@@ -1,0 +1,14 @@
+<!--
+Variables:
+    - image_attribute: the object to display
+    - name: the name of the object
+    - class: the class of the image
+    - style: the style of the image
+-->
+{% if image_attribute %}
+    <img src="{{ image_object.url }}" class="{{ class }}" style="{{ style }}" alt="avatar">
+{% else %}
+    <div id="cardInitials" class="initials">
+        XD
+    </div>
+{% endif %}

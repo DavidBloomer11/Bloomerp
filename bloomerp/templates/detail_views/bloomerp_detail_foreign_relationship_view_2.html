@@ -1,0 +1,226 @@
+{% load static %}
+{% load bloomerp %}
+{% load crispy_forms_tags %}
+
+
+<h5 class="card-title">{{title}}</h5>
+
+        
+
+        {% if form.errors or formset.errors %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+
+          {% for error in formset.errors %}
+            {{error}}
+          {% endfor %}
+          
+        </div>
+        
+        <script>
+          var alertList = document.querySelectorAll('.alert');
+          alertList.forEach(function (alert) {
+            new bootstrap.Alert(alert)
+          })
+        </script>
+        
+        {% endif %}
+
+
+        {% if no_preferences %}
+
+        <p>You currently have no view preferences set for this model. You can set the preferences 
+          <a href="{% url 'list_view_preference' %}?content_type_id={{content_type_id}}&return_to={{request.path}}">here.</a>
+        </p>
+        
+        {% else %}
+        
+        
+        <div
+          class="table-responsive"
+        >
+                
+        <table class="table table-borderless datatable">
+            <thead>
+              <tr>
+                {% for field in list_view_preferences %}
+                <th scope="col">
+                    {{field.application_field.title}}
+                </th>
+                {% endfor %}
+
+                {% if read_only == True %}
+                
+                {% else %}
+
+                <th scope="col">Actions</th>
+
+                {% endif %}
+                
+              </tr>
+            </thead>
+            <tbody>
+              
+              {% for object in object_list %}
+                  
+                  <tr>
+                    {% for preference in list_view_preferences %}
+                      {% if preference.is_main %}
+                      <td><a  
+                        {% if detail_url %}href="{% url detail_url object.pk %}"{% endif %}>{{ object|get_field_value:preference.application_field.field }}</a></td>
+                      {% elif preference.application_field.field_type == 'ForeignKey' %}
+                      <td>{{object|get_foreign_key_value:preference.application_field.field|safe}}</td>
+                      {% elif preference.application_field.field_type == 'ManyToManyField' %}
+                      <td>{{object|get_foreign_key_value:preference.application_field.field|safe}}</td>
+                      {% else %}
+                      <td>{{ object|get_field_value:preference.application_field.field }}</td>
+                      {% endif %}
+                    {% endfor %}
+                      {% if read_only == False %}
+
+                      <td>
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#updateObject" data-bs-formid="{{ forloop.counter0 }}"><i class="bx bxs-edit-alt bx-sm"></i></a>
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#deleteModal" data-bs-formid="{{ object.pk }}"><i class="bx bxs-trash bx-sm" style="color: red;"></i></a>
+                      </td>
+
+                      {% endif %}
+                     
+                  </tr>
+              {% endfor %}
+          </tbody>
+          
+          </table>
+        </div>
+        {% if read_only == False %}
+          <div class="text-center">
+            <button type="submit" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">Add</button>
+          </div>
+
+          
+          
+          <!-- Update Modal -->
+          <div class="modal fade" id="updateObject" tabindex="-1" role="dialog" aria-labelledby="modalTitleId" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                  <div class="modal-header">
+                      <h5 class="modal-title" id="modalTitleId">Update object</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form method="post" enctype="multipart/form-data"> 
+                      <div class="modal-body">
+                        {% csrf_token %}
+                        {{ formset.management_form }}
+                          {% for form in formset %}
+                          <div id="formUpdate{{forloop.counter0}}" class="d-none">
+                              {{form|crispy}}
+                          </div>
+                          {% endfor %}
+                          
+                        
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                      </div>
+                    </form>
+              </div>
+            
+            </div>
+          </div>
+          
+          <script>
+            var updateObject = document.getElementById('updateObject');
+          
+            updateObject.addEventListener('show.bs.modal', function (event) {
+              // Button that triggered the modal
+              let button = event.relatedTarget;
+              // Extract info from data-bs-* attributes
+              let id = button.getAttribute('data-bs-formid');
+              // Make form visible
+              let div = document.getElementById(`formUpdate${id}`);
+              div.classList.remove("d-none");
+        
+              // Save the div in dataset for later access
+              updateObject.dataset.currentFormId = id;
+          });
+        
+          updateObject.addEventListener('hidden.bs.modal', function (event) {
+              // Retrieve the div from dataset
+              let id = updateObject.dataset.currentFormId;
+              let div = document.getElementById(`formUpdate${id}`);
+              // Add the d-none class back to the div
+              if (div) {
+                  div.classList.add("d-none");
+              }
+          });
+          </script>
+          
+          <!--Delete modal-->
+          <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="modalTitleId" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                        <div class="modal-header">
+                                <h5 class="modal-title" id="modalTitleId">Delete entry</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                    <form action="" method="post">
+                        {% csrf_token %}
+                        <input type="text" id="deleteId" hidden name="deleteId">
+                        <div class="modal-body">
+                            Are you sure you want to delete this entry?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submint" class="btn btn-danger">Delete</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+          </div>
+          <script>
+            var modalId = document.getElementById('deleteModal');
+
+            modalId.addEventListener('show.bs.modal', function (event) {
+                  // Button that triggered the modal
+                  let button = event.relatedTarget;
+                  // Extract info from data-bs-* attributes
+                  let id = button.getAttribute('data-bs-formid');
+                  // Use above variables to manipulate the DOM
+                
+                  document.getElementById('deleteId').setAttribute('value',id)
+            });
+          </script>
+
+          
+          <!-- Create modal -->
+          <div class="modal fade" id="createModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" role="dialog" aria-labelledby="createObject" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="createObject">Create object</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                  <form method="post" enctype="multipart/form-data"> 
+                  <div class="modal-body">
+                    {% csrf_token %}
+                    
+                    {{ form|crispy }}
+
+                    <input name="is_create" value=1 class="d-none"/>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+          
+          
+
+        {% endif %}
+        {% endif %}
+
+
+

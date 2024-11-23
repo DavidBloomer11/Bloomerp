@@ -1,0 +1,275 @@
+{% load static %}
+
+<h5 class="card-title">Editor</h5>
+
+<form method="post">
+    {% csrf_token %}
+    <textarea id="template" name="template">{{object.template}}</textarea>
+
+    <div class="d-flex justify-content-center m-2">
+        <button type="submit" class="btn btn-primary">Save</button>
+    </div>
+
+</form>
+
+<!-- Preview modal -->
+<div
+    class="modal fade"
+    id="previewModal"
+    tabindex="-1"
+    data-bs-backdrop="static"
+    data-bs-keyboard="false"
+    
+    role="dialog"
+    aria-labelledby="previewModalTitle"
+    aria-hidden="true"
+>
+    <div
+        class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-xl"
+        role="document"
+    >
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="previewModalTitle">
+                    Preview
+                </h5>
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                ></button>
+            </div>
+            <div class="modal-body" id="previewModalBody">
+                <iframe id="previewIframe" style="width: 100%; height: 100vh;"></iframe>
+            </div>
+            <div class="modal-footer">
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal"
+                >
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End preview modal -->
+
+<!-- Variables modal -->
+<div
+    class="modal fade"
+    id="variablesModal"
+    tabindex="-1"
+    data-bs-backdrop="static"
+    data-bs-keyboard="false"
+    
+    role="dialog"
+    aria-labelledby="variablesModalTitle"
+    aria-hidden="true"
+>
+    <div
+        class="modal-dialog modal-dialog-scrollable modal-dialog-centered"
+        role="document"
+    >
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="variablesModalTitle">
+                    Variables
+                </h5>
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                ></button>
+            </div>
+            <div class="modal-body" id="variablesModalBody">
+                <div class="row">
+                    <div class="col">
+                        <h5>Application fields</h5>
+                        {% for field in object.application_fields %}
+                            <a 
+                                class="pointer" 
+                                onclick="addVariable('{{field.field}}','{{field.field_type}}')"
+                                data-bs-dismiss="modal"
+                                >{{ field.field }}
+                            </a>
+                            <br>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col">
+                        <h5>Free variables</h5>
+                        {% for field in object.free_variables.all %}
+                            <a 
+                                class="pointer" 
+                                onclick="addFreeVariable('{{field}}', '{{field.variable_type}}')"
+                                data-bs-dismiss="modal"
+                                >{{ field }}
+                            </a>
+                            <br>
+                        {% endfor %}
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal"
+                >
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End variables modal -->
+
+{% include "snippets/llm_modal_snippet.html" with modal_id="aiModal" query_type="document_template" target="#llm_output" %}
+
+<textarea id="llm_output" class="d-none"></textarea>
+
+<script>
+    let initialContent = `{{ object.template | safe }}`;
+
+    // Initialize TinyMCE with custom button
+    tinymce.init({
+        selector: 'textarea#template',
+        plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table code',
+        toolbar: 'undo redo | blocks | bold italic underline | numlist bullist | table code media | preview-template variables ai',
+        setup: function (editor) {
+            // Add Preview Template button
+            editor.ui.registry.addButton('preview-template', {
+                text: 'Preview template',
+                onAction: function () {
+                    // Show the modal
+                    const modal = new bootstrap.Modal(document.getElementById("previewModal"));
+                    modal.show();
+                }
+            });
+
+            // Add Variables button
+            editor.ui.registry.addButton('variables', {
+                text: 'Variables',
+                onAction: function () {
+                    // Show the modal
+                    const modal = new bootstrap.Modal(document.getElementById("variablesModal"));
+                    modal.show();
+                }
+            });
+
+            // Magic happens here
+            editor.ui.registry.addButton('ai', {
+                text: 'AI',
+                onAction: function () {
+                    // Show the modal
+                    const modal = new bootstrap.Modal(document.getElementById("aiModal"));
+                    modal.show();
+                }
+            });
+        }
+    });
+
+    // Add event listener to modal on show
+    document.getElementById('previewModal').addEventListener('show.bs.modal', async function (event) {
+        // Get the content of the editor
+        let content = tinymce.get('template').getContent();
+        let template_id = "{{ object.id | escapejs }}";
+
+        // Add the content
+        let baseUrl = "{% url 'components_preview_document_template'  %}";
+
+        // Send fetch request to the server
+        const response = await fetch(baseUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                content: content,
+                template_id: template_id
+            })
+        })
+
+        // Get the response
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+
+            // Set the iframe src
+            // Since the server uses a try catch block, the response will always be ok
+            // If an error occurs, the server will give the error message as a response
+            document.getElementById('previewIframe').src = url;
+        } 
+
+        
+    });
+    
+    // Add variable to current cursor position
+    function addVariable(variable, type) {
+        if (!variable) {
+            return;
+        }
+
+        if (type === 'ManyToManyField') {
+            // We need to do some ninje stuff to make sure it doesn't trigger the for loop
+            content = `{${'%'} for item in object.${variable}.all %} {${'{'} item ${'}'}} {% endfor ${'%'}}`;
+        } else {
+            content = `{${'{'} object.${variable} ${'}'}}`;
+        }
+
+
+        let editor = tinymce.get('template');
+        editor.insertContent(content);
+    }
+
+    function addFreeVariable(variable, type) {
+        if (!variable) {
+            return;
+        }
+        // Types can be
+        // - date
+        // - boolean
+        // - integer
+        // - float
+        // - text
+        // - list
+        // - model
+        // If date, we need to add the format filter
+
+        if (type === 'date') {
+            content = `{${'{'} ${variable} ${'}'}}`;
+        } else if (type === 'boolean') {
+            content = `{${'{'} ${variable} ${'}'}}`;
+        } else if (type === 'integer') {
+            content = `{${'{'} ${variable} ${'}'}}`;
+        } else if (type === 'float') {
+            content = `{${'{'} ${variable} ${'}'}}`;
+        } else if (type === 'text') {
+            content = `{${'{'} ${variable} ${'}'}}`;
+        } else if (type === 'list') {
+            content = `{${'{'} ${variable} ${'}'}}`;
+        } else if (type === 'model') {
+            content = `{${'{'} ${variable} ${'}'}}`;
+        }
+        
+
+        let editor = tinymce.get('template');
+        editor.insertContent(content);
+    }
+
+    // Add content after llm query
+    document.addEventListener('htmx:afterSwap', function(event) {
+        if (event.detail.target.id == 'llm_output') {
+            // Get value of the llm output
+            let llmOutput = document.getElementById('llm_output').value;
+            tinymce.get('template').setContent(llmOutput);
+        }
+    });
+
+</script>

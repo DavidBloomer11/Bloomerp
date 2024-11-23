@@ -1,0 +1,41 @@
+<!--
+Card picture snippet
+
+Variables:
+    - image_object: the object to display
+    - name: the name of the object
+-->
+
+<div class="d-flex justify-content-center mb-3">
+    {% include "snippets/avatar.html" with image_attribute=image_object class="rounded mx-auto d-block" style="height:6em; width:6em" %}
+</div>
+
+<script>
+    (function() {
+        // Get the object name
+        let object = "{{ name | escapejs}}"
+        // Get the first letters of the first and second word of the object
+        let initials = object.split(" ").map(word => word[0]).join("").substring(0, 2).toUpperCase()
+        // Get the div where the picture is displayed
+        let div = document.getElementById("cardInitials")
+        // Create a new element with the initials
+        if (div) {
+            div.innerHTML = `${initials}`
+        }
+    })()
+</script>
+
+<style>
+.initials {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1em;
+    width: 6em;
+    height: 6em;
+    text-align: center;
+    border-radius: 50%;
+    background: gray;
+    color: white;
+}
+</style>

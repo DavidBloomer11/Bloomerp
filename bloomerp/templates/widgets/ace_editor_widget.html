@@ -1,0 +1,33 @@
+<!-- ace_editor_widget.html -->
+{% load static %}
+<div id="{{ widget.editor_id }}" style="width: 100%; height: 300px;"></div>
+
+<textarea id="{{ widget.attrs.id }}" name="{{ widget.name }}" style="display: none;">{{ widget.value }}</textarea>
+
+{% if widget.language == 'sql' %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.2/mode-sql.min.js" integrity="sha512-dABa+YCy/MOELLU5BKnJeR/pcORL8icJNR1TBZWrRmlFoWXZEFketX6Qx/DVBkewMZC8mUOGJMJ70fwxcpIDCw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+{% elif widget.language == 'json' %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.2/mode-json.min.js" integrity="sha512-K+H+3WTfhwE9fnfv4makUYJxz4kwIadQPOjGHAmOT96FtMSPRnvnuGR/sZjuNB2MmmHQ94Mnc9zoDxTHKMMEww==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+{% elif widget.language == 'python' %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.2/mode-python.min.js" integrity="sha512-DUdq0nHbbCHQMqQNALNivk5tAdpFWOpm3mplXDwBqIpXD6/vfgXp8fESbfsnePQT3jZKVI3mCbEQumz/S4IHPA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+{% elif widget.language == 'html' %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.2/mode-html.min.js" integrity="sha512-JSkDZ0Crk8+F/F/lCqh6LZ/mzPqhSrRanUC3TExEziPsbLPFIJQmR5R7p954sdM88cOL9+WlVR6XBFJa3nXcdA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+{% elif widget.language == 'css' %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.2/mode-css.min.js" integrity="sha512-/j2txHwfn9J3633V80jkkMDKbz0nq3hxhnrh2dZIKKQzFYuEVyMLx+wsbtgC2aViUYenhx1mb4EuZyGiluBwXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+{% elif widget.language == 'javascript' %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.2/mode-javascript.min.js" integrity="sha512-S5TwCMItd+YdNiTApqHt2QkA2sd90dgpWxHoYhulWm+Nb/i9GppPsve8IOraaTj56uNJgIOtmFQFggL1PuKkWA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+{% endif %}
+
+<script>
+    (function() {
+        // Make the scripts are loaded before running this code
+        var textarea = document.getElementById("{{ widget.attrs.id }}");
+        var editor = ace.edit("{{ widget.editor_id }}");
+        editor.session.setMode("ace/mode/{{ widget.language }}");
+        editor.setValue(textarea.value, -1);
+
+        editor.session.on('change', function(){
+            textarea.value = editor.getValue();
+        });
+    })();
+</script>

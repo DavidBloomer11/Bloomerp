@@ -1,0 +1,46 @@
+{% load crispy_forms_tags %} 
+<h5 class="card-title">Object View Preferences</h5>
+<p class="text-muted">
+  Here, you can customize the list view visibility of a specific model by selecting the fields you want to see.
+</p>
+
+<div class="mb-3 col-3">
+  <label for="" class="form-label">Model</label>
+  <select
+    class="form-select form-select"
+    name="content_type"
+    id="selectContentType"
+  >
+    <option selected>Select one</option>
+    {% for content_type in content_type_list %}
+    <option value="{{content_type.pk}}">{{content_type}}</option>
+    {% endfor %}
+  </select>
+</div>
+
+{% if selected_model %}
+<p class="fw-bold my-2">Selected Model: {{selected_model|title}}</p>
+{% endif %}
+
+{% if selected_model %}
+  <form method="POST" action="">
+      {% csrf_token %}
+      {{ form | crispy }}
+      <button type="submit" class="btn btn-primary">Save Preferences</button>
+  </form>
+{% endif %}
+
+
+
+<script>
+  document
+    .getElementById("selectContentType")
+    .addEventListener("change", function () {
+      var selectedValue = this.value; // Get the selected value
+
+      // Redirect to the desired URL with the selected value as a query parameter
+      // Replace '/url/' with the actual path you wish to navigate to
+      window.location.href = `{{request.path}}?content_type_id=${selectedValue}`;
+    });
+</script>
+

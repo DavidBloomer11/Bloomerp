@@ -1,0 +1,14 @@
+{% for object in objects %}
+    <li>
+        <a 
+            class="dropdown-item pointer" 
+            {% if type == "fk" %}
+            onclick="setForeignKeyValue('{{ object.pk }}', '{{ object | escapejs }}', '{{ field_name | escapejs }}')"
+            {% else %}
+            onclick="setM2MValue('{{ object.pk }}', '{{ object | escapejs }}', '{{ field_name | escapejs }}')"
+            {% endif %}
+            >
+            {{ object }}
+        </a>
+    </li>
+{% endfor %}

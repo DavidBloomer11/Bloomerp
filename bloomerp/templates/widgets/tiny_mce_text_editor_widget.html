@@ -1,0 +1,13 @@
+<textarea id='{{widget.name}}' name="{{ widget.name }}">{{ widget.value }}</textarea>
+
+<script>
+    let widget = '{{widget.name | safe }}';
+
+    tinymce.init({
+        selector: `textarea#${widget.name}`,
+        plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table code',
+        toolbar: 'undo redo | blocks | bold italic underline | numlist bullist | table | code | media' ,
+      });
+
+</script>
+

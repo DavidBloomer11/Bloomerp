@@ -1,0 +1,11 @@
+<div class="pagetitle">
+    <h1>{{ title }}</h1>
+    <nav>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a class="pointer" hx-get="{% url 'bloomerp_home_view' %}" hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true">Home</a></li>
+        <li class="breadcrumb-item"><a class="pointer" hx-get="{% url list_view_url %}" hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true">{{ model_name_plural | title }}</a></li>
+        <li class="breadcrumb-item active">{{ title }}</li>
+      </ol>
+    </nav>
+</div>

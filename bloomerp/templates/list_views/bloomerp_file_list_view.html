@@ -1,0 +1,32 @@
+<!-- Page Title -->
+<div class="pagetitle">
+    <h1>Files</h1>
+    <nav>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a 
+			hx-get="{% url "bloomerp_home_view" %}"
+			hx-target="#main-content"
+			hx-push-url="true"
+			hx-swap="innerHTML"
+			class="pointer"
+			>Home</a></li>
+		<li class="breadcrumb-item"><a 
+				hx-get=""
+				hx-target="#main-content"
+				hx-swap="innerHTML"
+				hx-push-url="true"
+				class="pointer"
+				>Files</a></li>
+        <li class="breadcrumb-item active">List</li>
+      </ol>
+    </nav>
+</div>
+<!-- End Page Title -->
+
+<div class="card text-start">
+    <div class="card-body m-2">
+        {% include "snippets/files_snippet.html" %}
+    </div>
+</div>
+
+

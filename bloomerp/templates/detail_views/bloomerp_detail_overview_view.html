@@ -1,0 +1,138 @@
+{% load bloomerp %}
+{% include 'snippets/message.html' with messages=messages %}
+
+<h5 class="card-title">Overview</h5>
+
+{% if no_preferences%}
+
+<p>You currently have no list view preferences set for this model. You can your view preferences 
+  <a href="{% url 'users_my_profile_detail_view_preference' %}?content_type_id={{content_type_id}}&return_to={{request.path}}">here.</a>
+</p>
+
+
+{% endif %}
+
+
+<div class="row">
+
+  {% if left_column %}
+  <div class="col-12 col-sm-{{col_span}}">
+    {% for attribute in left_column %}
+    <div class="row mt-2">
+        <p><span class="fw-bold mb-1 pe-3">{{ attribute.application_field.title }}:   </span>
+          
+        {% if attribute.application_field.field_type == 'ForeignKey' %}
+
+          {{object|get_foreign_key_value:attribute.application_field.field|safe}}
+
+        {% elif attribute.application_field.field_type == 'ManyToManyField' %}
+          
+          {{object|get_foreign_key_value:attribute.application_field.field|safe}}
+
+          {% elif attribute.application_field.field_type == 'DateField' %}
+
+          {{object|get_foreign_key_value:attribute.application_field.field|date:request.user.date_view_preference|default:"None"}}
+          <i class="bi bi-clipboard2 copy-icon" onclick="copyToClipboard(this)"></i>
+        {% elif attribute.application_field.field_type == 'DateTimeField' %}
+            
+          {{object|get_field_value:attribute.application_field.field|date:request.user.datetime_view_preference|default:"None"}}
+          <i class="bi bi-clipboard2 copy-icon" onclick="copyToClipboard(this)"></i>
+        {% else %}
+          {{ object|get_field_value:attribute.application_field.field }}
+          <i class="bi bi-clipboard2 copy-icon" onclick="copyToClipboard(this)"></i>
+        {% endif %}
+          
+      </p>
+    </div>
+
+    {% endfor %}
+  </div>  
+  {% endif %}
+
+  {% if center_column %}
+  <div class="col-12 col-sm-{{col_span}}">
+    {% for attribute in center_column %}
+    <div class="row mt-2">
+        <p><span class="fw-bold mb-1 pe-3">{{ attribute.application_field.title }}:</span>
+          
+        {% if attribute.application_field.field_type == 'ForeignKey' %}
+
+          {{object|get_foreign_key_value:attribute.application_field.field|safe}}
+
+        {% elif attribute.application_field.field_type == 'ManyToManyField' %}
+          
+          {{object|get_foreign_key_value:attribute.application_field.field|safe}}
+        
+        {% elif attribute.application_field.field_type == 'DateField' %}
+
+          {{object|get_field_value:attribute.application_field.field|date:request.user.date_view_preference|default:"None"}}
+          <i class="bi bi-clipboard2 copy-icon" onclick="copyToClipboard(this)"></i>
+        {% elif attribute.application_field.field_type == 'DateTimeField' %}
+            
+          {{object|get_field_value:attribute.application_field.field|date:request.user.datetime_view_preference|default:"None"}}
+          <i class="bi bi-clipboard2 copy-icon" onclick="copyToClipboard(this)"></i>
+        {% else %}
+          {{ object|get_field_value:attribute.application_field.field }}
+          <i class="bi bi-clipboard2 copy-icon" onclick="copyToClipboard(this)"></i>
+        {% endif %}
+          
+      </p>
+    </div>
+
+    {% endfor %}
+  </div>  
+  {% endif %}
+
+  {% if right_column %}
+  <div class="col-12 col-sm-{{col_span}}">
+    {% for attribute in right_column %}
+    <div class="row mt-2">
+        <p><span class="fw-bold mb-1 pe-3">{{ attribute.application_field.title }}:   </span>
+          
+        {% if attribute.application_field.field_type == 'ForeignKey' %}
+
+          {{object|get_foreign_key_value:attribute.application_field.field|safe}}
+
+        {% elif attribute.application_field.field_type == 'ManyToManyField' %}
+          
+          {{object|get_foreign_key_value:attribute.application_field.field|safe}}
+
+        {% elif attribute.application_field.field_type == 'DateField' %}
+
+          {{object|get_field_value:attribute.application_field.field|date:request.user.date_view_preference|default:"None"}}
+          <i class="bi bi-clipboard2 copy-icon" onclick="copyToClipboard(this)"></i>
+        {% elif attribute.application_field.field_type == 'DateTimeField' %}
+            
+          {{object|get_field_value:attribute.application_field.field|date:request.user.datetime_view_preference|default:"None"}}
+          <i class="bi bi-clipboard2 copy-icon" onclick="copyToClipboard(this)"></i>
+        {% else %}
+          {{ object|get_field_value:attribute.application_field.field }}
+          <i class="bi bi-clipboard2 copy-icon" onclick="copyToClipboard(this)"></i>
+        {% endif %}
+          
+      </p>
+    </div>
+
+    {% endfor %}
+  </div>  
+  {% endif %}
+
+
+
+</div>
+
+<script>
+  function copyToClipboard(element) {
+    // Create a temporary textarea element to hold the text to be copied
+    const tempInput = document.createElement('textarea');
+    // This gets the text content of the previous sibling (your value)
+    tempInput.value = element.previousSibling.textContent.trim();
+    document.body.appendChild(tempInput);
+    tempInput.select(); // Selects the content of the textarea
+    document.execCommand('copy'); // Copies the selected content to the clipboard
+    document.body.removeChild(tempInput); // Remove the temporary element
+}
+
+</script>
+
+

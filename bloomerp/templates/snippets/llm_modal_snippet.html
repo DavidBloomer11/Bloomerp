@@ -1,0 +1,70 @@
+<!--
+Snippet for a modal window that is used to create a query to an llm.
+
+Variables:
+    - modal_id: The id of the modal window.
+    - title: The title of the modal window.
+    - query_type: The type of the query to be executed.
+    - target: The target of the query.
+-->
+<div
+    class="modal fade"
+    id="{{ modal_id }}"
+    tabindex="-1"
+    data-bs-backdrop="static"
+    data-bs-keyboard="false"
+    role="dialog"
+    aria-labelledby="magicModalTitle"
+    aria-hidden="true"
+>
+    <div
+        class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-lg"
+        role="document"
+    >
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="magicModalTitle">
+                    {{ title }}
+                </h5>
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                ></button>
+            </div>
+            <form
+                hx-get="{% url 'components_llm_executor' %}?llm_query_type={{ query_type }}"
+                hx-target="{{ target }}"
+                hx-swap="innerHTML"
+                hx-trigger="submit"
+                >
+            <div class="modal-body">
+                <div class="form-floating mb-3">
+                    <textarea
+                        class="form-control"
+                        id="llm_query"
+                        name="llm_query"
+                        placeholder="Query"
+                        style="height: 200px"
+                        required
+                    ></textarea>
+                    <label for="llm_query">Query</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal"
+                >
+                    Close
+                </button>
+                <button type="submit" data-bs-dismiss="modal" class="btn btn-primary">Generate</button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>
+

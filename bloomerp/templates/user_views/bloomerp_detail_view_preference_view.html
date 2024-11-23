@@ -1,0 +1,95 @@
+<h5 class="card-title">Object View Preferences</h5>
+<p class="text-muted">
+  Here, you can customize the visibility of fields for a specific model by
+  adjusting the settings.
+</p>
+
+<div class="mb-3 col-3">
+  <label for="" class="form-label">Model</label>
+  <select
+    class="form-select form-select"
+    name="content_type"
+    id="selectContentType"
+  >
+    <option selected>Select one</option>
+    {% for content_type in content_type_list %}
+    <option value="{{content_type.pk}}">{{content_type}}</option>
+    {% endfor %}
+  </select>
+</div>
+
+{% if selected_model %}
+<p class="fw-bold my-2">Selected Model: {{selected_model|title}}</p>
+
+
+<form method="POST" action="">
+<div
+    class="row align-items-center g-2"
+>
+    <div class="col-2">
+        <input type="text" class="form-control" id="searchField" placeholder="Search field">
+    </div>
+    <div class="col-2"><button type="submit" class="btn btn-primary">Save Preferences</button></div>
+</div>
+
+
+
+<script>
+document.getElementById("searchField").addEventListener("input", function () {
+    var searchValue = this.value.toLowerCase(); // Get the search value
+
+    // Loop through each row in the table
+    var rows = document.querySelectorAll(".table tbody tr");
+    rows.forEach(function (row) {
+        var fieldValue = row.querySelector(".fw-bold").textContent.toLowerCase(); // Get the field value
+
+        // Check if the field value contains the search value
+        if (fieldValue.includes(searchValue)) {
+            row.style.display = ""; // Show the row
+        } else {
+            row.style.display = "none"; // Hide the row
+        }
+    });
+});
+</script>
+
+{% if formset %}
+
+  {% csrf_token %} {{ formset.management_form }}
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Field</th>
+          <th scope="col">Using</th>
+          <th scope="col">Field position</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for form in formset %}
+        <tr class="">
+            <td scope="row" class="fw-bold">{{ form.field.value }} <span class="d-none">{{form.id}}</span></td>
+            <td>{{form.is_used}}</td>
+            <td>{{form.position}}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  
+</form>
+
+{% endif %}
+{% endif %}
+<script>
+  document
+    .getElementById("selectContentType")
+    .addEventListener("change", function () {
+      var selectedValue = this.value; // Get the selected value
+
+      // Redirect to the desired URL with the selected value as a query parameter
+      // Replace '/url/' with the actual path you wish to navigate to
+      window.location.href = `{{request.path}}?content_type_id=${selectedValue}`;
+    });
+</script>
+

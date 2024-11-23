@@ -1,0 +1,14 @@
+<!--
+Form snippet:
+
+Variables:
+    - form: the form object
+    - action: the url to which the form should be submitted
+-->
+{% load crispy_forms_tags %}
+
+<form action="{{ action }}" method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form | crispy }}
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>

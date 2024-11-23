@@ -1,0 +1,15 @@
+venv
+manage.py
+test_environment
+db.sqlite3
+test_app
+bloomerp/migrations
+.vscode
+others
+query.sql
+*.pyo
+*.pdf
+*.pyc
+media
+bloomerp.io
+project_structure.py

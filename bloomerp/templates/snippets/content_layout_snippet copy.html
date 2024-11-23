@@ -1,0 +1,195 @@
+<!--
+A snippet to be used in the content layout of a page.
+Variables are:
+    - object: object that contains a content_layout attribute which is a json variable that contains the layout.
+    - render_type: describes how the items in the layout should be rendered. It can be 'link' (for dashboard app), 'widget' (for dashboard), or 'field' (for detail view).
+    - allow_creation : boolean that indicates if the user can create new items in the layout.
+    - item_list: list of items that can be added to the layout. Is a queryset of a particular model.
+-->
+
+{% load static %}
+{% load i18n %}
+{% load bloomerp %}
+
+<div class="d-flex justify-content-start">
+    <a href="#" onclick="changeLayout()">
+        <img src="{% static 'bloomerp/icons/settings.svg' %}" height="20" width="20" alt="add" />
+    </a>
+</div>
+
+<div id="contentLayoutContainer">
+    {% for row in object.content_layout.rows %}
+        <!--Row title-->
+        <h5 class="card-title">{{ row.title }}</h5>
+        <!--End row title-->
+
+        <div class="row" id="row-{{forloop.counter}}">
+            {% for column in row.columns %}
+                <div class="col col-md-{{ column.size }}" id="row-{{forloop.parentloop.counter}}-col-{{forloop.counter}}">
+                    {% for item in column.items %}
+                        {% if render_type == 'link' %}
+                            {% with item|get_link_by_id as link %}
+
+                                <!--Render link-->
+                                {% if link %}
+                                    <div class="item" id="row-{{forloop.parentloop.parentloop.counter}}-col-{{forloop.parentloop.counter}}-item-{{forloop.counter}}">
+                                        {% if link.is_absolute_url %}
+                                            <a href="{{ link.url }}">{{ link.name }}</a>                                
+                                        {% else %}
+                                            <a 
+                                                hx-get="{% url link.url %}"
+                                                hx-target="#main-content"
+                                                hx-swap="innerHTML"
+                                                hx-push-url="true"
+                                                class="pointer"
+                                                >{{ link.name }}</a>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                                <!--End render link-->
+
+                            {% endwith %}
+                        {% elif render_type == 'widget' %}
+                            {% with item|get_widget_by_id as widget %}
+
+                            <!--Render widget-->
+                            {% if widget %}
+                            
+                            {% endif %}
+                            <!--End render widget-->
+
+                            {% endwith %}
+                        {% endif %}
+                        <br>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+    {% endfor %}
+</div>
+
+<!--Save layout div-->
+<div class="d-none save-layout-div d-flex">
+    <div class="btn-group dropup">
+        <button class="btn btn-secondary dropdown-toggle mx-2" data-bs-toggle="dropdown" aria-expanded="false">Add widget</button>
+
+        <ul class="dropdown-menu">
+                <li><span class="dropdown-item-text">Drag and drop items to the dashboard</span></li>
+            {% for item in item_list %}
+                <li><a class="dropdown-item draggable new-item" draggable=true id="{{item.pk}}">{{ item }}</a></li>
+            {% endfor %}
+        </ul>
+
+    </div>
+    <button class="btn btn-primary" onclick="saveLayout('{{ user_dashboard_view.pk }}')">Save layout</button>
+</div>
+<!--End save layout div-->
+
+<script>
+    function changeLayout() {
+        const contentLayoutContainer = document.getElementById('contentLayoutContainer');
+
+        // Toggle class for rows
+        const rows = contentLayoutContainer.querySelectorAll('.row');
+        rows.forEach(row => {
+            row.classList.toggle('content-layout-row');
+            row.setAttribute('draggable', true);
+            row.addEventListener('dragstart', dragStartRow);
+            row.addEventListener('drop', dropOnRow);
+        });
+
+        // Toggle class for columns and make them draggable
+        const columns = contentLayoutContainer.querySelectorAll('.col');
+        columns.forEach(column => {
+            column.classList.toggle('content-layout-column');
+            column.setAttribute('draggable', true);
+            column.addEventListener('dragstart', dragStartColumn);
+            column.addEventListener('drop', dropOnColumn);
+            column.addEventListener('dragover', allowDrop);
+        });
+
+        // Toggle class for items and make them draggable
+        const items = contentLayoutContainer.querySelectorAll('.item');
+        items.forEach(item => {
+            item.classList.toggle('content-layout-item');
+            item.setAttribute('draggable', true);
+            item.addEventListener('dragstart', dragStartItem);
+            item.addEventListener('drop', dropOnItem);
+            item.addEventListener('dragover', allowDrop);
+        });
+        
+        // Make sure new items can be added to the layout
+        const newItems = document.querySelectorAll('.new-item');
+        newItems.forEach(newItem => {
+            newItem.addEventListener('dragstart', dragStartItem);
+            newItem.addEventListener('drop', dropOnItem);
+            newItem.addEventListener('dragover', allowDrop);
+        });
+
+
+        // Show save layout div
+        const saveLayoutDiv = document.querySelector('.save-layout-div');
+        saveLayoutDiv.classList.toggle('d-none');
+
+    }
+
+    function allowDrop(ev) {
+        ev.preventDefault();
+    }
+
+    // -------------------------
+    // Drag starts
+    // -------------------------
+    function dragStartItem(ev) {
+        ev.dataTransfer.setData("id", ev.target.id);
+    }
+
+    function dragStartColumn(ev) {
+        ev.dataTransfer.setData("id", ev.target.id);
+    }
+
+    function dragStartRow(ev) {
+        ev.dataTransfer.setData("id", ev.target.id);
+    }
+
+    // -------------------------
+    // Drop
+    // -------------------------
+    function dropOnItem(ev) {
+        ev.preventDefault();
+        const sourceId = ev.dataTransfer.getData("id");
+        const targetItem = ev.target;
+
+        // Check if what type of element is being dropped
+        source = document.getElementById(sourceId);
+
+        if (source.classList.contains('content-layout-item')) {
+            // Item is being dropped on another item
+            console.log('Item is being dropped on another item');
+        } else if (source.classList.contains('content-layout-column')) {
+            // Column is being dropped on an item
+            console.log('Column is being dropped on an item');
+        } else if (source.classList.contains('content-layout-row')) {
+            // Row is being dropped on an item
+            console.log('Row is being dropped on an item');
+        } else if (source.classList.contains('new-item')) {
+            // New item is being dropped on an item
+            console.log('New item is being dropped on an item');
+        }
+
+    }
+
+    function dropOnColumn(ev) {
+        ev.preventDefault();
+        const targetColumn = ev.target;
+        
+        // Check if what type of element is being dropped
+
+    }
+
+    function dropOnRow(ev) {
+        ev.preventDefault();
+
+    }
+    
+</script>

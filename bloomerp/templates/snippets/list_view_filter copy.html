@@ -1,0 +1,408 @@
+<!---
+Description: This snippet is used to render the filter section of the list view. It includes the search bar, filter button, settings button, and save filter button.
+
+Variables:
+    - content_type_id: The id of the content type of the model being displayed.
+    - application_fields: A list of fields of the model being displayed.
+    - target: The id of the element that will be updated with the new content when the filter is applied.
+    - include_actions: A boolean that indicates if the actions column should be included in the table.
+    -->
+{% load static %}
+{% load bloomerp %}
+
+<div class="d-flex justify-content-between">
+
+    <!-- Search -->
+    <div class="d-flex">
+        <input 
+            type="text" 
+            class="form-control form-control-sm" 
+            placeholder="Search" 
+            autocomplete="off"
+            name="data_table_string_search"
+            hx-get="{% url 'components_data_table' %}?data_table_content_type_id={{ content_type_id }}&data_table_include_actions={{ include_actions }}"
+            hx-target="{{ target }}"
+            hx-swap="innerHTML"
+            hx-include="#filterForm"
+            hx-trigger="keyup delay:500ms"
+            >
+    </div>
+    <!-- End search -->
+
+    <div class="d-flex">
+
+        <!-- Save current filter -->
+        <div class="dropdown">
+            <button
+                    class="btn btn-borderless bg-transparent text-dark btn-sm"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    data-bs-auto-close="outside"
+                    aria-expanded="false">
+                    <img src="{% static 'bloomerp/icons/archive.svg' %}" height="20" alt="Save"/>
+            </button>
+        
+            <div class="dropdown-menu p-2 dropdown-menu-arrow" id="saveFilterDropdown">
+                <h6 class="dropdown-header">Save current filter</h6>
+
+                <form 
+                    hx-post=""
+                    hx-target="#saveFilterDropdown"
+                    hx-swap="innerHTML"
+                    hx-trigger="submit"
+                    >
+                    <div class="d-flex gap-2">
+                        <input 
+                            type="text" 
+                            class="form-control form-control-sm" 
+                            name="name" 
+                            placeholder="Filter name" 
+                            required
+                            autocomplete="off"
+                            >
+                        <button class="btn btn-sm btn-primary" type="submit">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- End save current filter -->
+        
+
+        <!-- Filter button -->
+        <div class="dropdown">
+            <button
+                    class="btn btn-borderless bg-transparent text-dark btn-sm"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    data-bs-auto-close="outside"
+                    aria-expanded="false">
+                    <img src="{% static 'bloomerp/icons/filter.svg' %}" height="20" alt="Filter"/>
+            </button>
+        
+            <div class="dropdown-menu filter-dropdown-menu dropdown-menu-arrow" id="filterDropdown">
+                    <form 
+                        hx-get="{% url 'components_data_table' %}?data_table_content_type_id={{ content_type_id }}&data_table_include_actions={{ include_actions }}"
+                        hx-target="{{ target }}"
+                        hx-swap="innerHTML"
+                        hx-trigger="submit"
+                        id="filterForm"
+                        >
+                        <div
+                            class="row justify-content-center align-items-center g-2"
+                            id="filterInputContainer"
+                        >
+                            <div class="filter-input-row row justify-content-center align-items-center g-2 mb-2">
+                                
+
+                                <div class="col d-flex align-items-center gap-2">
+                                    <img 
+                                        src="{% static 'bloomerp/icons/close.svg' %}" 
+                                        height="12" 
+                                        alt="Remove filter"
+                                        onclick="removeFilterInputRow(this)"
+                                        style="cursor: pointer;"
+                                        >
+
+                                    <select class="form-select form-select-sm selectedField" onchange="addFilterActions(this)">
+                                        {% for field in application_fields %}
+                                            <option value="{{ field.field }}" type="{{ field.field_type }}">{{ field.field | title }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="col">
+                                    <select class="form-select form-select-sm filterAction" onchange="addFilterValueInput(this)">
+                                    </select>
+                                </div>
+
+                                <div class="col filterValueDiv">
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Apply filters section -->
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <a 
+                                href="#" 
+                                class="d-flex align-items-center gap-1"
+                                onclick="addFilterInputRow(); return false;"
+                                >
+                                <img src="{% static 'bloomerp/icons/add.svg' %}" height="16" alt="Add filter"/>
+                                <span class="text-muted" style="font-size: 0.875rem;">Add new filter</span>
+                            </a>
+
+                            <div class="d-flex gap-2">
+                                <button 
+                                    class="btn btn-sm btn-primary"
+                                    type="submit">
+                                        Apply filter
+                                </button>
+                                <button 
+                                    class="btn btn-sm btn-secondary" 
+                                    type="button"
+                                    hx-get="{% url 'components_data_table' %}?data_table_content_type_id={{ content_type_id }}&data_table_include_actions=true"
+                                    hx-target="{{ target }}"
+                                    hx-swap="innerHTML"
+                                    hx-trigger="click"
+                                    hx-on::after-request="console.log('after request')"
+                                        >Remove filters
+                                </button>
+                            </div>
+                        </div>
+                        <!-- End apply filters section -->
+
+                    </form>
+            </div>
+        </div>
+        <!-- End filter button -->
+        
+
+        <!-- Settings -->
+        <div class="dropdown">
+            <button
+                    class="btn btn-borderless bg-transparent text-dark btn-sm"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    data-bs-auto-close="outside"
+                    aria-expanded="false">
+                    <img src="{% static 'bloomerp/icons/dots.svg' %}" height="20" alt="Settings"/>
+            </button>
+        
+            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                <li><a class="dropdown-item" href="{% url "list_view_preference" %}?content_type_id={{ content_type_id }}&return_to={{ request.path }}">Select fields</a></li>
+                <li><a 
+                        class="dropdown-item btn"
+                        hx-get="{% url 'components_data_table' %}?data_table_content_type_id={{ content_type_id }}&data_table_include_actions=true&data_table_download=csv"
+                        hx-include="#filterForm"
+                        hx-swap="none"
+                        hx-ext="htmx-download"
+                        >Download csv
+                    </a>
+                </li>
+                <li><a 
+                        class="dropdown-item btn"
+                        hx-get="{% url 'components_data_table' %}?data_table_content_type_id={{ content_type_id }}&data_table_include_actions=true&data_table_download=xlsx"
+                        hx-include="#filterForm"
+                        hx-swap="none"
+                        hx-ext="htmx-download"
+                        >Download xlsx
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <!-- End Settings -->
+    </div>
+</div>
+<script>
+    function addFilterActions(element) {
+        const selectedField = element;
+        const selectedFieldType = selectedField.options[selectedField.selectedIndex].getAttribute('type');
+        const selectedFieldName = selectedField.value;
+        const filterInputRow = element.closest('.filter-input-row');
+
+        const filterAction = filterInputRow.querySelector('.filterAction');
+        filterAction.innerHTML = '';
+
+        const options = getFilterOptions(selectedFieldType, selectedFieldName);
+        options.forEach((option, index) => {
+            const newOption = new Option(option.label, option.value);
+            if (index === 0) newOption.selected = true;
+            filterAction.add(newOption);
+        });
+
+        addFilterValueInput(filterAction);
+    }
+
+    function getFilterOptions(fieldType, fieldName) {
+        const filterOptions = {
+            CharField: [
+                { value: '__icontains', label: 'contains' },
+                { value: '', label: 'equals' },
+                { value: '__startswith', label: 'starts with' },
+                { value: '__endswith', label: 'ends with' },
+                { value: '__isnull', label: 'has value' },
+            ],
+            NumericField: [
+                { value: '', label: 'equals' },
+                { value: '__gte', label: 'greater than or equals' },
+                { value: '__lte', label: 'less than or equals' },
+                { value: '__gt', label: 'greater than' },
+                { value: '__lt', label: 'less than' },
+                { value: '__isnull', label: 'has value' },
+            ],
+            DateField: [
+                { value: '', label: 'equals' },
+                { value: '__gte', label: 'greater than or equals' },
+                { value: '__lte', label: 'less than or equals' },
+                { value: '__year', label: 'year' },
+                { value: '__month', label: 'month' },
+                { value: '__day', label: 'day' },
+                { value: '__isnull', label: 'has value' },
+            ],
+            ForeignKey: [
+                { value: fieldName, label: 'equals' },
+                { value: '__isnull', label: 'has value' },
+                { value: 'advanced', label: 'Advanced search' },
+            ],
+        };
+
+        if (['IntegerField',
+            'FloatField',
+            'DecimalField',
+            'BigAutoField',
+            'PositiveIntegerField',
+            'PositiveSmallIntegerField'
+            ].includes(fieldType)) {
+            console.log('Numeric field');
+            return filterOptions.NumericField;
+        } else if (['DateTimeField'].includes(fieldType)) {
+            return filterOptions.DateField;
+        return filterOptions[fieldType] || [];
+    }
+
+    function addFilterValueInput(element) {
+        const filterInputRow = element.closest('.filter-input-row');
+        const selectedFilterAction = element.value;
+        const selectedField = filterInputRow.querySelector('.selectedField');
+        const selectedFieldType = selectedField.options[selectedField.selectedIndex].getAttribute('type');
+        const filterValueDiv = filterInputRow.querySelector('.filterValueDiv');
+        filterValueDiv.innerHTML = '';
+
+        // Create the input based on the selected filter action and field type
+        const input = createFilterInput(selectedFilterAction, selectedFieldType);
+
+        // There are three cases, that each need to be handled differently:
+        // 1. The input is a input element
+        // 2. The input is a button element
+        // 3. The input is a select element
+
+        if (input.tagName === 'BUTTON') {
+            filterValueDiv.appendChild(input);
+        } else if (input.tagName === 'SELECT') {
+            input.classList.add('form-select', 'form-select-sm');
+            filterValueDiv.appendChild(input);
+            input.onchange = () => setFilterValue(input);
+        } else {
+            input.classList.add('form-control', 'form-control-sm');
+            filterValueDiv.appendChild(input);
+            input.oninput = () => setFilterValue(input);
+        }
+
+    }
+
+    function createFilterInput(action, fieldType) {
+        const input = document.createElement('input');
+        input.id = 'filterValueInput';
+        input.required = true;
+
+        switch (fieldType) {
+            case 'IntegerField':
+            case 'BigAutoField':
+            case 'PositiveIntegerField':
+            case 'PositiveSmallIntegerField':
+                input.type = 'number';
+                break;
+            case 'FloatField':
+            case 'DecimalField':
+                input.type = 'number';
+                input.step = '0.01';
+                break;
+            case 'DateField':
+            case 'DateTimeField':
+                if (action === '__year') {
+                    input.type = 'number';
+                    input.min = '1900';
+                    input.max = '2100';
+                } else if (action === '__month') {
+                    input.type = 'number';
+                    input.min = '1';
+                    input.max = '12';
+                } else if (action === '__day') {
+                    input.type = 'number';
+                    input.min = '1';
+                    input.max = '31';
+                } else if (action === '__isnull') {
+                    input.type = 'checkbox';
+                    input.value = 'false';
+                } else {
+                    if (fieldType === 'DateField') {
+                        input.type = 'date';
+                    } else {
+                        input.type = 'datetime-local';
+                    }
+                }
+                break;
+            case 'CharField':
+            case 'TextField':
+                input.type = 'text';
+                break;
+            case 'ForeignKey':
+                if (action === 'advanced') {
+                    // Create a button to open the advanced search modal
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.classList.add('btn', 'btn-sm', 'btn-primary');
+                    button.innerText = 'Advanced search';
+                    button.onclick = () => console.log('Open advanced search modal');
+                    return button;
+                } else if (action === '__isnull') {
+                    input.type = 'checkbox';
+                    input.value = 'false';
+                } else {
+                    input.type = 'text';
+                }
+            case 'BooleanField':
+                input.type = 'checkbox';
+                input.value = 'true';
+                break;
+            case 'ManyToManyField':
+                input.type = 'text';
+                input.placeholder = 'Unsupported field type';
+                break;
+            default:
+                input.type = 'text';
+                input.placeholder = 'Unsupported field type';
+        }
+        
+        return input;
+    }
+
+    function setFilterValue(element) {
+        const filterInputRow = element.closest('.filter-input-row');
+        const selectedField = filterInputRow.querySelector('.selectedField');
+        const field = selectedField.value;
+        const filterValueInput = filterInputRow.querySelector('#filterValueInput');
+        const selectedFilterAction = filterInputRow.querySelector('.filterAction').value;
+        const filterValue = filterInputRow.querySelector('.filterValue');
+
+        filterValue.name = field + selectedFilterAction;
+        filterValue.value = filterValueInput.value;
+    }
+
+    function addFilterInputRow() {
+        const filterInputContainer = document.getElementById('filterInputContainer');
+        const newFilterInputRow = filterInputContainer.querySelector('.filter-input-row').cloneNode(true);
+        newFilterInputRow.querySelectorAll('input, select').forEach(input => {
+            input.value = '';
+        });
+        filterInputContainer.appendChild(newFilterInputRow);
+    }
+
+    function removeFilterInputRow(element) {
+        const filterInputRow = element.closest('.filter-input-row');
+        filterInputRow.remove();
+    }
+
+</script>
+
+<style>
+    .dropdown-menu.filter-dropdown-menu {
+        padding: 10px;
+        width: 500px;
+    }
+
+</style>

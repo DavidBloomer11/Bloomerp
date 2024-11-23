@@ -1,0 +1,54 @@
+{% load static %}
+{% load crispy_forms_tags %}
+
+
+<!-- Page Title -->
+<div class="pagetitle">
+    <h1>{{ model_name_plural | title }}</h1>
+    <nav>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a 
+			hx-get="{% url "bloomerp_home_view" %}"
+			hx-target="#main-content"
+			hx-push-url="true"
+			hx-swap="innerHTML"
+			class="pointer"
+			>Home</a></li>
+        <li class="breadcrumb-item"><a 
+			hx-get="{% url list_view_url %}"
+			hx-push-url="true"
+			hx-swap="innerHTML"
+			hx-target="#main-content"
+			class="pointer"
+			>{{ model_name_plural | title }}</a></li>
+        <li class="breadcrumb-item active">Add</li>
+      </ol>
+    </nav>
+</div>
+<!-- End Page Title -->
+
+<!--Form card-->
+<div class="card">
+	<div class="card-body">
+		<h4 class="card-title">Add {{model_name}}</h4>
+		{% if form.errors %}
+		<div class="alert alert-danger" role="alert">
+			{{form.errors}}
+		</div>
+		{% endif %}
+
+		<form method="post" action="" enctype="multipart/form-data" class="px-3">
+			{% csrf_token %}
+
+			{{form | crispy}}
+
+			<div class="d-flex justify-content-center gap-2">
+				<button type="submit" class="btn btn-primary">Create {{ model_name }}</button>
+				<button type="reset" class="btn btn-secondary" href="#">Reset</button>
+			</div>
+		</form>
+	</div>
+</div>
+<!--End Form card-->
+
+

@@ -1,0 +1,40 @@
+from setuptools import find_packages, setup
+
+setup(
+    name="Bloomerp",
+    version="0.1",
+    packages=find_packages(),
+    include_package_data=True,
+    license="MIT License",
+    description="BloomERP is an open-source ERP system for small and medium-sized businesses.",
+    long_description=open("README.md").read(),
+    long_description_content_type="text/markdown",
+    url="https://github.com/davidbloomer11/bloomerp",
+    author="David Bloomer",
+    author_email="bloomer.david@outlook.com",
+    classifiers=[
+        "Environment :: Web Environment",
+        "Framework :: Django",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.8",
+        "Operating System :: OS Independent",
+    ],
+    install_requires=[
+        'Django>=3.2',
+        'requests>=2.0.0',
+        'djangorestframework>=3.12.0',
+        'django-htmx>=1.0.0',
+        'django-formtools>=2.3',
+        'Pillow>=8.0.0',
+        'psycopg2>=2.8.0',
+        'django-crispy-forms>=1.11.0',
+        'django-filter>=2.4.0',
+        'django-taggit>=1.3.0',
+        'django-mptt>=0.11.0',
+        'django-extensions>=3.1.0',
+    ],
+    extras_require={
+        'images': ['Pillow>=8.0.0'],
+    },
+)
