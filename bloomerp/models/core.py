@@ -179,9 +179,11 @@ class File(
 
     def upload_to(self, filename):
         '''Returns the upload path for the file'''
+        ROOT = 'bloomerp'
+
         if self.content_type is None:
             # Default folder for files with no content type
-            folder = 'others'
+            folder = f'others'
         else:
             # Use the content type's app_label for organization
             folder = f'{self.content_type.app_label}'
@@ -190,7 +192,7 @@ class File(
         unique_filename = f"{uuid.uuid4()}_{filename}"
         
         # Return the full path
-        return f'{folder}/{unique_filename}'
+        return f'{ROOT}/{folder}/{unique_filename}'
     
     # -----------------------------
     # File Fields

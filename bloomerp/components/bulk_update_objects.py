@@ -39,7 +39,8 @@ def bulk_update_objects(request:HttpRequest) -> HttpResponse:
             if not user.has_perm(f'{model._meta.app_label}.bulk_delete_{model._meta.model_name}'):
                 return HttpResponse('Permission denied', status=403)
 
-            if type(model) == File:
+            # Check whether the model is a file
+            if model == File:
                 for obj in objects:
                     obj.delete()
             else:
