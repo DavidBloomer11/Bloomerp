@@ -1,13 +1,47 @@
 <textarea id='{{widget.name}}' name="{{ widget.name }}">{{ widget.value }}</textarea>
 
+
+<!--AI Modal-->
+{% include "snippets/llm_modal_snippet.html" with modal_id=widget.name|add:"aiModal" query_type="tiny_mce_content" target="#"|add:widget.name|add:"llm_output" title="Generate content" %}
+<textarea id="{{widget.name}}llm_output" class="d-none"></textarea>
+<!--End AI Modal-->
+
+
+
 <script>
-    let widget = '{{widget.name | safe }}';
+	(function() {
+		let widget = '{{widget.name | safe }}';
 
-    tinymce.init({
-        selector: `textarea#${widget.name}`,
-        plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table code',
-        toolbar: 'undo redo | blocks | bold italic underline | numlist bullist | table | code | media' ,
-      });
+		if (tinymce.get(widget)) {
+			tinymce.get(widget).remove();
+		}
 
+		tinymce.init({
+			selector: `textarea#${widget}`,
+			plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table code',
+			toolbar: 'undo redo | blocks | bold italic underline | numlist bullist | table | code | media | ai' ,
+			setup: function (editor) {
+				// Magic happens here
+				editor.ui.registry.addButton('ai', {
+					text: 'AI',
+					onAction: function () {
+						// Show the modal
+						const modal = new bootstrap.Modal(document.getElementById("{{widget.name}}aiModal"));
+						modal.show();
+					}
+				});
+			}
+		});
+
+		// Add content after llm query
+		document.addEventListener('htmx:afterSwap', function(event) {
+			if (event.detail.target.id == `${widget}llm_output`) {
+				// Get value of the llm output
+				let llmOutput = document.getElementById(`${widget}llm_output`).value;
+				tinymce.get('template').setContent(llmOutput);
+			}
+		});
+
+	})();
 </script>
 
