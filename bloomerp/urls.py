@@ -29,9 +29,13 @@ from bloomerp.utils.urls import IntOrUUIDConverter
 from rest_framework.routers import DefaultRouter
 from bloomerp.utils.router import _get_routers_from_settings, RouteFinder, BloomerpRouterHandler
 
-
+# Register the custom URL converter
 register_converter(IntOrUUIDConverter, 'int_or_uuid') # Register the custom URL converter
 drf_router = DefaultRouter()
+
+# Get the base URL from the settings
+from django.conf import settings
+BASE_URL = settings.BLOOMERP_SETTINGS.get('BASE_URL', '')
 
 # Custom routers
 from bloomerp.views.workspace import router as dashboard_router
@@ -217,20 +221,7 @@ urlpatterns.append(path('test_workspace/', test_workspace))
 
 
 # ---------------------------------
-# Serving media files
-# ---------------------------------
-from django.conf import settings
-
-if settings.DEBUG:
-    from django.conf.urls.static import static
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-
-# ---------------------------------
 # Create path
 # ---------------------------------
-# First get the base url from the BLOOMERP_SETTINGS
-from django.conf import settings
 
-base_url = settings.BLOOMERP_SETTINGS.get('BASE_URL', '')
-BLOOMERP_URLPATTERNS = path(base_url, include(urlpatterns))
+BLOOMERP_URLPATTERNS = path(BASE_URL, include(urlpatterns))
