@@ -7,65 +7,9 @@ from django.contrib.contenttypes.models import ContentType
 from bloomerp.models import Link, Widget
 from django.utils.safestring import mark_safe
 import uuid
-from bloomerp.models import Bookmark, User
+from bloomerp.models import Bookmark, User, ApplicationField
 
 register = template.Library()
-
-@register.filter(name='get_field_value')
-def get_field_value(obj:Model, field_name:str):
-    """
-    Custom template filter to get the value of a field by its name.
-    
-    Example usage:
-    {{ object|get_field_value:field_name }}
-
-    """
-    if '.' in field_name:
-        attributes = field_name.split('.')
-        value = obj
-        for attribute in attributes:
-            try:
-                value = getattr(value, attribute)
-            except Exception as e:
-                return e
-        return value
-    try:
-        return getattr(obj, field_name)
-    except Exception as e:
-        return e
-
-from django.contrib.contenttypes.models import ContentType
-@register.filter(name='get_foreign_key_value')
-def get_foreign_key_value(obj:Model,field_name):
-    '''
-    
-    '''
-
-    try:
-        resp = ''
-
-        value = getattr(obj, field_name)
-        if isinstance(value, Manager):
-            qs = value.all()
-
-            if not qs:
-                return 'None'
-
-            content_type_id = ContentType.objects.get_for_model(qs.model).pk
-      
-
-            resp += f'<a href="/simple-list-view/?content_type_id={content_type_id}&field_name={obj._meta.model_name}&field_value={obj.pk}">'
-            for item in qs[:2]:
-                resp+= item.__str__() + ', '
-            resp += '... </a>'
-            return resp
-        else:
-            try:
-                return f'<a href="{value.get_absolute_url()}">{value}</a>'
-            except:
-                return value
-    except Exception as e:
-        return e
 
 @register.filter(name='get_dict_value')
 def get_dict_value(dictionary:dict, key:str):
@@ -139,7 +83,7 @@ def percentage(value, arg):
         value = int(value) / int(arg)
         return value*100
     except (ValueError, ZeroDivisionError):
-        return None
+        return 
     
 @register.filter
 def get_link_by_id(id:int):
@@ -161,7 +105,7 @@ def get_link_by_id(id:int):
     try:
         return Link.objects.get(pk=id)
     except:
-        return None
+        return 
     
 @register.filter
 def get_widget_by_id(id:int):
@@ -183,7 +127,7 @@ def get_widget_by_id(id:int):
     try:
         return Widget.objects.get(pk=id)
     except:
-        return None
+        return 
     
 
 @register.inclusion_tag('snippets/breadcrumb.html')
@@ -259,3 +203,98 @@ def render_bookmark(object:Model, user:User, size:int, target:str):
         'target' : target,
         'size': size
     }
+
+from bloomerp.models import File
+@register.simple_tag(name='field_value')
+def field_value(object:Model, application_field:ApplicationField, user:User):
+    '''
+    Returns the formatted html value of a field in an object.
+    Marks it as safe.
+
+    Example usage:
+    {% field_value object application_field user %}
+    '''
+    DEFAULT_NONE_VALUE = ''
+
+    try:
+        # Get the value of the field
+        value = getattr(object, application_field.field)
+
+        if value is None:
+            return DEFAULT_NONE_VALUE
+
+        if application_field.field_type == 'ForeignKey':
+            # Get the value of the field
+            return mark_safe(f'<a href="{value.get_absolute_url()}">{value}</a>')
+            
+        elif application_field.field_type == 'DateField':
+            # Get the date preferences of the user
+            # Can be
+            # ("d-m-Y", "Day-Month-Year (15-08-2000)"),
+            # ("m-d-Y", "Month-Day-Year (08-15-2000)"),
+            # ("Y-m-d", "Year-Month-Day (2000-08-15)"),
+            preference = user.date_view_preference
+
+            # Format the date
+            if preference == "d-m-Y":
+                return value.strftime("%d-%m-%Y")
+            elif preference == "m-d-Y":
+                return value.strftime("%m-%d-%Y")
+            elif preference == "Y-m-d":
+                return value.strftime("%Y-%m-%d")
+            else:
+                return value.strftime("%d-%m-%Y")
+
+        elif application_field.field_type == 'DateTimeField':
+            # Get the datetime preferences of the user
+            # Can be 
+            # ("d-m-Y H:i", "Day-Month-Year Hour:Minute (15-08-2000 12:30)"),
+            # ("m-d-Y H:i", "Month-Day-Year Hour:Minute (08-15-2000 12:30)"),
+            # ("Y-m-d H:i", "Year-Month-Day Hour:Minute (2000-08-15 12:30)"),
+            preference = user.date_view_preference
+
+            # Format the date
+            if preference == "d-m-Y H:i":
+                return value.strftime("%d-%m-%Y %H:%M")
+            elif preference == "m-d-Y H:i":
+                return value.strftime("%m-%d-%Y %H:%M")
+            elif preference == "Y-m-d H:i":
+                return value.strftime("%Y-%m-%d %H:%M")
+            else:
+                return value.strftime("%d-%m-%Y %H:%M")
+
+        elif application_field.field_type == 'BloomerpFileField':
+            # Get the value of the field
+            file:File = getattr(object, application_field.field)
+            if file:
+                return mark_safe(f'<a href="{file.file.url}" target="_blank">{file.name}</a>')
+            else:
+                return DEFAULT_NONE_VALUE
+
+        elif application_field.field_type == 'ManyToManyField':
+            # Get the value of the field
+            qs = value.all()
+
+            if not qs:
+                return DEFAULT_NONE_VALUE
+            else:
+                resp = DEFAULT_NONE_VALUE
+                for item in qs[:2]:
+                    resp+= item.__str__() + ', '
+                return resp + '...'
+        elif application_field.field_type == 'OneToManyField':
+            # Get the value of the field
+            qs = value.all()
+
+            if not qs:
+                return DEFAULT_NONE_VALUE
+            else:
+                resp = ''
+                for item in qs[:2]:
+                    resp+= item.__str__() + ', '
+                return resp + '...'    
+        
+        else:
+            return value
+    except Exception as e:
+        return e    

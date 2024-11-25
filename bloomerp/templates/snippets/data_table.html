@@ -59,27 +59,8 @@ Variables:
                         {% endif %}
                     {% endif %}
 
-                    {% for column in list_view_preferences %}
-                        {% if column.is_main %}
-                            <td><a 
-                                hx-get="{{ object.get_absolute_url }}"
-                                hx-push-url="true"
-                                hx-target="#main-content"
-                                hx-swap="innerHTML"
-                                class="pointer"
-                                
-                                >{{ object|get_field_value:column.application_field.field }}</a></td>
-                        {% elif column.application_field.field_type == 'ForeignKey' %}
-                            <td>{{ object | get_foreign_key_value:column.application_field.field | safe}}</td>
-                        {% elif column.application_field.field_type == 'ManyToManyField' %}
-                            <td>{{ object | get_foreign_key_value:column.application_field.field | safe}}</td>
-                        {% elif column.application_field.field_type == 'DateField' %}
-                            <td>{{ object | get_field_value:column.application_field.field | date:request.user.date_view_preference | default:"None"}}</td>
-                        {% elif column.application_field.field_type == 'DateTimeField' %}
-                            <td>{{ object | get_field_value:column.application_field.field | date:request.user.datetime_view_preference | default:"None"}}</td>
-                        {% else %}
-                            <td>{{ object | get_field_value:column.application_field.field }}</td>
-                        {% endif %}
+                    {% for pref in list_view_preferences %}
+                        <td> {% field_value object pref.application_field request.user %} </td>
                     {% endfor %}
 
                     {% if include_actions %}
