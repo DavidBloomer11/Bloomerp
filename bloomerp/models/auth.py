@@ -22,12 +22,13 @@ from typing import Self
 # ---------------------------------
 # User Model
 # ---------------------------------
-class User(
+class AbstractBloomerpUser(
     AbstractUser,
     AbsoluteUrlModelMixin,
     ):
-    class Meta(BloomerpModel.Meta):
-        db_table = "auth_user"
+    class Meta:
+        abstract = True
+
 
     avatar = models.ImageField(null=True, blank=True, upload_to="users/", help_text=_("The user's avatar"))
 
@@ -124,6 +125,13 @@ class User(
         Method that returns the workspaces for the user.
         '''
         return Workspace.objects.filter(user=self, content_type=None)
+
+
+class User(AbstractBloomerpUser):
+    class Meta(BloomerpModel.Meta):
+        db_table = "auth_user"
+        swappable = "AUTH_USER_MODEL"
+
 
 # ---------------------------------
 # User Detail View Preference Model

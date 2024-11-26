@@ -6,8 +6,6 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse, reverse_lazy
 from django.contrib import messages
-#from modules.shared_utils.mixins import ForeignRelationshipMixin
-#from modules.shared_utils.shared_views import BaseListView
 from bloomerp.forms.auth import UserDetailViewPreferenceForm, UserDetailViewPreferenceFormset
 from bloomerp.forms.core import ListViewFieldsSelectForm
 from django.contrib.contenttypes.models import ContentType
@@ -17,103 +15,20 @@ from bloomerp.models import (
     UserDetailViewPreference,
     User
     )
-from django.views.generic.edit import CreateView
-from django.views.generic.detail import DetailView
-#from .models import User, UserDetailViewPreference, UserListViewPreference
 from bloomerp.utils.models import model_name_plural_underline
 from django.contrib.auth.mixins import PermissionRequiredMixin
-class UserDetailBaseView(PermissionRequiredMixin, DetailView):
-    tabs = [
-        #{'name': 'Overview', 'route': 'users_overview', 'id': False},
-        #{'name': 'Change password', 'route': 'users_change_password', 'id': False},
-        #{'name': 'Notification settings', 'route': 'notification_settings', 'id': False},
-        #{'name': 'Object view settings', 'route': 'detail_view_preference', 'id': False},
-        #{'name': 'List view settings', 'route': 'list_view_preference', 'id': False},
-        #{'name': 'KPI Dashboard settings', 'route': 'widget_dashboard_view_preference', 'id': False},
-        #{'name': 'KPI ListView settings', 'route': 'widget_list_view_preference', 'id': False},
-        #{'name': 'Change details', 'route': 'users_settings', 'id': False},
-    ]
-    module_info = {'root': 'dashboard_homepage', 'name': 'Users'}
-    model = User
-
-    permission_required = []
-    
-    def get_object(self) -> Model:
-        return self.request.user
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        # Set tabs
-        context['tabs'] = self.tabs
-
-        # Set model name
-        context['model'] = 'user'
-
-        # Set module info
-        context['module'] = self.module_info
-        self.context = context
-        return context
-
-
-class UserOverviewView(UserDetailBaseView):
-    template_name = 'base_detail_overview_view.html'
-
-    left_column = [
-        {'field_name': 'Username','field_value':'username'},
-        {'field_name': 'First name','field_value':'first_name'},
-        {'field_name': 'Last name','field_value':'last_name'},
-        {'field_name': 'Email','field_value':'email'},
-    ]
-    middle_column = [
-        
-    ]
-
-
-    extra_context = {
-        'left_column':left_column,
-        'middle_column':middle_column,
-    }
-
-from django.contrib.auth.views import PasswordChangeView
-from django.contrib.messages.views import SuccessMessageMixin
-class UserPasswordChangeView(
-        SuccessMessageMixin, 
-        UserDetailBaseView, 
-        PasswordChangeView
-    ):
-    template_name = 'base_detail_form_view.html'
-    success_url = reverse_lazy("users_overview")
-    success_message = 'Password updated succesfully.'
-
-from django.views.generic.edit import UpdateView
-class UserSettingsView(SuccessMessageMixin, UserDetailBaseView, UpdateView):
-    template_name = 'base_detail_form_view.html'
-    success_url = reverse_lazy("users_overview")
-    success_message = 'Settings updated succesfully.'
-    fields = ['first_name','last_name','email','avatar']
-
-class ForeignRelationshipMixin:
-    pass
-
-class BaseListView:
-    pass
-
-class Notification:
-    pass
-
-class UserModelNotificationSetting:
-    pass
-
 
 
 # -------------------------------------------
 # NEW SHIT
 from bloomerp.utils.router import BloomerpRouter
-from bloomerp.views.core import BloomerpBaseDetailView
+from bloomerp.views.mixins import HtmxMixin, BloomerpModelContextMixin
 from bloomerp.views.mixins import BloomerpModelFormViewMixin
+from bloomerp.views.core import BloomerpBaseDetailView
 from django.contrib.auth.forms import PasswordChangeForm
-from django.views.generic.edit import FormView
+from django.views.generic.edit import FormView, UpdateView
+from django.contrib.auth import update_session_auth_hash
+
 
 class ProfileMixin:
     tabs = [
@@ -124,7 +39,7 @@ class ProfileMixin:
     ]
     exclude_header = True
 
-    extra_context = {"disable_tab_select":True}
+    extra_context = {"disable_tab_select":True, "tabs":tabs}
 
     def get_object(self):
         return User.objects.get(pk=self.request.user.pk)
@@ -140,10 +55,26 @@ router = BloomerpRouter()
     description="Overview of profile",
     url_name="my_profile_overview"
 )
-class BloomerpProfileView(BloomerpModelFormViewMixin, ProfileMixin, BloomerpBaseDetailView):
+class BloomerpProfileView(BloomerpModelFormViewMixin, ProfileMixin, HtmxMixin, BloomerpModelContextMixin, UpdateView):
     template_name = 'auth_views/profile_overview.html'
     fields = ['first_name', 'last_name', 'date_view_preference', 'datetime_view_preference', 'avatar']
-    success_url = reverse_lazy('profile_overview')
+    success_url = reverse_lazy('users_my_profile_overview')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['instance'] = self.request.user
+        return kwargs
+
+    def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+        form = self.get_form()
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Profile updated successfully.')
+            return redirect(self.success_url)
+        else:
+            return self.form_invalid(form)
+    
+    
 
 @router.bloomerp_route(
     path="my-profile/reset-password/",
@@ -156,15 +87,17 @@ class BloomerpProfileView(BloomerpModelFormViewMixin, ProfileMixin, BloomerpBase
 class BloomerpProfilePasswordResetView(ProfileMixin, BloomerpBaseDetailView, FormView):
     template_name = 'auth_views/profile_password_reset.html'
     form_class = PasswordChangeForm
-    success_url = reverse_lazy('profile_overview')
+    success_url = reverse_lazy('users_my_profile_overview')
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs['user'] = self.request.user
         return kwargs
 
-    def form_valid(self, form):
+    def form_valid(self, form:PasswordChangeForm):
         self.object = self.get_object()
+        form.save()
+        update_session_auth_hash(self.request, form.user)  # Prevents logout
         return super().form_valid(form)    
     
     def form_invalid(self, form):
@@ -275,6 +208,7 @@ class UserDetailViewPreferenceView(ProfileMixin, BloomerpBaseDetailView):
 
 
 from bloomerp.forms.auth import BloomerpUserCreationForm
+from django.contrib.messages.views import SuccessMessageMixin
 @router.bloomerp_route(
     path="create",
     name="Create user",
@@ -314,4 +248,3 @@ class UserCreateView(
     def get_success_message(self, cleaned_data):
         return f"User was created successfully."
 
-    
