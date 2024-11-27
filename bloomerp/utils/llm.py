@@ -3,10 +3,9 @@ from django.conf import settings
 
 
 class BloomerpOpenAI:
-    def __init__(self):
-        API_KEY = settings.BLOOMERP_SETTINGS.get('BLOOMERP_OPENAI_API_KEY', None)
-
-        self.client = OpenAI(api_key=API_KEY)
+    def __init__(self, api_key: str = None):
+        
+        self.client = OpenAI(api_key=api_key)
         self.model = "gpt-4o"
     
     def is_valid_key(self):
@@ -16,6 +15,20 @@ class BloomerpOpenAI:
             return True
         except Exception:
             return False
+
+    def create_tiny_mce_content(self, prompt:str) -> str:
+        '''Function to create the content for TinyMCE editor.'''
+
+        response = self.client.chat.completions.create(
+            model = self.model,
+            messages = [
+                {'role': 'system', 'content': 'You are a helpful assistant that helps me to create content for TinyMCE editor based on the prompt it gives.'},
+                {'role': 'user', 'content': prompt},
+            ]
+        )
+
+        content = response.choices[0].message.content
+        return content
 
 
     def create_sql_query(self,
