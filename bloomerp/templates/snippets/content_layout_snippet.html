@@ -358,7 +358,10 @@
 
 
         // Send the layout to the server
-        fetch(`/api/workspaces/${workspaceId}/`, {
+        let url = '{% url "workspaces-detail" workspace.pk %}'
+
+
+        fetch(url, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
