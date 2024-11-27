@@ -7,7 +7,7 @@ class StringSearchModelMixin(models.Model):
     """
     A mixin for models that need to be searchable by a string query.
     """
-    search_fields = []
+    string_search_fields: list = None  # The list of fields to search in
 
     class Meta:
         abstract = True
@@ -26,6 +26,7 @@ class StringSearchModelMixin(models.Model):
                 field.name for field in cls._meta.fields
                 if isinstance(field, models.CharField) or isinstance(field, models.TextField)
             ]
+
 
         # Build a Q object to filter across all string fields
         query_filter = Q()

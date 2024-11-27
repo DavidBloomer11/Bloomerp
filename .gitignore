@@ -13,3 +13,9 @@ query.sql
 media
 bloomerp.io
 project_structure.py
+*eggs-info
+__pycache__
+*.pyd
+.DS_Store
+dist
+build

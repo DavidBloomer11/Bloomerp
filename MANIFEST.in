@@ -1,5 +1,28 @@
 include LICENSE
 include README.md
+include setup.py
+include requirements.txt
+recursive-include bloomerp *.py
 recursive-include bloomerp/static *
-recursive-include bloomerp/templates *
-recursive-include bloomerp/migrations *
+recursive-include bloomerp/templates *.html
+global-exclude *.py[cod]
+global-exclude __pycache__
+global-exclude *.pyo
+global-exclude *.pdf
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude *.pyd
+global-exclude .DS_Store
+global-exclude .git
+global-exclude .gitignore
+global-exclude .vscode
+global-exclude venv
+global-exclude test_environment
+global-exclude db.sqlite3
+global-exclude test_app
+global-exclude bloomerp/migrations
+global-exclude others
+global-exclude query.sql
+global-exclude media
+global-exclude bloomerp.io
+global-exclude project_structure.py
