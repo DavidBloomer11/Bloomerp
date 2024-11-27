@@ -62,6 +62,7 @@ def dynamic_filterset_factory(model):
             
             # Add exact filter for IntegerField
             filter_overrides[f'{field.name}'] = django_filters.NumberFilter(field_name=field.name, lookup_expr='exact')
+            filter_overrides[f'{field.name}__equals'] = django_filters.NumberFilter(field_name=field.name, lookup_expr='exact')
 
         elif isinstance(field, DateField) or isinstance(field, DateTimeField):
             if field.get_internal_type() == 'DateField':
