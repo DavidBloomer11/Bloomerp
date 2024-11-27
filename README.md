@@ -6,7 +6,7 @@ It's out-of-the-box functionality gives you the ability to create advanced apps 
 
 At its core, it leverages the popular Python framework Django and HTMX to provide robust and fast applications.
 
-## Key features 🚀
+## Key features
 
 Bloomerp comes packed with a variety of features:
 
@@ -504,3 +504,11 @@ Each time I've referred to 'we' throughout this document, I'm actually only refe
 - **Submit a Pull Request**: When you're ready, submit a pull request for review.
 
 Feel free to open issues for feature requests or discussions.
+
+
+## License
+By contributing to this project, you agree that your contributions will be licensed under the AGPL v3 and may be used in commercially licensed versions of this software.
+
+This project is licensed under the [GNU Affero General Public License v3](LICENSE.txt).
+
+For commercial licensing options, please contact [bloomer.david@outlook.com](mailto:bloomer.david@outlook.com).
