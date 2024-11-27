@@ -9,22 +9,32 @@ from django.contrib.auth.decorators import login_required
 @login_required
 @route('fk_search_results')
 def fk_search_results(request:HttpRequest) -> HttpResponse:
+    '''
+    Component that returns search results for a given query.
+    This component is used for foreign key or many to many fields.
+    '''
+
     Model : BloomerpModel = ContentType.objects.get_for_id(request.GET.get('content_type_id')).model_class()
-    query = request.GET.get('foreign_field_query')
+    query = request.GET.get('fk_search_results_query')
     field_name = request.GET.get('field_name')
     search_type = request.GET.get('search_type','fk')
+
+    if search_type not in ['fk','m2m']:
+        pass
+
+
     if query:
-        # Check if the model has a string_search method
+        # Check if the model has a string_search method, it is inherited from BloomerpModel
         if not hasattr(Model, 'string_search'):
-            # Perform a simple search if the method is not found
+            # Add the string_search method to the model
             Model.string_search = classmethod(string_search)
         
         context = {
-            'objects': Model.string_search(query)
+            'objects': Model.string_search(query)[:5]
         }
     else:
         context = {
-            'objects': Model.objects.none()
+            'objects': Model.objects.all()[:5]
         }
 
     context['field_name'] = field_name
