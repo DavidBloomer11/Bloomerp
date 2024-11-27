@@ -213,11 +213,6 @@ urlpatterns += [
 route_finder = RouteFinder(directory='components', prefix='components/')
 urlpatterns += route_finder.generate_urlpatterns()
 
-# ---------------------------------
-# Test URL patterns
-# ---------------------------------
-from bloomerp.views.tests import test_workspace
-urlpatterns.append(path('test_workspace/', test_workspace))
 
 
 # ---------------------------------

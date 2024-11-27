@@ -634,7 +634,7 @@ class Workspace(
                         try:
                             Link.objects.get(pk=link_id)
                         except:
-                            errors['content'] = _("Link does not exist")
+                            errors['content'] = _(f"Link with id {link_id} does not exist")
 
         # Check if the content is valid for widgets (widget must have a valid widget_id)
         for item in self.content['content']:
@@ -680,6 +680,39 @@ class Workspace(
         
         self.content = {'content': new_content}
         self.save()
+
+    def remove_stale_links_content(self):
+        '''
+        Removes stale links from the workspace content.
+        Stale links are links that do not exist in the database.
+        '''
+        content = self.content
+        new_content = []
+
+        for item in content['content']:
+            if item['type'] == 'link':
+                try:
+                    Link.objects.get(pk=item['data']['link_id'])
+                    new_content.append(item)
+                except:
+                    pass
+            elif item['type'] == 'link_list':
+                new_links = []
+                for link_id in item['data']['links']:
+                    try:
+                        Link.objects.get(pk=link_id)
+                        new_links.append(link_id)
+                    except:
+                        pass
+                if new_links:
+                    item['data']['links'] = new_links
+                    new_content.append(item)
+            else:
+                new_content.append(item)
+
+        self.content = {'content': new_content}
+        self.save()
+    
     
 
     @staticmethod

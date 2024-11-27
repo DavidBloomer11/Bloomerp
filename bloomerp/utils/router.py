@@ -9,6 +9,7 @@ from bloomerp.utils.models import model_name_plural_slug, model_name_plural_unde
 from bloomerp.models import Link
 from typing import List, Callable
 import re
+import traceback
 
 # Helper functions
 def _get_name_or_slug(obj, slug=False):
@@ -198,6 +199,7 @@ class BloomerpRoute:
                 defaults={
                     'description': self.description,
                     'name': self.route_name,
+                    'url' : self.relative_path,
                 }
             )
             # Delete any existing links with the same URL
@@ -245,20 +247,28 @@ class BloomerpRouter:
         Decorator for registering routes for a model.
         Works for both function-based and class-based views.
 
+        Implementation:
+        - Validates the provided parameters.
+        - Handles different cases for models (single, list, all).
+        - Creates relative and absolute paths for the routes.
+        - Appends route information to the router's list.
+        - Supports both function-based views (FBVs) and class-based views (CBVs).
+
         Parameters:
             - path : The path for the route.
             - models : The model for which the route is being registered. If no model is given, it is an app-level route.
             - exclude_models : A list of models to exclude from the route. Only works when models is '__all__'.
-            - route_type : The type of route. Can be 'list', 'detail', or 'app'. App-level	routes don't require a model.
+            - route_type : The type of route. Can be 'list', 'detail', or 'app'. App-level routes don't require a model.
             - name : The name of the route. Will be used to generate the Link object for the route.
             - override : If True, the route will override any existing route with the same path.
             - description : A description of the route. Will be used to generate the Link object for the route.
+            - url_name : The URL name for the route.
         """
         def decorator(view):
             from django.contrib.contenttypes.models import ContentType
             from bloomerp.models import Widget
             nonlocal path, models, route_type, name, description, override, exclude_models, url_name
-        
+
             # Set temp_routes
             temp_routes = []
             
@@ -334,44 +344,69 @@ class BloomerpRouter:
                     temp_routes.append(route)
             elif type(models) == list:
                 for model in models:
-                    
+                    model_name = model._meta.verbose_name.title()
+
                     # Create the relative path for the model
                     if not url_name:
                         relative_path = self._create_relative_path(model, route_type, name)
                     else:
                         relative_path = self._create_relative_path(model, route_type, url_name)
                     
-                    path = _create_absoulte_path_for_model(model, route_type, path)
+                    try:
+                        route_name = name.format(model=model_name)
+                    except:
+                        route_name = name + ' ' + model_name
+                    
+
+                    try:
+                        desc = description.format(model=model_name)
+                    except:
+                        desc = description + ' ' + model_name
+
+                    created_path = _create_absoulte_path_for_model(model, route_type, path)
                     # Append the route information to the router's list
                     route = BloomerpRoute(
                         model=model,
                         route_type=route_type,
-                        path=path,
+                        path=created_path,
                         view = None, # This will be set later
-                        route_name=name,
-                        description=description,
+                        route_name=route_name,
+                        description=desc,
                         override=override,
                         relative_path=relative_path
                     )
                     temp_routes.append(route)
             elif models:
                 # Single model case
+                model_name = models._meta.verbose_name.title()
+
                 # Create the relative path for the model
                 if not url_name:
                     relative_path = self._create_relative_path(models, route_type, name)
                 else:
                     relative_path = self._create_relative_path(models, route_type, url_name)
 
-                path = _create_absoulte_path_for_model(models, route_type, path)
+                created_path = _create_absoulte_path_for_model(models, route_type, path)
+
+                try:
+                    route_name = name.format(model=model_name)
+                except:
+                    route_name = name + ' ' + model_name
+                
+
+                try:
+                    desc = description.format(model=model_name)
+                except:
+                    desc = description + ' ' + model_name
 
                 # Append the route information to the router's list
                 route = BloomerpRoute(
                     model=models,
                     route_type=route_type,
-                    path=path,
+                    path=created_path,
                     view = None, # This will be set later
-                    route_name=name,
-                    description=description,
+                    route_name=route_name,
+                    description=desc,
                     override=override,
                     relative_path=relative_path
                 ) 
@@ -580,7 +615,9 @@ def _get_routers_from_settings() -> List[BloomerpRouter]:
     # Get the routers from the settings
     try:
         router_paths = settings.BLOOMERP_SETTINGS['ROUTERS']
+        print(router_paths)
     except:
+        print("No routers found in the settings.")
         router_paths = []
     
     for router_path in router_paths:
@@ -596,4 +633,5 @@ def _get_routers_from_settings() -> List[BloomerpRouter]:
             routers.append(router)
         except (ImportError, AttributeError, TypeError) as e:
             print(f"Error importing {router_path}: {e}")
+            traceback.print_exc()
     return routers
