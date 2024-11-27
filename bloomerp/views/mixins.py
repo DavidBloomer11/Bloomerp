@@ -114,6 +114,7 @@ class BloomerpModelFormViewMixin(ModelFormMixin):
             exclude=self.exclude
         )
 
+from bloomerp.models import BloomerpModel
 class BloomerpModelContextMixin:
     '''
     A mixin that provides context data whenever rendering a model view.
@@ -130,6 +131,8 @@ class BloomerpModelContextMixin:
 
     Note: consider splitting this mixin into list and detail mixins.
     '''
+    model: BloomerpModel = None
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -152,6 +155,7 @@ class BloomerpModelContextMixin:
         context["model_name"] = self.model._meta.verbose_name
         context["model_name_plural"] = self.model._meta.verbose_name_plural
         context["content_type_id"] = ContentType.objects.get_for_model(self.model).pk
+        context["model"] = self.model
 
         # URL context data
         context["model_dashboard_url"] = get_model_dashboard_view_url(self.model)
