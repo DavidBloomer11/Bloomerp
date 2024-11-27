@@ -1,1 +1,0 @@
-# Bloomerp models
