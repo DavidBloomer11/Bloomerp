@@ -32,43 +32,6 @@ Variables:
 
     <div class="d-flex">
 
-        <!-- Save current filter -->
-        <div class="dropdown">
-            <button
-                    class="btn btn-borderless bg-transparent text-dark btn-sm"
-                    type="button"
-                    data-bs-toggle="dropdown"
-                    data-bs-auto-close="outside"
-                    aria-expanded="false">
-                    <img src="{% static 'bloomerp/icons/archive.svg' %}" height="20" alt="Save"/>
-            </button>
-        
-            <div class="dropdown-menu p-2 dropdown-menu-arrow" id="saveFilterDropdown">
-                <h6 class="dropdown-header">Save current filter</h6>
-
-                <form 
-                    hx-post=""
-                    hx-target="#saveFilterDropdown"
-                    hx-swap="innerHTML"
-                    hx-trigger="submit"
-                    >
-                    <div class="d-flex gap-2">
-                        <input 
-                            type="text" 
-                            class="form-control form-control-sm" 
-                            name="name" 
-                            placeholder="Filter name" 
-                            required
-                            autocomplete="off"
-                            >
-                        <button class="btn btn-sm btn-primary" type="submit">Save</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-        <!-- End save current filter -->
-        
-
         <!-- Filter button -->
         <div class="dropdown">
             <button
