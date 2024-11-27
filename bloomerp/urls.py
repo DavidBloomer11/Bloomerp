@@ -86,9 +86,11 @@ custom_router_handler.generate_links()
 # ---------------------------------
 # Auth related URL patterns
 # ---------------------------------
+from django.conf import settings
+
 from django.urls import reverse_lazy
 urlpatterns = [
-    path('login/', auth_views.LoginView.as_view(
+    path(settings.LOGIN_URL, auth_views.LoginView.as_view(
             template_name='auth_views/login_view.html',
             next_page=reverse_lazy('bloomerp_home_view')
             ), name='login'),
