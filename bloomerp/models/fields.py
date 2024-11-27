@@ -4,38 +4,6 @@ from bloomerp.models.core import File
 from django.core.exceptions import ValidationError
 import os
 
-# ---------------------------------
-# Bloomerp List Field
-# ---------------------------------
-class ListField(models.TextField):
-    description = "Stores a python list"
-
-    def __init__(self, *args, **kwargs):
-        super(ListField, self).__init__(*args, **kwargs)
-
-    def to_python(self, value):
-        # If the value is empty or None, return an empty list
-        if not value:
-            return []
-        # If the value is already a list, just return it
-        if isinstance(value, list):
-            return value
-        # Otherwise, parse the string to a list using ast.literal_eval
-        return ast.literal_eval(value)
-
-    def get_prep_value(self, value):
-        # If the value is None, return None
-        if value is None:
-            return value
-        # Convert the value to a string (previously 'unicode' in Python 2)
-        return str(value)
-
-    def value_to_string(self, obj):
-        # Get the field's value from the object
-        value = self.value_from_object(obj)
-        # Convert the value to a format suitable for storage in the database
-        return self.get_prep_value(value)
-
 
 # ---------------------------------
 # Bloomerp File Field
@@ -145,6 +113,8 @@ class CodeField(models.TextField):
 # Bloomerp Text Editor Field
 # ---------------------------------
 class TextEditorField(models.TextField):
+    '''Use this field to store rich text content with a text editor.'''
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
     
