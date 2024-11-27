@@ -30,6 +30,8 @@ class DocumentController:
         #Add free variable data
         data.update(free_variables)
 
+        print(data)
+
         #Create metadata variable
         meta_data = {}
         meta_data['document_template'] = template.pk
@@ -75,9 +77,16 @@ class DocumentController:
         temp = django_engine.from_string(template.template)
         formatted_html = temp.render(data)
         
+
+        # Check if the template has styling
+        if not template.styling:
+            styling = None
+        else:
+            styling = template.styling.styling
+
         document_bytes = generate_pdf(
             html_content=formatted_html,
-            css_content=template.styling.styling,
+            css_content=styling
         )
 
         content_file = ContentFile(document_bytes)

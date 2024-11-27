@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from bloomerp.models.core import BloomerpModel, ApplicationField
 from bloomerp.models.fields import CodeField, TextEditorField
-
+from django.utils.translation import gettext_lazy as _
 
 # ---------------------------------
 # Document Template Model
@@ -12,8 +12,16 @@ class DocumentTemplateHeader(BloomerpModel):
         managed = True
         db_table = 'bloomerp_document_template_header'
 
-    name = models.CharField(max_length=100, blank=False, null=False) #Name of the document template header
-    header = models.ImageField() #Content of the header
+    name = models.CharField(
+        max_length=100,
+        blank=False,
+        null=False, 
+        help_text=_("Name of the template header.")) #Name of the document template header
+    header = models.ImageField(
+        help_text=_("Image of the header."),
+        upload_to='document_templates/headers',
+    ) 
+    #Content of the header
     
     def __str__(self):
         return self.name

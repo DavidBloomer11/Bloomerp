@@ -1,13 +1,12 @@
 from django.views.generic import DetailView
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from bloomerp.models import DocumentTemplate, File
+from bloomerp.models import DocumentTemplate, File, DocumentTemplateFreeVariable, DocumentTemplateStyling, DocumentTemplateHeader
 from bloomerp.forms.document_templates import FreeVariableForm
 from django.shortcuts import redirect
 from django.contrib import messages
 from bloomerp.utils.document_templates import DocumentController
 from django.contrib.contenttypes.models import ContentType
 from bloomerp.utils.router import BloomerpRouter
-from bloomerp.views.mixins import BloomerpModelContextMixin
 from bloomerp.views.core import BloomerpBaseDetailView
 from django.views.generic.edit import UpdateView
 from bloomerp.utils.models import get_detail_base_view_url
@@ -17,13 +16,21 @@ from bloomerp.utils.models import get_detail_base_view_url
 # ---------------------------------
 router = BloomerpRouter()
 
+EXCLUDE_MODELS = [
+    DocumentTemplate,
+    DocumentTemplateFreeVariable,
+    DocumentTemplateStyling,
+    DocumentTemplateHeader
+]
+
+
 @router.bloomerp_route(
     path="document-templates", 
     name="Document Templates List for {model} model",
     url_name="document_templates_list",
     description="List of document templates for the {model} model",
     route_type="detail",
-    exclude_models=[DocumentTemplate]
+    exclude_models=EXCLUDE_MODELS
     )
 class BloomerpDetailDocumentTemplateListView(PermissionRequiredMixin, BloomerpBaseDetailView):
     settings = None
@@ -57,7 +64,7 @@ class BloomerpDetailDocumentTemplateListView(PermissionRequiredMixin, BloomerpBa
     route_type="detail",
     url_name="document_template_generate",
     description="Document Template for {model}",
-    exclude_models=[DocumentTemplate]
+    exclude_models=EXCLUDE_MODELS
     )
 class BloomerpDetailDocumentTemplateGenerateView(PermissionRequiredMixin, BloomerpBaseDetailView):
     template_name = "document_template_views/bloomerp_detail_document_generator_view.html"
