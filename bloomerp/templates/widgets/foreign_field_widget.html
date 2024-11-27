@@ -36,7 +36,7 @@
         autocomplete="off"
         id="{{ widget.name }}_display" 
         placeholder="Select an item"
-        name="foreign_field_query"
+        name="fk_search_results_query"
         hx-get="{% url 'components_fk_search_results' %}?content_type_id={{ content_type_id }}&field_name={{ widget.name }}&search_type={{ widget_type }}"
         hx-trigger="keyup changed delay:500ms"
         hx-target="#{{ widget.name }}_search"
@@ -67,6 +67,7 @@
                 class="dropdown-item" 
                 type="button"
                 data-bs-toggle="modal"
+                onclick="closeAllModals()"
                 data-bs-target="#create_new_{{ widget.name }}_modal"
                 hx-get="{% url 'components_object_model_form' %}?content_type_id={{ content_type_id }}&form_prefix={{ form_prefix }}"
                 hx-target="#create_new_{{ widget.name }}"
@@ -150,7 +151,7 @@
     aria-hidden="true"
 >
     <div
-        class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-md"
+        class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-lg"
         role="document"
     >
         <div class="modal-content">
@@ -195,6 +196,7 @@
             document.getElementById('create_new_{{ widget.name | escapejs }}').innerHTML = "";
         })
     }
+
 </script>
 
 <style>
