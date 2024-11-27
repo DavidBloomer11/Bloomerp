@@ -18,9 +18,9 @@ function showMessage(text, type) {
     const messageContent = document.createElement('div');
     messageContent.classList.add('alert-message');
     messageContent.innerHTML = `
-        <img src="/static/assets/icons/${type}.svg" class="alert-icon">
+        <img src="/static/bloomerp/icons/${type}.svg" class="alert-icon">
         <div>${text}</div>
-        <img src="/static/assets/icons/close.svg" alt="X" width="20" height="20" class="alert-close">
+        <img src="/static/bloomerp/icons/close.svg" alt="X" width="20" height="20" class="alert-close">
     `;
 
     // Append the content to the container
