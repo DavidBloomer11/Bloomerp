@@ -298,3 +298,27 @@ def field_value(object:Model, application_field:ApplicationField, user:User):
             return value
     except Exception as e:
         return e    
+
+
+@register.inclusion_tag('snippets/breadcrumb.html')
+def breadcrumb(title:str=None, model:Model = None, object:Model=None):
+    '''
+    Returns a breadcrumb navigation.
+
+    Example usage:
+    {% breadcrumb links %}
+    '''
+    # Init context
+    context = {"title": title}
+
+    # Check if the model is set
+    if model:
+        list_view_url = get_list_view_url(model)
+        model_name_plural = model._meta.verbose_name_plural.title()
+        context['list_view_url'] = list_view_url
+        context['model_name_plural'] = model_name_plural
+    if object:
+        context['object'] = object
+    return context
+
+    
