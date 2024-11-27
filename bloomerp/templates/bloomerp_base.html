@@ -29,7 +29,7 @@
 
       <!--Search bar-->
       <div class="search-bar">
-          <div class="dropdown" id="searchInputDropdown">
+		  <div class="dropdown" id="searchInputDropdown">
               <input 
                 type="text" 
                 class="form-control" 
@@ -43,7 +43,7 @@
                 hx-trigger="keyup delay:300ms" 
                 hx-target="#searchResult">
 
-              <div class="dropdown-menu" aria-labelledby="searchInput" id="searchResult">
+              <div class="dropdown-menu" aria-labelledby="searchInput" id="searchResult" style="max-height: 80vh; overflow-y: auto;">
                   
               </div>
           </div>
@@ -231,9 +231,6 @@
 	<!--Simple datatable-->
     <script src="{% static 'bloomerp/vendor/simple-datatables/simple-datatables.js' %}"></script>
 
-	<!--Validate email-->
-    <script src="{% static 'bloomerp/vendor/php-email-form/validate.js' %}"></script>
-
     <!-- Template Main JS File -->
     <script src="{% static 'bloomerp/js/main.js' %}"></script>
 
@@ -242,9 +239,6 @@
 	
 	  <!--Bloomerp forms-->
     <script src="{% static 'bloomerp/js/bloomerpForms.js' %}"></script>
-
-	  <!--Quil editor-->
-    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
 
     <!--Hotkeys-->
     <script src="{% static 'bloomerp/js/hotkeys.js' %}"></script>
