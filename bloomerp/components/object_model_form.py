@@ -6,6 +6,7 @@ from django.forms.models import modelform_factory
 from bloomerp.forms.core import BloomerpModelForm
 from bloomerp.models import User
 from django.contrib.auth.decorators import login_required
+from django import forms
 
 @login_required
 @route('object_model_form')
@@ -18,7 +19,9 @@ def object_model_form(request:HttpRequest) -> HttpResponse:
     content_type_id = request.GET.get('content_type_id')
     form_prefix = request.GET.get('form_prefix','')
     object_id = request.GET.get('object_id', None)
-    field_name = request.GET.get('field_name', None)
+    fields = request.GET.getlist('field_name', None)
+    fields_hidden = request.GET.getlist('field_name_hidden', None)
+    reset_on_submit = request.GET.get('reset_on_submit', False)
 
     # Add permission check here
     user : User = request.user
@@ -38,23 +41,41 @@ def object_model_form(request:HttpRequest) -> HttpResponse:
     if not user.has_perm(f'{model._meta.app_label}.add_{model._meta.model_name}') and not user.has_perm(f'{model._meta.app_label}.change_{model._meta.model_name}'):
         return HttpResponse('User does not have permission to add objects of this model')
 
-    if field_name:
-        fields = [field_name]
-        Form = modelform_factory(model, fields=fields, form=BloomerpModelForm)
+    # Create the form
+    if fields:
+        Form : BloomerpModelForm = modelform_factory(model, fields=fields, form=BloomerpModelForm)
     else:
-        Form = modelform_factory(model, fields='__all__', form=BloomerpModelForm)
+        Form : BloomerpModelForm = modelform_factory(model, fields='__all__', form=BloomerpModelForm)
 
     if request.method == 'POST':
-        form = Form(data=request.POST, files=request.FILES, prefix=form_prefix, model=model)
+        form : BloomerpModelForm = Form(data=request.POST, files=request.FILES, prefix=form_prefix, model=model)
         if form.is_valid():
             form.save()
             created = True
             new_object = form.instance
+        if reset_on_submit:
+            form = Form(prefix=form_prefix, model=model, user=user)
     else:
+        if fields_hidden:
+            Form = hide_fields(Form, fields_hidden)
+        
         if object_id:
             instance = model.objects.get(id=object_id)
             form = Form(instance=instance, prefix=form_prefix, model=model, user=user)
         else:
             form = Form(prefix=form_prefix, model=model, user=user)
 
-    return render(request, 'components/object_model_form.html', {'form': form, 'created': created, 'form_prefix': form_prefix, 'new_object': new_object})
+    return render(request, 'components/object_model_form.html', {'form': form, 'created': created, 'form_prefix': form_prefix, 'new_object': new_object, 'reset_on_submit': reset_on_submit})
+
+
+def hide_fields(Form, fields) -> BloomerpModelForm:
+    '''
+    Hides the fields in the form
+    '''
+    for field in fields:
+        try:
+            Form.base_fields[field].widget = forms.HiddenInput()
+        except KeyError:
+            pass
+    return Form
+

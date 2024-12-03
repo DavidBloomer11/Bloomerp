@@ -6,6 +6,10 @@
 
 <p>Object created successfully</p>
 
+{% if reset_on_submit %}
+        {{form|crispy}}
+{% endif %}
+
 <input type="hidden" id="{{form_prefix}}_new_object" data-object-id="{{new_object.pk}}" data-display-text="{{new_object}}">
 
 {% endif %}

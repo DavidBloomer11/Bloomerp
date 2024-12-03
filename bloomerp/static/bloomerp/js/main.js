@@ -201,16 +201,13 @@ function createSpinner() {
 
 document.addEventListener('htmx:beforeRequest', function(event) {
     // Exclude certain targets
-    const exclude_targets = ['searchResult']
-
+    const include_targets = ['main-content', 'detail-content' ]
 
     // Get the target element
     var target = event.detail.target;
 
-    console.log(target.id);
-
     // If the target element is in the exclude_targets list, then return
-    if (exclude_targets.includes(target.id)) {
+    if (!include_targets.includes(target.id)) {
         return;
     }
 
