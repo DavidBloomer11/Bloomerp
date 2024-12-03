@@ -115,167 +115,6 @@
     return new bootstrap.Tooltip(tooltipTriggerEl)
   })
 
-  /**
-   * Initiate quill editors
-   */
-  if (select('.quill-editor-default')) {
-    new Quill('.quill-editor-default', {
-      theme: 'snow'
-    });
-  }
-
-  if (select('.quill-editor-bubble')) {
-    new Quill('.quill-editor-bubble', {
-      theme: 'bubble'
-    });
-  }
-
-  if (select('.quill-editor-full')) {
-    new Quill(".quill-editor-full", {
-      modules: {
-        toolbar: [
-          [{
-            font: []
-          }, {
-            size: []
-          }],
-          ["bold", "italic", "underline", "strike"],
-          [{
-              color: []
-            },
-            {
-              background: []
-            }
-          ],
-          [{
-              script: "super"
-            },
-            {
-              script: "sub"
-            }
-          ],
-          [{
-              list: "ordered"
-            },
-            {
-              list: "bullet"
-            },
-            {
-              indent: "-1"
-            },
-            {
-              indent: "+1"
-            }
-          ],
-          ["direction", {
-            align: []
-          }],
-          ["link", "image", "video"],
-          ["clean"]
-        ]
-      },
-      theme: "snow"
-    });
-  }
-
-  /**
-   * Initiate TinyMCE Editor
-   */
-
-  var useDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-  tinymce.init({
-    selector: 'textarea.tinymce-editor',
-    plugins: 'print preview paste importcss searchreplace autolink autosave save directionality code visualblocks visualchars fullscreen image link media template codesample table charmap hr pagebreak nonbreaking anchor toc insertdatetime advlist lists wordcount imagetools textpattern noneditable help charmap quickbars emoticons',
-    imagetools_cors_hosts: ['picsum.photos'],
-    menubar: 'file edit view insert format tools table help',
-    toolbar: 'undo redo | bold italic underline strikethrough | fontselect fontsizeselect formatselect | alignleft aligncenter alignright alignjustify | outdent indent |  numlist bullist | forecolor backcolor removeformat | pagebreak | charmap emoticons | fullscreen  preview save print | insertfile image media template link anchor codesample | ltr rtl',
-    toolbar_sticky: true,
-    autosave_ask_before_unload: true,
-    autosave_interval: '30s',
-    autosave_prefix: '{path}{query}-{id}-',
-    autosave_restore_when_empty: false,
-    autosave_retention: '2m',
-    image_advtab: true,
-    link_list: [{
-        title: 'My page 1',
-        value: 'https://www.tiny.cloud'
-      },
-      {
-        title: 'My page 2',
-        value: 'http://www.moxiecode.com'
-      }
-    ],
-    image_list: [{
-        title: 'My page 1',
-        value: 'https://www.tiny.cloud'
-      },
-      {
-        title: 'My page 2',
-        value: 'http://www.moxiecode.com'
-      }
-    ],
-    image_class_list: [{
-        title: 'None',
-        value: ''
-      },
-      {
-        title: 'Some class',
-        value: 'class-name'
-      }
-    ],
-    importcss_append: true,
-    file_picker_callback: function(callback, value, meta) {
-      /* Provide file and text for the link dialog */
-      if (meta.filetype === 'file') {
-        callback('https://www.google.com/logos/google.jpg', {
-          text: 'My text'
-        });
-      }
-
-      /* Provide image and alt text for the image dialog */
-      if (meta.filetype === 'image') {
-        callback('https://www.google.com/logos/google.jpg', {
-          alt: 'My alt text'
-        });
-      }
-
-      /* Provide alternative source and posted for the media dialog */
-      if (meta.filetype === 'media') {
-        callback('movie.mp4', {
-          source2: 'alt.ogg',
-          poster: 'https://www.google.com/logos/google.jpg'
-        });
-      }
-    },
-    templates: [{
-        title: 'New Table',
-        description: 'creates a new table',
-        content: '<div class="mceTmpl"><table width="98%%"  border="0" cellspacing="0" cellpadding="0"><tr><th scope="col"> </th><th scope="col"> </th></tr><tr><td> </td><td> </td></tr></table></div>'
-      },
-      {
-        title: 'Starting my story',
-        description: 'A cure for writers block',
-        content: 'Once upon a time...'
-      },
-      {
-        title: 'New list with dates',
-        description: 'New List with dates',
-        content: '<div class="mceTmpl"><span class="cdate">cdate</span><br /><span class="mdate">mdate</span><h2>My List</h2><ul><li></li><li></li></ul></div>'
-      }
-    ],
-    template_cdate_format: '[Date Created (CDATE): %m/%d/%Y : %H:%M:%S]',
-    template_mdate_format: '[Date Modified (MDATE): %m/%d/%Y : %H:%M:%S]',
-    height: 600,
-    image_caption: true,
-    quickbars_selection_toolbar: 'bold italic | quicklink h2 h3 blockquote quickimage quicktable',
-    noneditable_noneditable_class: 'mceNonEditable',
-    toolbar_mode: 'sliding',
-    contextmenu: 'link image imagetools table',
-    skin: useDarkMode ? 'oxide-dark' : 'oxide',
-    content_css: useDarkMode ? 'dark' : 'default',
-    content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
-  });
 
   /**
    * Initiate Bootstrap validation check
@@ -301,28 +140,12 @@
   datatables.forEach(datatable => {
     new simpleDatatables.DataTable(datatable);
   })
-
-  /**
-   * Autoresize echart charts
-   */
-  const mainContainer = select('#main');
-  if (mainContainer) {
-    setTimeout(() => {
-      new ResizeObserver(function() {
-        select('.echart', true).forEach(getEchart => {
-          echarts.getInstanceByDom(getEchart).resize();
-        })
-      }).observe(mainContainer);
-    }, 200);
-  }
-
 })();
 
 
 // --------------------------------------------
 // Functions to get cookies
 // --------------------------------------------
-
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -339,7 +162,6 @@ function getCookie(name) {
 }
 
 
-
 // --------------------------------------------
 // Functions to toggle sidebar
 // --------------------------------------------
@@ -354,3 +176,58 @@ function hideBloomerpSidebar() {
 function showBloomerpSidebar() {
     document.body.classList.remove('toggle-sidebar');
 }
+
+// --------------------------------------------
+// HTMX Indicator
+// --------------------------------------------
+function createSpinner() {
+  var spinner = document.createElement('div');
+  spinner.id = 'spinner';
+  spinner.className = 'spinner-container';
+
+  var spinnerBorder = document.createElement('div');
+  spinnerBorder.className = 'spinner-border';
+  spinnerBorder.setAttribute('role', 'status');
+
+  var spinnerText = document.createElement('span');
+  spinnerText.className = 'visually-hidden';
+  spinnerText.innerText = 'Loading...';
+
+  spinnerBorder.appendChild(spinnerText);
+  spinner.appendChild(spinnerBorder);
+
+  return spinner;
+}
+
+document.addEventListener('htmx:beforeRequest', function(event) {
+  // Exclude certain targets
+  const exclude_targets = ['searchResult']
+
+
+  // Get the target element
+  var target = event.detail.target;
+
+  console.log(target.id);
+
+  // If the target element is in the exclude_targets list, then return
+  if (exclude_targets.includes(target.id)) {
+      return;
+  }
+
+  var spinner = createSpinner();
+
+  // Remove any existing content from the target element
+  target.innerHTML = '';
+  target.appendChild(spinner);
+
+});
+
+document.addEventListener('htmx:afterRequest', function(event) {
+  // If event.detail.xhr.status is not 200, then replace the target element with an error message
+  var target = event.detail.target;
+  var xhr = event.detail.xhr;
+
+  if (xhr.status === 500) {
+      target.innerHTML = '<p>Oops, something went wrong.</p>';
+  }
+});
