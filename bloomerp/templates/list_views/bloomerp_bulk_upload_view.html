@@ -67,23 +67,24 @@
     class="modal-dialog modal-dialog-scrollable modal-dialog-centered"
     role="document"
   >
-    <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title" id="modalTitleId">
-            Download Bulk Upload Template
-            </h5>
-            <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="modal"
-            aria-label="Close"
-            ></button>
-        </div>
-        
+    <form method="post" action="{% url 'components_download_bulk_upload_template' %}">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitleId">
+                Download Bulk Upload Template
+                </h5>
+                <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+                ></button>
+            </div>
+            
             <div class="modal-body">
                 <p>Select the fields and file type you want for your template. Some fields are required.</p>
 
-                <form method="post" action="{% url 'components_download_bulk_upload_template' %}">
+                
                 {% csrf_token %}
                 {{ fields_form | crispy }}
             </div>
@@ -96,16 +97,12 @@
                 Close
                 </button>
                 <button type="submit" class="btn btn-primary">Download</button>
-                </form>
+                
             </div>
-    </div>
+        </div>
+    </form>
   </div>
+
 </div>
 
-<!-- Optional: Place to the bottom of scripts -->
-<script>
-  const myModal = new bootstrap.Modal(
-    document.getElementById("downloadBulkUploadTemplate" "),
-    options,
-  );
-</script>
+
