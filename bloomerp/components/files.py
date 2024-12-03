@@ -134,9 +134,8 @@ def files(request: HttpRequest) -> HttpResponse:
     filterset = FilterSet(request.GET, queryset=files) # Initialize files as empty queryset in case it's not used later
     files = filterset.qs
 
-    # Filter on accessible content types
-    files = files.filter(content_type_id__in=accessible_content_types)
-
+    # Filter on accessible content types, including files that are not mapped to a content type
+    files = files.filter(content_type_id__in=accessible_content_types) | files.filter(content_type_id__isnull=True)
 
     context = {
         'files': files,

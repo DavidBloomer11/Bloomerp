@@ -220,7 +220,10 @@ class File(
     @property
     def size(self):
         """Returns the file size of the file."""
-        return self.file.size
+        try:
+            return self.file.size
+        except FileNotFoundError:
+            return 0
 
     @property
     def size_str(self):
