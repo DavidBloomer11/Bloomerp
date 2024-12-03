@@ -106,10 +106,29 @@ def route(path=None):
 
 
 class RouteFinder:
-    def __init__(self, directory: str, prefix: str = '') -> None:
-        self.directory = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', directory)
+    '''Class used to find routes in a given directory. Used primarily for creating components.'''
+
+    def __init__(
+            self, 
+            directory: str, 
+            url_route_prefix: str = None,
+            url_name_prefix: str = None
+            ) -> None:
+        '''Initialize the RouteFinder object.
+        
+        Args:
+            directory (str): The directory to search for routes.
+            prefix (str): The prefix to add to the url routes.
+            url_name_prefix (str): The prefix to add to the url names.
+        '''
+        self.directory = directory
         self.urlpatterns = []
-        self.prefix = prefix
+        self.prefix = url_route_prefix
+        if not url_name_prefix:
+            self.url_name_prefix = ''
+        else:
+            self.url_name_prefix = url_name_prefix + '_'
+
 
     def find_python_files(self):
         """Find all Python files in the specified directory."""
@@ -132,7 +151,7 @@ class RouteFinder:
         """Look for functions with a 'route' attribute in a module."""
         for name, obj in inspect.getmembers(module):
             if inspect.isfunction(obj) and hasattr(obj, 'route'):
-                self.urlpatterns.append(path(self.prefix + obj.route, obj, name='components_' + obj.__name__))
+                self.urlpatterns.append(path(self.prefix + obj.route, obj, name=self.url_name_prefix + obj.__name__))
 
     def generate_urlpatterns(self):
         """Scan the directory, find routes, and populate urlpatterns."""
@@ -635,3 +654,4 @@ def _get_routers_from_settings() -> List[BloomerpRouter]:
             print(f"Error importing {router_path}: {e}")
             traceback.print_exc()
     return routers
+

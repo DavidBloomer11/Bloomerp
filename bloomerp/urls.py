@@ -212,7 +212,12 @@ urlpatterns += [
 # ---------------------------------
 # Route decorator
 # ---------------------------------
-route_finder = RouteFinder(directory='components', prefix='components/')
+# Get current dir
+import os
+current_dir = os.path.dirname(os.path.abspath(__file__))
+components_dir = os.path.join(current_dir, 'components')
+
+route_finder = RouteFinder(directory=components_dir, url_route_prefix='components/', url_name_prefix='components')
 urlpatterns += route_finder.generate_urlpatterns()
 
 
