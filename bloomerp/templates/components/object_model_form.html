@@ -1,3 +1,11 @@
 {% load crispy_forms_tags %}
 
-{{form|crispy}}
+{% if not created %}
+    {{form|crispy}}
+{% else %}
+
+<p>Object created successfully</p>
+
+<input type="hidden" id="{{form_prefix}}_new_object" data-object-id="{{new_object.pk}}" data-display-text="{{new_object}}">
+
+{% endif %}

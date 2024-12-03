@@ -11,7 +11,6 @@
         - setM2MValue
         - makeAdvancedSearchTableClickable
 -->
-
 {% load crispy_forms_tags %}
 
 {% if widget_type == 'm2m' %}
@@ -50,10 +49,10 @@
         <li><hr class="dropdown-divider"></li>
         <li>
             <a 
-                class="dropdown-item" 
+                class="dropdown-item showmodal" 
                 type="button"
-                data-bs-toggle="modal"
-                data-bs-target="#advancedSearchModal{{ widget.name }}"
+                data-show-modal="{{ advanced_search_modal_id }}"
+                data-bs-target="#{{ advanced_search_modal_id }}"
                 hx-get="{% url 'components_data_table' %}?data_table_content_type_id={{ content_type_id }}"
                 hx-target="#{{ widget.name }}_advanced_search_table"
                 hx-swap="innerHTML"
@@ -64,13 +63,12 @@
         </li>
         <li>
             <a 
-                class="dropdown-item" 
+                class="dropdown-item showmodal" 
                 type="button"
-                data-bs-toggle="modal"
-                onclick="closeAllModals()"
-                data-bs-target="#create_new_{{ widget.name }}_modal"
-                hx-get="{% url 'components_object_model_form' %}?content_type_id={{ content_type_id }}&form_prefix={{ form_prefix }}"
-                hx-target="#create_new_{{ widget.name }}"
+                data-show-modal="{{ create_modal_id }}"
+                hx-get="{% url 'components_object_model_form' %}?content_type_id={{ content_type_id }}&form_prefix={{ create_modal_id }}"
+                hx-target="#{{ create_modal_id }}_body"
+                hx-trigger="click"
                 hx-swap="innerHTML"
                 >Create new item
             </a>
@@ -88,20 +86,16 @@
     {% endif %}
 </div>
 
-<!-- ADVANCED SEARCH -->
+
+<!-- ADVANCED SEARCH MODAL -->
 <div
     class="modal fade"
-    id="advancedSearchModal{{ widget.name }}"
-    tabindex="-1"
-    data-bs-backdrop="static"
-    data-bs-keyboard="false"
-    role="dialog"
-    aria-labelledby="modalTitleId"
+    id="{{ advanced_search_modal_id }}"
     aria-hidden="true"
+    tabindex="-1"
 >
     <div
         class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-lg"
-        role="document"
     >
         <div class="modal-content">
             <div class="modal-header">
@@ -137,26 +131,22 @@
         </div>
     </div>
 </div>
-<!-- END ADVANCED SEARCH -->
+<!-- END ADVANCED SEARCH MODAL -->
 
-<!-- CREATE NEW ITEM -->
+<!-- CREATE NEW ITEM MODAL -->
 <div
     class="modal fade"
-    id="create_new_{{ widget.name }}_modal"
-    tabindex="-1"
-    data-bs-backdrop="static"
-    data-bs-keyboard="false"
-    role="dialog"
-    aria-labelledby="modalTitleId"
+    id="{{ create_modal_id }}"
     aria-hidden="true"
+    tabindex="-1"
 >
     <div
         class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-lg"
-        role="document"
-    >
+    >   
+        
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalTitleId">
+                <h5 class="modal-title">
                     Create new item
                 </h5>
                 <button
@@ -166,8 +156,10 @@
                     aria-label="Close"
                 ></button>
             </div>
+             
             {% csrf_token %}
-            <div class="modal-body" id="create_new_{{ widget.name }}">
+            
+            <div class="modal-body" id="{{ create_modal_id }}_body">
                 <!-- The form will be loaded here -->
             </div>
             <div class="modal-footer">
@@ -179,25 +171,18 @@
                     Close
                 </button>
                 <button 
-                    hx-post="{% url 'components_object_model_form' %}?content_type_id={{ content_type_id }}&form_prefix={{ form_prefix }}"
-                    hx-target="#create_new_{{ widget.name }}" 
+                    hx-post="{% url 'components_object_model_form' %}?content_type_id={{ content_type_id }}&form_prefix={{ create_modal_id }}"
+                    hx-target="#{{ create_modal_id }}_body" 
+                    hx-include="#{{ create_modal_id }}_body"
+                    hx-on::after-request="setNewObject('{{ widget.name }}', '{{ create_modal_id }}_new_object', '{{ widget_type }}')"
                     hx-swap="innerHTML"
                     class="btn btn-primary">Save</button>
             </div>
         </div>
     </div>
 </div>
+<!-- END CREATE NEW ITEM MODAL -->
 
-<script>
-    {
-        // Reset the modal form when it is closed
-        let modal = document.getElementById('create_new_{{ widget.name | escapejs }}_modal')
-        modal.addEventListener('hidden.bs.modal', event => {
-            document.getElementById('create_new_{{ widget.name | escapejs }}').innerHTML = "";
-        })
-    }
-
-</script>
 
 <style>
     .dropdown-menu-scrollable {

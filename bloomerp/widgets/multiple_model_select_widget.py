@@ -3,7 +3,7 @@ from django.forms.models import modelform_factory
 from django.db.models import Model
 from django.contrib.contenttypes.models import ContentType
 from bloomerp.models import ApplicationField
-
+import random
 class MultipleModelSelect(forms.SelectMultiple):
     template_name = 'widgets/foreign_field_widget.html'
 
@@ -20,6 +20,10 @@ class MultipleModelSelect(forms.SelectMultiple):
         context['objects'] = self.model.objects.all()[:5]
         context['content_type_id'] = ContentType.objects.get_for_model(self.model).id
         context['form'] = Form()
+
+        # Add random modal id to the context
+        context['advanced_search_modal_id'] = f'modal-{random.randint(0, 100000)}'
+        context['create_modal_id'] = f'modal-{random.randint(0, 100000)}'
 
         # Get the object(s) that is currently selected
         if context['widget']['value']:

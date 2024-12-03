@@ -3,6 +3,7 @@ from django.forms.models import modelform_factory
 from django.db.models import Model
 from django.contrib.contenttypes.models import ContentType
 from bloomerp.models import ApplicationField
+import random
 
 class ForeignKeyWidget(forms.Widget):
     template_name = 'widgets/foreign_field_widget.html'
@@ -23,6 +24,10 @@ class ForeignKeyWidget(forms.Widget):
         form_prefix = context['widget']['name']
         context['form_prefix'] = form_prefix
         context['form'] = Form(prefix=form_prefix)
+
+        # Add random modal id to the context
+        context['advanced_search_modal_id'] = f'modal-{random.randint(0, 100000)}'
+        context['create_modal_id'] = f'modal-{random.randint(0, 100000)}'
 
         # Get the object that is currently selected
         if context['widget']['value']:

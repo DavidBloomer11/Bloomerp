@@ -200,25 +200,25 @@ function createSpinner() {
 }
 
 document.addEventListener('htmx:beforeRequest', function(event) {
-  // Exclude certain targets
-  const exclude_targets = ['searchResult']
+    // Exclude certain targets
+    const exclude_targets = ['searchResult']
 
 
-  // Get the target element
-  var target = event.detail.target;
+    // Get the target element
+    var target = event.detail.target;
 
-  console.log(target.id);
+    console.log(target.id);
 
-  // If the target element is in the exclude_targets list, then return
-  if (exclude_targets.includes(target.id)) {
-      return;
-  }
+    // If the target element is in the exclude_targets list, then return
+    if (exclude_targets.includes(target.id)) {
+        return;
+    }
 
-  var spinner = createSpinner();
+    var spinner = createSpinner();
 
-  // Remove any existing content from the target element
-  target.innerHTML = '';
-  target.appendChild(spinner);
+    // Remove any existing content from the target element
+    target.innerHTML = '';
+    target.appendChild(spinner);
 
 });
 

@@ -23,6 +23,10 @@ def object_model_form(request:HttpRequest) -> HttpResponse:
     # Add permission check here
     user : User = request.user
 
+    # Attributes to be passed to the template
+    created = False
+    new_object = None
+
 
     if not content_type_id:
         return HttpResponse('content_type_id required in the query parameters', status=400)
@@ -44,7 +48,8 @@ def object_model_form(request:HttpRequest) -> HttpResponse:
         form = Form(data=request.POST, files=request.FILES, prefix=form_prefix, model=model)
         if form.is_valid():
             form.save()
-            return HttpResponse('Form submitted successfully')
+            created = True
+            new_object = form.instance
     else:
         if object_id:
             instance = model.objects.get(id=object_id)
@@ -52,4 +57,4 @@ def object_model_form(request:HttpRequest) -> HttpResponse:
         else:
             form = Form(prefix=form_prefix, model=model, user=user)
 
-    return render(request, 'components/object_model_form.html', {'form': form})
+    return render(request, 'components/object_model_form.html', {'form': form, 'created': created, 'form_prefix': form_prefix, 'new_object': new_object})
