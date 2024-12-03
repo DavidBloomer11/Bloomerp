@@ -13,7 +13,6 @@ from django.contrib.auth.models import Permission
 # ---------------------------------
 # Bloomerp Model (abstract)
 # ---------------------------------
-from django.contrib.contenttypes.fields import GenericRelation
 class BloomerpModel(
     mixins.TimestampedModelMixin,
     mixins.StringSearchModelMixin,
@@ -27,8 +26,7 @@ class BloomerpModel(
     class Meta:
         abstract = True
         default_permissions = ('add', 'change', 'delete', 'view', 'bulk_change', 'bulk_delete', 'bulk_add', 'export')
-
-        
+    
     files = GenericRelation("bloomerp.File")
     comments = GenericRelation("bloomerp.Comment")
 
@@ -179,6 +177,7 @@ class File(
 
     def upload_to(self, filename):
         '''Returns the upload path for the file'''
+        # Can fetch this from settings in the future
         ROOT = 'bloomerp'
 
         if self.content_type is None:
@@ -268,17 +267,29 @@ class File(
         return self.file.name
 
     
-    def get_accesible_files(
-        query: str, user, folder=None, content_type=None, object_id=None
-    ):
+    def get_accesible_files_for_user(
+        query: str, 
+        user, 
+        folder=None, 
+        content_type=None, 
+        object_id=None
+    ) -> QuerySet:
         """
         Returns a queryset of files that are accessible for the user.
+
+        Args:
+            query (str): The search query
+            user (User): The user object
+            folder (FileFolder): The folder object
+            content_type (ContentType): The content type
+            object_id (int): The object id
+
+        Returns:
+            QuerySet: A queryset of files
         """
 
         # Get the content types the user has access to
-
         content_types = user.get_content_types_for_user(permission_types=["view"])
-
 
         if folder:
             qs = folder.files.filter(content_type__in=content_types).order_by(
@@ -324,7 +335,6 @@ class FileFolder(
     files = models.ManyToManyField(File, related_name='folders', blank=True, null=True)
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
     content_types = models.ManyToManyField(ContentType, blank=True, null=True, help_text="Restrict folders to certain models.", verbose_name="Models")
-
 
     def __str__(self):
         return self.name
