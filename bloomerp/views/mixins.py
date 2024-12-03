@@ -18,8 +18,12 @@ from django.views.generic.edit import ModelFormMixin
 
 
 class HtmxMixin:
+    '''Updates the template name based on the request.htmx attribute.'''
     htmx_template = 'bloomerp_htmx_base_view.html'
     base_detail_template = 'detail_views/bloomerp_base_detail_view.html'
+    htmx_detail_target = 'detail-content'
+    htmx_main_target = 'main-content'
+    is_detail_view = False
 
     def get_context_data(self, **kwargs:Any) -> dict:
         try:
@@ -28,15 +32,21 @@ class HtmxMixin:
             # If the super class does not have a get_context_data method
             context = {}
 
-        # Append extra context data
-        if not self.request.htmx:
-            if isinstance(self, DetailView) or isinstance(self, UpdateView):
+        # ---------------------
+        # NORMAL REQUEST
+        # ---------------------
+        if not self.request.htmx or self.request.htmx.history_restore_request:
+            if self.is_detail_view or isinstance(self, DetailView) or isinstance(self, UpdateView):
                 context['include_main_content'] = self.base_detail_template
                 context['include_detail_content'] = self.template_name
                 context['template_name'] = self.base_detail_template
             else:
                 context['template_name'] = self.template_name
             self.template_name = self.htmx_template
+        
+        # ---------------------
+        # HTMX REQUEST
+        # ---------------------
         else:
             # Check the target of htmx
             if self.request.htmx.target == 'main-content':
