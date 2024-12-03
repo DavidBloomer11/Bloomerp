@@ -165,6 +165,18 @@ python manage.py makemigrations sales
 python manage.py migrate sales
 ```
 
+Add the endpoints in your `urls.py` file.
+```python
+# urls.py
+from bloomerp.urls import BLOOMERP_URLPATTERNS
+
+urlpatterns = [
+    path("admin/", admin.site.urls),
+    BLOOMERP_URLPATTERNS
+]
+```
+
+
 Every time you update your models, run:
 
 ```sh
