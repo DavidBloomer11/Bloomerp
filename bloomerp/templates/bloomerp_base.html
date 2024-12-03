@@ -10,6 +10,8 @@
   </head>
 
   <body class="toggle-sidebar" id="bloomerpBody">
+	
+
     {% block body %}
 
     <!--Header -->
@@ -188,7 +190,7 @@
 
     <!--Main -->
     <main id="main" class="main">
-		<div id="main-content" class="container">
+		<div id="main-content" class="container" hx-history-elt>
 			{% block main %}
 				{% if include_main_content %}
 					{% include include_main_content %}
@@ -200,7 +202,6 @@
 
 	<!--Messages wrapper-->
 	<div id="messages-wrapper" class="messages-wrapper">
-	
 	</div>
 	<!--End messages wrapper-->
 
@@ -212,7 +213,7 @@
       </div>
       <div class="credits">
         
-        Designed by <a href="https://www.bloomerp.com/">BloomERP</a>
+        Designed by <a href="https://www.bloomerp.com/">Bloomerp</a>
       </div>
     </footer>
     <!-- End Footer -->
