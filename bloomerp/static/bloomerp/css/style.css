@@ -1396,3 +1396,10 @@ Dashboard
   opacity: 0;
   transform: translateY(-20px); /* Optional: Move the message slightly upwards */
 }
+
+.spinner-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50vh;
+}
