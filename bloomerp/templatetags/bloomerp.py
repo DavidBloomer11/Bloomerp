@@ -218,10 +218,11 @@ def field_value(object:Model, application_field:ApplicationField, user:User):
 
     try:
         # Get the value of the field
-        value = getattr(object, application_field.field)
-
-        if value is None:
-            return DEFAULT_NONE_VALUE
+        if application_field.field_type != 'OneToManyField':
+            value = getattr(object, application_field.field)
+            
+            if value is None:
+                return DEFAULT_NONE_VALUE
 
         if application_field.field_type == 'ForeignKey':
             # Get the value of the field
@@ -284,6 +285,8 @@ def field_value(object:Model, application_field:ApplicationField, user:User):
                 return resp + '...'
         elif application_field.field_type == 'OneToManyField':
             # Get the value of the field
+            value = getattr(object, f'{application_field.field}_set')
+
             qs = value.all()
 
             if not qs:
