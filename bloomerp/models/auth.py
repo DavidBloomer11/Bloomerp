@@ -105,7 +105,6 @@ class AbstractBloomerpUser(
         content_type = ContentType.objects.get_for_model(model)
         return UserListViewPreference.objects.filter(user=self, application_field__content_type=content_type)
 
-
     @property
     def accessible_content_types(self) -> QuerySet:
         '''
@@ -183,6 +182,34 @@ class UserDetailViewPreference(models.Model):
 
         return list(application_fields_info)
 
+
+    @classmethod
+    def generate_default_for_user(cls, user: User, content_type: ContentType) -> QuerySet[Self]:
+        '''
+        Method that generates default detail view preference for a user.
+        '''
+        application_fields = ApplicationField.objects.filter(content_type=content_type)
+        
+        # Exclude some application fields
+        application_fields = application_fields.exclude(
+            field_type__in=['ManyToManyField', 'OneToManyField']
+        )
+
+        # Exclude some more fields
+        application_fields = application_fields.exclude(
+            field='id'
+        )
+        
+        
+        for application_field in application_fields:
+            preference, created = UserDetailViewPreference.objects.get_or_create(
+                user=user,
+                application_field=application_field,
+                position='LEFT'
+            )
+            
+        return UserDetailViewPreference.objects.filter(user=user, application_field__content_type=content_type)
+
 # ---------------------------------
 # User List View Preference Model
 # ---------------------------------
@@ -199,6 +226,32 @@ class UserListViewPreference(models.Model):
         db_table = 'bloomerp_user_list_view_preference'
         unique_together = ('user', 'application_field')
 
+
+    @classmethod
+    def generate_default_for_user(cls, user: User, content_type: ContentType) -> QuerySet[Self]:
+        '''
+        Method that generates default list view preference for a user.
+        '''
+        application_fields = ApplicationField.objects.filter(content_type=content_type)
+        
+        # Exclude some application fields
+        application_fields = application_fields.exclude(
+            field_type__in=['ManyToManyField', 'OneToManyField']
+        )
+
+        # Exclude some more fields
+        application_fields = application_fields.exclude(
+            field__in=['id', 'created_by', 'updated_by', 'datetime_created', 'datetime_updated']
+        )
+        
+        # Only take the first 5 fields
+        for application_field in application_fields[:5]:
+            preference, created = UserListViewPreference.objects.get_or_create(
+                user=user,
+                application_field=application_field
+            )
+            
+        return UserListViewPreference.objects.filter(user=user, application_field__content_type=content_type)
 
 # ---------------------------------
 # Bookmark Model
@@ -714,7 +767,6 @@ class Workspace(
         self.save()
     
     
-
     @staticmethod
     def create_default_content_type_workspace(
         user: User,

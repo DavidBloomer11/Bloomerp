@@ -33,6 +33,10 @@ from bloomerp.views.mixins import (
 )
 
 from bloomerp.utils.router import BloomerpRouter
+from django.forms.models import modelform_factory
+from bloomerp.forms.core import BloomerpModelForm
+from django import forms
+
 router = BloomerpRouter()
 
 # ---------------------------------
@@ -113,8 +117,13 @@ class BloomerpDetailOverviewView(PermissionRequiredMixin, BloomerpBaseDetailView
         context["view_type"] = "DETAIL"
         context["content_type_id"] = content_type.pk
         if not queryset:
-            context["no_preferences"] = True
-            return context
+            queryset = UserDetailViewPreference.generate_default_for_user(
+                user = self.request.user,
+                content_type = content_type
+            )
+            
+
+            
 
         left_column = queryset.filter(position="LEFT")
         center_column = queryset.filter(position="CENTER")
@@ -283,6 +292,14 @@ class BloomerpForeignRelationshipView(
                 "No foreign model or foreign model attribute given."
             )
 
+        # Create the form
+        Form = modelform_factory(fields="__all__", model=self.foreign_model, form=BloomerpModelForm)
+
+        # Initialize the form and set the instance
+        form = Form(initial={self.foreign_model_attribute: self.object.pk}, model=self.foreign_model)
+
+        # Hide the foreign model attribute
+        form.fields[self.foreign_model_attribute].widget = forms.HiddenInput()
 
         # Get application fields for the foreign model
         application_fields = ApplicationField.get_for_model(self.foreign_model)
@@ -294,7 +311,8 @@ class BloomerpForeignRelationshipView(
         context['application_fields'] = application_fields
         context['initial_query'] = f'{self.foreign_model_attribute}={self.object.pk}'
         context['foreign_model_name'] = self.foreign_model._meta.verbose_name_plural
-
+        context['foreign_model_name_singular'] = self.foreign_model._meta.verbose_name
+        context['form'] = form
         return context
 
     def get_permissions(self):

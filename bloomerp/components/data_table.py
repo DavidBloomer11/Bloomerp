@@ -5,7 +5,7 @@ from django.http import HttpResponse, HttpRequest
 from bloomerp.utils.filters import dynamic_filterset_factory
 from bloomerp.utils.models import string_search_on_qs
 from django.contrib.contenttypes.models import ContentType
-from bloomerp.models import User
+from bloomerp.models import User, UserListViewPreference
 from bloomerp.utils.models import model_name_plural_underline
 from bloomerp.utils.model_io import BloomerpModelIO
 from bloomerp.models import ApplicationField
@@ -44,7 +44,8 @@ def data_table(request:HttpRequest) -> HttpResponse:
         include_actions = False
     
     # Get the model based on the content type id
-    model = ContentType.objects.get(id=content_type_id).model_class()
+    content_type = ContentType.objects.get(id=content_type_id)
+    model = content_type.model_class()
 
 
     # Permissions check
@@ -67,6 +68,9 @@ def data_table(request:HttpRequest) -> HttpResponse:
     # Get the list view preference for the user
     list_view_preferences = user.get_list_view_preference_for_model(model)
     
+    if not list_view_preferences:
+        list_view_preferences = UserListViewPreference.generate_default_for_user(user, content_type)
+
     # Apply string search
     if data_table_string_search:
         # Remove any leading or trailing whitespace
