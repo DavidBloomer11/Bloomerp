@@ -6,7 +6,7 @@ from django.urls import include, path,  register_converter
 from django.contrib.auth import views as auth_views
 from django.contrib.contenttypes.models import ContentType
 from bloomerp.views.core import (BloomerpForeignRelationshipView)
-
+from bloomerp.components import *
 from bloomerp.views.document_templates import router as document_template_router
 from django.db.models import Model
 from bloomerp.utils.models import (
@@ -24,7 +24,7 @@ from bloomerp.utils.models import (
     )
 from bloomerp.utils.api import generate_serializer, generate_model_viewset_class
 from bloomerp.views.api import BloomerpModelViewSet
-from bloomerp.models import Link
+from bloomerp.models import Link, User
 from bloomerp.utils.urls import IntOrUUIDConverter
 from rest_framework.routers import DefaultRouter
 from bloomerp.utils.router import _get_routers_from_settings, RouteFinder, BloomerpRouterHandler
@@ -125,35 +125,43 @@ for content_type in content_types:
     	# ---------------------------------
         # Related models
         # ---------------------------------
-        for related_model in get_foreign_occurences_for_model(model):
-            related_model:Model
-            related_model_name_underline = model_name_plural_underline(related_model)
-            related_base_model_route = model_name_plural_slug(related_model)
-            url_name = f"{model_name_underline}_detail_{related_model_name_underline}"
+        if model != User:
+            for related_model in get_foreign_occurences_for_model(model):
+                related_model:Model
+                related_model_name_underline = model_name_plural_underline(related_model)
+                related_base_model_route = model_name_plural_slug(related_model)
+                url_name = f"{model_name_underline}_detail_{related_model_name_underline}"
 
-            # Get application field
-            foreign_model_attribute = get_attribute_name_for_foreign_key(related_model, model)
+                # Get application field
+                foreign_model_attribute = get_attribute_name_for_foreign_key(related_model, model)
 
-            if foreign_model_attribute:
-                # Add related model to the tabs
+                if foreign_model_attribute:
+                    # Add related model to the tabs
 
-                urlpatterns.append(
-                    path(f"{base_model_route}/<int_or_uuid:pk>/{related_base_model_route}/", 
-                        BloomerpForeignRelationshipView.as_view(
-                            model=model,
-                            foreign_model = related_model,
-                            foreign_model_detail_url = f"{related_model_name_underline}_detail",
-                            foreign_model_attribute = foreign_model_attribute), 
-                        name=url_name))
+                    urlpatterns.append(
+                        path(f"{base_model_route}/<int_or_uuid:pk>/{related_base_model_route}/", 
+                            BloomerpForeignRelationshipView.as_view(
+                                model=model,
+                                foreign_model = related_model,
+                                foreign_model_detail_url = f"{related_model_name_underline}_detail",
+                                foreign_model_attribute = foreign_model_attribute), 
+                            name=url_name))
 
-                Link.objects.get_or_create(
-                    content_type=content_type,
-                    name=f"{model_name} {related_model._meta.verbose_name_plural}",
-                    url=url_name,
-                    level = 'DETAIL',
-                    is_absolute_url = False,
-                    description = f"Related {related_model._meta.verbose_name_plural} view for {model_name}"
-                )
+                    defaults = {
+                        'name' : f'{model_name.capitalize()} {related_model._meta.verbose_name_plural}',
+                        'description' : f'Related {related_model._meta.verbose_name_plural} view for {model_name}',
+                    }
+
+                    try:
+                        obj, created = Link.objects.update_or_create(
+                            content_type=content_type,
+                            url=url_name,
+                            level = 'DETAIL',
+                            is_absolute_url = False,
+                            defaults=defaults
+                        )
+                    except Exception as e:
+                        print(url_name)
 
         
         # ---------------------------------

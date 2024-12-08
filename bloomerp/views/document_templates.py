@@ -26,7 +26,7 @@ EXCLUDE_MODELS = [
 
 @router.bloomerp_route(
     path="document-templates", 
-    name="Document Templates List for {model} model",
+    name="Document Templates",
     url_name="document_templates_list",
     description="List of document templates for the {model} model",
     route_type="detail",

@@ -45,7 +45,7 @@ router = BloomerpRouter()
 
 @router.bloomerp_route(
     path="list",
-    name="List of {model} model",
+    name="{model} list",
     url_name="list",
     description="List of {model} model",
     route_type="list",
@@ -91,7 +91,7 @@ class BloomerpBaseDetailView(HtmxMixin, BloomerpModelContextMixin, DetailView):
 # ---------------------------------
 @router.bloomerp_route(
     path="",
-    name="{model} overview",
+    name="Overview",
     url_name="overview",
     description="Overview of object from {model} model",
     route_type="detail",
@@ -190,7 +190,7 @@ class BloomerpCreateView(
 # ---------------------------------
 @router.bloomerp_route(
     path="update",
-    name="Update {model}",
+    name="Update",
     url_name="update",
     description="Update object from {model}",
     route_type="detail",
@@ -343,7 +343,7 @@ class BloomerpForeignRelationshipView(
 # ---------------------------------
 @router.bloomerp_route(
     path="files",
-    name="{model} Files",
+    name="Files",
     url_name="files",
     description="Files for object for {model} model",
     route_type="detail",
@@ -433,7 +433,7 @@ class BloomerpFileListView(PermissionRequiredMixin, HtmxMixin, View):
 
 @router.bloomerp_route(
     path="comments",
-    name="Comments for {model}",
+    name="Comments",
     url_name="{model}_detail_comments",
     description="Comments for object from {model} model",
     route_type="detail",
