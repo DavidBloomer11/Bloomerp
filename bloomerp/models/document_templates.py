@@ -80,14 +80,45 @@ class DocumentTemplate(BloomerpModel):
         managed = True
         db_table = 'bloomerp_document_template'
 
-    name = models.CharField(max_length=100, blank=False, null=False) #Name of the document template
-    template = TextEditorField(default='') # Content of the template, including the variables
-    model_variable = models.ForeignKey(ContentType, on_delete=models.SET_NULL, null=True, blank=True) # Many to many field to Content Type
-    free_variables = models.ManyToManyField(DocumentTemplateFreeVariable,blank=True) # Many to many field of free variable, a free variable is a variable that is not from a model
-    template_header = models.ForeignKey(DocumentTemplateHeader, on_delete=models.SET_NULL, null=True, blank=True) #Foreign key to the document template header
-    footer = models.TextField(null=True,blank=True)
-    standard_document = models.BooleanField(null=False,blank=False, default=False) # Signifies weather the document should be created on object creation
-    styling = models.ForeignKey(DocumentTemplateStyling, on_delete=models.SET_NULL, null=True, blank=True) # Foreign key to the document template styling
+    name = models.CharField(
+        max_length=100,
+        help_text=_("Name of the document template.")
+        ) #Name of the document template
+    template = TextEditorField(
+        default='Hello world',
+        help_text=_("Content of the template, including the variables.")
+        ) # Content of the template, including the variables
+    model_variable = models.ForeignKey(
+        ContentType, 
+        on_delete=models.CASCADE,
+        help_text=_("Model variable of the document template."),
+        ) # Many to many field to Content Type
+    free_variables = models.ManyToManyField(
+        DocumentTemplateFreeVariable,
+        blank=True,
+        null=True,
+        help_text=_("A free variable is a variable that is not from a model, and can be inserted in the template at creation time.")
+        ) # Many to many field of free variable, a free variable is a variable that is not from a model
+    
+    template_header = models.ForeignKey(
+        DocumentTemplateHeader,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text=_("Header of the document template.")
+        ) #Foreign key to the document template header
+    footer = models.TextField(
+        null=True,
+        blank=True,
+        help_text=_("Footer of the document template.")
+        )
+    styling = models.ForeignKey(
+        DocumentTemplateStyling,
+        on_delete=models.SET_NULL,
+        null=True, 
+        blank=True,
+        help_text=_("Styling of the document template.")
+        ) # Foreign key to the document template styling
 
     def __str__(self):
         return self.name
