@@ -49,7 +49,7 @@ class HtmxMixin:
         # ---------------------
         else:
             # Check the target of htmx
-            if self.request.htmx.target == 'main-content':
+            if self.request.htmx.target == self.htmx_main_target:
                 if isinstance(self, DetailView) or isinstance(self, UpdateView):
                     # In this case, we are dealing with a detail view
                     context['include_detail_content'] = self.template_name
@@ -154,7 +154,11 @@ class BloomerpModelContextMixin:
         content_type = ContentType.objects.get_for_model(self.model)
 
         # Detail view routes
-        context['detail_view_tabs'] = UserDetailViewTab.get_detail_view_tabs(content_type=content_type, user=self.request.user)
+        detail_view_tabs = UserDetailViewTab.get_detail_view_tabs(content_type=content_type, user=self.request.user)
+        if not detail_view_tabs:
+            detail_view_tabs = UserDetailViewTab.generate_default_for_user(content_type=content_type, user=self.request.user)
+
+        context['detail_view_tabs'] = detail_view_tabs
         context['detail_links_form'] = DetailLinksSelectForm(content_type=content_type, user=self.request.user)
 
 

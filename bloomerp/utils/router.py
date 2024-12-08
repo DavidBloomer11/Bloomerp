@@ -104,7 +104,6 @@ def route(path=None):
         return func
     return decorator
 
-
 class RouteFinder:
     '''Class used to find routes in a given directory. Used primarily for creating components.'''
 
@@ -225,7 +224,8 @@ class BloomerpRoute:
             Link.objects.filter(url=self.relative_path).exclude(name=self.route_name).delete()
 
         except Exception as e:
-            print(f"Error creating Link object for route {self.route_name}: {e}")
+            # Delete any existing links with the same URL
+            Link.objects.filter(url=self.relative_path).first().delete()
 
     def create_urlpattern(self):
         """

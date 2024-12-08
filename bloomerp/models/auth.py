@@ -486,6 +486,19 @@ class Link(
 
         return links_info
     
+    def detail_view_tab_links(content_type: ContentType) -> QuerySet:
+        '''
+        Method that returns the detail view tab links for a content type.
+        '''
+        qs = Link.objects.filter(content_type=content_type, level='DETAIL') 
+        
+        for link in qs:
+            if link.number_of_args() > 1:
+                # Exclude links that require more than one argument
+                qs = qs.exclude(pk=link.pk)
+
+        return qs
+
     @property
     def model_name(self) -> str:
         '''
@@ -576,11 +589,40 @@ class UserDetailViewTab(
         Returns the detail view tabs for the user and content type.
         '''
         qs = UserDetailViewTab.objects.filter(user=user, link__content_type=content_type, link__level='DETAIL')
-        
         return qs
+
+    @classmethod
+    def generate_default_for_user(cls, user: User, content_type: ContentType) -> QuerySet[Self]:
+        '''
+        Method that generates default detail view tabs for a user.
+        '''
+        links : QuerySet[Link] = Link.detail_view_tab_links(content_type)
+        
+        for link in links:
+            UserDetailViewTab.objects.get_or_create(
+                user=user,
+                link=link
+            )
+            
+        return UserDetailViewTab.objects.filter(user=user, link__content_type=content_type)
 
     def __str__(self):
         return str(self.user) + ' ' + str(self.link.name)
+
+    def clean(self):
+        errors = {}
+
+        # Check if the link is a detail link
+        if self.link.level != 'DETAIL':
+            errors['link'] = _("Link must be a detail link")
+
+        if self.link.number_of_args() > 1:
+            errors['link'] = _("Link can only have one argument (pk) for a detail view tab")
+
+        if errors:
+            raise ValidationError(errors)
+
+        return super().clean()
 
 
 def get_default_workspace():

@@ -101,12 +101,12 @@ def dynamic_filterset_factory(model):
             filter_overrides[f'{field.name}__isnull'] = django_filters.BooleanFilter(field_name=field.name, lookup_expr='isnull')
 
             related_model = field.related_model
-            related_fields = [f for f in related_model._meta.get_fields() if isinstance(f, CharField)]  # Assuming you want to filter by string fields in related models
+            related_fields = related_model._meta.get_fields()  # Assuming you want to filter by string fields in related models
             
             for related_field in related_fields:
                 # For example: manager__first_name__icontains
-                filter_overrides[f'{field.name}__{related_field.name}__icontains'] = django_filters.CharFilter(field_name=f'{field.name}__{related_field.name}', lookup_expr='icontains')
                 filter_overrides[f'{field.name}__{related_field.name}__exact'] = django_filters.CharFilter(field_name=f'{field.name}__{related_field.name}', lookup_expr='exact')
+                filter_overrides[f'{field.name}__{related_field.name}'] = django_filters.CharFilter(field_name=f'{field.name}__{related_field.name}', lookup_expr='exact')
         
         elif field.get_internal_type() == 'ManyToManyField':
             # ManyToMany fields: Add filters for related model's CharField fields (e.g. functions__name__icontains)
@@ -115,11 +115,9 @@ def dynamic_filterset_factory(model):
             filter_overrides[f'{field.name}__id'] = django_filters.ModelMultipleChoiceFilter(field_name=field.name, to_field_name='id', queryset=related_model.objects.all())
             filter_overrides[f'{field.name}__in'] = django_filters.ModelMultipleChoiceFilter(field_name=field.name, to_field_name='id', queryset=related_model.objects.all(), lookup_expr='in', distinct=True)
 
-            related_fields = [f for f in related_model._meta.get_fields() if isinstance(f, CharField)]
+            related_fields = related_model._meta.get_fields()
 
             for related_field in related_fields:
-                # For example: functions__name__icontains
-                filter_overrides[f'{field.name}__{related_field.name}__icontains'] = django_filters.CharFilter(field_name=f'{field.name}__{related_field.name}', lookup_expr='icontains')
                 filter_overrides[f'{field.name}__{related_field.name}__exact'] = django_filters.CharFilter(field_name=f'{field.name}__{related_field.name}', lookup_expr='exact')
                 filter_overrides[f'{field.name}__{related_field.name}'] = django_filters.CharFilter(field_name=f'{field.name}__{related_field.name}', lookup_expr='exact')
                                 

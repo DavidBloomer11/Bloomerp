@@ -226,7 +226,12 @@ def field_value(object:Model, application_field:ApplicationField, user:User):
 
         if application_field.field_type == 'ForeignKey':
             # Get the value of the field
-            return mark_safe(f'<a href="{value.get_absolute_url()}">{value}</a>')
+            try:
+                abosulte_url = value.get_absolute_url()
+                return mark_safe(f'<a href="{abosulte_url}">{value}</a>')
+            except AttributeError:
+                abosulte_url = None
+                return value
             
         elif application_field.field_type == 'DateField':
             # Get the date preferences of the user
@@ -285,7 +290,11 @@ def field_value(object:Model, application_field:ApplicationField, user:User):
                 return resp + '...'
         elif application_field.field_type == 'OneToManyField':
             # Get the value of the field
-            value = getattr(object, f'{application_field.field}_set')
+            try:
+                value = getattr(object, f'{application_field.field}_set')
+            except:
+                value = getattr(object, application_field.field)
+
 
             qs = value.all()
 
