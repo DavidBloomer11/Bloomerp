@@ -1,13 +1,13 @@
 from django import template
 from django.db.models.manager import Manager
 from django.db.models import Model
-from bloomerp.utils.models import model_name_plural_underline, get_model_dashboard_view_url, get_list_view_url
+from bloomerp.utils.models import model_name_plural_underline, get_model_dashboard_view_url, get_list_view_url, get_initials
 from django.urls import reverse 
 from django.contrib.contenttypes.models import ContentType
 from bloomerp.models import Link, Widget
 from django.utils.safestring import mark_safe
 import uuid
-from bloomerp.models import Bookmark, User, ApplicationField
+from bloomerp.models import Bookmark, User, ApplicationField, UserListViewPreference
 
 register = template.Library()
 
@@ -332,5 +332,71 @@ def breadcrumb(title:str=None, model:Model = None, object:Model=None):
     if object:
         context['object'] = object
     return context
+
+
+
+@register.inclusion_tag('snippets/avatar.html')
+def avatar(object:Model, avatar_attribute:str='avatar', size:int=30, class_name=''):
+    '''
+    Returns an avatar object.
+
+    Args:
+        object (Model): The object that has the avatar attribute.
+        avatar_attribute (str): The attribute name of the avatar. Default is 'avatar'.
+        size (int): The size of the avatar. Default is 50.
+        class_name (str): The class name of the avatar. Default is ''.
+
+    Example usage:
+    {% avatar object avatar_attribute size class_name %}
+
+    '''
+    try:
+        avatar = getattr(object, avatar_attribute)
+
+        if not hasattr(avatar, 'url'):
+            # Get the first letter of the object's string representation
+            initials = get_initials(object)
+        else:
+            initials = None
+    except:
+        initials = get_initials(object)
+        avatar = None
+
+    return {
+        'avatar': avatar,
+        'size': size,
+        'class_name': class_name,
+        'initials': initials
+    }
+
+
+@register.inclusion_tag('snippets/data_table.html')
+def data_table(
+    content_type_id:int,
+    user:User,
+):
+    '''
+    Returns a data table for a model.
+
+    Example usage:
+    {% data_table content_type_id %}
+    '''
+    # Get the model from the content_type_id
+    content_type = ContentType.objects.get(pk=content_type_id)
+    model = content_type.model_class()
+
+    # Get the application fields
+    application_fields = ApplicationField.objects.filter(content_type=content_type)
+
+    # Get the list view preferences of the user
+    list_view_preferences = UserListViewPreference.objects.filter(user=user, application_field__content_type=content_type)
+
+    return {
+        'model': model,
+        'application_fields': application_fields,
+        'list_view_preferences': list_view_preferences,
+        'content_type_id': content_type_id,
+        'object_list': model.objects.all()
+    }
 
     

@@ -1,7 +1,7 @@
 from django.views.generic import DetailView
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from bloomerp.models import DocumentTemplate, File, DocumentTemplateFreeVariable, DocumentTemplateStyling, DocumentTemplateHeader
-from bloomerp.forms.document_templates import FreeVariableForm
+from bloomerp.forms.document_templates import FreeVariableForm, GenerateDocumentForm
 from django.shortcuts import redirect
 from django.contrib import messages
 from bloomerp.utils.document_templates import DocumentController
@@ -10,6 +10,7 @@ from bloomerp.utils.router import BloomerpRouter
 from bloomerp.views.core import BloomerpBaseDetailView
 from django.views.generic.edit import UpdateView
 from bloomerp.utils.models import get_detail_base_view_url
+
 
 # ---------------------------------
 # Bloomerp Detail Document Template List View
@@ -134,10 +135,62 @@ class BloomerpDetailDocumentTemplateGenerateView(PermissionRequiredMixin, Bloome
     url_name="editor",
     description="Document Template Editor"
     )
-class BloomerpDocumentTemplateEditorView(BloomerpBaseDetailView, UpdateView):
+class BloomerpDocumentTemplateEditorView(PermissionRequiredMixin, BloomerpBaseDetailView, UpdateView):
     model = DocumentTemplate
     template_name = "document_template_views/bloomerp_document_template_editor_view.html"
     fields = ["template"]
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["args"] = f"template_id={self.object.id}" 
+        return context
+
+    def get_permission_required(self):
+        return [f"{self.model._meta.app_label}.view_{self.model._meta.model_name}"]
+
+@router.bloomerp_route(
+    models = DocumentTemplate, 
+    path="generate-document",
+    route_type="detail", 
+    name="Generate document",
+    url_name="generate_document",
+    description="Generate document for the document template"
+    )
+class BloomerpDocumentTemplateGenerateView(PermissionRequiredMixin, BloomerpBaseDetailView):
+    model = DocumentTemplate
+    template_name = "document_template_views/bloomerp_document_template_generate_view.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Check if document template has 
+        
+        context['form'] = GenerateDocumentForm(self.object)
+
+        return context
     
+    def get_permission_required(self):
+        return [f"{self.model._meta.app_label}.view_{self.model._meta.model_name}"]
+
+@router.bloomerp_route(
+    models = DocumentTemplate, 
+    path="generated-documents",
+    route_type="detail", 
+    name="Generated documents",
+    url_name="generated_documents",
+    description="List of generated documents for the document template"
+    )
+class BloomerpDocumentTemplateGeneratedDocumentsView(PermissionRequiredMixin, BloomerpBaseDetailView):
+    model = DocumentTemplate
+    template_name = "document_template_views/bloomerp_document_template_generated_documents_view.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Get all files associated with the document template
+        files = File.objects.filter(meta__document_template=self.get_object().pk)
+        context['files'] = files
+
+        return context
+
+    def get_permission_required(self):
+        return [f"{self.model._meta.app_label}.view_{self.model._meta.model_name}"]
 

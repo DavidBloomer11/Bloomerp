@@ -1,21 +1,28 @@
 from bloomerp.models import (
-    DocumentTemplate,
+    DocumentTemplate, User,
     File)
 from bloomerp.utils.pdf import generate_pdf
 from django.db.models import Model
 from django.core.files.base import ContentFile
 from django.template import engines
 from django.template.loader import render_to_string
+from bloomerp.utils.pdf import PdfHandler
 
 class DocumentController:
-    def __init__(self) -> None:
-        pass
+    '''
+    Controller class for everything related to documents.
+    '''
+
+    def __init__(self, document_template : DocumentTemplate=None, user : User = None) -> None:
+        self.document_template = document_template
+        self.user = user
 
     def create_document(
             self,
-            template:DocumentTemplate, 
+            document_template:DocumentTemplate, 
             instance:Model, 
-            free_variables: dict=None
+            free_variables: dict=None,
+            persist:bool=True
         ):
         ''' Creates a document for a particular template, using the model variable and the free variables:
             - Template : The document template
@@ -25,123 +32,185 @@ class DocumentController:
         '''
         data = {}
 
-        data['object'] = instance
+        if instance:
+            data['object'] = instance
     	
         #Add free variable data
-        data.update(free_variables)
-
-        print(data)
+        if free_variables:
+            data.update(free_variables)
 
         #Create metadata variable
         meta_data = {}
-        meta_data['document_template'] = template.pk
+        meta_data['document_template'] = document_template.pk
 
         meta_data['signed'] = False
         
         #Format HTML       
         django_engine = engines["django"]
-        temp = django_engine.from_string(template.template)
+        temp = django_engine.from_string(document_template.template)
         formatted_html = temp.render(data)        
+
+        # Get the styling
+        # Check if the template has styling
+        if not document_template.styling:
+            styling = None
+        else:
+            styling = document_template.styling.styling
+
+        # Check if document_template has a header
+        if document_template.template_header:
+            header = document_template.template_header
+            header_url = header.header.path
+            header_margin_bottom = header.margin_bottom
+            header_margin_left = header.margin_left
+            header_margin_right = header.margin_right
+            header_margin_top = header.margin_top
+            header_height = header.height
+        else:
+            header_url = None
+            header_margin_bottom = 0
+            header_margin_left = 0
+            header_margin_right = 0
+            header_margin_top = 0
+            header_height = 0
+
+        if document_template.page_orientation == 'landscape':
+            is_landscape = True
+        else:
+            is_landscape = False
 
         document_bytes = generate_pdf(
             html_content=formatted_html,
-            css_content=template.styling.styling,
+            css_content=styling,
+            # Header options
+            header_url=header_url,
+            header_margin_bottom=header_margin_bottom,
+            header_margin_left=header_margin_left,
+            header_margin_right=header_margin_right,
+            header_margin_top=header_margin_top,
+            header_height=header_height,
+            # Page options
+            title=document_template.name,
+            page_size=document_template.page_size,
+            page_margin=document_template.page_margin,
+            footer=document_template.footer,
+            is_landscape=is_landscape,
+            include_page_numbers=document_template.include_page_numbers
         )
-    
+
         content_file = ContentFile(document_bytes)
         
-        file_object = File()
+        if persist:
+            file_object = File()
         
-        #Save the file
-        file_object.file.save(template.name + ' ' + str(instance) + '.pdf', content_file)
+            #Save the file
+            file_object.file.save(document_template.name + ' ' + str(instance) + '.pdf', content_file)
 
-        file_object.name = template.name + ' ' + str(instance)
-        file_object.content_object = instance
+            file_object.name = document_template.name + ' ' + str(instance)
+            file_object.content_object = instance
 
-        #Save metadata
-        file_object.meta = meta_data
+            # Add created by
+            
 
-        file_object.save()
+            #Save metadata
+            file_object.meta = meta_data
+
+            file_object.save()
+
+            return file_object
+        else:
+            return content_file
         
     def create_preview_document(
             self,
-            template:DocumentTemplate,
+            document_template:DocumentTemplate,
             data:dict
         ) -> ContentFile:
-        ''' Creates a preview document for a particular template, using the model variable and the free variables:
-            - Template : The document template
+        ''' Creates a preview document for a particular document_template, using the model variable and the free variables:
+            - Template : The document document_template
             - Data : A dictionary of free variables
         '''
         #Format HTML
         django_engine = engines["django"]
-        temp = django_engine.from_string(template.template)
+        temp = django_engine.from_string(document_template.template)
         formatted_html = temp.render(data)
         
 
-        # Check if the template has styling
-        if not template.styling:
+        # Check if the document_template has styling
+        if not document_template.styling:
             styling = None
         else:
-            styling = template.styling.styling
+            styling = document_template.styling.styling
+
+        # Check if document_template has a header
+        if document_template.template_header:
+            header = document_template.template_header
+            header_url = header.header.path
+            header_margin_bottom = header.margin_bottom
+            header_margin_left = header.margin_left
+            header_margin_right = header.margin_right
+            header_margin_top = header.margin_top
+            header_height = header.height
+        else:
+            header_url = None
+            header_margin_bottom = 0
+            header_margin_left = 0
+            header_margin_right = 0
+            header_margin_top = 0
+            header_height = 0
+
+        if document_template.page_orientation == 'landscape':
+            is_landscape = True
+        else:
+            is_landscape = False
 
         document_bytes = generate_pdf(
             html_content=formatted_html,
-            css_content=styling
+            css_content=styling,
+            # Header options
+            header_url=header_url,
+            header_margin_bottom=header_margin_bottom,
+            header_margin_left=header_margin_left,
+            header_margin_right=header_margin_right,
+            header_margin_top=header_margin_top,
+            header_height=header_height,
+            # Page options
+            title=document_template.name,
+            page_size=document_template.page_size,
+            page_margin=document_template.page_margin,
+            footer=document_template.footer,
+            is_landscape=is_landscape,
         )
 
         content_file = ContentFile(document_bytes)
 
         return content_file
 
-
-
-    def send_signature_request(
-            self,
-            requested_by:int,
-            file_id: int,
-            requested_for = None,
-            requested_for_email = None,
-        ):
-        '''
-        Sends a signature request to someone.
-        '''
-        #Get file
-        file = File.objects.get(pk=int(file_id))
-        '''
-        if requested_for_email:
-            #Email given
-            signature_request = SignatureRequest(
-                requested_by=User.objects.get(pk=int(requested_by)),
-                requested_for_email=requested_for_email,
-                file = file
-            )
-            email = requested_for_email
-        else:
-            #User given
-            requested_for_user = User.objects.get(pk=int(requested_for))
-
-            signature_request = SignatureRequest(
-                requested_by=User.objects.get(pk=int(requested_by)),
-                requested_for=requested_for_user,
-                file = File.objects.get(pk=int(file_id))
-            )
-            email = requested_for_user.email
-        signature_request.save()
-        
-        #Send notification
-        NotificationController.create_notification_from_signature_request(signature_request)
-        '''
-
-    def sign_pdf(self, pdf_file : File, signature_bytes):
+    def sign_pdf(
+            self, 
+            file : File, 
+            signature_bytes : bytes
+            ) -> File:
         '''
         Function that will sign a pdf file, using signature bytes.
         '''
-        file_path = pdf_file.file.path
+        file_path = file.file.path
 
-        meta_data = {
-            'signed' : True
-        }
-        '''
+        # Create metadata variable
+        meta_data = {}
+
+        # If a user is present, add the user to the metadata
+        if self.user:
+            meta_data['user'] = self.user.pk
+
+        # Check if the file object has a document template
+        if 'document_template' in file.meta:
+            meta_data['document_template'] = file.meta['document_template']
+
+        # Add signed equals to true
+        meta_data['signed'] = True
+
+        # Create a PdfHandler object
         handler = PdfHandler(file_path)
 
         #Sign the actual document and retreive the bytes
@@ -149,30 +218,29 @@ class DocumentController:
             signature_path=None,
             signature_bytes= signature_bytes
         )
+
+        # Create a content file
         content_file = ContentFile(document_bytes)
         
+        # Create a file object
         signed_file_obj = File()
 
         #Save the file
-        signed_file_obj.file.save(pdf_file.name + '- signed' '.pdf', content_file)
+        signed_file_obj.file.save(file.name + '- signed' '.pdf', content_file)
 
-        signed_file_obj.name = pdf_file.name + ' - signed'
-        signed_file_obj.content_object = pdf_file.content_object
-        
-        signed_file_obj.meta = {'signed':True}
+        signed_file_obj.content_object = file.content_object
+
+        signed_file_obj.meta = meta_data
+        signed_file_obj.name = file.name + '- signed.pdf' 
         signed_file_obj.save()
         
-        pdf_file.meta = {'signed_file_id':signed_file_obj.pk}
-        pdf_file.save()
+        # Update the original file with the signed file id
+        file.meta = {'signed_file_id': str(signed_file_obj.pk)}
+        file.save()
 
         return signed_file_obj
-        '''
-
-        
-         
-
-
         
 
 
-        
+
+

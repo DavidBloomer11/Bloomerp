@@ -236,6 +236,7 @@ class UserCreateView(
         context["model_name"] = self.model._meta.verbose_name
         context["model_name_plural"] = self.model._meta.verbose_name_plural
         context["list_view_url"] = model_name_plural_underline(self.model) + "_list"
+        context["model"] = self.model
         return context
 
     def form_valid(self, form):

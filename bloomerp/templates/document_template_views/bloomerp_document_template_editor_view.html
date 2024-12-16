@@ -9,7 +9,6 @@
     <div class="d-flex justify-content-center m-2">
         <button type="submit" class="btn btn-primary">Save</button>
     </div>
-
 </form>
 
 <!-- Preview modal -->
@@ -41,7 +40,29 @@
                 ></button>
             </div>
             <div class="modal-body" id="previewModalBody">
-                <iframe id="previewIframe" style="width: 100%; height: 100vh;"></iframe>
+                <form 
+					hx-post="{% url 'components_generate_document_template' %}"
+					hx-target="#form-container"
+					hx-swap="innerHTML"
+					hx-trigger="submit"
+					>
+					{% csrf_token %}
+					
+					<div 
+						id="form-container" 
+						hx-get="{% url "components_generate_document_template" %}?document_template_id={{ object.pk }}&add_persist_field=false"
+						hx-trigger="load"
+						hx-target="#form-container"
+						hx-swap="innerHTML"
+						>
+					</div>
+
+					<input type="hidden" name="add_persist_field" value="false"/>
+
+					<textarea class="d-none" name="preview_content" id="preview_content"></textarea>
+					
+					<button type="submit" class="btn btn-primary">Preview</button>
+				</form>
             </div>
             <div class="modal-footer">
                 <button
@@ -70,7 +91,7 @@
     aria-hidden="true"
 >
     <div
-        class="modal-dialog modal-dialog-scrollable modal-dialog-centered"
+        class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-lg"
         role="document"
     >
         <div class="modal-content">
@@ -86,6 +107,8 @@
                 ></button>
             </div>
             <div class="modal-body" id="variablesModalBody">
+				<p>Click on a variable to add it to the editor</p>
+
                 <div class="row">
                     <div class="col">
                         <h5>Application fields</h5>
@@ -95,6 +118,7 @@
                                 onclick="addVariable('{{field.field}}','{{field.field_type}}')"
                                 data-bs-dismiss="modal"
                                 >{{ field.field }}
+								<span class="mx-2"><img src="{% static 'bloomerp/icons/arrow-right.svg' %}" alt="Magic" width=16 height=16></span>
                             </a>
                             <br>
                         {% endfor %}
@@ -105,9 +129,10 @@
                         {% for field in object.free_variables.all %}
                             <a 
                                 class="pointer" 
-                                onclick="addFreeVariable('{{field}}', '{{field.variable_type}}')"
+                                onclick="addFreeVariable('{{field.slug}}', '{{field.variable_type}}')"
                                 data-bs-dismiss="modal"
                                 >{{ field }}
+								<span class="mx-2"><img src="{% static 'bloomerp/icons/arrow-right.svg' %}" alt="Magic" width=16 height=16></span>
                             </a>
                             <br>
                         {% endfor %}
@@ -129,7 +154,7 @@
 </div>
 <!-- End variables modal -->
 
-{% include "snippets/llm_modal_snippet.html" with modal_id="aiModal" query_type="document_template" target="#llm_output" %}
+{% include "snippets/llm_modal_snippet.html" with id="document_template_ai" modal_id="document_template_ai_modal" query_type="document_template" target="llm_output" args=args %}
 
 <textarea id="llm_output" class="d-none"></textarea>
 
@@ -172,7 +197,7 @@
 					text: 'AI',
 					onAction: function () {
 						// Show the modal
-						const modal = new bootstrap.Modal(document.getElementById("aiModal"));
+						const modal = new bootstrap.Modal(document.getElementById("document_template_ai_modal"));
 						modal.show();
 					}
 				});
@@ -180,39 +205,6 @@
 		});
 	})();
 
-	// Add event listener to modal on show
-	document.getElementById('previewModal').addEventListener('show.bs.modal', async function (event) {
-		// Get the content of the editor
-		let content = tinymce.get('template').getContent();
-		let template_id = "{{ object.id | escapejs }}";
-
-		// Add the content
-		let baseUrl = "{% url 'components_preview_document_template'  %}";
-
-		// Send fetch request to the server
-		const response = await fetch(baseUrl, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'X-CSRFToken': '{{ csrf_token }}'
-			},
-			body: JSON.stringify({
-				content: content,
-				template_id: template_id
-			})
-		})
-
-		// Get the response
-		if (response.ok) {
-			const blob = await response.blob();
-			const url = URL.createObjectURL(blob);
-
-			// Set the iframe src
-			// Since the server uses a try catch block, the response will always be ok
-			// If an error occurs, the server will give the error message as a response
-			document.getElementById('previewIframe').src = url;
-		} 
-	});
 	
 	// Add variable to current cursor position
 	function addVariable(variable, type) {
@@ -265,12 +257,22 @@
 		editor.insertContent(content);
 	}
 
-	// Add content after llm query
-	document.addEventListener('htmx:afterSwap', function(event) {
-		if (event.detail.target.id == 'llm_output') {
-			// Get value of the llm output
-			let llmOutput = document.getElementById('llm_output').value;
-			tinymce.get('template').setContent(llmOutput);
-		}
+	document.getElementById('previewModal').addEventListener('show.bs.modal', async function (event) {
+		// Get the content of the editor
+		let content = tinymce.get('template').getContent();
+		
+		// Set the content value of the text area
+		document.getElementById('preview_content').innerHTML = content
+
 	});
+
+
+	// Add content after llm query
+	llm_output_div = document.getElementById('llm_output_document_template_ai');
+
+	llm_output_div.addEventListener('llm-inserted', function(e) {
+		// Set the content to the widget
+		tinymce.get('template').setContent(llm_output_div.innerHTML);
+	});
+
 </script>
