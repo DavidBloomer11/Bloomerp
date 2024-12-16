@@ -1,8 +1,9 @@
 from cryptography.fernet import Fernet
 
-class HeertechEncryption:
-    def __init__(self):
-        self.key = "eIam4iEcolyIkOPTr8xN30RzNHC4ziZPMa3u6XlkmXY="
+class BloomerpEncryptionSuite:
+    def __init__(self, key:str=None):
+        '''Initializes the encryption suite'''
+        self.key = key
         self.suite = Fernet(self.key)
 
     def encrypt_primary_key(self,pk):
