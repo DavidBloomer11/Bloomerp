@@ -53,6 +53,10 @@ def object_model_form(request:HttpRequest) -> HttpResponse:
             form.save()
             created = True
             new_object = form.instance
+
+            if hasattr(form, 'save_m2m'):
+                form.save_m2m()
+
         if reset_on_submit:
             form = Form(prefix=form_prefix, model=model, user=user)
     else:
