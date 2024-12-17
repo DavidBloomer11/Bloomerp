@@ -314,7 +314,7 @@ async function addFolderToFolder(folderId, parentFolderId) {
 // Function to refresh files
 function refreshFiles(target) {
     if (!target) {
-        target = "#file_results";
+        target = "#file_list";
     }
     
     setTimeout(() => {
@@ -378,7 +378,7 @@ function sortFiles(sortBy) {
     } else {
         url += '?sort=' + sortBy;
     }
-    htmx.ajax('GET',url, '#file_results');
+    htmx.ajax('GET',url, '#file_list');
 }
 
 // Get selected objects
