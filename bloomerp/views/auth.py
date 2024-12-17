@@ -151,7 +151,7 @@ class UserListViewPreferenceView(ProfileMixin, BloomerpBaseDetailView):
             if return_to:
                 return redirect(return_to)
             else:
-                return redirect(reverse('list_view_preference') + f'?content_type_id={content_type_id}')
+                return redirect(reverse('users_my_profile_list_view_preference') + f'?content_type_id={content_type_id}')
         else:
             return render(request, self.template_name, {'form': form})
 
