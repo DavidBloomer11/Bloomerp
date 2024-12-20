@@ -2,11 +2,18 @@
 Snippet for a modal window that is used to create a query to an llm.
 
 Variables:
-    - modal_id: The id of the modal window.
+    - id: The id of the modal window.
     - title: The title of the modal window.
     - query_type: The type of the query to be executed.
-    - target: The target of the query.
+    - target: The target of the query (if any).
+    - modal_id : The id of the modal window.
+    - args : The arguments to be passed to the llm executor. (args have the form argName=argValue;argName=argValue;...)
 -->
+{% load static %}
+{% load bloomerp %}
+
+{% generate_uuid as conversation_id %}
+
 <div
     class="modal fade"
     id="{{ modal_id }}"
@@ -20,6 +27,7 @@ Variables:
     <div
         class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-lg"
         role="document"
+        id = "modal-dialog-{{ conversation_id }}"
     >
         <div class="modal-content">
 
@@ -35,37 +43,71 @@ Variables:
                 ></button>
             </div>
             
-            <div class="modal-body">
-                <div class="form-floating mb-3">
-                    <textarea
-                        class="form-control"
-                        id="llm_query"
-                        name="llm_query"
-                        placeholder="Query"
-                        style="height: 200px"
-                    ></textarea>
-                    <label for="llm_query">Query</label>
+            <div class="modal-body container">
+                <!-- Conversation container -->
+                <div id="conversation_container_{{ id }}">
+                    
                 </div>
+                <!-- End conversation container -->
+
+
+                <!-- Query -->
+                <div class="form-floating">
+                    <textarea 
+                        class="form-control" 
+                        id="llm_query_{{ id }}">
+
+                    </textarea>
+                    <label for="floatingTextarea">Query</label>  
+                </div>
+                <!-- End query -->
+
             </div>
-            <div class="modal-footer">
-                <button
-                    type="button"
-                    class="btn btn-secondary"
-                >
-                    Close
-                </button>
-                <button 
-                    hx-get="{% url 'components_llm_executor' %}?llm_query_type={{ query_type }}"
-                    hx-target="{{ target }}"
-                    hx-swap="innerHTML"
-                    hx-trigger="click"
-                    hx-include="#llm_query"
-                    class="btn btn-primary"
-                    data-bs-dismiss="modal"
-                    type="button" >Generate</button>
+            <div class="modal-footer d-flex justify-content-between">
+                
+                    <div class="d-flex">
+                        <button
+                            type="button"
+                            class="btn btn-secondary"
+                            onclick="toggleFullScreenModal('modal-dialog-{{ conversation_id }}')"
+                            >Full Screen
+                        </button>
+                    </div>
+
+
+                    <div class="d-flex gap-2">
+                        <button
+                            type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal"
+                        >
+                            Close
+                        </button>
+                        <button 
+                            onclick="llmContentStreamer('{% url "components_llm_executor" %}', '{{ id }}', '{{ query_type }}', '{{ target }}', '{{ args }}')"
+                            class="btn btn-primary"
+                            type="button"
+                            id="generate_button_{{ id }}"
+                        >
+                            Send message
+                        </button>
+                    </div>
+                
             </div>
-            
         </div>
     </div>
 </div>
+
+<div id="llm_output_{{ id }}" class="d-none">
+    
+</div>
+
+<script>
+    document.getElementById('llm_query_{{ id }}').addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            document.getElementById('generate_button_{{ id }}').click();
+        }
+    });
+</script>
 

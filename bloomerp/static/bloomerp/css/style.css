@@ -1333,9 +1333,9 @@ Dashboard
 /* Wrapper to hold all messages */
 .messages-wrapper {
   position: fixed;
-  bottom: 20px; /* Distance from the bottom */
+  bottom: 40px; /* Distance from the bottom */
   right: 60px;  /* Distance from the right */
-  z-index: 1000; /* Ensure it appears above other elements */
+  z-index: 1100; /* Ensure it appears above other elements */
   display: flex;
   flex-direction: column; /* Stack messages vertically */
   gap: 10px; /* Space between messages */
@@ -1402,4 +1402,59 @@ Dashboard
   justify-content: center;
   align-items: center;
   height: 50vh;
+}
+
+/* 
+  LLM CSS
+*/
+.assistant-bubble {
+  background-color: white;
+  color: black;
+  padding: 10px;
+  border-radius: 10px;
+  max-width: 75%;
+  word-wrap: break-word;
+  border: var(--primary) 2px solid;
+}
+.user-bubble {
+  background-color: var(--primary);
+  color: #fff;
+  padding: 10px;
+  border-radius: 10px;
+  max-width: 75%;
+  word-wrap: break-word;
+}
+
+/* 
+  Signature css
+*/
+
+.signature-canvas {
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+  width: 100%;
+  height: 200px;
+  touch-action: none; 
+}
+
+.initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: gray;
+  color: white;
+}
+
+/* 
+  Context menu
+*/
+
+.context-menu {
+  display: none;
+  position: absolute;
+  z-index: 1000;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 5px;
 }
