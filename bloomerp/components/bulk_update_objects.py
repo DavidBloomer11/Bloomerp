@@ -14,9 +14,10 @@ from django.shortcuts import get_object_or_404
 def bulk_update_objects(request:HttpRequest) -> HttpResponse:
     # Get the content type id and form prefix from the query parameters
     content_type_id = request.GET.get('content_type_id')
-    form_prefix = request.GET.get('form_prefix','')
+    form_prefix = request.GET.get('bulk_update_form_prefix','')
     user = request.user
     num_objects = 0
+
 
     # Initialize potential errors
     errors = []
@@ -64,6 +65,7 @@ def bulk_update_objects(request:HttpRequest) -> HttpResponse:
             Form = modelform_factory(model, fields=fields, form=BloomerpModelForm)
 
             # Loop through the objects and update them
+            
             for obj in objects:
                 form = Form(data=request.POST, files=request.FILES, prefix=form_prefix, instance=obj, model=model, user=user)
                 if form.is_valid():

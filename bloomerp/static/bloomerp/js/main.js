@@ -186,16 +186,16 @@ function showBloomerpSidebar() {
 // --------------------------------------------
 // HTMX Indicator
 // --------------------------------------------
-function createSpinner() {
-    var spinner = document.createElement("div");
+function createSpinner(addContainer = true) {
+    const spinner = document.createElement("div");
     spinner.id = "spinner";
-    spinner.className = "spinner-container";
+    if (addContainer) spinner.className = "spinner-container";
 
-    var spinnerBorder = document.createElement("div");
-    spinnerBorder.className = "spinner-border";
+    const spinnerBorder = document.createElement("div");
+    spinnerBorder.className = addContainer ? "spinner-border" : "";
     spinnerBorder.setAttribute("role", "status");
 
-    var spinnerText = document.createElement("span");
+    const spinnerText = document.createElement("span");
     spinnerText.className = "visually-hidden";
     spinnerText.innerText = "Loading...";
 
@@ -218,7 +218,7 @@ document.addEventListener("htmx:beforeRequest", function (event) {
 });
 
 
-document.addEventListener("htmx:beforeHistorySave", function(event) {
+document.addEventListener("htmx:beforeHistorySave", async function(event) {
     // Remove the spinner
     var spinner = document.getElementById("spinner");
     if (spinner) {
@@ -226,20 +226,24 @@ document.addEventListener("htmx:beforeHistorySave", function(event) {
     }
 });
 
-
 document.addEventListener("htmx:afterRequest", function (event) {
     var xhr = event.detail.xhr;
-    
     // Show the target element
     var target = event.detail.target;
     target.style.visibility = "visible";
-
     // Make the target element visible
-
     if (xhr.status === 500) {
         target.innerHTML = "<p>Oops, something went wrong.</p>";
     }
     
-    
 });
 
+
+/**
+ * Modal functions
+ */
+
+function toggleFullScreenModal(modalDialogId) {
+    var modalDialog = document.getElementById(modalDialogId);
+    modalDialog.classList.toggle("modal-fullscreen");
+}

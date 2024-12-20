@@ -8,25 +8,28 @@
 
         <!--TABLE RESULT-->
         {% if widget.output_type == 'table' %}
-
-        <table class="table table-striped">
-            <thead>
-              <tr>
-                {% for col in result.columns %}
-                <th scope="col">{{col|title}}</th>
-                {% endfor %}
-              </tr>
-            </thead>
-            <tbody>
-                {% for row in result.data %}
-                <tr>
-                    {% for cell in row %}
-                    <td>{{cell}}</td>
+        <div
+          class="table-responsive overflow-auto"
+        >
+            <table class="table table-striped">
+                <thead>
+                  <tr>
+                    {% for col in result.columns %}
+                    <th scope="col">{{col|title}}</th>
                     {% endfor %}
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                  </tr>
+                </thead>
+                <tbody>
+                    {% for row in result.data %}
+                    <tr>
+                        {% for cell in row %}
+                        <td>{{cell}}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
         <!--END TABLE RESULT-->
 
         {% elif widget.output_type == 'value' %}

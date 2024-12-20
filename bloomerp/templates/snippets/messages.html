@@ -1,4 +1,3 @@
-<!-- Template: messages.html -->
 
 {% load static %}
 
@@ -74,67 +73,4 @@
 </script>
 
 
-<style>
-    /* Wrapper to hold all messages */
-    .messages-wrapper {
-        position: fixed;
-        bottom: 20px; /* Distance from the bottom */
-        right: 20px;  /* Distance from the right */
-        z-index: 1000; /* Ensure it appears above other elements */
-        display: flex;
-        flex-direction: column; /* Stack messages vertically */
-        gap: 10px; /* Space between messages */
-    }
 
-    /* Common styles for all message containers */
-    .message-container {
-        padding: 15px 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        min-width: 400px; /* Optional: Set a minimum width */
-        max-width: 600px; /* Optional: Set a maximum width */
-        opacity: 1; /* Initial opacity */
-        transition: opacity 0.5s ease-out, transform 0.5s ease-out; /* Transition for fade-out and slight upward movement */
-    }
-    
-    /* Specific styles for error messages */
-    .alert-message-error {
-        background-color: #f8d7da; /* Light red background */
-        color: #721c24;           /* Dark red text */
-    }
-
-    /* Specific styles for success messages */
-    .alert-message-success {
-        background-color: #d4edda; /* Light green background */
-        color: #155724;           /* Dark green text */
-    }
-
-    /* Styles for the inner message content */
-    .alert-message {
-        font-size: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .alert-message-info {
-        background-color: #cce5ff; /* Light blue background */
-        color: #004085;           /* Dark blue text */
-    }
-
-    .alert-icon {
-        padding-right: 5px;
-        height: 24px;
-    }
-
-    .alert-close {
-        cursor: pointer;
-        height: 20px;
-    }
-
-    .fade-out {
-        opacity: 0;
-        transform: translateY(-20px); /* Optional: Move the message slightly upwards */
-    }
-
-</style>

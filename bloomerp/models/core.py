@@ -18,6 +18,7 @@ class BloomerpModel(
     mixins.StringSearchModelMixin,
     mixins.UserStampedModelMixin,
     mixins.AbsoluteUrlModelMixin,
+    mixins.AvatarModelMixin,
     models.Model,
 ):
     '''
@@ -134,11 +135,15 @@ class ApplicationField(models.Model):
         return qs
 
     @staticmethod
-    def get_db_tables_and_columns() -> list[tuple[str, list[str]]]:
+    def get_db_tables_and_columns(user= None) -> list[tuple[str, list[str]]]:
         """
         Returns a tuple for each database table.
         The tuple contains the table name and a tuple of the list of columns and there datatype.
         
+        Args:
+            user (User): The user object
+
+
         Example output:
         [
             ('auth_user', [('id', 'int'), ('username','varchar'), ...]),
@@ -147,7 +152,13 @@ class ApplicationField(models.Model):
 
         """
         tables = []
+
         qs = ApplicationField.objects.filter(db_table__isnull=False)
+
+        if user:
+            content_types = user.get_content_types_for_user(permission_types=["view"])
+            qs = qs.filter(content_type__in=content_types)
+
 
         for table in qs.values("db_table").distinct():
             table_name = table["db_table"]
@@ -155,6 +166,8 @@ class ApplicationField(models.Model):
                 "db_column", "db_field_type"
             )
             tables.append((table_name, columns))
+
+        print(tables)
 
         return tables
 
@@ -269,7 +282,6 @@ class File(
         """Returns the name of the file."""
         return self.file.name
 
-    
     def get_accesible_files_for_user(
         query: str, 
         user, 

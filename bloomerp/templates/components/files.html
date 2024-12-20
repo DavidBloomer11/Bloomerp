@@ -13,7 +13,7 @@ Variables:
 {% load crispy_forms_tags %}
 
 <!--breadcrumb-->
-<div class="d-flex">
+<div class="d-flex my-2">
     <nav>
         {% if current_folder %}
             <a 
@@ -33,7 +33,10 @@ Variables:
                 aria-haspopup="true"
                 aria-expanded="false"
                 >Root
+                
             </a>
+            <span class="card-title"> > </span>
+
             <div
                 class="dropdown-menu dropdown-menu-start"
                 aria-labelledby="triggerId"
@@ -163,9 +166,9 @@ Variables:
                     <td>{{ folder.created_by }}</td>
                     <td>{{folder.datetime_updated}}</td>
                     <td></td>
-                    <td width="100px">
+                    <td width="120px">
                         <div class="d-flex d-none justify-content-between">
-                            <a href="#"><i class="bi bi-trash"></i></a>
+                            
                         </div>
                     </td>
                 </tr>
@@ -197,18 +200,30 @@ Variables:
                     <td>{{ file.created_by }}</td>
                     <td>{{ file.datetime_updated | date:request.user.datetime_view_preference }}</td>
                     <td>{{ file.size_str }}</td>
-                    <td width="100px">
+                    <td width="120px">
                         <div class="d-flex d-none justify-content-between">
-                            <a href="{{ file.file.url }}">
+                            {% if file.file_extension == 'pdf' %}
+                            <a
+                                data-bs-target="#signPdfModal"
+                                data-bs-toggle="modal"
+                                data-bs-fileId="{{ file.pk }}"
+                                onclick="document.getElementById('signatureFileId').value = '{{ file.pk }}'"
+                                class="pointer"
+                                draggable="false"
+                                >
+                                <img src="{% static 'bloomerp/icons/pen.svg' %}" alt="View" width="20" height="20">
+                            </a>
+                            {% endif %}
+                            <a href="{{ file.file.url }}" draggable="false">
                                 <img src="{% static 'bloomerp/icons/download.svg' %}" alt="Download" width="20" height="20">
                             </a>
-                            <a href="#">
+                            <a href="#" draggable="false">
                                 <img src="{% static 'bloomerp/icons/share.svg' %}" alt="Share" width="20" height="20">
                             </a>
-                            <a href="#">
+                            <a href="#" draggable="false">
                                 <img src="{% static 'bloomerp/icons/edit.svg' %}" alt="Edit" width="20" height="20">
                             </a>
-                            <a href="#" data-bs-toggle="modal" data-bs-target="#deleteFileModal" data-bs-fileId="{{ file.pk }}">
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#deleteFileModal" data-bs-fileId="{{ file.pk }}" draggable="false">
                                 <img src="{% static 'bloomerp/icons/delete.svg' %}" alt="Delete" width="20" height="20">
                             </a>
                         </div>
@@ -270,8 +285,6 @@ Variables:
 <input type="hidden" id="file_table_sort" value="{{sort}}">
 <input type="hidden" id="file_table_target" value="#{{ target }}">
 <!--End hidden inputs for JS-->
-
-<!--MODALS-->
 
 
 {% if current_folder %}
@@ -705,10 +718,64 @@ Variables:
 </div>
 <!--End Bulk delete modal-->
 
-<!--Update file modal-->
+<!--Sign pdf modal-->
+<div
+    class="modal fade"
+    id="signPdfModal"
+    tabindex="-1"
+    data-bs-backdrop="static"
+    data-bs-keyboard="false"
+    role="dialog"
+    aria-labelledby="signPdfModalTitle"
+    aria-hidden="true"
+>
+    <div
+        class="modal-dialog   modal-lg"
+        role="document"
+    >
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="signPdfModalTitle">
+                    Sign PDF
+                </h5>
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                ></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="{% url "components_sign_file" %}">
+                    {% csrf_token %}
+
+                    <input type="hidden" name="file_id" id="signatureFileId" value="">
+                    
+                    {% include "snippets/signature_snippet.html" with signature_field_name="signature" %}
+
+                    <div class="d-flex justify-content-center">
+                        <button type="submit" class="btn btn-primary">Sign</button>
+                    </div>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal"
+                >
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--End Sign pdf modal-->
+
+
 
 
 <!--END MODALS -->
-
-
 <script src="{% static 'bloomerp/js/files.js' %}"></script>
+

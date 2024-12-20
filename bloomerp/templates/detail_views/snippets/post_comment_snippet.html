@@ -3,6 +3,7 @@
     - content_type_id: The content type id of the object
     - object: The object to which the comments will be posted
 -->
+{% load bloomerp %}
 
 <div class="p-2 mb-2">
         <form
@@ -14,7 +15,7 @@
             {% csrf_token %}
             <div class="justify-content-start align-items-center d-flex gap-2">
                 <div class="commentAuthor">
-                    {% include "snippets/avatar.html" with image_attribute=request.user.avatar class="mr-3 rounded-circle" style="width:30px; height:30px" %}
+                    {% avatar object=request.user size="50px" class_name="rounded-circle" %}
                 </div>
 
                 <div class="flex-grow-1">

@@ -36,6 +36,8 @@ class Command(BaseCommand):
                     #----------------------------------------------
                     field_list = []
                     fields = Model._meta.get_fields()
+
+                    
                     for field in fields:
                         try:
                             # Try-catch block needed to filter out reverse relation fields

@@ -67,6 +67,11 @@ class BloomerpListView(
             return self.permission_required
         else:
             return [f"{self.model._meta.app_label}.view_{self.model._meta.model_name}"]
+        
+    def get_context_data(self, **kwargs: Any) -> dict:
+        context = super().get_context_data(**kwargs)
+        context["title"] = self.model._meta.verbose_name.capitalize() + " list"
+        return context
 
     
 # ---------------------------------
@@ -177,6 +182,7 @@ class BloomerpCreateView(
         context["model_name"] = self.model._meta.verbose_name
         context["model_name_plural"] = self.model._meta.verbose_name_plural
         context["list_view_url"] = model_name_plural_underline(self.model) + "_list"
+        context["model"] = self.model
         return context
 
     def get_permission_required(self):
@@ -267,6 +273,7 @@ class BloomerpForeignRelationshipView(
     foreign_model_detail_url  = None # The URL to redirect to when clicking on a foreign model
     read_only = False # Whether the view is read only
     form_class = None
+    foreign_relationship_type = None
 
     def check_permission(self, permission):
         if not self.request.user.has_perm(permission):
@@ -287,19 +294,30 @@ class BloomerpForeignRelationshipView(
     def get_context_data(self, **kwargs: Any) -> dict:
         context = super().get_context_data(**kwargs)
 
+        print(self.model)
+        print(self.foreign_model)
+        print(self.foreign_model_attribute)
+
         if self.foreign_model == None or self.foreign_model_attribute == None:
             raise NotImplementedError(
                 "No foreign model or foreign model attribute given."
             )
 
         # Create the form
-        Form = modelform_factory(fields="__all__", model=self.foreign_model, form=BloomerpModelForm)
+        try:
+            Form = modelform_factory(fields="__all__", model=self.foreign_model, form=BloomerpModelForm)
+            # Initialize the form and set the instance
+            form = Form(initial={self.foreign_model_attribute: self.object.pk}, model=self.foreign_model)
 
-        # Initialize the form and set the instance
-        form = Form(initial={self.foreign_model_attribute: self.object.pk}, model=self.foreign_model)
+            # Hide the foreign model attribute
+            form.fields[self.foreign_model_attribute].widget = forms.HiddenInput()
+        except Exception as e:
+            # Case where the relation ship type is a ManyToManyField but the model has m2m on the other side
+            new_model = self.foreign_model._meta.get_field(self.foreign_model_attribute).through
 
-        # Hide the foreign model attribute
-        form.fields[self.foreign_model_attribute].widget = forms.HiddenInput()
+            Form = modelform_factory(fields="__all__", model=new_model, form=BloomerpModelForm)
+
+            form = Form(initial={self.foreign_model_attribute: self.object.pk}, model=new_model)
 
         # Get application fields for the foreign model
         application_fields = ApplicationField.get_for_model(self.foreign_model)
@@ -363,6 +381,7 @@ class BloomerpDetailFileListView(PermissionRequiredMixin, BloomerpBaseDetailView
         context['title'] = f'Files for {self.get_object()}'
         context['target'] = 'file_results'
         return context
+
 # ---------------------------------
 # Bloomerp Bulk Upload View
 # ---------------------------------
@@ -451,6 +470,7 @@ class BloomerpDetailCommentsView(PermissionRequiredMixin, BloomerpBaseDetailView
         context['comments'] = self.object.comments.all()
         return context
 
+
 @router.bloomerp_route(
     path="user-bookmarks",
     name="Bookmarks for user",
@@ -468,12 +488,30 @@ class BloomerpBookmarksView(PermissionRequiredMixin, HtmxMixin, View):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['content_type_id'] = ContentType.objects.get_for_model(self.model).pk
+        context['initial_query'] = 'user=' + str(self.request.user.pk)
         return context
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data()
         return render(request, self.template_name, context)
 
+from django.views.generic import TemplateView
+@router.bloomerp_route(
+    path="test",
+    name="Test",
+    url_name="test",
+    route_type="app",
+    description="Test",
+)
+class TestView(HtmxMixin, TemplateView):
+    template_name = "test.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        return context
+    
 
 
 

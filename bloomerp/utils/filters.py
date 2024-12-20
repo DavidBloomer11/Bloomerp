@@ -63,6 +63,7 @@ def dynamic_filterset_factory(model):
             # Add exact filter for IntegerField
             filter_overrides[f'{field.name}'] = django_filters.NumberFilter(field_name=field.name, lookup_expr='exact')
             filter_overrides[f'{field.name}__equals'] = django_filters.NumberFilter(field_name=field.name, lookup_expr='exact')
+            filter_overrides[f'{field.name}__exact'] = django_filters.NumberFilter(field_name=field.name, lookup_expr='exact')
 
         elif isinstance(field, DateField) or isinstance(field, DateTimeField):
             if field.get_internal_type() == 'DateField':
@@ -71,12 +72,17 @@ def dynamic_filterset_factory(model):
                 filter_overrides[f'{field.name}__lte'] = DateFilter(field_name=field.name, lookup_expr='lte')
                 filter_overrides[f'{field.name}__gt'] = DateFilter(field_name=field.name, lookup_expr='gt')
                 filter_overrides[f'{field.name}__lt'] = DateFilter(field_name=field.name, lookup_expr='lt')
+
+                # Add exact filter for DateField
+                filter_overrides[f'{field.name}__exact'] = DateFilter(field_name=field.name, lookup_expr='exact')
             else:
                 # DateTime fields: Add gte, lte, gt, lt filters
                 filter_overrides[f'{field.name}__gte'] = django_filters.DateTimeFilter(field_name=field.name, lookup_expr='gte')
                 filter_overrides[f'{field.name}__lte'] = django_filters.DateTimeFilter(field_name=field.name, lookup_expr='lte')
                 filter_overrides[f'{field.name}__gt'] = django_filters.DateTimeFilter(field_name=field.name, lookup_expr='gt')
                 filter_overrides[f'{field.name}__lt'] = django_filters.DateTimeFilter(field_name=field.name, lookup_expr='lt')
+                filter_overrides[f'{field.name}__exact'] = django_filters.DateTimeFilter(field_name=field.name, lookup_expr='exact')
+
 
             # Add isnull filter for DateField
             filter_overrides[f'{field.name}__isnull'] = django_filters.BooleanFilter(field_name=field.name, lookup_expr='isnull')

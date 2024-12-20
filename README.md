@@ -524,3 +524,4 @@ By contributing to this project, you agree that your contributions will be licen
 This project is licensed under the [GNU Affero General Public License v3](LICENSE.txt).
 
 For commercial licensing options, please contact [bloomer.david@outlook.com](mailto:bloomer.david@outlook.com).
+

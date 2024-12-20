@@ -73,7 +73,7 @@ class BloomerpModelIO:
         sheet.append(fields)
 
         for obj in queryset:
-            row = [getattr(obj, field) for field in fields]
+            row = [getattr(obj, field).__str__() for field in fields]
             sheet.append(row)
 
         workbook.save(buffer)
@@ -205,3 +205,4 @@ class BloomerpModelIO:
 
         else:
             raise ValueError("Invalid file type. Must be either 'csv' or 'xlsx'.")
+        

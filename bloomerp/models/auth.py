@@ -8,7 +8,7 @@ from django.forms import ValidationError
 from bloomerp.models.core import BloomerpModel, ApplicationField
 from bloomerp.models.widgets import Widget
 from django.utils.translation import gettext as _
-from bloomerp.utils.models import model_name_plural_underline
+from bloomerp.utils.models import model_name_plural_underline, get_detail_view_url
 from django.urls import reverse, NoReverseMatch
 from bloomerp.models.mixins import (
     AbsoluteUrlModelMixin,
@@ -264,10 +264,19 @@ class Bookmark(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
-    object = GenericForeignKey("content_type", "object_id")
+    object : models.Model = GenericForeignKey("content_type", "object_id")
 
     datetime_created = models.DateTimeField(auto_now_add=True)
 
+    def get_absolute_url(self):
+        try:
+            return self.object.get_absolute_url()
+        except:
+            model = self.object._meta.model
+            detail_view_url = get_detail_view_url(model)
+            return reverse(detail_view_url, args=[self.object.pk])
+            
+    
 
 # ---------------------------------
 # Bloomerp Comment Model
@@ -521,6 +530,16 @@ class Link(
                 return False
             except NoReverseMatch:
                 return True
+
+    def to_absolute_url(self) -> str:
+        from django.urls import reverse
+        if self.is_absolute_url:
+            return self.url
+        else:
+            try:
+                return reverse(self.url)
+            except:
+                pass
 
     def get_args(self) -> list:
         '''
@@ -867,6 +886,7 @@ class Workspace(
                 links.append(link)
 
 
+
         content = {
             'content': [
                 {
@@ -883,14 +903,16 @@ class Workspace(
                     'type': 'header',
                     'data': {'text': 'Some quick links'},
                     'size': 12
-                },
-                {
-                    'type': 'link_list',
-                    'data': {'links': [link.pk for link in links[:5]]},
-                    'size': 12
                 }
             ]
         }
+
+        if links:
+            content['content'].append({
+                'type': 'link_list',
+                'data': {'links': [link.pk for link in links]},
+                'size': 12
+            })
 
         workspace, created = Workspace.objects.get_or_create(
             user=user,

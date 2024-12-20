@@ -4,48 +4,14 @@
 {% load crispy_forms_tags %}
 
 <!-- Page Title -->
-<div class="pagetitle">
-    <h1>{{model_name_plural|title}}</h1>
-    <nav>
-      <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a 
-			hx-get="{% url "bloomerp_home_view" %}"
-			hx-target="#main-content"
-			hx-push-url="true"
-			hx-swap="innerHTML"
-			class="pointer"
-			>Home</a></li>
-		<li class="breadcrumb-item"><a 
-				hx-get="{% url model_dashboard_url %}"
-				hx-target="#main-content"
-				hx-swap="innerHTML"
-				hx-push-url="true"
-				class="pointer"
-				>{{model_name_plural|title}}</a></li>
-        <li class="breadcrumb-item active">List</li>
-      </ol>
-    </nav>
-</div>
-<!-- End Page Title -->
+{% breadcrumb title=title model=model %}
 
 <div class="card">
   
   	<div class="card-body">
 		<h4 class="card-title">{{model_name_plural|title}} list</h4>
 		
-		{% include "snippets/list_view_filter.html" with application_fields=application_fields target="#table_section" content_type_id=content_type_id include_actions="true"  %}
-		
-		<div 
-			id="table_section"
-			hx-get="{% url 'components_data_table' %}
-				?data_table_content_type_id={{ content_type_id }}
-				&data_table_include_actions=true"
-			hx-trigger="load"
-			hx-target="#table_section"
-			hx-swap="innerHTML"	
-			>
-
-		</div>
+		{% datatable content_type_id=content_type_id user=request.user request=request %}
 
 		<div class="d-flex justify-content-center gap-2">
 			<a class="btn btn-primary" href="{% url create_view_url %}">Add {{ model_name }}</a>

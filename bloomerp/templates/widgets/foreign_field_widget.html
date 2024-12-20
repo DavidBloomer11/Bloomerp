@@ -12,6 +12,7 @@
         - makeAdvancedSearchTableClickable
 -->
 {% load crispy_forms_tags %}
+{% load bloomerp %}
 
 {% if widget_type == 'm2m' %}
 <div class="d-none" id="{{ widget.name }}_input_div">
@@ -53,11 +54,11 @@
                 type="button"
                 data-show-modal="{{ advanced_search_modal_id }}"
                 data-bs-target="#{{ advanced_search_modal_id }}"
-                hx-get="{% url 'components_data_table' %}?data_table_content_type_id={{ content_type_id }}"
-                hx-target="#{{ widget.name }}_advanced_search_table"
+                hx-get="{% url 'components_datatable_and_filter' %}?content_type_id={{ content_type_id }}&include_actions=false"
+                hx-target="[id='{{ widget.name }}_advanced_search_table']"
                 hx-swap="innerHTML"
                 hx-trigger="click"
-                hx-on::after-request="makeAdvancedSearchTableClickable('{{ widget.name | escapejs }}', '{{ widget_type }}')"
+                onclick="addClickableEventListener('{{ widget.name | escapejs }}', '{{ widget_type }}')"
                 >Advanced search
             </a>
         </li>
@@ -67,7 +68,7 @@
                 type="button"
                 data-show-modal="{{ create_modal_id }}"
                 hx-get="{% url 'components_object_model_form' %}?content_type_id={{ content_type_id }}&form_prefix={{ create_modal_id }}"
-                hx-target="#{{ create_modal_id }}_body"
+                hx-target="[id='{{ create_modal_id }}_body']"
                 hx-trigger="click"
                 hx-swap="innerHTML"
                 >Create new item
@@ -95,9 +96,10 @@
     tabindex="-1"
 >
     <div
-        class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-lg"
+        class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-xl"
     >
-        <div class="modal-content">
+        <div
+            class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalTitleId">
                     Advanced search
@@ -110,12 +112,7 @@
                 ></button>
             </div>
             <div class="modal-body">
-                <div id="{{ widget.name }}_list_view_filter">
-                    <!-- The search results will be loaded here -->
-                    <!-- include "snippets/list_view_filter.html" with application_fields=application_fields target="#"|add:widget.name|add:"_advanced_search_table" content_type_id=content_type_id include_actions="false"-->
-                </div>
-
-                <div id="{{widget.name}}_advanced_search_table">
+                <div id="{{ widget.name }}_advanced_search_table">
                     <!-- The table will be loaded here -->
                 </div>
             </div>
@@ -174,6 +171,7 @@
                     hx-post="{% url 'components_object_model_form' %}?content_type_id={{ content_type_id }}&form_prefix={{ create_modal_id }}"
                     hx-target="#{{ create_modal_id }}_body" 
                     hx-include="#{{ create_modal_id }}_body"
+                    hx-encoding="multipart/form-data"
                     hx-on::after-request="setNewObject('{{ widget.name }}', '{{ create_modal_id }}_new_object', '{{ widget_type }}')"
                     hx-swap="innerHTML"
                     class="btn btn-primary">Save</button>
@@ -182,6 +180,7 @@
     </div>
 </div>
 <!-- END CREATE NEW ITEM MODAL -->
+
 
 
 <style>

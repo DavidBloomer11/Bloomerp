@@ -1,13 +1,13 @@
+{% load bloomerp %}
 
 <input type="hidden" id="csrf_token" name="csrfmiddlewaretoken" value="{{csrf_token}}">
-
 
 {% for comment in comments %}
     <div class="border mb-2 p-2 rounded">
         <div class="commentHeader justify-content-between d-flex mb-2">
             <div class="d-flex align-items-center gap-2">
                 <div class="commentAuthor">
-                    {% include "snippets/avatar.html" with image_attribute=request.user.avatar class="mr-3 rounded-circle" style="width:30px; height:30px" %}
+                    {% avatar object=request.user size="50px" class_name="rounded-circle" %}
                 </div>
                 <div class="fw-bold">{{comment.created_by}}</div>
                 <div class="text-muted">{{comment.datetime_created}}</div>

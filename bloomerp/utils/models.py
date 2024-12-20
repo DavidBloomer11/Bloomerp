@@ -40,14 +40,14 @@ def get_attribute_name_for_foreign_key(model:Model, related_model:Model) -> str:
         try:
             
             if field.many_to_one and field.related_model == related_model:
-                return field.name
+                return (field.name, "many_to_one")
             if field.many_to_many and field.related_model == related_model:
-                return field.name
+                return (field.name, "many_to_many")
 
         except:
             pass
 
-    return None
+    return None, None
 
 def get_file_fields_dict_for_model(model:Model) -> list[dict[str, bool]]:
     """
@@ -365,3 +365,13 @@ def search_models_by_query(query:str) -> list[ContentType]:
         if query.lower() in content_type.model_class()._meta.verbose_name_plural.lower():
             search_results.append(content_type)
     return search_results
+
+
+# ---------------------------------
+# OTHER
+# ---------------------------------
+def get_initials(object:Model) -> str:
+    """
+    This function returns the initials of the object.
+    """
+    return ''.join([word[0].upper() for word in object.__str__().split()])[0:2]

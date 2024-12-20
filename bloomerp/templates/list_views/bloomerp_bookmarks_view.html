@@ -1,2 +1,14 @@
+{% load bloomerp %}
 
 {% include "snippets/breadcrumb.html" with title="My bookmarks" list_view_url="bookmarks_list" model_name_plural="Bookmarks" %}
+
+<div class="card text-start">
+    <div class="card-body">
+        <h4 class="card-title">My bookmarks</h4>
+        {% datatable content_type_id=content_type_id user=request.user initial_query=initial_query %}
+    </div>
+</div>
+
+
+
+

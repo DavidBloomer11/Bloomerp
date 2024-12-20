@@ -32,7 +32,20 @@ Variables:
                 {% endif %}
                 
                 {% for column in list_view_preferences %}
-                    <th>{{ column.field_name }}</th>
+                    {% if column.application_field.field_type == 'Property' %}
+                        <th>{{ column.field_name }}</th>
+                    {% elif data_table_order_by == column.application_field.field %}
+                        <th 
+                            class="pointer" 
+                            onclick="filterDataTable('data_table_order_by=-{{column.application_field.field}}','{{datatable_id}}')">
+                            <u>{{ column.field_name }}</u>
+                        </th>
+                    {% else %}
+                        <th 
+                            class="pointer"
+                            onclick="filterDataTable('data_table_order_by={{column.application_field.field}}','{{datatable_id}}')">{{ column.field_name }}</th>
+                    {% endif %}
+                    
                 {% endfor %}
 
                 {% if include_actions %}
@@ -59,8 +72,9 @@ Variables:
                         {% endif %}
                     {% endif %}
 
-                    {% for pref in list_view_preferences %}
-                        <td> {% field_value object pref.application_field request.user %} </td>
+                    {% for preference in list_view_preferences %}
+                        
+                        {% field_value object preference.application_field request.user datatable_item=True %}
                     {% endfor %}
 
                     {% if include_actions %}
@@ -89,17 +103,17 @@ Variables:
                             </a>
                             {% endif %}
 
-                            {% if object.get_absolute_url %}
+                            
                             <a
-                                href="{{ object.get_absolute_url }}"
-                                hx-get="{{ object.get_absolute_url }}"
+                                hx-get="{{ object|detail_view_url }}"
                                 hx-push-url="true"
                                 hx-target="#main-content"
                                 hx-swap="innerHTML"
+                                class="pointer"
                                 >
                                 <img src="{% static 'bloomerp/icons/eye.svg' %}" alt="View" width="20" height="20">
                             </a>
-                            {% endif %}
+                            
                         </td>
                     {% endif %}
                 </tr>
@@ -115,16 +129,25 @@ Variables:
     <!--Pagination-->
     <div class="d-flex justify-content-start">
         <div class="btn-group" role="group">
-            <button type="button" hx-include="#filterForm" hx-include="[input='data_table_string_search']" hx-target="#table_section" hx-get="{% url 'components_data_table' %}?data_table_content_type_id={{content_type_id}}&data_table_limit=25&data_table_include_actions={{include_actions}}" class="btn btn-outline-primary btn-sm">25</button>
-            <button type="button" hx-include="#filterForm" hx-include="[input='data_table_string_search']" hx-target="#table_section" hx-get="{% url 'components_data_table' %}?data_table_content_type_id={{content_type_id}}&data_table_limit=50&data_table_include_actions={{include_actions}}" class="btn btn-outline-primary btn-sm">50</button>
-            <button type="button" hx-include="#filterForm" hx-include="[input='data_table_string_search']" hx-target="#table_section" hx-get="{% url 'components_data_table' %}?data_table_content_type_id={{content_type_id}}&data_table_limit=100&data_table_include_actions={{include_actions}}" class="btn btn-outline-primary btn-sm">100</button>
-            <button type="button" hx-include="#filterForm" hx-include="[input='data_table_string_search']" hx-target="#table_section" hx-get="{% url 'components_data_table' %}?data_table_content_type_id={{content_type_id}}&data_table_limit=all&data_table_include_actions={{include_actions}}" class="btn btn-outline-primary btn-sm">all</button>
+            <button type="button" hx-include="#filterForm{{ datatable_id }}" hx-include="[input='data_table_string_search']" hx-target="#{{ datatable_id }}" hx-get="{% url 'components_datatable' %}?{{request_params | safe}}&data_table_limit=25" class="btn btn-outline-primary btn-sm">25</button>
+            <button type="button" hx-include="#filterForm{{ datatable_id }}" hx-include="[input='data_table_string_search']" hx-target="#{{ datatable_id }}" hx-get="{% url 'components_datatable' %}?{{request_params | safe}}&data_table_limit=50" class="btn btn-outline-primary btn-sm">50</button>
+            <button type="button" hx-include="#filterForm{{ datatable_id }}" hx-include="[input='data_table_string_search']" hx-target="#{{ datatable_id }}" hx-get="{% url 'components_datatable' %}?{{request_params | safe}}&data_table_limit=100" class="btn btn-outline-primary btn-sm">100</button>
+            <button type="button" hx-include="#filterForm{{ datatable_id }}" hx-include="[input='data_table_string_search']" hx-target="#{{ datatable_id }}" hx-get="{% url 'components_datatable' %}?{{request_params | safe}}&data_table_limit=all" class="btn btn-outline-primary btn-sm">all</button>
         </div>
     </div>
     <!--End pagination-->
-
 </div>
 
+<!--Table dropdown-->
+<div id="{{ datatable_id }}-context-menu" class="context-menu">
+    <ul style="list-style:none; margin:0; padding:0;">
+        <li class="dropdown-item"><a class="pointer"  id="{{ datatable_id }}-context-menu-copy-value">Copy Value</a></li>
+        <li class="dropdown-item" id="{{ datatable_id }}-context-menu-filter-value-list-item">
+            <a class="pointer" id="{{ datatable_id }}-context-menu-filter-value">Filter on Value</a>
+        </li>
+    </ul>
+</div>
+<!--End table dropdown-->
 
 {% if include_actions %}
 
@@ -185,7 +208,7 @@ Variables:
                 ></button>
             </div>
             <form
-                hx-post="{% url 'components_bulk_update_objects' %}?content_type_id={{ content_type_id }}&form_prefix=bulk_update"
+                hx-post="{% url 'components_bulk_update_objects' %}?content_type_id={{ content_type_id }}&bulk_update_form_prefix=bulk_update_{{datatable_id}}"
                 hx-target="#bulkUpdateResponse"
                 hx-swap="innerHTML"
                 id = "bulkUpdateForm"
@@ -193,7 +216,7 @@ Variables:
                 {% csrf_token %}
 
                 <input type="hidden" name="bulk_update_content_type_id" value="{{ content_type_id }}">
-                <input type="hidden" name="bulk_update_form_prefix" value="bulk_update">
+                <input type="hidden" name="bulk_update_form_prefix" value="bulk_update_{{datatable_id}}">
 
                 <div class="modal-body" id="bulkUpdateFormDiv">
                     <!--Select field-->
@@ -202,9 +225,9 @@ Variables:
                         <select
                             class="form-select"
                             name="field_name"
-                            hx-get="{% url "components_object_model_form" %}?content_type_id={{ content_type_id }}&form_prefix=bulk_update"
+                            hx-get="{% url "components_object_model_form" %}?content_type_id={{ content_type_id }}&form_prefix=bulk_update_{{datatable_id}}"
                             hx-trigger="change"
-                            hx-target="#bulkInputFieldTarget"
+                            hx-target="#bulkInputFieldTarget{{datatable_id}}"
                         >
                             <option selected>Select one</option>
                             {% for field in application_fields %}
@@ -215,7 +238,7 @@ Variables:
                     <!--End select field-->
 
                     <!--Input field-->
-                    <div id="bulkInputFieldTarget">
+                    <div id="bulkInputFieldTarget{{datatable_id}}">
 
                     </div>
                     <!--End input field-->
@@ -280,6 +303,7 @@ Variables:
                 id="bulkDeleteForm"
                 hx-target="#bulkDeleteResponse"
                 hx-swap="innerHTML"
+                hx-on::after-request="showMessage('Objects deleted successfully', 'success')"
                 >
                 {% csrf_token %}
                 <div class="modal-body" id="bulkDeleteFormDiv">
@@ -390,7 +414,7 @@ Variables:
 
         if (id == 'bulkUpdateForm' || id == 'bulkDeleteForm') {
             // Update table
-            reloadTable();
+            reloadTable('{{ datatable_id }}', '{{ request_params | safe }}', '{% url "components_datatable" %}')
         }
       })
 </script>
@@ -474,7 +498,7 @@ Variables:
             }).then(response => {
                 if (response.ok) {
                     // Reload table
-                    htmx.ajax('GET', "{% url 'components_data_table' %}?data_table_content_type_id={{ content_type_id }}&data_table_include_actions=true", '#table_section');
+                    reloadTable('{{ datatable_id }}', '{{ request_params | safe }}', '{% url "components_datatable" %}');
 
                     // Message
                     showMessage('Object updated successfully', 'success');
@@ -498,101 +522,96 @@ Variables:
 <!--End update modal-->
 {% endif %}
 
-{% if user_can_delete %}
-<!--Delete modal-->
-<div
-    class="modal fade"
-    id="deleteModal"
-    tabindex="-1"
-    role="dialog"
-    aria-labelledby="modalTitleId"
-    aria-hidden="true"
->
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalTitleId">
-                    Delete object
-                </h5>
-                <button
-                    type="button"
-                    class="btn-close"
-                    data-bs-dismiss="modal"
-                    aria-label="Close"
-                ></button>
-            </div>
-            <form>
-                {% csrf_token %}
-                <div class="modal-body" id="deleteFormDiv">
-                    <p>Are you sure you want to delete <span id="deleteObjectSpan" class="fw-bold"></span>?</p>
-                </div>
-                <input type="hidden" name="object_id" id="deleteObjectId">
-                <div class="modal-footer">
+    {% if user_can_delete %}
+    <!--Delete modal-->
+    <div
+        class="modal fade"
+        id="deleteModal"
+        tabindex="-1"
+        role="dialog"
+        aria-labelledby="modalTitleId"
+        aria-hidden="true"
+    >
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitleId">
+                        Delete object
+                    </h5>
                     <button
                         type="button"
-                        class="btn btn-secondary"
+                        class="btn-close"
                         data-bs-dismiss="modal"
-                    >
-                        Close
-                    </button>
-                    <button type="submit" class="btn btn-danger" data-bs-dismiss="modal">Delete</button>
+                        aria-label="Close"
+                    ></button>
                 </div>
-            </form>
+                <form>
+                    {% csrf_token %}
+                    <div class="modal-body" id="deleteFormDiv">
+                        <p>Are you sure you want to delete <span id="deleteObjectSpan" class="fw-bold"></span>?</p>
+                    </div>
+                    <input type="hidden" name="object_id" id="deleteObjectId">
+                    <div class="modal-footer">
+                        <button
+                            type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal"
+                        >
+                            Close
+                        </button>
+                        <button type="submit" class="btn btn-danger" data-bs-dismiss="modal">Delete</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
+    <script>
+        var deleteModal = document.getElementById('deleteModal');
 
-    var deleteModal = document.getElementById('deleteModal');
+        deleteModal.addEventListener('show.bs.modal', function (event) {
+            // Button that triggered the modal
+            let button = event.relatedTarget;
+            // Extract info from data-bs-
+            let objectId = button.getAttribute('data-bs-object-id');
+            let object = button.getAttribute('data-bs-object-str');
 
-    deleteModal.addEventListener('show.bs.modal', function (event) {
-        // Button that triggered the modal
-        let button = event.relatedTarget;
-        // Extract info from data-bs-
-        let objectId = button.getAttribute('data-bs-object-id');
-        let object = button.getAttribute('data-bs-object-str');
+            // Update modal title
+            document.getElementById('deleteObjectSpan').innerHTML = object;
 
-        // Update modal title
-        document.getElementById('deleteObjectSpan').innerHTML = object;
-
-        // Update hidden input
-        document.getElementById('deleteObjectId').value = objectId;
-    });
-
-    deleteModal.querySelector('form').addEventListener('submit', function (event) {
-        event.preventDefault();
-        // Extract info from hidden input
-        let objectId = document.getElementById('deleteObjectId').value;
-
-        let url = "{{ api_endpoint }}" + objectId + "/";
-
-        fetch(url, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
-            }
-        }).then(response => {
-            if (response.ok) {
-                // Reload table
-                reloadTable();
-            }
+            // Update hidden input
+            document.getElementById('deleteObjectId').value = objectId;
         });
-    });
 
-</script>
-<!--End delete modal-->
+        deleteModal.querySelector('form').addEventListener('submit', function (event) {
+            event.preventDefault();
+            // Extract info from hidden input
+            let objectId = document.getElementById('deleteObjectId').value;
+
+            let url = "{{ api_endpoint }}" + objectId + "/";
+
+            fetch(url, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            }).then(response => {
+                if (response.ok) {
+                    // Reload table
+                    reloadTable('{{ datatable_id }}', '{{ request_params | safe }}', '{% url "components_datatable" %}');
+                }
+            });
+        });
+    </script>
+    <!--End delete modal-->
 {% endif %}
 
 {% endif %}
 
 <script>
-    function reloadTable() {
-        htmx.ajax(
-            'GET',
-            "{% url 'components_data_table' %}?data_table_content_type_id={{ content_type_id }}&data_table_include_actions=true",
-            '#table_section'
-            );
-    }
+    document.addEventListener('htmx:afterSettle', () => addContextMenu('{{ datatable_id }}'));
 </script>
+
+<input type="hidden" id="{{datatable_id}}-datatable-url" value="{% url 'components_datatable' %}?{{ request_params | safe }}">
+

@@ -78,6 +78,6 @@ def list_view_filter_inputs(request:HttpRequest) -> HttpResponse:
         
         application_fields = ApplicationField.objects.filter(content_type_id=content_type_id).exclude(field_type__in=EXCLUDED_FIELD_TYPES)
 
-        return render(request, 'components/list_view_filter_row.html', {'application_fields': application_fields, 'id':uuid.uuid4()})
+        return render(request, 'components/list_view_filter_row.html', {'filter_application_fields': application_fields, 'id':uuid.uuid4()})
 
 

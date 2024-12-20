@@ -35,7 +35,7 @@ def list_view_filter(request:HttpRequest) -> HttpResponse:
 
     # Get the application fields for the content type
     application_fields = ApplicationField.objects.filter(content_type_id=content_type_id).exclude(field_type='Property')
-
+    
 
     context = {
         'application_fields': application_fields,

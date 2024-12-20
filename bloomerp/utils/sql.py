@@ -3,6 +3,7 @@ from django.core.cache import cache
 import re
 import pandas as pd
 from typing import Any, List, Dict
+import time
 
 class SqlQueryExecutor:
 
@@ -119,12 +120,12 @@ class SqlQueryExecutor:
             cursor.execute(query)
             columns = [col[0] for col in cursor.description]
             result = pd.DataFrame(cursor.fetchall(), columns=columns)
+            
 
         if use_cache:
             self._set_cache_result(result)
 
         return result
-
 
     def is_safe(self, query: str) -> bool:
         """

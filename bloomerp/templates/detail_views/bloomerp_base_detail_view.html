@@ -42,7 +42,9 @@
 	<div class="card-body">
 
 		<!--Picture-->
-		{% include "snippets/card_picture_snippet.html" with image_object=object.avatar name=object %}
+		<div class="d-flex justify-content-center mb-3">
+			{% avatar object=object size="6em" class_name="rounded-circle" %}
+		</div>
 		<!--End Picture-->
 
 		<!--Text under picture-->
@@ -139,11 +141,9 @@
         url += x + '/'
       }
     })
-    
-	console.log(url);	
-
+    	
     document.getElementById(url).classList.add('active');
-
+	
 	function setActiveTab(element) {
 		var tabs = document.querySelectorAll('.nav-link');
 		tabs.forEach(tab => {

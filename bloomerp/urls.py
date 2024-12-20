@@ -6,7 +6,7 @@ from django.urls import include, path,  register_converter
 from django.contrib.auth import views as auth_views
 from django.contrib.contenttypes.models import ContentType
 from bloomerp.views.core import (BloomerpForeignRelationshipView)
-from bloomerp.components import *
+from bloomerp.components import generate_document_template, datatable, llm_executor
 from bloomerp.views.document_templates import router as document_template_router
 from django.db.models import Model
 from bloomerp.utils.models import (
@@ -42,6 +42,7 @@ from bloomerp.views.workspace import router as dashboard_router
 from bloomerp.views.core import router as core_router
 from bloomerp.views.widgets import router as widget_router
 from bloomerp.views.auth import router as auth_router
+from django.apps import apps
 custom_routers = _get_routers_from_settings()
 
 
@@ -88,6 +89,7 @@ custom_router_handler.generate_links()
 # ---------------------------------
 from django.conf import settings
 
+
 from django.urls import reverse_lazy
 urlpatterns = [
     path(settings.LOGIN_URL, auth_views.LoginView.as_view(
@@ -109,6 +111,8 @@ for route in app_level_routes:
 # Model related URL patterns
 # ---------------------------------
 content_types = ContentType.objects.all()
+
+
 for content_type in content_types:
     if content_type.model_class():
         # Detail view patterns
@@ -133,7 +137,7 @@ for content_type in content_types:
                 url_name = f"{model_name_underline}_detail_{related_model_name_underline}"
 
                 # Get application field
-                foreign_model_attribute = get_attribute_name_for_foreign_key(related_model, model)
+                foreign_model_attribute, foreign_type = get_attribute_name_for_foreign_key(related_model, model)
 
                 if foreign_model_attribute:
                     # Add related model to the tabs
@@ -144,7 +148,10 @@ for content_type in content_types:
                                 model=model,
                                 foreign_model = related_model,
                                 foreign_model_detail_url = f"{related_model_name_underline}_detail",
-                                foreign_model_attribute = foreign_model_attribute), 
+                                foreign_model_attribute = foreign_model_attribute,
+                                foreign_relationship_type = foreign_type
+                                ),
+                                 
                             name=url_name))
 
                     defaults = {
@@ -193,12 +200,15 @@ for content_type in content_types:
             base_viewset=BloomerpModelViewSet
         )
 
-        drf_router.register(
-            prefix = model_name_plural_underline(model), 
-            viewset = ApiViewSet, 
-            basename=model_name_plural_underline(model)
-            )
-        
+        try:
+            drf_router.register(
+                prefix = model_name_plural_underline(model), 
+                viewset = ApiViewSet, 
+                basename=model_name_plural_underline(model)
+                )
+        except:
+            pass
+
         # ---------------------------------
         # Add the model to the admin dashboard
         # ---------------------------------

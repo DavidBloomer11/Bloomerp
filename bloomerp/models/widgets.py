@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.urls import reverse
 from bloomerp.models.core import BloomerpModel
 from django.contrib.contenttypes.models import ContentType
-
+from bloomerp.models.fields import CodeField
 
 # ---------------------------------
 # SQL Query Filter Model
@@ -31,7 +31,7 @@ class SqlQueryFilter(BloomerpModel):
     ]
 
     name = models.CharField(max_length=255)
-    query = models.TextField()
+    query = CodeField(language='sql', help_text='SQL Query to execute')
     filter_type = models.CharField(max_length=255, default='absolute', choices=FILTER_TYPE_CHOICES)
     filter_options = models.JSONField(blank=True, null=True)
 
@@ -169,7 +169,7 @@ class SqlQueryFilter(BloomerpModel):
 # SQL Query Model
 # ---------------------------------
 from django.contrib.auth.hashers import make_password
-from bloomerp.models.fields import CodeField
+import time
 class SqlQuery(BloomerpModel):
     '''
     A model to store SQL queries that can be used in Widgets
@@ -194,44 +194,45 @@ class SqlQuery(BloomerpModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        start = time.time()
+
         # Initialize the query executor
-        if self.name:
+        if self.pk is not None:
             self.executor = SqlQueryExecutor(
                 cache_time=60,
-                cache_id=make_password(self.name, 'md5')
+                cache_id= str(self.pk) + self.name 
             )
         else:
             self.executor = SqlQueryExecutor()
-
-    @property
+    
     def is_safe(self):
         '''
         Check if the query is a SELECT statement
         '''
         return self.executor.is_safe(self.query)
 
-    @property
+    
     def result_dataframe(self):
         '''
         Execute the query and return the result
         '''
         return self.executor.execute_to_df(self.query)
     
-    @property
+    
     def result_dict(self):
         '''
         Execute the query and return the result
         '''
         return self.executor.execute_to_dict(self.query)
     
-    @property
+    
     def result_raw(self):
         '''
         Execute the query and return the result
         '''
         return self.executor.execute_raw(self.query)
     
-    @property
+    
     def result_value(self):
         '''
         Execute the query and return the result
@@ -245,46 +246,24 @@ class SqlQuery(BloomerpModel):
         - Check if the query is safe
         - Check if the query actually returns a result
         '''
+        errors = {}
+
         # Check if the query is safe
-        # In the future, we can allow unsafe queries for more advanced users
-        if not self.is_safe:
-            raise ValidationError('Unsafe query')
-        
+        if not self.is_safe():
+            errors['query'] = 'Unsafe query'
+
         # Check if the query returns a result
         result = self.executor.is_valid(self.query)
         if result != True:
-            raise ValidationError(result)
+            errors['query'] = result
+
+        if errors:
+            raise ValidationError(errors)
 
     def __str__(self):
         return self.name
 
-    def apply_filters(self, filters: list):
-        '''
-        Apply filters to the query
-        '''
-        filter_qs = SqlQueryFilter.objects.filter(pk__in=filters)
-
-        # Remove ; from the query
-        self.query = self.query.replace(';', '')
-
-        # Lowercase the query
-        self.query = self.query.lower()
-
-        # Generate the filter query string
-        filter_query = ' and '.join([filter for filter in filters])
-
-        # Check if query has where clause
-        if 'where' in self.query:
-            # Add the filter_query after an AND if WHERE clause exists
-            self.query = self.query.replace('where', f'where {filter_query} and')
-        else:
-            # Add WHERE clause if it does not exist
-            self.query += f' where {filter_query}'
-
-        # Append the semicolon to the end of the query
-        self.query += ';'
-
-        return self.query
+    
 
 
 

@@ -19,3 +19,4 @@ __pycache__
 .DS_Store
 dist
 build
+notebooks

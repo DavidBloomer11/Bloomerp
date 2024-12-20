@@ -61,11 +61,6 @@ function setForeignKeyValue(pk, displayText, widgetName) {
 
 function setNewObject(widgetName, elementId, widgetType) {
     // Search for the hidden input element inside of the element
-    console.log("Setting new object");
-    console.log(widgetName);
-    console.log(elementId);
-    console.log(widgetType);
-
     let element = document.getElementById(elementId);
 
     if (element == null) {
@@ -101,51 +96,67 @@ function removeForeignKey(widgetName) {
   view_div.querySelector("span").innerHTML = "";
 }
 
-function makeAdvancedSearchTableClickable(widgetName, widgetType) {
+
+function addClickableEventListener(widgetName, widgetType) {
   // Get all of the advanced search divs
   // An advanced search div has the id of widgetName_advanced_search
+  console.log("Adding event listener for " + widgetName + " with type " + widgetType);
+
+
   let div = document.getElementById(widgetName + "_advanced_search_table");
 
-  let listViewFilterDivList = document.querySelectorAll(
-    '[id^="list_view_filter"]'
-  );
+  document.addEventListener("htmx:afterSwap", function (event) {
+    
+    if (event.target.id.startsWith("datatable")) {
+      // Get target id
+      console.log("Event target id: " + event.target.id);
 
-  listViewFilterDivList.forEach((listViewFilterDiv) => {
-    listViewFilterDiv.addEventListener("click", function (event) {
-      event.stopPropagation();
-    });
-  });
+      let targetId = event.target.id;
 
-  // Get the table from the div
-  let table = div.querySelector(".table");
+      // Check if the target id is in the advanced search div
+      table = document.getElementById(targetId).querySelector("tbody");
 
-  if (table == null) {
-    // If the table doesn't exist, return
-    return;
-  }
-
-  // Add event listener to the rows
-  let rows = table.querySelectorAll("tr");
-  rows.forEach((row) => {
-    row.addEventListener("click", function () {
-      let pk = row.getAttribute("data-id");
-      let displayText = row.getAttribute("data-display-text");
-
-      if (widgetType == "m2m") {
-        setM2MValue(pk, displayText, widgetName);
-      } else if (widgetType == "fk") {
-        setForeignKeyValue(pk, displayText, widgetName);
+      if (table == null) {
+        return;
       }
 
-      // Close the modal
-      let modalId = document.getElementById(`advancedSearchModal${widgetName}`);
-      let modal = bootstrap.Modal.getInstance(modalId);
-      modal.hide();
-    });
-  });
+      // Add event listener to the rows
+      let rows = table.querySelectorAll("tr");
+      rows.forEach((row) => {
+        row.classList.add("pointer");
 
-  // Function that toggles the working of the forms within the listViewFilterDiv to avoid conflict with nested forms
+        // Check if row already has an event listener
+        if (row.getAttribute("data-clickable") == "true") {
+          return;
+        }
+
+        // Check if row already has an event listener
+        if (row.getAttribute("data-clickable") == "true") {
+          return;
+        }
+
+        row.addEventListener("click", function () {
+          // Add data clickable attribute to row
+          row.setAttribute("data-clickable", "true");
+
+          let pk = row.getAttribute("data-id");
+          let displayText = row.getAttribute("data-display-text");
+
+          if (widgetType == "m2m") {
+            setM2MValue(pk, displayText, widgetName);
+          } else if (widgetType == "fk") {
+            setForeignKeyValue(pk, displayText, widgetName);
+          }
+
+          // Show message
+          showMessage("Selected " + displayText + " with pk " + pk, "info");
+        });
+      });
+    }
+  });
 }
+
+
 
 // Add a single delegated event listener to handle all .showmodal clicks
 document.body.addEventListener("click", function (event) {

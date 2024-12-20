@@ -18,7 +18,7 @@
             name = "application_field_id"
             >
                 <option value="" selected disabled>Select field</option>
-            {% for field in application_fields %}
+            {% for field in filter_application_fields %}
                 {% if field.field_type not in 'Property,OneToManyField' %}
                     <option value="{{ field.pk }}" type="{{ field.field_type }}">{{ field.title }}</option>
                 {% endif %}

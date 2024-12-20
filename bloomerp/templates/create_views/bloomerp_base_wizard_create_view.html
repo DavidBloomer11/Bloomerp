@@ -1,17 +1,8 @@
 
 {% load crispy_forms_tags %}
 {% load bloomerp %}
-<div class="pagetitle">
-    <h1>{{model_name_plural | title}}</h1>
-    <nav>
-      <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="/">Home</a></li>
-        <li class="breadcrumb-item"><a >{{model_name_plural|title}}</a></li>
-        <li class="breadcrumb-item active">Create</li>
-      </ol>
-    </nav>
-</div><!-- End Page Title -->
 
+{% breadcrumb title='Create widget' model=model %}
 
 <section class="section dashboard">
     <div class="row">

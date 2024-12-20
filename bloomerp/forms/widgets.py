@@ -2,11 +2,14 @@ from django import forms
 from django.forms import ModelChoiceField
 from bloomerp.models.widgets import Widget, SqlQuery
 from django.core.exceptions import ValidationError
+from bloomerp.widgets.foreign_key_widget import ForeignKeyWidget
+from bloomerp.widgets.text_editor import RichTextEditorWidget
+
 
 class WidgetForm1(forms.Form):
-    query = ModelChoiceField(queryset=SqlQuery.objects.all())
+    query = ModelChoiceField(queryset=SqlQuery.objects.all(), widget=ForeignKeyWidget(model=SqlQuery))
     name = forms.CharField(max_length=255)
-    description = forms.CharField(widget=forms.Textarea, required=False)
+    description = forms.CharField(widget=RichTextEditorWidget(), required=False)
     
 class WidgetForm2(forms.Form):
     output_type = forms.ChoiceField(choices=Widget.OUTPUT_TYPE_CHOICES)

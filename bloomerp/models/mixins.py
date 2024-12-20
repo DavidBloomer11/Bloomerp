@@ -175,3 +175,13 @@ class ContentLayoutModelMixin(models.Model):
         if not self.content_layout:
             self.content_layout = self.generate_layout()
             super().save(update_fields=['content_layout'])
+
+
+class AvatarModelMixin(models.Model):
+    """
+    A mixin for models that need to have an avatar.
+    """
+    class Meta:
+        abstract = True
+
+    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)

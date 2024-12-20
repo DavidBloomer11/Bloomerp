@@ -6,7 +6,7 @@ from bloomerp.models import Widget, SqlQuery, ApplicationField
 from bloomerp.utils.router import BloomerpRouter
 from bloomerp.utils.models import get_create_view_url
 from bloomerp.views.mixins import HtmxMixin, BloomerpModelFormViewMixin, BloomerpModelContextMixin
-from django.views.generic.edit import CreateView
+from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.detail import DetailView
 from django.urls import reverse
 from django.http import HttpResponse
@@ -17,6 +17,9 @@ from bloomerp.components.workspace_widget import workspace_widget
 
 router = BloomerpRouter()
 
+# ---------------------------------
+# Sql Query Create View
+# ---------------------------------
 @router.bloomerp_route(
     models = SqlQuery,
     path='create',
@@ -28,7 +31,6 @@ router = BloomerpRouter()
 class SqlQueryCreateView(PermissionRequiredMixin, HtmxMixin, BloomerpModelFormViewMixin, CreateView):
     model = SqlQuery
     template_name = 'widget_views/base_sql_query_builder_view.html'
-    settings = None
     permission_required = ['widget.add_widget']
     fields = ['name', 'query']
     
@@ -38,11 +40,44 @@ class SqlQueryCreateView(PermissionRequiredMixin, HtmxMixin, BloomerpModelFormVi
         context['db_tables_and_columns'] = ApplicationField.get_db_tables_and_columns()
         return context
     
+# ---------------------------------
+# Sql Query Editor View
+# ---------------------------------
+@router.bloomerp_route(
+    models = SqlQuery,
+    path='editor',
+    name= 'Sql Query Editor',
+    description='Edit a Sql Query',
+    route_type='detail',
+    url_name='editor'
+)
+class SqlQueryEditorView(PermissionRequiredMixin, BloomerpModelContextMixin, HtmxMixin, BloomerpModelFormViewMixin, UpdateView):
+    model = SqlQuery
+    template_name = "widget_views/snippets/sql_query_builder_snippet.html"
+    permission_required = ['bloomerp.execute_sql_query']
+    fields = ['name', 'query']
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['model'] = self.model
+        context['db_tables_and_columns'] = ApplicationField.get_db_tables_and_columns()
+        return context
+
+    def get_object(self, queryset=None):
+        return self.model.objects.get(pk=self.kwargs.get('pk'))
+
+    def get_success_url(self):
+        return self.object.get_absolute_url()
+
+    
+
+
+
+
 
 # ---------------------------------
 # Widget Create Wizard View
 # ---------------------------------
-
 @router.bloomerp_route(
         models=Widget,
         path='create',
@@ -61,6 +96,7 @@ class WidgetCreateWizardView(PermissionRequiredMixin, HtmxMixin, SessionWizardVi
         context = super().get_context_data(**kwargs)
         context['model_name_plural'] = 'Widgets'
         context['model_name'] = 'Widget'
+        context['model'] = self.model
         return context
 
     def get_form_kwargs(self, step=None):
