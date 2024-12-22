@@ -79,6 +79,18 @@ def _create_absoulte_path_for_model(model: Model, route_type: str, appended_url:
         p = model_name_plural_slug(model) + '/<int_or_uuid:pk>/' + appended_url + '/'
     return p
 
+
+def _create_relative_path(model:Model, route_type:str, name:str):
+    """
+    Create a relative path for a route based on the model, route type, and name.
+    """
+    if route_type == 'list':
+        return model_name_plural_underline(model) + '_' + _underline(name)
+    elif route_type == 'detail':
+        return model_name_plural_underline(model) + '_detail_' + _underline(name)
+    else:
+        return _underline(name)
+
 # Route decorator
 def route(path=None):
     def decorator(func):
@@ -178,7 +190,8 @@ class BloomerpRoute:
                 route_name: str,
                 description: str = None,
                 override: bool = False,
-                view_type = 'function'
+                view_type = 'function',
+                args : dict = None
                 ) -> None:
         self.model = model
         self.route_type = route_type
@@ -189,6 +202,7 @@ class BloomerpRoute:
         self.override = override
         self.relative_path = relative_path
         self.view_type = view_type
+        self.args = args
 
     def generate_link(self) -> None:
         """
@@ -231,14 +245,17 @@ class BloomerpRoute:
         """
         Create a URL pattern for the route.
         """
+        if not self.args:
+            self.args = {}
+
         if self.view_type == 'function':
             return path(self.path, self.view, name=self.relative_path)
         
         elif self.view_type == 'class':
             if self.route_type in ['list', 'detail']:
-                return path(self.path, self.view.as_view(model = self.model), name=self.relative_path)
+                return path(self.path, self.view.as_view(model = self.model, **self.args), name=self.relative_path)
             else:
-                return path(self.path, self.view.as_view(), name=self.relative_path)
+                return path(self.path, self.view.as_view(**self.args), name=self.relative_path)
         
     def set_view(self, view: Callable):
         """
@@ -253,14 +270,16 @@ class BloomerpRouter:
 
     def bloomerp_route(
             self, 
-            path : str,
-            models : List[Model] = None,
+            path : str = None,
+            models : List[Model] | Model = None,
             exclude_models : List[Model] = None,
             route_type='list', 
             name : str = None,   
             override : bool = False,
             description : str = None,
-            url_name : str = None
+            url_name : str = None,
+            from_func : Callable = None,
+            args : dict = None
             ):
         """
         Decorator for registering routes for a model.
@@ -273,52 +292,99 @@ class BloomerpRouter:
         - Appends route information to the router's list.
         - Supports both function-based views (FBVs) and class-based views (CBVs).
 
-        Parameters:
-            - path : The path for the route.
-            - models : The model for which the route is being registered. If no model is given, it is an app-level route.
-            - exclude_models : A list of models to exclude from the route. Only works when models is '__all__'.
-            - route_type : The type of route. Can be 'list', 'detail', or 'app'. App-level routes don't require a model.
-            - name : The name of the route. Will be used to generate the Link object for the route.
-            - override : If True, the route will override any existing route with the same path.
-            - description : A description of the route. Will be used to generate the Link object for the route.
-            - url_name : The URL name for the route.
+        Args:
+            path: The path for the route.
+            models: The model for which the route is being registered. If no model is given, it is an ap   evel route.
+            exclude_models: A list of models to exclude from the route. Only works when models is '__all__'.
+            route_type: The type of route. Can be 'list', 'detail', or 'app'. Ap   evel routes don't require a model.
+            name: The name of the route. Will be used to generate the Link object for the route.
+            override: If True, the route will override any existing route with the same path.
+            description: A description of the route. Will be used to generate the Link object for the route.
+            url_name: The URL name for the route.
+            from_func: A function that takes all models as input, and returns a dictionary with parameters or False
+            args: Additional args to be passed to the view
         """
         def decorator(view):
             from django.contrib.contenttypes.models import ContentType
             from bloomerp.models import Widget
-            nonlocal path, models, route_type, name, description, override, exclude_models, url_name
+            from django.apps import apps
+            nonlocal path, models, route_type, name, description, override, exclude_models, url_name, from_func, self, args
 
             # Set temp_routes
             temp_routes = []
             
-            if exclude_models:
-                models = '__all__'
+            # ---------------------
+            # VALIDATION
+            # ---------------------
+            if not from_func:
+                if exclude_models:
+                    models = '__all__'
 
-            # Some validation
-            if not models and route_type != 'app':
-                raise ValueError("A model must be provided for list and detail routes.")
-            
-            if models and route_type == 'app':
-                raise ValueError("You can't provide a model for an app route.")
+                if not models and route_type != 'app':
+                    raise ValueError("A model must be provided for list and detail routes.")
+                
+                if models and route_type == 'app':
+                    raise ValueError("You can't provide a model for an app route.")
 
-            if route_type not in ['list', 'detail', 'app']:
-                raise ValueError("Invalid route type. Must be 'list', 'detail', or 'app'.")
-            
-            if models and exclude_models:
-                if models != '__all__':
-                    raise ValueError("You can't provide both models and exclude_models.")
+                if route_type not in ['list', 'detail', 'app']:
+                    raise ValueError("Invalid route type. Must be 'list', 'detail', or 'app'.")
+                
+                if models and exclude_models:
+                    if models != '__all__':
+                        raise ValueError("You can't provide both models and exclude_models.")
 
-            if not exclude_models:
-                exclude_models = []
+                if not exclude_models:
+                    exclude_models = []
 
-            if description is None:
-                description = view.__doc__
-            
-            if not name:
-                name = _get_name_or_slug(view, slug=False)
+                if description is None:
+                    description = view.__doc__
+                
+                if not name:
+                    name = _get_name_or_slug(view, slug=False)
 
             # Models will be given in the case of LIST and DETAIL routes
-            if models == '__all__':
+            if from_func:
+                models = apps.get_models()
+                for model in models:
+                    params : dict | list[dict] | bool  = from_func(model)
+
+                    if params == False:
+                        continue
+                    
+                    # Multiple params given
+                    if type(params) == list:
+                        for param_dict in params:
+                            
+                            route = BloomerpRoute(
+                                model=param_dict['model'],
+                                route_type=param_dict['route_type'],
+                                path=_create_absoulte_path_for_model(param_dict['model'], param_dict['route_type'], param_dict['path']),
+                                view = None, # This will be set later
+                                route_name=param_dict['name'],
+                                description=param_dict['description'],
+                                override=False,
+                                relative_path=_create_relative_path(param_dict['model'], param_dict['route_type'],param_dict['url_name']),
+                                args=param_dict['args']
+                            )
+                            temp_routes.append(route)
+
+                    # Single dictionary given
+                    else:
+                        route = BloomerpRoute(
+                                model=param_dict['models'],
+                                route_type=param_dict['route_type'],
+                                path=param_dict['path'],
+                                view = None, # This will be set later
+                                route_name=param_dict['name'],
+                                description=param_dict['description'],
+                                override=False,
+                                relative_path=param_dict['url_name'],
+                                args=args
+                            )
+                        
+                        temp_routes.append(route)
+
+            elif models == '__all__':
                 ContentTypes = ContentType.objects.all()
                 for ContentType in ContentTypes:
                     model = ContentType.model_class()
@@ -330,9 +396,9 @@ class BloomerpRouter:
                     
                     # Create the relative path for the model
                     if not url_name:
-                        relative_path = self._create_relative_path(model, route_type, name)
+                        relative_path = _create_relative_path(model, route_type, name)
                     else:
-                        relative_path = self._create_relative_path(model, route_type, url_name)
+                        relative_path = _create_relative_path(model, route_type, url_name)
 
                     # Create the absolute path for the model
                     p = _create_absoulte_path_for_model(model, route_type, path)
@@ -358,7 +424,8 @@ class BloomerpRouter:
                         route_name=route_name,
                         description=desc,
                         override=override,
-                        relative_path=relative_path
+                        relative_path=relative_path,
+                        args=args
                     )
                     temp_routes.append(route)
             elif type(models) == list:
@@ -367,9 +434,9 @@ class BloomerpRouter:
 
                     # Create the relative path for the model
                     if not url_name:
-                        relative_path = self._create_relative_path(model, route_type, name)
+                        relative_path = _create_relative_path(model, route_type, name)
                     else:
-                        relative_path = self._create_relative_path(model, route_type, url_name)
+                        relative_path = _create_relative_path(model, route_type, url_name)
                     
                     try:
                         route_name = name.format(model=model_name)
@@ -392,7 +459,8 @@ class BloomerpRouter:
                         route_name=route_name,
                         description=desc,
                         override=override,
-                        relative_path=relative_path
+                        relative_path=relative_path,
+                        args=args
                     )
                     temp_routes.append(route)
             elif models:
@@ -401,9 +469,9 @@ class BloomerpRouter:
 
                 # Create the relative path for the model
                 if not url_name:
-                    relative_path = self._create_relative_path(models, route_type, name)
+                    relative_path = _create_relative_path(models, route_type, name)
                 else:
-                    relative_path = self._create_relative_path(models, route_type, url_name)
+                    relative_path = _create_relative_path(models, route_type, url_name)
 
                 created_path = _create_absoulte_path_for_model(models, route_type, path)
 
@@ -427,13 +495,14 @@ class BloomerpRouter:
                     route_name=route_name,
                     description=desc,
                     override=override,
-                    relative_path=relative_path
+                    relative_path=relative_path,
+                    args=args
                 ) 
                 temp_routes.append(route)
             elif models == None:
                 # App-level route case
                 if not url_name:
-                    relative_path = self._create_relative_path(None, route_type, name)
+                    relative_path = _create_relative_path(None, route_type, name)
                 else:
                     relative_path = url_name
 
@@ -449,7 +518,8 @@ class BloomerpRouter:
                     route_name=name,
                     description=description,
                     override=override,
-                    relative_path=relative_path
+                    relative_path=relative_path,
+                    args=args
                 )
                 temp_routes.append(route)
 
@@ -485,26 +555,7 @@ class BloomerpRouter:
 
         return decorator
 
-    def override_detail_overview_route(self, model: Model) -> None:
-        """
-        Decorator for overriding the detail overview route for a model.
-        """
-        # Get the base route for the model
-        pass
-
-    def override_list_overview_route(self, model: Model) -> None:
-        """
-        Decorator for overriding the list overview route for a model.
-        """
-        # Get the base route for the model
-        pass
-
-    def override_update_overview_route(self) -> None:
-        """
-        Decorator for overriding the app overview route.
-        """
-        pass
-
+    
     def get_routes_for_model(self, model) -> List[BloomerpRoute]:
         """
         Get all routes registered for a specific model.
@@ -634,7 +685,6 @@ def _get_routers_from_settings() -> List[BloomerpRouter]:
     # Get the routers from the settings
     try:
         router_paths = settings.BLOOMERP_SETTINGS['ROUTERS']
-        print(router_paths)
     except:
         print("No routers found in the settings.")
         router_paths = []
