@@ -1,6 +1,6 @@
 from django.db.models import Model
 from django.contrib.contenttypes.models import ContentType
-from bloomerp.models.core import ApplicationField
+from bloomerp.models.core import ApplicationField, BloomerpModel
 from django.db.models.query import QuerySet
 from django.db.models import Q, Model, CharField, TextField
 from django.apps import apps
@@ -354,7 +354,7 @@ def get_model_foreign_key_view_url(model:Model, foreign_model:Model, type='relat
 # ---------------------------------
 # Search models
 # ---------------------------------
-def search_models_by_query(query:str) -> list[ContentType]:
+def search_content_types_by_query(query:str) -> list[ContentType]:
     """
     This function returns a list of ContentTypes that contain the query in their verbose_name_plural.
     """
@@ -365,6 +365,52 @@ def search_models_by_query(query:str) -> list[ContentType]:
         if query.lower() in content_type.model_class()._meta.verbose_name_plural.lower():
             search_results.append(content_type)
     return search_results
+
+def search_objects_by_content_types(query:str, content_types:list[ContentType], limit:int, user=None) -> list[dict[str, QuerySet]]:
+    '''Searches objects via content types
+    
+    Args:
+        query: the given query
+        content_types: list of content types which should be queries
+        limit: limit results to this number of objects
+
+    Returns:
+        list of dictionaries containing the model name and the matching objects
+    '''
+    results = []
+
+    for content_type in content_types:
+        model = content_type.model_class()
+
+        try:
+            if not user.has_perm(f'{model._meta.app_label}.view_{model._meta.model_name}'):
+                continue
+            
+            if issubclass(model, BloomerpModel) and getattr(model, 'allow_string_search', False):
+                    # Perform string search using the static method
+                matching_objects = model.string_search(query)
+            else:
+                model.string_search = classmethod(string_search)
+
+                matching_objects = model.string_search(query)
+            
+            # If there are matching objects, add them to the results
+            if matching_objects.exists() and limit:
+                if len(matching_objects) > limit:
+                    matching_objects = matching_objects[0:limit]
+
+                results.append({
+                    "model_name": model._meta.verbose_name_plural,
+                    "objects": matching_objects
+                })
+        except:
+            pass
+
+    return results
+                
+
+
+
 
 
 # ---------------------------------

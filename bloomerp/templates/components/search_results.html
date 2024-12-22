@@ -37,7 +37,7 @@
         {% for object in result|get_dict_value:'objects' %}
             <a 
             class="dropdown-item pointer" 
-            hx-get="{{ object.get_absolute_url }}" 
+            hx-get="{{ object | detail_view_url }}" 
             hx-push-url="true" 
             hx-target="#main-content" 
             hx-swap="innerHTML"
