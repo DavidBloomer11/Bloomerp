@@ -13,7 +13,7 @@ from bloomerp.langchain_tools import BaseBloomerpTool
 class BloomerpOpenAI:
     def __init__(self, api_key: str = None):
         self.client = OpenAI(api_key=api_key)
-        self.model = "gpt-4o"
+        self.model = "gpt-4o-mini"
     
     def _prepare_messages(
             self,

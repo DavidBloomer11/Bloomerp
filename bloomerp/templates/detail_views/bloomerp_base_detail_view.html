@@ -76,14 +76,17 @@
 				{% for tab in detail_view_tabs %}
 				<li class="nav-item">
 					<a class="nav-link"
-					hx-get="{% url tab.link.url object.pk %}" 
-					type="submit"
-					hx-swap="innerHTML" 
-					hx-trigger="click"
-					hx-target="#detail-view-content"
-					hx-push-url="true"
-					hx-on::after-request="setActiveTab(this)"
-					id="{% url tab.link.url object.pk %}">{{tab.link.name}}</a>
+						hx-get="{% url tab.link.url object.pk %}" 
+						type="submit"
+						hx-swap="innerHTML" 
+						hx-trigger="click"
+						hx-target="#detail-view-content"
+						hx-push-url="true"
+						hx-on::after-request="setActiveTab(this)"
+						data-bs-toggle="tooltip"
+						data-bs-placement="top"
+						title="{{tab.link.description}}"
+						id="{% url tab.link.url object.pk %}">{{tab.link.name}}</a>
 				</li>
 				{% endfor %}
 			{% endif %}
@@ -153,6 +156,4 @@
 	}
 </script>
 <!--End Updating tabs-->
-
-
 
