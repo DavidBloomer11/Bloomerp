@@ -32,7 +32,7 @@ from bloomerp.views.mixins import (
     HtmxMixin
 )
 
-from bloomerp.utils.router import BloomerpRouter
+from bloomerp.utils.router import BloomerpRouter, _get_name_or_slug
 from django.forms.models import modelform_factory
 from bloomerp.forms.core import BloomerpModelForm
 from django import forms
@@ -212,7 +212,7 @@ class BloomerpUpdateView(
         ):
     template_name = "detail_views/bloomerp_detail_update_view.html"
     settings = None
-    
+    hello = None
     _uses_base_form = False
 
     def get_permissions(self):
@@ -261,31 +261,93 @@ class BloomerpUpdateView(
         return f"{self.object} was updated successfully."
 
 # ---------------------------------
-# Bloomerp Foreign Relationship View
+# Bloomerp many-to-many detail view
 # ---------------------------------
-class BloomerpForeignRelationshipView(
+from django.db.models.fields.reverse_related import ManyToManyRel, ManyToOneRel
+def get_view_parameters(model:Model):
+    params_list = []
+    model_name = model._meta.verbose_name
+
+    fields = model._meta.get_fields()
+
+    if model == File:
+        return False
+
+    for field in fields:
+        # Skip fields that 
+        if field.name in ['created_by','updated_by']:
+            continue
+
+        if field.get_internal_type() == 'ManyToManyField':
+            if type(field) == ManyToManyRel:
+                params_dict = {
+                    'path' : f'{_get_name_or_slug(field.related_model, slug=True)}',
+                    'name' : f'{field.related_model._meta.verbose_name_plural.capitalize()}',
+                    'url_name' : f'{_get_name_or_slug(field.related_model)}_relationship',
+                    'model' : model,
+                    'route_type' : 'detail',
+                    'description' : f'{field.related_model._meta.verbose_name_plural.capitalize()} relationship for {model_name}',
+                    'args': {
+                        'related_model':field.related_model,
+                        'related_model_attribute' : field.name,
+                        'reversed':True,
+                        'related_model_field' : field.remote_field.name
+                    }
+                }
+                
+            else:
+                params_dict = {
+                    'path' : f'{field.name}/',
+                    'name' : f'{field.verbose_name.capitalize()}',
+                    'url_name' : field.name + '_relationship',
+                    'description' : f'{field.verbose_name.capitalize()} relationship for {model_name}',
+                    'model' : model,
+                    'route_type' : 'detail',
+                    'args' : {
+                        'related_model':field.related_model,
+                        'related_model_attribute':True,
+                        'reversed':False,
+                        'related_model_field':field.remote_field.name
+                        }
+                }
+
+            params_list.append(params_dict)
+
+        elif type(field) == ManyToOneRel:
+            params_dict = {
+                'path' : f'{_get_name_or_slug(field.related_model, slug=True)}',
+                'name' : f'{field.name.capitalize().replace('_',' ')}',
+                'url_name' : f'{_get_name_or_slug(field.related_model)}_relationship',
+                'model' : model,
+                'route_type' : 'detail',
+                'description' : f'{field.name.capitalize().replace('_',' ')} relationship for {model_name}',
+                'args': {
+                    'related_model':field.related_model,
+                    'related_model_attribute' : field.name,
+                    'reversed':False,
+                    'related_model_field' : field.remote_field.name
+                }
+            }
+        
+            params_list.append(params_dict)
+
+    return params_list
+
+
+@router.bloomerp_route(from_func=get_view_parameters)
+class BloomerpDetailM2MView(
         PermissionRequiredMixin,
         BloomerpBaseDetailView
         ):
-    template_name : str = "detail_views/bloomerp_detail_foreign_relationship_view.html"
-    foreign_model : Model = None
-    foreign_model_attribute : str = None # The attribute relating the foreign model to the main model
-    foreign_model_detail_url  = None # The URL to redirect to when clicking on a foreign model
-    read_only = False # Whether the view is read only
-    form_class = None
-    foreign_relationship_type = None
-
-    def check_permission(self, permission):
-        if not self.request.user.has_perm(permission):
-            messages.error(
-                self.request,
-                f"User does not have the required permission: {permission}.",
-            )
-            return False
-        return True
+    template_name : str = "detail_views/bloomerp_detail_m2m_view.html"
+    model : Model = None
+    related_model : Model = None
+    related_model_attribute : str = None
+    reversed : bool = None
+    related_model_field : str = None
 
     def get_permission_required(self):
-        foreign_view_permission = f"{self.foreign_model._meta.app_label}.view_{self.foreign_model._meta.model_name}"
+        foreign_view_permission = f"{self.related_model._meta.app_label}.view_{self.related_model._meta.model_name}"
         model_view_permission = (
             f"{self.model._meta.app_label}.view_{self.model._meta.model_name}"
         )
@@ -293,68 +355,32 @@ class BloomerpForeignRelationshipView(
 
     def get_context_data(self, **kwargs: Any) -> dict:
         context = super().get_context_data(**kwargs)
-
-        print(self.model)
-        print(self.foreign_model)
-        print(self.foreign_model_attribute)
-
-        if self.foreign_model == None or self.foreign_model_attribute == None:
-            raise NotImplementedError(
-                "No foreign model or foreign model attribute given."
-            )
-
-        # Create the form
-        try:
-            Form = modelform_factory(fields="__all__", model=self.foreign_model, form=BloomerpModelForm)
-            # Initialize the form and set the instance
-            form = Form(initial={self.foreign_model_attribute: self.object.pk}, model=self.foreign_model)
-
-            # Hide the foreign model attribute
-            form.fields[self.foreign_model_attribute].widget = forms.HiddenInput()
-        except Exception as e:
-            # Case where the relation ship type is a ManyToManyField but the model has m2m on the other side
-            new_model = self.foreign_model._meta.get_field(self.foreign_model_attribute).through
-
-            Form = modelform_factory(fields="__all__", model=new_model, form=BloomerpModelForm)
-
-            form = Form(initial={self.foreign_model_attribute: self.object.pk}, model=new_model)
+        
+        # Construct initial query
+        initial_query = f'{self.related_model_field}={self.get_object().pk}'        
 
         # Get application fields for the foreign model
-        application_fields = ApplicationField.get_for_model(self.foreign_model)
+        application_fields = ApplicationField.get_for_model(self.related_model)
+        if self.reversed == False:
+            # Create form
+            Form = modelform_factory(model=self.related_model, fields='__all__', form=BloomerpModelForm)
+            
+            form = Form(model=self.related_model, user=self.request.user, initial={self.related_model_field:self.get_object().pk})
+
+            context['form'] = form
 
         # Set content_type_id 
-        context['foreign_content_type_id'] = ContentType.objects.get_for_model(self.foreign_model).pk
-        context['foreign_model_attribute'] = self.foreign_model_attribute
+        context['foreign_content_type_id'] = ContentType.objects.get_for_model(self.related_model).pk
+        context['foreign_model_attribute'] = self.related_model_attribute
         context['object'] = self.object
         context['application_fields'] = application_fields
-        context['initial_query'] = f'{self.foreign_model_attribute}={self.object.pk}'
-        context['foreign_model_name'] = self.foreign_model._meta.verbose_name_plural
-        context['foreign_model_name_singular'] = self.foreign_model._meta.verbose_name
-        context['form'] = form
+        context['initial_query'] = initial_query
+        context['reversed'] = self.reversed
+        context['related_model'] = self.related_model
+        context['related_model_name_singular'] = self.related_model._meta.verbose_name
+        context['related_model_name_plural'] = self.related_model._meta.verbose_name_plural
         return context
 
-    def get_permissions(self):
-        """
-        Returns a dictionary of standard add, change, delete, and view permissions
-        for the given model.
-
-        Returns:
-        Dictionary with keys 'add', 'change', 'delete', 'view' and their corresponding
-        permission codenames as values.
-        """
-        model_name = (
-            self.foreign_model._meta.model_name
-        )  # Get the model name in lowercase
-        app_label = self.foreign_model._meta.app_label  # Get the app label
-
-        permissions = {
-            "create": f"{app_label}.add_{model_name}",
-            "update": f"{app_label}.change_{model_name}",
-            "delete": f"{app_label}.delete_{model_name}",
-            "read": f"{app_label}.view_{model_name}",
-        }
-
-        return permissions
 
 # ---------------------------------
 # Bloomerp Detail File View
@@ -449,7 +475,9 @@ class BloomerpFileListView(PermissionRequiredMixin, HtmxMixin, View):
 
         return render(request, self.template_name, context)
     
-
+# ---------------------------------
+# Bloomerp Detail Comments View
+# ---------------------------------
 @router.bloomerp_route(
     path="comments",
     name="Comments",
@@ -470,7 +498,9 @@ class BloomerpDetailCommentsView(PermissionRequiredMixin, BloomerpBaseDetailView
         context['comments'] = self.object.comments.all()
         return context
 
-
+# ---------------------------------
+# Bloomerp Bookmarks View
+# ---------------------------------
 @router.bloomerp_route(
     path="user-bookmarks",
     name="Bookmarks for user",
@@ -496,6 +526,9 @@ class BloomerpBookmarksView(PermissionRequiredMixin, HtmxMixin, View):
         context = self.get_context_data()
         return render(request, self.template_name, context)
 
+# ---------------------------------
+# Bloomerp test view
+# ---------------------------------
 from django.views.generic import TemplateView
 @router.bloomerp_route(
     path="test",

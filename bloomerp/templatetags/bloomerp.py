@@ -322,6 +322,7 @@ def field_value(object:Model, application_field:ApplicationField, user:User, dat
         if application_field.field_type in OTHER_FIELDS:
             FILTER_VALUE = f'{application_field.field}={value}'
             FILTERABLE = True
+
         
         # ------------------------------
         # RETURNING THE VALUE
