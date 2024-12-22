@@ -206,7 +206,7 @@ class BloomerpLangChain:
         self.api_key = api_key
         self.conversation_history = conversation_history
         self.model = ChatOpenAI(
-                model="gpt-4",
+                model="gpt-4o-mini",
                 api_key=api_key
                 )
         self.conversation_id = conversation_id
