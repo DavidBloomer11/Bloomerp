@@ -169,7 +169,8 @@ def string_search_on_qs(qs: QuerySet, query: str):
 
     # Check if the model has a string_search_fields attribute
     if hasattr(model, 'string_search_fields') and model.string_search_fields:
-        string_fields = model.string_search_fields
+        return model.string_search(query)
+
     else:
         # Get all string fields (CharField and TextField) of the model
         string_fields = [
@@ -382,6 +383,9 @@ def search_objects_by_content_types(query:str, content_types:list[ContentType], 
     for content_type in content_types:
         model = content_type.model_class()
 
+        if model == ContentType:
+            continue
+
         try:
             if not user.has_perm(f'{model._meta.app_label}.view_{model._meta.model_name}'):
                 continue
@@ -390,6 +394,9 @@ def search_objects_by_content_types(query:str, content_types:list[ContentType], 
                     # Perform string search using the static method
                 matching_objects = model.string_search(query)
             else:
+                if hasattr(model, 'allow_string_search') and not model.allow_string_search:
+                    continue
+
                 model.string_search = classmethod(string_search)
 
                 matching_objects = model.string_search(query)

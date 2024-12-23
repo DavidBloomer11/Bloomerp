@@ -42,7 +42,6 @@ router = BloomerpRouter()
 # ---------------------------------
 # Bloomerp List View
 # ---------------------------------
-
 @router.bloomerp_route(
     path="list",
     name="{model} list",
@@ -183,6 +182,7 @@ class BloomerpCreateView(
         context["model_name_plural"] = self.model._meta.verbose_name_plural
         context["list_view_url"] = model_name_plural_underline(self.model) + "_list"
         context["model"] = self.model
+        context["title"] = 'Create ' + self.model._meta.verbose_name
         return context
 
     def get_permission_required(self):
@@ -212,7 +212,6 @@ class BloomerpUpdateView(
         ):
     template_name = "detail_views/bloomerp_detail_update_view.html"
     settings = None
-    hello = None
     _uses_base_form = False
 
     def get_permissions(self):
@@ -548,7 +547,7 @@ class BloomerpBookmarksView(PermissionRequiredMixin, HtmxMixin, View):
 from django.views.generic import FormView
 from django.forms import Form
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Fieldset, Submit, Div
+from crispy_forms.layout import Layout, Fieldset, Submit, Div, HTML
 
 
 class TestForm(Form):
@@ -561,6 +560,16 @@ class TestForm(Form):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.form_tag = False
+        self.helper.label_class = 'd-none'
+
+        HTML_C = '''<h3 class="dropdown-toggle pointer" onclick="document.getElementById('fieldset1').classList.toggle('d-none')">Hello</h3>'''
+
+        self.helper.layout = Layout(
+            Div(
+                HTML(HTML_C),
+                Div('first_name', 'last_name', css_class='d-none', css_id='fieldset1')
+            )
+        )
         
 
 

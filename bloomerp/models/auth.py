@@ -30,6 +30,9 @@ class AbstractBloomerpUser(
         abstract = True
 
 
+    string_search_fields = ['first_name+last_name', 'username']
+    allow_string_search = True
+
     avatar = models.ImageField(null=True, blank=True, upload_to="users/", help_text=_("The user's avatar"))
 
     # ------------------------------------------------
@@ -126,7 +129,7 @@ class AbstractBloomerpUser(
         return Workspace.objects.filter(user=self, content_type=None)
 
 
-class User(AbstractBloomerpUser):
+class User(AbstractBloomerpUser, StringSearchModelMixin):
     class Meta(BloomerpModel.Meta):
         db_table = "auth_user"
         swappable = "AUTH_USER_MODEL"
@@ -136,10 +139,14 @@ class User(AbstractBloomerpUser):
 # User Detail View Preference Model
 # ---------------------------------
 from django.db.models import BooleanField, Case, When, Subquery, OuterRef
-class UserDetailViewPreference(models.Model):
+class UserDetailViewPreference(
+    models.Model,
+    ):
     POSITION_CHOICES = [
         ('LEFT','Left'), ('CENTER','Center'),('RIGHT','Right')
     ]
+
+    allow_string_search = False
 
     user = models.ForeignKey(User, on_delete=models.CASCADE,related_name = 'detail_view_preference')
     application_field = models.ForeignKey(ApplicationField, on_delete=models.CASCADE)
@@ -214,6 +221,8 @@ class UserDetailViewPreference(models.Model):
 # User List View Preference Model
 # ---------------------------------
 class UserListViewPreference(models.Model):
+    allow_string_search = False
+    
     user = models.ForeignKey(User, on_delete=models.CASCADE,related_name = 'list_view_preference')
     application_field = models.ForeignKey(ApplicationField, on_delete=models.CASCADE)
 
@@ -268,6 +277,11 @@ class Bookmark(models.Model):
 
     datetime_created = models.DateTimeField(auto_now_add=True)
 
+    allow_string_search = False
+
+    def __str__(self) -> str:
+        return f"Bookmark for {self.content_type} with ID {self.object_id}"
+
     def get_absolute_url(self):
         try:
             return self.object.get_absolute_url()
@@ -295,8 +309,10 @@ class Comment(
     content_object = GenericForeignKey("content_type", "object_id")
     content = models.TextField()
 
+    allow_string_search = False
+
     def __str__(self):
-        return self.content
+        return f"{self.content} - {self.created_by} - {self.datetime_created}"
         
 class Link(
     AbsoluteUrlModelMixin,
@@ -593,6 +609,7 @@ class Link(
 
 class UserDetailViewTab(
     AbsoluteUrlModelMixin,
+
     models.Model
     ):
     class Meta(BloomerpModel.Meta):
@@ -602,6 +619,8 @@ class UserDetailViewTab(
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     link = models.ForeignKey(Link, help_text=_("The link to be displayed in the detail view tab"), on_delete=models.CASCADE)
+
+    allow_string_search = False
 
     def get_detail_view_tabs(user:User, content_type:ContentType) -> QuerySet[Self]:
         '''
@@ -647,6 +666,7 @@ class UserDetailViewTab(
 def get_default_workspace():
     links = Link.objects.all()
     widgets = Widget.objects.all()
+
     return {
         "content" : [
             {
@@ -664,11 +684,7 @@ def get_default_workspace():
                 "data": {"text": "Example of widget"},
                 "size" : 12
             },
-            {
-                "type": "widget",
-                "data": {"widget_id": widgets.first().pk},
-                "size" : 12
-            },
+            
             {
                 "type": "header",
                 "data": {"text": "Example of link"},

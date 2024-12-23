@@ -65,7 +65,9 @@ def list_view_filter_inputs(request:HttpRequest) -> HttpResponse:
 
             else:
                 # Create a model form that only includes the related field
-                form = modelform_factory(model=model, form=BloomerpModelForm, fields=[application_field.field])(model=model, user=request.user)
+                form = modelform_factory(model=model, form=BloomerpModelForm, fields=[application_field.field])(model=model, user=request.user, apply_helper=False, hide_default_fields=False)
+                
+                
                 context['form'] = form
 
         return render(request, 'components/list_view_filter_input.html', context)

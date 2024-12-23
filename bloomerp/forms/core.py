@@ -78,7 +78,7 @@ from bloomerp.widgets.foreign_key_widget import ForeignKeyWidget
 from bloomerp.widgets.code_editor_widget import AceEditorWidget
 from bloomerp.widgets.multiple_model_select_widget import MultipleModelSelect
 from django.forms.widgets import DateInput, DateTimeInput
-
+from bloomerp.forms.layouts import BloomerpModelformHelper
 
 class BloomerpModelForm(forms.ModelForm):
     model:Model = None
@@ -86,15 +86,29 @@ class BloomerpModelForm(forms.ModelForm):
     instance:Model = None
     is_new_instance:bool = True
 
-    def __init__(self, model:Model, user:User=None, *args, **kwargs):
+    def __init__(
+            self, 
+            model:Model, 
+            user:User=None,
+            apply_helper=True,
+            hide_default_fields=True,
+            *args, **kwargs):
+        '''
+        Args:
+            model: The model for which the model form is made
+            user: The user who is filling in the model form
+            apply_helper: whether to apply the layout
+            hide_default_fields: whether to hide the default fields (created_by, updated_by)
         
+        '''
+
+
         # Set the model instance to the form instance
         self.model = model
         self._meta.model = model
         self.user = user
 
         super(BloomerpModelForm, self).__init__(*args, **kwargs)
-
 
         # Set the instance to the form instance
         instance:Model = kwargs.get('instance')
@@ -156,10 +170,19 @@ class BloomerpModelForm(forms.ModelForm):
         # ---------------------------------
         # Hide created_by and updated_by fields
         # ---------------------------------
-        if 'created_by' in self.fields:
-            del self.fields['created_by']
-        if 'updated_by' in self.fields:
-            del self.fields['updated_by']
+        if hide_default_fields:
+            if 'created_by' in self.fields:
+                del self.fields['created_by']
+            if 'updated_by' in self.fields:
+                del self.fields['updated_by']
+
+        
+        if self.model and apply_helper:
+            helper = BloomerpModelformHelper(self.model)
+
+            if helper.is_defined() and self.model:
+                self.helper = helper
+
                 
     def save(self, commit=True):
         '''

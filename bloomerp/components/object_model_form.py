@@ -7,6 +7,7 @@ from bloomerp.forms.core import BloomerpModelForm
 from bloomerp.models import User
 from django.contrib.auth.decorators import login_required
 from django import forms
+from bloomerp.utils.requests import parse_bool_parameter
 
 @login_required
 @route('object_model_form')
@@ -22,6 +23,9 @@ def object_model_form(request:HttpRequest) -> HttpResponse:
     fields = request.GET.getlist('field_name', None)
     fields_hidden = request.GET.getlist('field_name_hidden', None)
     reset_on_submit = request.GET.get('reset_on_submit', False)
+    hide_default_fields = parse_bool_parameter(request.GET.get('hide_default_fields'), True)
+    apply_helper = parse_bool_parameter(request.GET.get('apply_helper'), True)
+
 
     # Add permission check here
     user : User = request.user
@@ -48,7 +52,14 @@ def object_model_form(request:HttpRequest) -> HttpResponse:
         Form : BloomerpModelForm = modelform_factory(model, fields='__all__', form=BloomerpModelForm)
 
     if request.method == 'POST':
-        form : BloomerpModelForm = Form(data=request.POST, files=request.FILES, prefix=form_prefix, model=model)
+        form : BloomerpModelForm = Form(
+            data=request.POST, 
+            files=request.FILES, 
+            prefix=form_prefix, 
+            model=model, 
+            hide_default_fields=hide_default_fields,
+            apply_helper=apply_helper
+            )
         if form.is_valid():
             form.save()
             created = True
@@ -58,16 +69,16 @@ def object_model_form(request:HttpRequest) -> HttpResponse:
                 form.save_m2m()
 
         if reset_on_submit:
-            form = Form(prefix=form_prefix, model=model, user=user)
+            form = Form(prefix=form_prefix, model=model, user=user, hide_default_fields=hide_default_fields, apply_helper=apply_helper)
     else:
         if fields_hidden:
             Form = hide_fields(Form, fields_hidden)
         
         if object_id:
             instance = model.objects.get(id=object_id)
-            form = Form(instance=instance, prefix=form_prefix, model=model, user=user)
+            form = Form(instance=instance, prefix=form_prefix, model=model, user=user, hide_default_fields=hide_default_fields, apply_helper=apply_helper)
         else:
-            form = Form(prefix=form_prefix, model=model, user=user)
+            form = Form(prefix=form_prefix, model=model, user=user, hide_default_fields=hide_default_fields, apply_helper=apply_helper)
 
     return render(request, 'components/object_model_form.html', {'form': form, 'created': created, 'form_prefix': form_prefix, 'new_object': new_object, 'reset_on_submit': reset_on_submit})
 

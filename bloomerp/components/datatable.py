@@ -119,14 +119,18 @@ def datatable(request:HttpRequest) -> HttpResponse:
             qs = qs.order_by(data_table_order_by)
         except Exception as e:
             pass
+    
+    
 
     # Limit the queryset
+    data_table_total_len = len(qs)
     if data_table_limit:
         try:
             data_table_limit = int(data_table_limit)
             qs = qs[:data_table_limit]
         except:
             pass
+    data_table_shown_results = len(qs)
 
     # Get the target from the HTMX request
     data_table_target = request.htmx.target
@@ -147,6 +151,8 @@ def datatable(request:HttpRequest) -> HttpResponse:
         'datatable_id' : data_table_target,
         'request_params': request_params,
         'data_table_order_by': data_table_order_by,
+        'data_table_shown_results' : data_table_shown_results,
+        'data_table_total_results' : data_table_total_len,
 
         # Permissions
         'user_can_add': user.has_perm(f'{model._meta.app_label}.add_{model._meta.model_name}'),

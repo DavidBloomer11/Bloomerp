@@ -353,9 +353,11 @@ def breadcrumb(title:str=None, model:Model = None, object:Model=None):
     # Check if the model is set
     if model:
         list_view_url = get_list_view_url(model)
+        model_dashboard_view_url = get_model_dashboard_view_url(model)
         model_name_plural = model._meta.verbose_name_plural.title()
         context['list_view_url'] = list_view_url
         context['model_name_plural'] = model_name_plural
+        context['model_dashboard_url'] = model_dashboard_view_url
     if object:
         context['object'] = object
     return context

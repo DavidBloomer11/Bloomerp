@@ -2,7 +2,7 @@
 {% load crispy_forms_tags %}
 {% load bloomerp %}
 
-{% breadcrumb model=model title="Create" %}
+{% breadcrumb model=model title=title %}
 
 <!--Form card-->
 <div class="card">
@@ -17,7 +17,7 @@
 		<form method="post" action="" enctype="multipart/form-data" class="px-3">
 			{% csrf_token %}
 
-			{{form | crispy}}
+			{% crispy form %}
 
 			<div class="d-flex justify-content-center gap-2">
 				<button type="submit" class="btn btn-primary">Create {{ model_name }}</button>

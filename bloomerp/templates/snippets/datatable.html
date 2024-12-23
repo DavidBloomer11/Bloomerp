@@ -13,7 +13,6 @@ Variables:
 {% load bloomerp %}
 {% load static %}
 
-
 <div class="table-responsive">
     <table class="table table-hover">
         <thead>
@@ -125,6 +124,10 @@ Variables:
             {% endif %}
         </tbody>
     </table>
+
+    <p class="text-muted mt-2">
+        Showing {{ data_table_shown_results }} out of {{ data_table_total_results }} results
+    </p>
 
     <!--Pagination-->
     <div class="d-flex justify-content-start">

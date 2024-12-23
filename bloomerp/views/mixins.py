@@ -153,6 +153,8 @@ class BloomerpModelContextMixin:
         # init content type
         content_type = ContentType.objects.get_for_model(self.model)
 
+        self.view_content_type = content_type
+        
         # Detail view routes
         detail_view_tabs = UserDetailViewTab.get_detail_view_tabs(content_type=content_type, user=self.request.user)
         if not detail_view_tabs:

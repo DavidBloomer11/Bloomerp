@@ -260,9 +260,9 @@ h1, h2, h3, h4, h5, h6 {
 .card-title {
   padding: 20px 0 15px 0;
   font-size: 18px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--dark);
-  font-family: "Poppins", sans-serif;
+  font-weight: bold;
 }
 .card-title span {
   color: #899bbd;
@@ -1457,4 +1457,16 @@ Dashboard
   border: 1px solid #ccc;
   border-radius: 5px;
   padding: 5px;
+}
+
+/*
+  Legend
+*/
+
+.form-legend {
+  font-weight: 500;
+  font-size: 18px;
+  color: var(--main-dark);
+  font-weight: bold;
+  font-family: "Open Sans", sans-serif;
 }

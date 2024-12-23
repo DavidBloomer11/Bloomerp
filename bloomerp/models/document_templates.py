@@ -170,6 +170,12 @@ class DocumentTemplate(BloomerpModel):
         help_text=_("Signifies whether the page numbers are included or not.")
         ) 
 
+    form_layout = {
+        "General information" : ['name', 'model_variable', 'free_variables'],
+        "Template content" : ['template'],
+        "Styling" : ['styling', 'template_header','footer', 'page_orientation','page_size','page_margin','include_page_numbers']
+    }
+
 
     def __str__(self):
         return self.name

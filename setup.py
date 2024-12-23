@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="Bloomerp",
-    version="0.1.9",
+    version="0.2.0",
     packages=find_packages(),
     include_package_data=True,
     license="MIT License",
@@ -37,7 +37,10 @@ setup(
         'openpyxl>=3.1.5',
         'openai>=1.54.1',
         'plotly>=5.0.0',
-        'PyPDF2>=3.0.1'
+        'PyPDF2>=3.0.1',
+        'langchain-core>=0.3.23',
+        'langchain-openai>=0.2.12',
+        'langgraph>=0.2.60',
     ],
     extras_require={
         'images': ['Pillow>=8.0.0'],

@@ -1,5 +1,6 @@
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Value, F
+from django.db.models.functions import Concat
 from django.urls import reverse
 from django.core.exceptions import ValidationError
 
@@ -8,6 +9,7 @@ class StringSearchModelMixin(models.Model):
     A mixin for models that need to be searchable by a string query.
     """
     string_search_fields: list = None  # The list of fields to search in
+    allow_string_search: bool = None
 
     class Meta:
         abstract = True
@@ -27,14 +29,24 @@ class StringSearchModelMixin(models.Model):
                 if isinstance(field, models.CharField) or isinstance(field, models.TextField)
             ]
 
+        queryset = cls.objects.all()
+        
+        # Replace spaces in the query with empty strings
 
         # Build a Q object to filter across all string fields
         query_filter = Q()
         for field in string_fields:
-            query_filter |= Q(**{f"{field}__icontains": query})
+            if '+' in field:
+                concatenated_query = query.replace(' ','')
+                concat_fields = field.split('+')
+                concat_operation = Concat(*[F(f) if f != ' ' else Value(' ') for f in concat_fields], output_field=models.CharField())
+                queryset = queryset.annotate(**{field: concat_operation})
+                query_filter |= Q(**{f"{field}__icontains": concatenated_query})
+            else:
+                query_filter |= Q(**{f"{field}__icontains": query})
 
         # Filter the queryset by the query in any of the string fields
-        return cls.objects.filter(query_filter)
+        return queryset.filter(query_filter)
     
 class TimestampedModelMixin(models.Model):
     """
