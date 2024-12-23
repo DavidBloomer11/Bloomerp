@@ -14,6 +14,8 @@ Variables:
 {% load static %}
 
 <div class="table-responsive">
+
+    {% if data_table_view_type == 'list' %}
     <table class="table table-hover">
         <thead>
             <tr>
@@ -124,6 +126,11 @@ Variables:
             {% endif %}
         </tbody>
     </table>
+
+    {% elif data_table_view_type == 'calendar' %}
+        {% calendar queryset=object_list start_date_field=data_table_calendar_view_fields.0 end_date_field=data_table_calendar_view_fields.1 %}
+    {% endif %}
+
 
     <p class="text-muted mt-2">
         Showing {{ data_table_shown_results }} out of {{ data_table_total_results }} results

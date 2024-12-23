@@ -447,3 +447,26 @@ def detail_view_url(object:Model):
     except:
         model = object._meta.model
         return reverse(get_detail_view_url(model), kwargs={'pk': object.pk})
+
+from django.db.models.functions import Cast
+from django.db.models import DateTimeField, F
+from django.db.models import QuerySet
+
+@register.inclusion_tag("snippets/calendar.html")
+def calendar(queryset: QuerySet, start_date_field: str, end_date_field: str = None, id=None):
+    if not id:
+        id = str(uuid.uuid4())
+
+    parse = 'Y-m-d'
+    queryset = queryset.annotate(date_start=Cast(F(start_date_field), output_field=DateTimeField()))
+    if end_date_field:
+        queryset = queryset.annotate(date_end=Cast(F(end_date_field), output_field=DateTimeField()))
+
+
+    return {
+        "queryset": queryset,
+        "start_date_field": start_date_field,
+        "end_date_field": end_date_field,
+        "id": id,
+        "parse":parse
+    }

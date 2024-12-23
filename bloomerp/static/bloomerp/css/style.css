@@ -1470,3 +1470,11 @@ Dashboard
   font-weight: bold;
   font-family: "Open Sans", sans-serif;
 }
+
+/* Full callendar */
+
+.fc .fc-button-primary {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}

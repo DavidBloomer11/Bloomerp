@@ -37,7 +37,10 @@ def datatable(request:HttpRequest) -> HttpResponse:
     data_table_foreign_key_value = request.GET.get('data_table_foreign_key_value', None)
     data_table_limit = request.GET.get('data_table_limit',25)
     data_table_order_by = request.GET.get('data_table_order_by', None)
-
+    
+    # View type
+    data_table_view_type = request.GET.get('data_table_view_type', 'list')
+    data_table_calendar_view_fields = request.GET.getlist('data_table_calendar_view_fields', None)
 
     # Set actions to True if the string is 'true'
     if include_actions in ['true', 'True']:
@@ -123,14 +126,14 @@ def datatable(request:HttpRequest) -> HttpResponse:
     
 
     # Limit the queryset
-    data_table_total_len = len(qs)
+    data_table_total_len = qs.count()
     if data_table_limit:
         try:
             data_table_limit = int(data_table_limit)
             qs = qs[:data_table_limit]
         except:
             pass
-    data_table_shown_results = len(qs)
+    data_table_shown_results = qs.count()
 
     # Get the target from the HTMX request
     data_table_target = request.htmx.target
@@ -153,6 +156,8 @@ def datatable(request:HttpRequest) -> HttpResponse:
         'data_table_order_by': data_table_order_by,
         'data_table_shown_results' : data_table_shown_results,
         'data_table_total_results' : data_table_total_len,
+        'data_table_view_type' : data_table_view_type,
+        'data_table_calendar_view_fields' : data_table_calendar_view_fields,
 
         # Permissions
         'user_can_add': user.has_perm(f'{model._meta.app_label}.add_{model._meta.model_name}'),

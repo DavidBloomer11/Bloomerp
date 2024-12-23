@@ -34,6 +34,29 @@ Variables:
 
     <div class="d-flex">
 
+        <!--Toggle view button-->
+        <div class="dropdown">
+            <button
+                    class="btn btn-borderless bg-transparent text-dark btn-sm"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                    <img src="{% static 'bloomerp/icons/eye.svg' %}" height="20" alt="Filter"/>
+            </button>
+        
+            <div class="dropdown-menu">
+                
+                <a 
+                    class="dropdown-item" 
+                    href="#" 
+                    data-bs-toggle="modal" 
+                    data-bs-target="#calendarViewModal{{datatable_id}}">Calendar view</a>
+            </div>
+        </div>
+        <!--End toggle view button-->
+
+
+
         <!-- Filter button -->
         <div class="dropdown">
             <button
@@ -143,6 +166,84 @@ Variables:
         <!-- End Settings -->
     </div>
 </div>
+
+
+<!-- Modal Body -->
+<div
+    class="modal fade"
+    id="calendarViewModal{{datatable_id}}"
+    tabindex="-1"
+    data-bs-backdrop="static"
+    data-bs-keyboard="false"
+    
+    role="dialog"
+    aria-labelledby="modalTitleId"
+    aria-hidden="true"
+>
+    <div
+        class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-sm"
+        role="document"
+    >
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    Calendar view
+                </h5>
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                ></button>
+            </div>
+            <div class="modal-body" id="calendarViewInputs{{datatable_id}}">
+                <div class="mb-3">
+                    <label for="start_date" class="form-label">Start Date Field</label>
+                    <select class="form-select" name="data_table_calendar_view_fields">
+                        {% for field in application_fields %}
+                            {% if field.field_type == 'DateField' or field.field_type == 'DateTimeField' %}
+                                <option value="{{ field.field }}">{{ field.field }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="end_date" class="form-label">End Date Field (Optional)</label>
+                    <select class="form-select" name="data_table_calendar_view_fields">
+                        {% for field in application_fields %}
+                            {% if field.field_type == 'DateField' or field.field_type == 'DateTimeField' %}
+                                <option value="{{ field.field }}">{{ field.field }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                    <div class="form-text">Specify the end date if you want see calendar date ranges.</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal"
+                >
+                    Close
+                </button>
+                <button
+                    hx-get="{% url 'components_datatable' %}?data_table_content_type_id={{ content_type_id }}&data_table_include_actions={{ include_actions }}{% if initial_query %}&{{initial_query}}{% endif %}&data_table_view_type=calendar"
+                    hx-include="#calendarViewInputs{{datatable_id}}"
+                    hx-trigger="click"
+                    hx-target="#{{datatable_id}}"
+                    hx-swap="innerHTML"
+                    class="btn btn-primary"
+                    data-bs-dismiss="modal"
+                    >Calendar view
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 <script>
     function removeFilterInputRow(element) {
         const filterInputRow = element.closest('.filter-input-row');

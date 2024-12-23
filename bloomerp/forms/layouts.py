@@ -8,6 +8,8 @@ class BloomerpModelformHelper(FormHelper):
 
     def __init__(self, model: BloomerpModel, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        
+        self.form_tag = False
 
         if not model:
             self.layout_defined = False
@@ -33,9 +35,7 @@ class BloomerpModelformHelper(FormHelper):
                 css_class = '' if required else ''
                 asterix = '*' if required else ''
 
-                
                 _content = content.format(title=title, id=id, asterix=asterix)
-                
 
                 fieldsets.append(
                     Div(
