@@ -264,13 +264,14 @@ class BloomerpUpdateView(
 # Bloomerp many-to-many detail view
 # ---------------------------------
 from django.db.models.fields.reverse_related import ManyToManyRel, ManyToOneRel
+from bloomerp.models import Comment
 def get_view_parameters(model:Model):
     params_list = []
     model_name = model._meta.verbose_name
 
     fields = model._meta.get_fields()
 
-    if model == File:
+    if model in [File, Comment]:
         return False
 
     for field in fields:
@@ -279,6 +280,9 @@ def get_view_parameters(model:Model):
             continue
 
         if field.get_internal_type() == 'ManyToManyField':
+            if field.related_model in [Comment, File]:
+                return False
+
             if type(field) == ManyToManyRel:
                 params_dict = {
                     'path' : f'{_get_name_or_slug(field.related_model, slug=True)}',
@@ -296,6 +300,9 @@ def get_view_parameters(model:Model):
                 }
                 
             else:
+                if field.related_model in [Comment, File]:
+                    return False
+
                 params_dict = {
                     'path' : f'{field.name}/',
                     'name' : f'{field.verbose_name.capitalize()}',
@@ -314,6 +321,9 @@ def get_view_parameters(model:Model):
             params_list.append(params_dict)
 
         elif type(field) == ManyToOneRel:
+            if field.related_model in [Comment, File]:
+                return False
+
             params_dict = {
                 'path' : f'{_get_name_or_slug(field.related_model, slug=True)}',
                 'name' : f'{field.name.capitalize().replace('_',' ')}',
@@ -478,6 +488,7 @@ class BloomerpFileListView(PermissionRequiredMixin, HtmxMixin, View):
 # ---------------------------------
 # Bloomerp Detail Comments View
 # ---------------------------------
+from bloomerp.models import Comment
 @router.bloomerp_route(
     path="comments",
     name="Comments",
@@ -495,7 +506,12 @@ class BloomerpDetailCommentsView(PermissionRequiredMixin, BloomerpBaseDetailView
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['comments'] = self.object.comments.all()
+        if not hasattr(self.object, 'comments'):
+            comments = Comment.objects.filter(content_type=self.content_type, object_id=self.object.pk)
+        else:
+            comments = self.object.comments.all()
+
+        context['comments'] = comments
         return context
 
 # ---------------------------------
@@ -529,7 +545,26 @@ class BloomerpBookmarksView(PermissionRequiredMixin, HtmxMixin, View):
 # ---------------------------------
 # Bloomerp test view
 # ---------------------------------
-from django.views.generic import TemplateView
+from django.views.generic import FormView
+from django.forms import Form
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout, Fieldset, Submit, Div
+
+
+class TestForm(Form):
+    first_name = forms.CharField()
+    last_name = forms.CharField()
+
+    identification_number = forms.CharField()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_tag = False
+        
+
+
+
 @router.bloomerp_route(
     path="test",
     name="Test",
@@ -537,13 +572,10 @@ from django.views.generic import TemplateView
     route_type="app",
     description="Test",
 )
-class TestView(HtmxMixin, TemplateView):
+class TestView(HtmxMixin, FormView):
     template_name = "test.html"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        
-        return context
+    form_class = TestForm
+    
     
 
 
