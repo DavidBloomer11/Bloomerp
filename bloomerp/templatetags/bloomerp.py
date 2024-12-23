@@ -130,20 +130,6 @@ def get_widget_by_id(id:int):
         return 
     
 
-@register.inclusion_tag('snippets/breadcrumb.html')
-def breadcrumb(title:str, model:Model):
-    '''
-    Returns a breadcrumb navigation.
-    '''
-    list_view_url = get_model_dashboard_view_url(model)
-    model_name_plural = model._meta.verbose_name_plural.title()
-
-    return {
-        'title' : title,
-        'list_view_url' : list_view_url,
-        'model_name_plural' : model_name_plural	
-    }
-    
 @register.inclusion_tag('snippets/workspace_item.html')
 def workspace_item(item:dict):
     '''
@@ -345,7 +331,7 @@ def breadcrumb(title:str=None, model:Model = None, object:Model=None):
     Returns a breadcrumb navigation.
 
     Example usage:
-    {% breadcrumb links %}
+    {% breadcrumb title model object %}
     '''
     # Init context
     context = {"title": title}

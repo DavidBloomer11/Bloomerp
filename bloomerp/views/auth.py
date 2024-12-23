@@ -1,6 +1,5 @@
 from typing import Any
 from django.db.models.base import Model as Model
-from django.db.models.query import QuerySet
 from django.forms import formset_factory
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render, redirect
@@ -17,10 +16,6 @@ from bloomerp.models import (
     )
 from bloomerp.utils.models import model_name_plural_underline
 from django.contrib.auth.mixins import PermissionRequiredMixin
-
-
-# -------------------------------------------
-# NEW SHIT
 from bloomerp.utils.router import BloomerpRouter
 from bloomerp.views.mixins import HtmxMixin, BloomerpModelContextMixin
 from bloomerp.views.mixins import BloomerpModelFormViewMixin
@@ -207,6 +202,9 @@ class UserDetailViewPreferenceView(ProfileMixin, BloomerpBaseDetailView):
             return render(request, self.template_name, {'formset': formset})
 
 
+# ---------------------------
+# USER CREATE VIEW
+# ---------------------------
 from bloomerp.forms.auth import BloomerpUserCreationForm
 from django.contrib.messages.views import SuccessMessageMixin
 @router.bloomerp_route(

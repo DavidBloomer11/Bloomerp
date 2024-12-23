@@ -1,12 +1,12 @@
 {% load crispy_forms_tags %}
+{% load bloomerp %}
 
-
-{% include "snippets/breadcrumb.html" with title="Bulk upload" %}
+{% breadcrumb title=title model=model %}
 
 
 <div class="card text-start">
   <div class="card-body">
-    <h4 class="card-title">Bulk upload {{model_name_plural|title}}</h4>
+    <h4 class="card-title">Bulk upload {{model_name_plural}}</h4>
 
     <p class="card-text">
       Please upload a CSV or Excel file to bulk import data.

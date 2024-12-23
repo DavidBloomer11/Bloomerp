@@ -441,6 +441,8 @@ class BloomerpBulkUploadView(PermissionRequiredMixin, HtmxMixin, View):
     def get_context_data(self, **kwargs) -> dict:
         context = super().get_context_data(**kwargs)
         context["model_name"] = self.model._meta.verbose_name
+        context["model"] = self.model
+        context["title"] = f'Bulk upload {self.model._meta.verbose_name_plural}'
         context["model_name_plural"] = self.model._meta.verbose_name_plural
         context["content_type_id"] = ContentType.objects.get_for_model(self.model).pk
         context["list_view_url"] = model_name_plural_underline(self.model) + "_list"
@@ -541,51 +543,6 @@ class BloomerpBookmarksView(PermissionRequiredMixin, HtmxMixin, View):
         context = self.get_context_data()
         return render(request, self.template_name, context)
 
-# ---------------------------------
-# Bloomerp test view
-# ---------------------------------
-from django.views.generic import FormView
-from django.forms import Form
-from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Fieldset, Submit, Div, HTML
-
-
-class TestForm(Form):
-    first_name = forms.CharField()
-    last_name = forms.CharField()
-
-    identification_number = forms.CharField()
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_tag = False
-        self.helper.label_class = 'd-none'
-
-        HTML_C = '''<h3 class="dropdown-toggle pointer" onclick="document.getElementById('fieldset1').classList.toggle('d-none')">Hello</h3>'''
-
-        self.helper.layout = Layout(
-            Div(
-                HTML(HTML_C),
-                Div('first_name', 'last_name', css_class='d-none', css_id='fieldset1')
-            )
-        )
-        
-
-
-
-@router.bloomerp_route(
-    path="test",
-    name="Test",
-    url_name="test",
-    route_type="app",
-    description="Test",
-)
-class TestView(HtmxMixin, FormView):
-    template_name = "test.html"
-    form_class = TestForm
-    
-    
 
 
 
