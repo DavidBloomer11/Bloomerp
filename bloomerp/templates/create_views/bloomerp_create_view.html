@@ -14,15 +14,16 @@
 		</div>
 		{% endif %}
 
-		<form method="post" action="" enctype="multipart/form-data" class="px-3">
+		<form method="post" action="" enctype="multipart/form-data" class="px-3" data="dsa">
 			{% csrf_token %}
-
-			{% crispy form %}
+			
+			{% if form.helper %}{% crispy form %}{% else %}{{form|crispy}}{% endif %}
 
 			<div class="d-flex justify-content-center gap-2">
 				<button type="submit" class="btn btn-primary">Create {{ model_name }}</button>
 				<button type="reset" class="btn btn-secondary" href="#">Reset</button>
 			</div>
+		
 		</form>
 	</div>
 </div>
