@@ -804,7 +804,8 @@ class Workspace(
                     if link_id not in [link.pk for link in links]:
                         new_links.append(link_id)
                 item['data']['links'] = new_links
-                new_content.append(item)
+                if new_links:
+                    new_content.append(item)
             else:
                 new_content.append(item)
         

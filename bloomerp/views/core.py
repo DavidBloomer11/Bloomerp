@@ -280,7 +280,7 @@ def get_view_parameters(model:Model):
 
         if field.get_internal_type() == 'ManyToManyField':
             if field.related_model in [Comment, File]:
-                return False
+                continue
 
             if type(field) == ManyToManyRel:
                 params_dict = {
@@ -300,7 +300,7 @@ def get_view_parameters(model:Model):
                 
             else:
                 if field.related_model in [Comment, File]:
-                    return False
+                    continue
 
                 params_dict = {
                     'path' : f'{field.name}/',
