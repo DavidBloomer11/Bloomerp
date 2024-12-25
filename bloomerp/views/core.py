@@ -24,7 +24,7 @@ from bloomerp.models import (
 from bloomerp.forms.core import BloomerpDownloadBulkUploadTemplateForm
 from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
-from bloomerp.utils.models import model_name_plural_underline, get_list_view_url
+from bloomerp.utils.models import model_name_plural_underline, get_list_view_url, get_detail_view_url
 from django.db.models import Model
 from bloomerp.views.mixins import (
     BloomerpModelFormViewMixin,
@@ -126,9 +126,6 @@ class BloomerpDetailOverviewView(PermissionRequiredMixin, BloomerpBaseDetailView
                 content_type = content_type
             )
             
-
-            
-
         left_column = queryset.filter(position="LEFT")
         center_column = queryset.filter(position="CENTER")
         right_column = queryset.filter(position="RIGHT")
@@ -190,6 +187,12 @@ class BloomerpCreateView(
 
     def get_success_message(self, cleaned_data):
         return f"{self.object} was created successfully."
+    
+    def get_success_url(self):
+        try:
+            return self.object.get_absolute_url()
+        except AttributeError:
+            return reverse(get_detail_view_url(self.object), kwargs={"pk": self.object.pk})
 
 # ---------------------------------
 # Bloomerp Update View
@@ -213,6 +216,13 @@ class BloomerpUpdateView(
     template_name = "detail_views/bloomerp_detail_update_view.html"
     settings = None
     _uses_base_form = False
+
+    def get_success_url(self):
+        try:
+            return self.object.get_absolute_url()
+        except AttributeError:
+            return reverse(get_detail_view_url(self.object), kwargs={"pk": self.object.pk})
+
 
     def get_permissions(self):
         """
