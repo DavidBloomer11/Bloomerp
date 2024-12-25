@@ -23,7 +23,7 @@ class WidgetForm3(forms.Form):
         
         if query and output_type:
             # If the output type is table, add a field for the columns
-            columns = query.result_dict['columns']
+            columns = query.result_dict()['columns']
 
             choices = [(None, '---------')] + [(col, col) for col in columns]
 
