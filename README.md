@@ -13,8 +13,9 @@ Bloomerp comes packed with a variety of features:
 - **Intuitive CRUD Views**: With integrated access control provided by Django.
 - **Advanced List Views**: Offering powerful filtering capabilities.
 - **PDF Generation System**: Easily define templates (like contracts) for your model objects.
-- **Customizable Dashboards**: Based on SQL queries.
-- **LLM Integration**: Create SQL queries using Large Language Models.
+- **Customizable Dashboards**: Create intuitive dashboards using widgets that are based on SQL Queries.
+- **SQL Query Editor**: Make informed decisions based on advanced SQL queries on your company data.
+- **LLM Integration with BloomAI**: Integrated 'bloomAI' that is your compangnion to create SQL queries, document templates, and general can even be used to extract company specific knowledge (using Langchain and tools calling). For more information, go to [BloomAI](docs/users/bloomai.md).
 - **Bulk Uploads**: For efficiently importing data into models.
 - **REST APIs**: Automatically generated for all models using Django REST Framework.
 - **File System UI**: An intuitive interface including folder structures.
@@ -67,6 +68,8 @@ After setting up the project and app, update `core/settings.py` to configure Blo
 ```python
 # core/settings.py
 from bloomerp.config import BLOOMERP_APPS, BLOOMERP_MIDDLEWARE, BLOOMERP_USER_MODEL
+
+LOGIN_URL = '/login'
 
 # Installed apps
 INSTALLED_APPS = [
