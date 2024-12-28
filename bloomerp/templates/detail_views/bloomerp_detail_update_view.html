@@ -1,7 +1,7 @@
 {% load crispy_forms_tags %}
 {% include 'snippets/messages.html' with messages=messages %}
 
-<h5 class="card-title">Update your details</h5>
+<h5 class="card-title">Update {{object}}</h5>
 
 {% if form.errors %}
 <div class="alert alert-danger">

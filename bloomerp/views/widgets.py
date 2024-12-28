@@ -6,6 +6,7 @@ from bloomerp.models import Widget, SqlQuery, ApplicationField
 from bloomerp.utils.router import BloomerpRouter
 from bloomerp.utils.models import get_create_view_url
 from bloomerp.views.mixins import HtmxMixin, BloomerpModelFormViewMixin, BloomerpModelContextMixin
+from bloomerp.views.core import BloomerpBaseDetailView
 from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.detail import DetailView
 from django.urls import reverse
@@ -168,4 +169,77 @@ class WidgetPreviewView(BloomerpModelContextMixin, HtmxMixin, DetailView):
         return workspace_widget(request)
 
 
+@router.bloomerp_route(
+    models=Widget,
+    path='update/',
+    name='Update',
+    description='Update widget',
+    route_type='detail',
+    url_name='update'
+)
+class WidgetUpdateWizardView(PermissionRequiredMixin, SessionWizardView, BloomerpBaseDetailView):
+    form_list = [WidgetForm1, WidgetForm2, WidgetForm3]
+    template_name = 'detail_views/bloomerp_detail_wizard_update_view.html'
+    permission_required = 'shared_utils.change_widget'
+    model = Widget  
+
+    
+    def get_context_data(self, **kwargs) -> dict:
+        context = super().get_context_data(**kwargs)
+        context["exclude_header"] = self.exclude_header
+        self.object = self.get_object()
+        # This is necessary to get the context data from the BloomerpModelContextMixin
+        # Don't ask me why, I don't know
+        context.update(BloomerpModelContextMixin.get_context_data(self, **kwargs))
+
+        return context
+
+    def get_form_kwargs(self, step=None):
+        """
+        Returns the keyword arguments for instantiating the form
+        (or formset) on the given step.
+        """
+        if step == '0':
+            return {'widget': self.get_object()}
+
+        if step == '1':
+            return {'widget': self.get_object()}
+
+        if step == '2':
+            # Fetch the output type selected in the previous step
+            output_type = self.get_cleaned_data_for_step('1')['output_type']
+
+            # Fetch the query selected in the first step
+            query = self.get_cleaned_data_for_step('0')['query']
+
+            return {'output_type': output_type, 'query': query, 'widget': self.get_object()}
+
+        return {}
+
+    def done(self, form_list, **kwargs):
+        form_data = [form.cleaned_data for form in form_list]
+        
+        # Extract the form data
+        name = form_data[0]['name']
+        description = form_data[0]['description']
+        query = form_data[0]['query']
+        output_type = form_data[1]['output_type']
+        options = {key: value for form in form_data[2:] for key, value in form.items()}
+
+        if options.get('group_by') == '':
+            del options['group_by'] 
+
+        # Get the object
+        widget : Widget = self.get_object()
+
+        widget.name = name
+        widget.description = description
+        widget.query = query
+        widget.output_type = output_type
+        widget.options = options
+        widget.updated_by = self.request.user
+        widget.created_by = self.request.user
+        
+        widget.save()
+        return redirect(widget.get_absolute_url())
 

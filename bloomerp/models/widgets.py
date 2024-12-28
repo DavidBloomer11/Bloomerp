@@ -313,7 +313,7 @@ class Widget(BloomerpModel):
             raise ValidationError('Unsafe query')
 
         # Get columns
-        dataframe = self.query.result_dataframe
+        dataframe = self.query.result_dataframe()
         columns = dataframe.columns.tolist()
 
         # TABLE SPECIFIC VALIDATION
@@ -405,7 +405,7 @@ class Widget(BloomerpModel):
         '''
         Execute the query and return the result
         '''
-        dataframe:DataFrame = self.query.result_dataframe
+        dataframe:DataFrame = self.query.result_dataframe()
 
         if self.output_type == 'value':
             column = self.options['column']
