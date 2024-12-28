@@ -18,7 +18,7 @@ class BloomerpFileField(models.ForeignKey):
         kwargs['to'] = 'bloomerp.File'
         kwargs['on_delete'] = models.SET_NULL
         kwargs['null'] = True
-        kwargs['blank'] = True
+        kwargs['blank'] = True # Field should always be optional as we dont want any cascading 
         
         super().__init__(*args, **kwargs)
 
