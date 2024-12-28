@@ -17,6 +17,8 @@ class BloomerpFileField(models.ForeignKey):
         self.allowed_extensions = allowed_extensions if allowed_extensions is not None else '__all__'
         kwargs['to'] = 'bloomerp.File'
         kwargs['on_delete'] = models.SET_NULL
+        kwargs['null'] = True
+        kwargs['blank'] = True
         
         super().__init__(*args, **kwargs)
 
