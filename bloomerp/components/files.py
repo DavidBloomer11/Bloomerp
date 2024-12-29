@@ -24,7 +24,7 @@ def files(request: HttpRequest) -> HttpResponse:
 
     '''
     # Some logic for permissions here
-    if not request.user.has_perm('bloomerp.view_files'):
+    if not request.user.has_perm('bloomerp.view_file'):
         return HttpResponse('User does not have permission to view files')
 
     # get the accessible content types for the user
