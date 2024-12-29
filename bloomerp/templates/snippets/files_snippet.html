@@ -35,7 +35,7 @@ Variables:
         <!-- Filter button -->
         {% url 'components_files' as url %}
         {% if object and content_type_id %}
-        {% include "snippets/filter_snippet.html" with target=target url=url|add:"?content_type_id="|add:content_type_id|add:"&object_id"|add:object.pk %}
+        {% include "snippets/filter_snippet.html" with target=target url=url|add:"?content_type_id="|add:content_type_id|add:"&object_id"|add:object.pk application_fields=files_application_fields %}
         {% elif content_type_id %}
         {% include "snippets/filter_snippet.html" with target=target url=url|add:"?content_type_id="|add:content_type_id %}
         {% elif object %}

@@ -532,89 +532,89 @@ Variables:
 <!--End update modal-->
 {% endif %}
 
-    {% if user_can_delete %}
-    <!--Delete modal-->
-    <div
-        class="modal fade"
-        id="deleteModal"
-        tabindex="-1"
-        role="dialog"
-        aria-labelledby="modalTitleId"
-        aria-hidden="true"
-    >
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalTitleId">
-                        Delete object
-                    </h5>
+{% if user_can_delete %}
+<!--Delete modal-->
+<div
+    class="modal fade"
+    id="deleteModal"
+    tabindex="-1"
+    role="dialog"
+    aria-labelledby="modalTitleId"
+    aria-hidden="true"
+>
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitleId">
+                    Delete object
+                </h5>
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                ></button>
+            </div>
+            <form>
+                {% csrf_token %}
+                <div class="modal-body" id="deleteFormDiv">
+                    <p>Are you sure you want to delete <span id="deleteObjectSpan" class="fw-bold"></span>?</p>
+                </div>
+                <input type="hidden" name="object_id" id="deleteObjectId">
+                <div class="modal-footer">
                     <button
                         type="button"
-                        class="btn-close"
+                        class="btn btn-secondary"
                         data-bs-dismiss="modal"
-                        aria-label="Close"
-                    ></button>
+                    >
+                        Close
+                    </button>
+                    <button type="submit" class="btn btn-danger" data-bs-dismiss="modal">Delete</button>
                 </div>
-                <form>
-                    {% csrf_token %}
-                    <div class="modal-body" id="deleteFormDiv">
-                        <p>Are you sure you want to delete <span id="deleteObjectSpan" class="fw-bold"></span>?</p>
-                    </div>
-                    <input type="hidden" name="object_id" id="deleteObjectId">
-                    <div class="modal-footer">
-                        <button
-                            type="button"
-                            class="btn btn-secondary"
-                            data-bs-dismiss="modal"
-                        >
-                            Close
-                        </button>
-                        <button type="submit" class="btn btn-danger" data-bs-dismiss="modal">Delete</button>
-                    </div>
-                </form>
-            </div>
+            </form>
         </div>
     </div>
+</div>
 
-    <script>
-        var deleteModal = document.getElementById('deleteModal');
+<script>
+    var deleteModal = document.getElementById('deleteModal');
 
-        deleteModal.addEventListener('show.bs.modal', function (event) {
-            // Button that triggered the modal
-            let button = event.relatedTarget;
-            // Extract info from data-bs-
-            let objectId = button.getAttribute('data-bs-object-id');
-            let object = button.getAttribute('data-bs-object-str');
+    deleteModal.addEventListener('show.bs.modal', function (event) {
+        // Button that triggered the modal
+        let button = event.relatedTarget;
+        // Extract info from data-bs-
+        let objectId = button.getAttribute('data-bs-object-id');
+        let object = button.getAttribute('data-bs-object-str');
 
-            // Update modal title
-            document.getElementById('deleteObjectSpan').innerHTML = object;
+        // Update modal title
+        document.getElementById('deleteObjectSpan').innerHTML = object;
 
-            // Update hidden input
-            document.getElementById('deleteObjectId').value = objectId;
+        // Update hidden input
+        document.getElementById('deleteObjectId').value = objectId;
+    });
+
+    deleteModal.querySelector('form').addEventListener('submit', function (event) {
+        event.preventDefault();
+        // Extract info from hidden input
+        let objectId = document.getElementById('deleteObjectId').value;
+
+        let url = "{{ api_endpoint }}" + objectId + "/";
+
+        fetch(url, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        }).then(response => {
+            if (response.ok) {
+                // Reload table
+                reloadTable('{{ datatable_id }}', '{{ request_params | safe }}', '{% url "components_datatable" %}');
+            }
         });
-
-        deleteModal.querySelector('form').addEventListener('submit', function (event) {
-            event.preventDefault();
-            // Extract info from hidden input
-            let objectId = document.getElementById('deleteObjectId').value;
-
-            let url = "{{ api_endpoint }}" + objectId + "/";
-
-            fetch(url, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                }
-            }).then(response => {
-                if (response.ok) {
-                    // Reload table
-                    reloadTable('{{ datatable_id }}', '{{ request_params | safe }}', '{% url "components_datatable" %}');
-                }
-            });
-        });
-    </script>
-    <!--End delete modal-->
+    });
+</script>
+<!--End delete modal-->
 {% endif %}
 
 {% endif %}

@@ -372,13 +372,15 @@ function sortFiles(sortBy) {
 
     url = getFileTableCurrentUrl();
 
+    target = getFileTableTarget();
+
     // Check if the url already has contains ?
     if (url.includes('?')) {
         url += '&sort=' + sortBy;
     } else {
         url += '?sort=' + sortBy;
     }
-    htmx.ajax('GET',url, '#file_list');
+    htmx.ajax('GET',url, target);
 }
 
 // Get selected objects

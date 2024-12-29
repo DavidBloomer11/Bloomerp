@@ -11,6 +11,7 @@ Variables:
 {% load static %}
 {% load i18n %}
 {% load crispy_forms_tags %}
+{% load bloomerp %}
 
 <!--breadcrumb-->
 <div class="d-flex my-2">
@@ -44,7 +45,6 @@ Variables:
                     <a class="dropdown-item pointer" data-bs-toggle="modal" data-bs-target="#uploadFileModal">Upload file</a>
                     <a class="dropdown-item pointer" data-bs-toggle="modal" data-bs-target="#createFolderModal">Create new folder</a>
             </div>
-
         {% endif %}
 
         {% for parent in current_folder.parents %}
@@ -91,7 +91,7 @@ Variables:
 <!-- File results -->
 <div
     class="table-responsive overflow-auto"
-    id="fileResultsTable"
+    id="{{ target }}"
 >
     <table
         class="table table-hover"
@@ -126,6 +126,7 @@ Variables:
                     ></a>
                 </th>
                 <th scope="col">File size</th>
+                <th scope="col">Object</th>
                 <th scope="col">Actions</th>
             </tr>
         </thead>
@@ -200,6 +201,26 @@ Variables:
                     <td>{{ file.created_by }}</td>
                     <td>{{ file.datetime_updated | date:request.user.datetime_view_preference }}</td>
                     <td>{{ file.size_str }}</td>
+
+                    {% if file.content_object %}
+                    <td>
+                        <a
+                            hx-get="{{ file.content_object | detail_view_url }}"
+                            hx-target="#main-content"
+                            hx-swap="innerHTML"
+                            hx-trigger="click"
+                            hx-push-url="true"
+                            href="#"
+                            >
+                        {{ file.content_object }}
+                        </a>
+                    </td>
+
+                    {% else %}
+                    <td></td>
+                    {% endif %}
+
+
                     <td width="120px">
                         <div class="d-flex d-none justify-content-between">
                             {% if file.file_extension == 'pdf' %}
@@ -216,9 +237,6 @@ Variables:
                             {% endif %}
                             <a href="{{ file.file.url }}" draggable="false">
                                 <img src="{% static 'bloomerp/icons/download.svg' %}" alt="Download" width="20" height="20">
-                            </a>
-                            <a href="#" draggable="false">
-                                <img src="{% static 'bloomerp/icons/share.svg' %}" alt="Share" width="20" height="20">
                             </a>
                             <a href="#" draggable="false">
                                 <img src="{% static 'bloomerp/icons/edit.svg' %}" alt="Edit" width="20" height="20">

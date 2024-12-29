@@ -106,6 +106,9 @@ def files(request: HttpRequest) -> HttpResponse:
         if object_id:
             files = files.filter(object_id=object_id)
 
+        # Exclude files that are in a folder
+        files = files.filter(folders=None)
+
     # Sort files by name if sort is not specified
     if not sort:
         files = files.order_by('name')

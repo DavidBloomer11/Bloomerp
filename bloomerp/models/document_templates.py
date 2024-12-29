@@ -1,8 +1,9 @@
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from bloomerp.models.core import BloomerpModel, ApplicationField
-from bloomerp.models.fields import CodeField, TextEditorField
+from bloomerp.models.fields import CodeField, TextEditorField, BloomerpFileField, StatusField
 from django.utils.translation import gettext_lazy as _
+from bloomerp.models import FileFolder
 
 # ---------------------------------
 # Document Template Model
@@ -170,10 +171,20 @@ class DocumentTemplate(BloomerpModel):
         help_text=_("Signifies whether the page numbers are included or not.")
         ) 
 
+    save_to_folder = models.ForeignKey(
+        to = FileFolder,
+        null=True,
+        blank=True,
+        help_text=_('Signifies to which folder a file generated from the template needs to be saved upon creation.'),
+        on_delete=models.SET_NULL
+    )
+
+
     form_layout = {
         "General information" : ['name', 'model_variable', 'free_variables'],
         "Template content" : ['template'],
-        "Styling" : ['styling', 'template_header','footer', 'page_orientation','page_size','page_margin','include_page_numbers']
+        "Styling" : ['styling', 'template_header','footer', 'page_orientation','page_size','page_margin','include_page_numbers'],
+        "Saving" : ['save_to_folder']
     }
 
 
@@ -220,4 +231,79 @@ class DocumentTemplate(BloomerpModel):
     def get_standard_documents_for_instance(instance):
         content_type = ContentType.objects.get_for_model(instance)
         return DocumentTemplate.objects.filter(model_variable=content_type, standard_document=True)
+    
+
+
+# ---------------------------------
+# Signature Request Model
+# ---------------------------------
+
+class SignatureRequest:
+    '''
+    The Signature Request model can be used to request a signature from a (authenticated) user.
+
+    Attributes:
+        recipient: The recipient of the signature request.
+        recipient_email: The email of the recipient (if the recipient is not provided).
+        sender: The sender of the signature request.
+        status: The status of the signature request.
+        signed_document: The signed document of the signature request.
+        signed_at: The date and time when the document was signed.
+
+    '''
+    class Meta(BloomerpModel.Meta):
+        managed = True
+        db_table = 'bloomerp_signature_request'
+
+
+    avatar = None
+
+    recipient = models.ForeignKey(
+        'bloomerp.User',
+        on_delete=models.CASCADE,
+        help_text=_("Recipient of the signature request."),
+        related_name='incoming_signature_requests',
+        null=True,
+        blank=True
+        ) # Foreign key to the recipient
+    
+    recipient_email = models.EmailField(
+        help_text=_("Email of the recipient (if recipient is not provided)."),
+        null=True,
+        blank=True
+        ) # Email of the recipient
+
+
+    sender = models.ForeignKey(
+        'bloomerp.User',
+        on_delete=models.CASCADE,
+        help_text=_("Sender of the signature request.")
+        ) # Foreign key to the sender
+    
+    status = StatusField(
+        default='pending',
+        help_text=_("Status of the signature request."),
+        colored_choices=[
+            ('pending', 'Pending', '#ffcc00'),
+            ('processing', 'Processing', '#007bff'),
+            ('completed', 'Completed', '#28a745'),
+            ('cancelled', 'Cancelled', '#dc3545'),
+        ]
+    )
+    
+
+
+    signed_document = BloomerpFileField()
+    
+    signed_at = models.DateTimeField(
+        help_text=_("Date and time when the document was signed."),
+        blank=True,
+        null=True
+        ) # Date and time when the document was signed
+    
+    def __str__(self):
+        return f'{self.document_template.name} - {self.recipient.get_full_name()}'
+
+    
+    
     

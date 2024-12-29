@@ -1,5 +1,5 @@
 from bloomerp.models import (
-    DocumentTemplate, User,
+    DocumentTemplate, User, FileFolder,
     File)
 from bloomerp.utils.pdf import generate_pdf
 from django.db.models import Model
@@ -7,6 +7,7 @@ from django.core.files.base import ContentFile
 from django.template import engines
 from django.template.loader import render_to_string
 from bloomerp.utils.pdf import PdfHandler
+
 
 class DocumentController:
     '''
@@ -110,12 +111,18 @@ class DocumentController:
             file_object.content_object = instance
 
             # Add created by
+            file_object.created_by = self.user
+            file_object.updated_by = self.user
             
 
             #Save metadata
             file_object.meta = meta_data
 
             file_object.save()
+
+            if document_template.save_to_folder:
+                document_template.save_to_folder.files.add(file_object)
+                
 
             return file_object
         else:

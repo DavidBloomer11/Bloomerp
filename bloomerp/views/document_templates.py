@@ -91,7 +91,10 @@ class BloomerpDetailDocumentTemplateGenerateView(PermissionRequiredMixin, Bloome
 
             if free_variable_form.is_valid():
                 data = free_variable_form.cleaned_data
-                controller = DocumentController() 
+                controller = DocumentController(
+                    document_template=template,
+                    user=self.request.user
+                )
                 controller.create_document(template, instance, data)
 
             # Redirect to a success page or any other desired view
