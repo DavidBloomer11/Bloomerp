@@ -15,6 +15,7 @@ from django.db.models import (
     ManyToManyField,
     Field
 )
+from bloomerp.models.fields import StatusField
 from django_filters import DateFilter
 
 def dynamic_filterset_factory(model):
@@ -41,8 +42,8 @@ def dynamic_filterset_factory(model):
         if isinstance(field, FileField):
             # Skip File fields
             continue  
-
-        if isinstance(field, CharField) or isinstance(field, TextField):
+        
+        if isinstance(field, CharField) or isinstance(field, TextField) or isinstance(field, StatusField):
             # String fields: Add icontains, exact, and isnull filters
             filter_overrides[f'{field.name}__icontains'] = django_filters.CharFilter(field_name=field.name, lookup_expr='icontains')
             filter_overrides[f'{field.name}__isnull'] = django_filters.BooleanFilter(field_name=field.name, lookup_expr='isnull')
@@ -87,10 +88,11 @@ def dynamic_filterset_factory(model):
             # Add isnull filter for DateField
             filter_overrides[f'{field.name}__isnull'] = django_filters.BooleanFilter(field_name=field.name, lookup_expr='isnull')
 
-            # Add year, month, day filters for DateField
+            # Add year, month, day, week filters for DateField
             filter_overrides[f'{field.name}__year'] = django_filters.NumberFilter(field_name=field.name, lookup_expr='year')
             filter_overrides[f'{field.name}__month'] = django_filters.NumberFilter(field_name=field.name, lookup_expr='month')
             filter_overrides[f'{field.name}__day'] = django_filters.NumberFilter(field_name=field.name, lookup_expr='day')
+            filter_overrides[f'{field.name}__week'] = django_filters.NumberFilter(field_name=field.name, lookup_expr='week')
 
             # Add year, month, day gte, lte filters for DateField
             filter_overrides[f'{field.name}__year__gte'] = django_filters.NumberFilter(field_name=field.name, lookup_expr='year__gte')

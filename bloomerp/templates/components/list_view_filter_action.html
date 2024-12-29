@@ -9,7 +9,7 @@
             name="action"
         >   
                 <option disabled selected>Choose an action</option>
-            {% if application_field.field_type in 'CharField,TextField' %}
+            {% if application_field.field_type in 'CharField,TextField,StatusField' %}
                 <option value="exact">Equals</option>
                 <option value="icontains">Contains</option>
                 <option value="startswith">Starts with</option>
@@ -23,6 +23,7 @@
                 <option value="lte">Before</option>
                 <option value="gte">After</option>
                 <option value="day">Day</option>
+                <option value="week">Week</option>
                 <option value="month">Month</option>
                 <option value="year">Year</option>
             {% elif application_field.field_type == 'BooleanField' %} 

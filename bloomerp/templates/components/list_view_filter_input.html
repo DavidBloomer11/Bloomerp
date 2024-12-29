@@ -1,4 +1,4 @@
-{% if application_field.field_type in 'CharField,TextField' %}
+{% if application_field.field_type in 'CharField,TextField,StatusField' %}
     {% if action == 'isnull' %}
         <select class="form-select form-select-sm" name="{{ application_field.field }}__isnull">
             <option value="false">Yes</option>
@@ -8,7 +8,7 @@
         <input type="text" class="form-control form-control-sm" name="{{ application_field.field }}__{{ action }}" id="inputValue">
     {% endif %}
 {% elif application_field.field_type in 'DateField' %}
-        {% if action in 'day,month,year' %}
+        {% if action in 'day,month,year,week' %}
             <input type="number" class="form-control form-control-sm" name="{{ application_field.field }}__{{ action }}" id="inputValue">
         {% else %}
             <input type="date" class="form-control form-control-sm" name="{{ application_field.field }}__{{ action }}" id="inputValue">
