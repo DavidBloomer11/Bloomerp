@@ -1,7 +1,7 @@
 {% load static %}
 {% load bloomerp %}
 
-<div id="{{item.id}}" type="{{item.type}}" class="col-{{item.size}} justify-content-between align-items-center workspace-item">
+<div id="{{item.id}}" type="{{item.type}}" class="col-12 col-md-{{item.size}} justify-content-between align-items-center workspace-item">
     <!--Script-->
     {{ item.data | json_script:item.id }}
     <!--End Script-->

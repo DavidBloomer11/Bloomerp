@@ -182,7 +182,7 @@ function saveLayout(dashboard_id) {
             const classList = col.classList;
             let width = null;
             classList.forEach((className) => {
-                if (className.startsWith('col-')) {
+                if (className.startsWith('col-md')) {
                     width = className.split('-')[1];
                 }
             })
@@ -263,18 +263,19 @@ function removeColumn(rowNumber, columnNumber) {
 function setColumnWidth(rowNumber, columnNumber, width) {
     const column = document.getElementById('dashboard-row-' + rowNumber + '-col-' + columnNumber);
     
+
     // Get class list of the column
     const classList = column.classList;
 
     // Remove any existing width class
     classList.forEach((className) => {
-        if (className.startsWith('col-')) {
+        if (className.startsWith('col-md')) {
             classList.remove(className);
         }
     })
 
     // Add the new width class
-    column.classList.add('col-' + width);
+    column.classList.add('col-md-' + width);
 
 }
 

@@ -202,15 +202,21 @@
     }
     
     function resizeItem(id, type, customSize) {
+        if (type == 'custom' && !customSize) {
+            return
+        }
+
+
         // Get the parent row
         let col = document.getElementById(id);
 
         // Parse the col class from the element that starts with 'col-'
-        let colClass = col.className.match(/col-\d+/)[0];
-
+        let colClass = col.className.match(/col-md-\d+/)[0];
+        
         // Get the number of the col
         let colNumber = parseInt(colClass.split('-')[1]);
         
+
         // Check if the type is shrink or expand
         if (type == 'shrink') {
             // Check if the col number is greater than 1
@@ -236,7 +242,7 @@
         col.classList.remove(colClass);
 
         // Add the new col class
-        col.classList.add(`col-${colNumber}`);
+        col.classList.add(`col-md-${colNumber}`);
 
     }
 
@@ -256,8 +262,13 @@
 
     function getItemSize(element) {
         let col = element.closest('.workspace-item');
-        let colClass = col.className.match(/col-\d+/)[0];
-        let colNumber = parseInt(colClass.split('-')[1]);
+        let colClass = col.className.match(/col-md-\d+/)[0];
+        let colNumber = parseInt(colClass.split('-')[2]);
+
+        if (!colNumber) {
+            return 12
+        }
+
         return colNumber;
     }
 
@@ -268,6 +279,7 @@
         document.querySelectorAll('.workspace-item').forEach(item => {
             // Get the size
             let size = getItemSize(item);
+            
 
             // Get the type
             let type = item.getAttribute('type');
