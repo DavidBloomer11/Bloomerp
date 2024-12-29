@@ -67,9 +67,6 @@ class Command(BaseCommand):
                                 db_table = None
                                 db_field_type = None
                                     
-
-                            
-
                             #----------------------------------------------
                             # Processing many-to-many fields and ForeignKeys
                             #----------------------------------------------
@@ -89,6 +86,26 @@ class Command(BaseCommand):
                                 
                                 if field.one_to_many:
                                     field_type = 'OneToManyField'
+
+                            #----------------------------------------------
+                            # Processing status field
+                            #----------------------------------------------
+                            if field_type == 'StatusField':
+                                try:
+                                    meta['choices'] = field.choices
+                                    meta['colored_choices'] = field.colored_choices
+                                    meta['colors'] = {choice[0]: choice[2] for choice in field.colored_choices}
+                                except:
+                                    pass
+
+                            #----------------------------------------------
+                            # Processing CharField
+                            #----------------------------------------------
+                            if field_type == 'CharField':
+                                # Check if field has choices
+                                if hasattr(field, 'choices'):
+                                    meta['choices'] = field.choices
+
 
                             field_info = {
                                 'field_name': field.name,

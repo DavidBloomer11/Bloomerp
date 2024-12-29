@@ -304,6 +304,25 @@ def field_value(object:Model, application_field:ApplicationField, user:User, dat
                     resp += item.__str__() + ', '
                 value = resp + '...'    
         
+        elif application_field.field_type == 'StatusField':
+            # Get the value of the field
+            filter_value : str = getattr(object, application_field.field)
+            FILTER_VALUE = f'{application_field.field}={filter_value}'
+            FILTERABLE = True
+
+            # Get color
+            color_dict : dict = application_field.meta.get('colors')
+
+            if color_dict:
+                color = color_dict.get(filter_value.lower(), 'gray')
+            else:
+                color = 'gray'
+
+            value = mark_safe(f'<span class="badge badge-pill" style="background-color: {color}">{value}</span>')
+            
+            
+
+
         OTHER_FIELDS = ['AutoField', 'BigAutoField', 'BooleanField', 'CharField', 'TextField', 'IntegerField', 'DecimalField']
         if application_field.field_type in OTHER_FIELDS:
             FILTER_VALUE = f'{application_field.field}={value}'
@@ -322,7 +341,10 @@ def field_value(object:Model, application_field:ApplicationField, user:User, dat
             return value
 
     except Exception as e:
-        return DEFAULT_NONE_VALUE
+        if datatable_item:
+            return mark_safe(f'<td allow-context-menu={False}>{DEFAULT_NONE_VALUE}</td>')
+        else:
+            return DEFAULT_NONE_VALUE
 
 
 @register.inclusion_tag('snippets/breadcrumb.html')
