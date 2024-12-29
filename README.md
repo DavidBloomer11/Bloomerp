@@ -6,6 +6,8 @@ It's out-of-the-box functionality gives you the ability to create advanced apps 
 
 At its core, it leverages the popular Python framework Django and HTMX to provide robust and fast applications.
 
+For a **live demo**, you can go to [demo.bloomerp.io](https://demo.bloomerp.io/bloomerp-demo/login-default-user)
+
 ## Key features
 
 Bloomerp comes packed with a variety of features:
