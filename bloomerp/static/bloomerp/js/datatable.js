@@ -10,6 +10,13 @@ function reloadTable(dataTableId, request_params, url) {
         );
 }
 
+function reloadDataTable(dataTableId) {
+    // Reloads a datatable using just the datatable Id
+
+    let url = getDataTableUrl(dataTableId);
+    htmx.ajax('GET', url, `#${dataTableId}`);
+}
+
 function addContextMenu(datatableId) {
     table = document.getElementById(datatableId);
     contextMenu = document.getElementById(datatableId+'-context-menu');

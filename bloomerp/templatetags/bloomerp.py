@@ -8,6 +8,9 @@ from bloomerp.models import Link, Widget
 from django.utils.safestring import mark_safe
 import uuid
 from bloomerp.models import Bookmark, User, ApplicationField, UserListViewPreference
+from django.db.models.functions import Cast
+from django.db.models import DateTimeField, F
+from django.db.models import QuerySet
 
 register = template.Library()
 
@@ -414,7 +417,8 @@ def datatable(
     user:User,
     include_actions:bool=True,
     initial_query:str=None,
-    request=None
+    request=None,
+    datatable_id=None
 ):
     '''
     Returns a data table for a model.
@@ -430,7 +434,11 @@ def datatable(
     application_fields = ApplicationField.objects.filter(content_type=content_type)
 
     # Create random id for the datatable target
-    datatable_id = 'datatable-' + str(uuid.uuid4())
+    if not datatable_id:
+        datatable_id = 'datatable-' + str(uuid.uuid4())
+    else:
+        datatable_id = 'datatable-' + str(datatable_id)
+
 
     if not initial_query:
         initial_query = ''
@@ -470,9 +478,6 @@ def detail_view_url(object:Model):
         model = object._meta.model
         return reverse(get_detail_view_url(model), kwargs={'pk': object.pk})
 
-from django.db.models.functions import Cast
-from django.db.models import DateTimeField, F
-from django.db.models import QuerySet
 
 @register.inclusion_tag("snippets/calendar.html")
 def calendar(queryset: QuerySet, start_date_field: str, end_date_field: str = None, id=None):
