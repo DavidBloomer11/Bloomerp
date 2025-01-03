@@ -103,8 +103,8 @@ class Command(BaseCommand):
                             #----------------------------------------------
                             if field_type == 'CharField':
                                 # Check if field has choices
-                                if hasattr(field, 'choices'):
-                                    meta['choices'] = field.choices
+                                if hasattr(field, 'flatchoices'):
+                                    meta['choices'] = field.flatchoices
 
 
                             field_info = {
