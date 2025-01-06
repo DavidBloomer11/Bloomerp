@@ -317,7 +317,7 @@ def field_value(object:Model, application_field:ApplicationField, user:User, dat
             color_dict : dict = application_field.meta.get('colors')
 
             if color_dict:
-                color = color_dict.get(filter_value.lower(), 'gray')
+                color = color_dict.get(filter_value, 'gray')
             else:
                 color = 'gray'
 
