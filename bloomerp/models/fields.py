@@ -136,15 +136,17 @@ class TextEditorField(models.TextField):
 # ---------------------------------
 # Bloomerp Status Field
 # ---------------------------------
+# ---------------------------------
+# Bloomerp Status Field
+# ---------------------------------
 class StatusField(models.CharField):
     '''
     A status field inherits from CharField and provides a list of choices and colors.
-    It is used to represent the satatus of a particular object and has color highlighting in the UI.
+    It is used to represent the status of a particular object and has color highlighting in the UI.
 
     Required Arguments:
         colored_choices: A list of tuples where each tuple contains a status, a human-readable name, and a color code (hex code).
 
-        
     Example Usage:
     ```python
     class Task(models.Model):
@@ -171,7 +173,6 @@ class StatusField(models.CharField):
     BLACK = '#000000'
     WHITE = '#ffffff'
 
-
     def __init__(
             self,
             colored_choices: list[tuple[str, str, str]], 
@@ -188,7 +189,13 @@ class StatusField(models.CharField):
         super().__init__(*args, **kwargs)
 
     def get_internal_type(self):
-        return "StatusField"
+        return "CharField"
+
+    def db_type(self, connection):
+        """
+        Returns the database type for this field.
+        """
+        return 'varchar({})'.format(self.max_length)
 
     def deconstruct(self):
         name, path, args, kwargs = super().deconstruct()
