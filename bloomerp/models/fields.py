@@ -189,7 +189,7 @@ class StatusField(models.CharField):
         super().__init__(*args, **kwargs)
 
     def get_internal_type(self):
-        return "CharField"
+        return "StatusField"
 
     def db_type(self, connection):
         """
