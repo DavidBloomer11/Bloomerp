@@ -47,6 +47,11 @@ Now, let's get Bloomerp installed:
 pip install bloomerp
 ```
 
+Or if you want to get the latest (unreleased) version from Github
+```sh
+pip install --upgrade git+https://github.com/DavidBloomer11/Bloomerp.git  
+```
+
 ### Set Up the Project
 
 Once you have the necessary dependencies installed, it's time to create your new project.
