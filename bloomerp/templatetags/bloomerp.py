@@ -13,6 +13,7 @@ from django.db.models import DateTimeField, F
 from django.db.models import QuerySet
 from bloomerp.utils.encryption import BloomerpEncryptionSuite
 from django.conf import settings
+from django.core.signing import dumps, loads
 
 register = template.Library()
 
@@ -418,7 +419,7 @@ def datatable(
     content_type_id:int,
     user:User,
     include_actions:bool=True,
-    initial_query:str=None,
+    initial_query:str='',
     request=None,
     datatable_id=None,
     bypass_view_permission=False
@@ -427,7 +428,7 @@ def datatable(
     Returns a data table for a model.
 
     Example usage:
-    {% datatable content_type_id user include_actions initial_query request %}
+    {% datatable content_type_id user include_actions initial_query request datatable_id bypass_view_permission %}
     '''
     # Get the model from the content_type_id
     content_type = ContentType.objects.get(pk=content_type_id)
@@ -442,16 +443,21 @@ def datatable(
     else:
         datatable_id = 'datatable-' + str(datatable_id)
 
-
-    if not initial_query:
-        initial_query = ''
-
     if bypass_view_permission:
-        # Encrypt the
-        encryption_suite = BloomerpEncryptionSuite(settings.SECRET_KEY)
-        bypass_view_permission_value = encryption_suite.encrypt_primary_key(user.pk)
-    else:
-        bypass_view_permission_value = None
+        if not initial_query:
+            raise ValueError('Initial query must be set if bypass_view_permission is True')
+
+        bypass_view_permission_value = dumps({
+            'initial_query' : initial_query,
+            'content_type_id': content_type_id,
+            'user_id' : user.pk
+        })
+
+    # Add the bypass_view_permission_value to the initial_query
+    if initial_query and bypass_view_permission:
+        initial_query += f'&data_table_bypass_view_permission={bypass_view_permission_value}'
+    elif bypass_view_permission and not initial_query:
+        initial_query = f'data_table_bypass_view_permission={bypass_view_permission_value}'
 
 
     return {
@@ -462,7 +468,6 @@ def datatable(
         'include_actions': include_actions,
         'initial_query': initial_query,
         'request': request,
-        'bypass_value': bypass_view_permission_value
     }
 
 

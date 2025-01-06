@@ -10,7 +10,7 @@ from bloomerp.utils.models import model_name_plural_underline
 from bloomerp.utils.model_io import BloomerpModelIO
 from bloomerp.models import ApplicationField
 from django.contrib.auth.decorators import login_required
-
+from django.core.signing import dumps, loads
 
 @login_required
 @route('datatable')
@@ -37,7 +37,7 @@ def datatable(request:HttpRequest) -> HttpResponse:
     data_table_foreign_key_value = request.GET.get('data_table_foreign_key_value', None)
     data_table_limit = request.GET.get('data_table_limit',25)
     data_table_order_by = request.GET.get('data_table_order_by', None)
-    data_table_bypass_permission_value = request.GET.get('data_table_bypass_view_permission', None)
+    data_table_bypass_view_permission_value = request.GET.get('data_table_bypass_view_permission', None)
     
     # View type
     data_table_view_type = request.GET.get('data_table_view_type', 'list')
@@ -57,21 +57,26 @@ def datatable(request:HttpRequest) -> HttpResponse:
     # Data table limit
     if data_table_limit == 'all':
         data_table_limit = None
+    
 
-
-    # Permissions check
+    # ---------------------
+    # PERMISSION CHECK
+    # ---------------------
+    # Checks if the user has the permission to view the data table
+    # Also checks if the user has the bypass view permission
     if not user.has_perm(f'{model._meta.app_label}.view_{model._meta.model_name}'):
-        if data_table_bypass_permission_value:
-            # Decrypt
-            from django.conf import settings
-            from bloomerp.utils.encryption import BloomerpEncryptionSuite
-            encryption_suite = BloomerpEncryptionSuite(settings.SECRET_KEY)
-            user_id = encryption_suite.decrypt(data_table_bypass_permission_value)
+        # If the bypass view permission is set do some extra checks
+        if data_table_bypass_view_permission_value:
+            value_dict : dict = loads(data_table_bypass_view_permission_value)
 
-            # Check if the user exists, is so, the user has permission
-            try:
-                user = User.objects.get(id=user_id)
-            except User.DoesNotExist:
+            # Check if the user has the permission to view the data table
+            if value_dict.get('content_type_id') != int(content_type_id):
+                return HttpResponse('User does not have permission to view this data table')
+            if value_dict.get('user_id') != user.id:
+                return HttpResponse('User does not have permission to view this data table')
+            # Get the initial query from the value dict and check if it is a parameter in the get request
+            att, val = value_dict.get('initial_query').split('=')
+            if request.GET.get(att) != val:
                 return HttpResponse('User does not have permission to view this data table')
         else:
             return HttpResponse('User does not have permission to view this data table')

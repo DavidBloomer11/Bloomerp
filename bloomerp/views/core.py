@@ -10,7 +10,7 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import UpdateView, CreateView
 from django.views.generic.list import ListView
 from django.views.generic import View
-from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
 from django.contrib.contenttypes.models import ContentType
 from bloomerp.models import (
     ApplicationField,
@@ -536,7 +536,7 @@ class BloomerpDetailCommentsView(PermissionRequiredMixin, BloomerpBaseDetailView
     route_type="list",
     models=[Bookmark]
 )
-class BloomerpBookmarksView(PermissionRequiredMixin, HtmxMixin, View):
+class BloomerpBookmarksView(LoginRequiredMixin, HtmxMixin, View):
     template_name = "list_views/bloomerp_bookmarks_view.html"
     model = None
 
