@@ -11,6 +11,8 @@ from bloomerp.models import Bookmark, User, ApplicationField, UserListViewPrefer
 from django.db.models.functions import Cast
 from django.db.models import DateTimeField, F
 from django.db.models import QuerySet
+from bloomerp.utils.encryption import BloomerpEncryptionSuite
+from django.conf import settings
 
 register = template.Library()
 
@@ -418,7 +420,8 @@ def datatable(
     include_actions:bool=True,
     initial_query:str=None,
     request=None,
-    datatable_id=None
+    datatable_id=None,
+    bypass_view_permission=False
 ):
     '''
     Returns a data table for a model.
@@ -443,6 +446,13 @@ def datatable(
     if not initial_query:
         initial_query = ''
 
+    if bypass_view_permission:
+        # Encrypt the
+        encryption_suite = BloomerpEncryptionSuite(settings.SECRET_KEY)
+        bypass_view_permission_value = encryption_suite.encrypt_primary_key(user.pk)
+    else:
+        bypass_view_permission_value = None
+
 
     return {
         'model': model,
@@ -451,7 +461,8 @@ def datatable(
         'datatable_id': datatable_id,
         'include_actions': include_actions,
         'initial_query': initial_query,
-        'request': request
+        'request': request,
+        'bypass_value': bypass_view_permission_value
     }
 
 

@@ -37,6 +37,7 @@ def datatable(request:HttpRequest) -> HttpResponse:
     data_table_foreign_key_value = request.GET.get('data_table_foreign_key_value', None)
     data_table_limit = request.GET.get('data_table_limit',25)
     data_table_order_by = request.GET.get('data_table_order_by', None)
+    data_table_bypass_permission_value = request.GET.get('data_table_bypass_view_permission', None)
     
     # View type
     data_table_view_type = request.GET.get('data_table_view_type', 'list')
@@ -60,7 +61,20 @@ def datatable(request:HttpRequest) -> HttpResponse:
 
     # Permissions check
     if not user.has_perm(f'{model._meta.app_label}.view_{model._meta.model_name}'):
-        return HttpResponse('User does not have permission to view this data table')
+        if data_table_bypass_permission_value:
+            # Decrypt
+            from django.conf import settings
+            from bloomerp.utils.encryption import BloomerpEncryptionSuite
+            encryption_suite = BloomerpEncryptionSuite(settings.SECRET_KEY)
+            user_id = encryption_suite.decrypt(data_table_bypass_permission_value)
+
+            # Check if the user exists, is so, the user has permission
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return HttpResponse('User does not have permission to view this data table')
+        else:
+            return HttpResponse('User does not have permission to view this data table')
 
 
     # Init the queryset
