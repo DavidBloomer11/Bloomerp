@@ -16,10 +16,11 @@
   --dark: #012970;
   --main-light: #f6f9ff;
   --main-dark: #2c384e;
+  --font-sans: "IBM Plex Sans", sans-serif;
 }
 
 body {
-  font-family: "Open Sans", sans-serif;
+  font-family: var(--font-sans);
   background: var(--main-light);
   color: #444444;
 }
@@ -35,7 +36,7 @@ a:hover {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: "Open Sans", sans-serif;
+  font-family: var(--font-sans);
 }
 
 /*--------------------------------------------------------------
@@ -280,7 +281,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Alerts */
 .alert-heading {
   font-weight: 500;
-  font-family: "Poppins", sans-serif;
+  font-family: var(--font-sans);
   font-size: 20px;
 }
 
@@ -325,7 +326,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Breadcrumbs */
 .breadcrumb {
   font-size: 14px;
-  font-family: "Nunito", sans-serif;
+  font-family: var(--font-sans);
   color: #899bbd;
   font-weight: 600;
 }
@@ -381,7 +382,7 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 26px;
   font-weight: 700;
   color: var(--dark);
-  font-family: "Nunito", sans-serif;
+  font-family: var(--font-sans);
 }
 
 .header {
@@ -597,7 +598,10 @@ h1, h2, h3, h4, h5, h6 {
 }
 @media (max-width: 1199px) {
   .toggle-sidebar .sidebar {
-    left: 0;
+    left: -300px; /* Hidden by default */
+  }
+  .sidebar {
+    left: 0; /* Show sidebar when toggle-sidebar class is added */
   }
 }
 @media (min-width: 1200px) {
@@ -1145,7 +1149,13 @@ h1, h2, h3, h4, h5, h6 {
 
 .dropdown-menu.filter-dropdown-menu {
   padding: 10px;
-  width: 500px;
+  width: 30vw;
+}
+
+@media (max-width: 576px) {
+  .dropdown-menu.filter-dropdown-menu {
+    width: 100vw;
+  }
 }
 
 
@@ -1468,7 +1478,7 @@ Dashboard
   font-size: 18px;
   color: var(--main-dark);
   font-weight: bold;
-  font-family: "Open Sans", sans-serif;
+  font-family: var(--font-sans);
 }
 
 /* Full callendar */
@@ -1477,4 +1487,35 @@ Dashboard
   background-color: var(--primary);
   border-color: var(--primary);
   color: white;
+}
+
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%; /* Makes it circular */
+}
+
+
+.full-screen {
+  background-color: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100vw;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1050; /* Ensure it's above other elements */
+}
+
+.underline {
+  text-decoration: underline;
+}
+
+/* Meta text */
+.text-meta {
+  font-size: 12px;
+  color: #6c757d;
 }

@@ -79,7 +79,18 @@ Variables:
                     {% endfor %}
 
                     {% if include_actions %}
-                        <td class="d-flex justify-content-start gap-2">
+                        <td>
+                            <div class="d-flex justify-content-start gap-2">
+                            <a
+                                hx-get="{{ object|detail_view_url }}"
+                                hx-push-url="true"
+                                hx-target="#main-content"
+                                hx-swap="innerHTML"
+                                class="pointer"
+                                >
+                                <img src="{% static 'bloomerp/icons/eye.svg' %}" alt="View" width="20" height="20">
+                            </a>
+
 
                             {% if user_can_change %}
                             <a href="#" 
@@ -102,26 +113,33 @@ Variables:
                                 >
                                 <img src="{% static 'bloomerp/icons/delete.svg' %}" alt="Delete" style="fill:red" width="20" height="20">
                             </a>
-                            {% endif %}
-
+                            {% endif %}  
                             
-                            <a
-                                hx-get="{{ object|detail_view_url }}"
-                                hx-push-url="true"
-                                hx-target="#main-content"
+                            <a 
+                                href="#" 
+                                data-bs-toggle="modal"
+                                data-bs-target="#todoModal"
+                                hx-get="{% url 'components_todos' %}?object_id={{ object.pk }}&content_type_id={{ content_type_id }}"
+                                hx-trigger="click"
+                                hx-target="#todo-container"
                                 hx-swap="innerHTML"
-                                class="pointer"
                                 >
-                                <img src="{% static 'bloomerp/icons/eye.svg' %}" alt="View" width="20" height="20">
+                                <img src="{% static 'bloomerp/icons/notebook.svg' %}" alt="Comments" width="20" height="20">
                             </a>
-                            
+                            </div>
                         </td>
                     {% endif %}
                 </tr>
             {% endfor %}
             {% else %}
                 <tr>
-                    <td colspan="{{ list_view_preferences.count }}">No data available</td>
+                    <td 
+                        {% if include_actions %}
+                        colspan="{{ list_view_preferences.count |add:2 }}"
+                        {% else %}
+                        colspan="{{ list_view_preferences.count }}"
+                        {% endif %}
+                        >No data available</td>
                 </tr>
             {% endif %}
         </tbody>

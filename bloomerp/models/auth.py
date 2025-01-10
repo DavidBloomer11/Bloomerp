@@ -290,8 +290,6 @@ class Bookmark(models.Model):
             detail_view_url = get_detail_view_url(model)
             return reverse(detail_view_url, args=[self.object.pk])
             
-    
-
 # ---------------------------------
 # Bloomerp Comment Model
 # ---------------------------------
@@ -313,7 +311,80 @@ class Comment(
 
     def __str__(self):
         return f"{self.content} - {self.created_by} - {self.datetime_created}"
-        
+
+# ---------------------------------
+# Bloomerp Todo Model
+# ---------------------------------
+class Todo(BloomerpModel):
+    class Meta(BloomerpModel.Meta):
+        managed = True
+        db_table = 'bloomerp_todo'
+
+    avatar = None
+    assigned_to = models.ForeignKey(User, on_delete=models.CASCADE, related_name='todos')
+    requested_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE, related_name='requested_todos', help_text=_("The user who requested the todo"))
+
+    required_by = models.DateField(
+        null=True, blank=True,
+        help_text=_("The date by which the todo is required")
+        )
+    priority = models.IntegerField(
+        help_text=_("The priority of the todo"), 
+        choices=[(1, 'Low'), (2, 'Medium'), (3, 'High')],
+        default=2
+        )
+
+    title = models.CharField(max_length=255, help_text=_("The name of the todo"))
+    content = models.TextField(blank=True, null=True)
+
+    is_completed = models.BooleanField(default=False)
+    datetime_completed = models.DateTimeField(null=True, blank=True)
+
+    # For if the todo is related to a model
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
+    object_id = models.PositiveIntegerField(null=True, blank=True)
+    content_object = GenericForeignKey("content_type", "object_id")
+
+
+    allow_string_search = False # Do not allow string search for todos (we dont want to-do's to be searchable in the search bar)
+    string_search_fields = ['content'] # Allow string search for content
+
+    @property
+    def priority_string(self):
+        if self.priority == 1:
+            return "Low"
+        elif self.priority == 2:
+            return "Medium"
+        elif self.priority == 3:
+            return "High"
+
+    def __str__(self):
+        return self.title
+
+
+    def clean(self):
+        errors = {}
+        from django.utils import timezone
+        from django.core.exceptions import ObjectDoesNotExist
+
+        # Set the datetime completed to None if the todo is not completed
+        if self.is_completed and not self.datetime_completed:
+            self.datetime_completed = timezone.now()
+        elif not self.is_completed:
+            self.datetime_completed = None
+
+
+        if self.content_type and self.object_id:
+            try:
+                self.content_object  # Triggers a lookup
+            except ObjectDoesNotExist:
+                errors['content_object'] = _("The related object does not exist")
+
+        if errors:
+            raise ValidationError(errors)
+
+        return super().clean()
+
 class Link(
     AbsoluteUrlModelMixin,
     StringSearchModelMixin,
@@ -722,7 +793,9 @@ class Workspace(
         "text",
         "widget",
         "link",
-        "link_list"
+        "link_list",
+        "query_filter",
+        "query_filter_list"
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)

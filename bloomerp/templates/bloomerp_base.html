@@ -9,9 +9,11 @@
 	</head>
 
 	<body class="toggle-sidebar" id="bloomerpBody">
+		
 		<!--Header -->
 		<header id="header" class="header fixed-top d-flex align-items-center">
 
+			<!-- Logo -->
 			<div class="d-flex align-items-center justify-content-between">
 				<a
 					hx-get="{% url "bloomerp_home_view" %}"
@@ -19,30 +21,30 @@
 					hx-swap="innerHTML"
 					hx-push-url="true"
 					class="d-flex align-items-center pointer">
-				<img src="{% static 'bloomerp/img/logo.png' %}" width="120" height="38">
+				<img src="{% static 'bloomerp/img/logo.png' %}" class="d-none d-md-block" width="120" height="38">
+				<img src="{% static 'bloomerp/img/logo-touch-icon.png' %}" class="d-md-none" width="30" height="30">
 				</a>
 				<i class="bi bi-list toggle-sidebar-button" onclick="document.getElementById('bloomerpBody').classList.toggle('toggle-sidebar')"></i>
-			</div><!-- End Logo -->
+			</div>
+			<!-- End Logo -->
 
 			<!--Search bar-->
-			<div class="search-bar">
-				<div class="dropdown" id="searchInputDropdown">
-					<input 
-						type="text" 
-						class="form-control" 
-						id="searchInput" 
-						name="search_results_query" 
-						placeholder="Search (ctrl + q)" 
-						autocomplete="off"
-						data-bs-toggle="dropdown" 
-						aria-expanded="false" 
-						hx-get="{% url 'components_search_results'%}" 
-						hx-trigger="keyup delay:300ms" 
-						hx-target="#searchResult">
-
-					<div class="dropdown-menu" aria-labelledby="searchInput" id="searchResult" style="max-height: 80vh; overflow-y: auto;">
-						
-					</div>
+			<div class="dropdown ms-md-4 ms-1" id="searchInputDropdown">
+				<input 
+					type="text" 
+					class="form-control me-auto" 
+					id="searchInput" 
+					name="search_results_query" 
+					placeholder="Search (ctrl + q)" 
+					autocomplete="off"
+					data-bs-toggle="dropdown" 
+					aria-expanded="false" 
+					hx-get="{% url 'components_search_results'%}" 
+					hx-trigger="keyup delay:300ms" 
+					hx-target="#searchResult"
+					>
+				<div class="dropdown-menu" aria-labelledby="searchInput" id="searchResult" style="max-height: 80vh; overflow-y: auto;">
+					
 				</div>
 			</div>
 			<!--End Search bar-->
@@ -50,57 +52,21 @@
 			
 			<nav class="header-nav ms-auto">
 				<ul class="d-flex align-items-center">
-
-					<!--Search Icon-->
-					<li class="nav-item d-block d-lg-none">
-						<a class="nav-link nav-icon search-bar-toggle " href="#">
-							<i class="bi bi-search"></i>
+					<!--Todo-->
+					<li class="nav-item">
+						<a 
+							data-bs-toggle="modal" 
+							data-bs-target="#todoModal" 
+							class="nav-link nav-icon position-relative" 
+							hx-get="{% url 'components_todos' %}"
+							hx-target="#todo-container"
+							hx-swap="innerHTML"
+							hx-trigger="click"
+							href="#">
+							<img src="{% static 'bloomerp/icons/notebook.svg' %}" width="20" height="20">
 						</a>
 					</li>
-					<!-- End Search Icon-->
-					
-					<!--Bookmarks dropdown-->
-					<li class="nav-item dropdown">
-						<a class="nav-link nav-icon align-items-center" href="#" data-bs-toggle="dropdown">
-							<img src="{% static 'bloomerp/icons/bookmark.svg' %}" alt="Bookmarks" height="20" width="20">
-						</a>
-						<ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow bookmarks">
-							<li class="dropdown-header">
-								<h6>Latest bookmarks</h6>
-							</li>
-							<li>
-								<hr class="dropdown-divider">
-							</li>
-							{% for bookmark in request.user.latest_bookmarks %}
-							<li>
-								<a 
-									hx-get="{{ bookmark.object.get_absolute_url }}"
-									hx-target="#main-content"
-									hx-swap="innerHTML"
-									hx-push-url="true"
-									class="dropdown-item d-flex align-items-center" href="#">
-									<span>{{ bookmark.object }}</span>
-								</a>
-							</li>
-							{% endfor %}
-							<li>
-								<hr class="dropdown-divider">
-							</li>
-							<li>
-								<a 
-									class="dropdown-item d-flex align-items-center pointer"
-									hx-get="{% url 'bookmarks_user_bookmarks' %}"
-									hx-target="#main-content"
-									hx-swap="innerHTML"
-									hx-push-url="true"
-								>
-									<span>View all bookmarks</span>
-								</a>
-							</li>
-							
-						</ul>
-					</li>
-					<!--End Bookmarks dropdown-->
+					<!--End Todo-->
 
 					<!--AI-->
 					<li class="nav-item">
@@ -113,7 +79,6 @@
 
 					<!--Profile dropdown-->
 					<li class="nav-item dropdown pe-3">
-
 						<!--Profile dropdown button-->
 						<a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
 							{% avatar object=request.user class_name="rounded-circle" size=40 %}
@@ -185,10 +150,8 @@
 								</form>
 							</li>
 						</ul>
-					<!-- End Profile Dropdown Items -->
-
 					</li>
-					<!-- End Profile Nav -->
+					<!-- End Profile Dropdown Items -->
 
 				</ul>
 			</nav>
@@ -213,7 +176,6 @@
 		<!-- End-->
 
 		{% generate_uuid as uuid %}
-		
 		{% include "snippets/llm_modal_snippet.html" with modal_id="bloomAiModal" id="bloomAi" title="Bloom AI" query_type="bloom_ai" args="conversation_id="|add:uuid %}
 
 
@@ -221,6 +183,9 @@
 		{% include 'snippets/messages.html' %}
 		<!--End messages wrapper-->
 
+		<!--Todo-->
+		{% include 'snippets/todo_modal.html' %}
+		<!--End Todo-->
 		
 
 

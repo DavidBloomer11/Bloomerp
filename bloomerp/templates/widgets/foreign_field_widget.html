@@ -28,14 +28,17 @@
     {% if widget.value != None %}value="{{ widget.value }}"{% endif %} 
 />
 {% endif %}
-
 <div class="dropdown {% if invalid %}is-invalid{% endif %}">
     <input
-        class="dropdown-toggle form-control {% if invalid %}is-invalid{% endif %}" 
+        class="dropdown-toggle form-control {% if invalid %}is-invalid{% endif %} {{ widget.attrs.class }}" 
         data-bs-toggle="dropdown"
         autocomplete="off"
-        id="{{ widget.name }}_display" 
+        id="{{ widget.name }}_display"
+        {% if widget.attrs.placeholder %}
+        placeholder="{{ widget.attrs.placeholder }}"
+        {% else %}
         placeholder="Select an item"
+        {% endif %} 
         name="fk_search_results_query"
         hx-get="{% url 'components_fk_search_results' %}?content_type_id={{ content_type_id }}&field_name={{ widget.name }}&search_type={{ widget_type }}"
         hx-trigger="keyup changed delay:500ms"
