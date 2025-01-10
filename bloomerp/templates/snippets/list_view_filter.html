@@ -11,8 +11,6 @@ Variables:
 {% load static %}
 {% load bloomerp %}
 
-
-
 <div class="d-flex justify-content-between">
 
     <!-- Search -->
@@ -55,72 +53,71 @@ Variables:
         </div>
         <!--End toggle view button-->
 
-
-
         <!-- Filter button -->
         <div class="dropdown">
             <button
                     class="btn btn-borderless bg-transparent text-dark btn-sm"
                     type="button"
                     data-bs-toggle="dropdown"
+                    data-bs-auto-close="outside"
                     aria-expanded="false">
                     <img src="{% static 'bloomerp/icons/filter.svg' %}" height="20" alt="Filter"/>
             </button>
         
             <div class="dropdown-menu filter-dropdown-menu dropdown-menu-arrow" id="filterDropdown">
-                    <div 
-                        id="filterForm{{ datatable_id }}"
-                        >
-                        <div
-                            class="row justify-content-center align-items-center g-2"
-                            id="filterInputContainer{{ datatable_id }}"
-                            hx-get="{% url 'components_list_view_filter_inputs' %}?step=row&content_type_id={{ content_type_id }}"
-                            hx-target="#filterInputContainer{{ datatable_id }}"
-                            hx-swap="innerHTML"
-                            hx-trigger="load"
-                        >
-                            
-                        </div>
-
-                        <hr>
-
-                        <!-- Apply filters section -->
-                        <div class="d-flex justify-content-between align-items-center">
-
-                            <a 
-                                href="#" 
-                                class="d-flex align-items-center gap-1"
-                                hx-get="{% url 'components_list_view_filter_inputs' %}?step=row&content_type_id={{ content_type_id }}"
-                                hx-target="#filterForm{{ datatable_id }} .new-filter-input-row"
-                                hx-swap="outerHTML"
-                                >
-                                <img src="{% static 'bloomerp/icons/add.svg' %}" height="16" alt="Add filter"/>
-                                <span class="text-muted" style="font-size: 0.875rem;">Add new filter</span>
-                            </a>
-
-                            <div class="d-flex gap-2">
-                                <button 
-                                    class="btn btn-sm btn-primary"
-                                    hx-get="{% url 'components_datatable' %}?data_table_content_type_id={{ content_type_id }}&data_table_include_actions={{ include_actions }}"
-                                    hx-target="#{{ datatable_id }}"
-                                    hx-include="#filterForm{{ datatable_id }}"
-                                    hx-swap="innerHTML"
-                                    >
-                                        Apply filter
-                                </button>
-                                <button 
-                                    class="btn btn-sm btn-secondary" 
-                                    type="button"
-                                    hx-get="{% url 'components_datatable' %}?data_table_content_type_id={{ content_type_id }}&data_table_include_actions={{ include_actions }}"
-                                    hx-target="#{{ datatable_id }}"
-                                    hx-swap="innerHTML"
-                                    hx-trigger="click"
-                                        >Remove filters
-                                </button>
-                            </div>
-                        </div>
-                        <!-- End apply filters section -->
+                <div 
+                    id="filterForm{{ datatable_id }}"
+                    >
+                    <div
+                        class="row justify-content-center align-items-center g-2"
+                        id="filterInputContainer{{ datatable_id }}"
+                        hx-get="{% url 'components_list_view_filter_inputs' %}?step=row&content_type_id={{ content_type_id }}"
+                        hx-target="#filterInputContainer{{ datatable_id }}"
+                        hx-swap="innerHTML"
+                        hx-trigger="load"
+                    >
+                        
                     </div>
+
+                    <hr>
+
+                    <!-- Apply filters section -->
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <a 
+                            href="#" 
+                            class="d-flex align-items-center gap-1"
+                            hx-get="{% url 'components_list_view_filter_inputs' %}?step=row&content_type_id={{ content_type_id }}"
+                            hx-target="#filterForm{{ datatable_id }} .new-filter-input-row"
+                            hx-swap="outerHTML"
+                            >
+                            <img src="{% static 'bloomerp/icons/add.svg' %}" height="16" alt="Add filter"/>
+                            <span class="text-muted" style="font-size: 0.875rem;">Add new filter</span>
+                        </a>
+
+                        <div class="d-flex gap-2">
+                            <button 
+                                class="btn btn-sm btn-primary"
+                                hx-get="{% url 'components_datatable' %}?data_table_content_type_id={{ content_type_id }}&data_table_include_actions={{ include_actions }}"
+                                hx-target="#{{ datatable_id }}"
+                                hx-include="#filterForm{{ datatable_id }}"
+                                hx-swap="innerHTML"
+                                >
+                                    Apply filter
+                            </button>
+                            <button 
+                                class="btn btn-sm btn-secondary" 
+                                type="button"
+                                hx-get="{% url 'components_datatable' %}?data_table_content_type_id={{ content_type_id }}&data_table_include_actions={{ include_actions }}"
+                                hx-target="#{{ datatable_id }}"
+                                hx-swap="innerHTML"
+                                hx-trigger="click"
+                                    >Remove filters
+                            </button>
+                        </div>
+                    </div>
+                    <!-- End apply filters section -->
+                </div>
             </div>
         </div>
         <!-- End filter button -->
