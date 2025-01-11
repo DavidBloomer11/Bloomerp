@@ -3,11 +3,13 @@
 <aside id="sidebar" class="sidebar">
     <ul class="sidebar-nav" id="sidebar-nav">
 		<li 
-			onclick="document.getElementById('personalWorkspaces').classList.toggle('d-none')"
-			class="nav-heading pointer dropdown-toggle">Personal workspaces</li>
-		
+			class="nav-heading pointer dropdown-toggle"
+			data-bs-toggle="collapse"
+			data-bs-target="#personalWorkspaces"
+			>Personal workspaces</li>
+
 		<!-- Personal workspaces -->
-		<div id="personalWorkspaces">
+		<div id="personalWorkspaces" class="collapse show">
 		{% for workspace in request.user.workspaces %}
 			<li class="nav-item">
 				<a class="nav-link collapsed pointer" hx-get="{% url 'view_workspace' workspace.pk %}" hx-target="#main-content" hx-push-url="true">
@@ -19,12 +21,14 @@
 		
 		<!-- Model workspaces -->
 		<li 
-			onclick="document.getElementById('modelWorkspaces').classList.toggle('d-none')"
-			class="nav-heading pointer dropdown-toggle">Model workspaces</li>
+			class="nav-heading pointer dropdown-toggle"
+			data-bs-toggle="collapse"
+			data-bs-target="#modelWorkspaces"
+			>Model workspaces</li>
 
-		<div id="modelWorkspaces">
+		<div id="modelWorkspaces" class="collapse show">
 			<!-- Search input -->
-			<li class="nav-item">
+			<li class="nav-item" style="padding: 10px 15px;">
 				<input class="form-control form-control-sm ml-3 mr-4" type="text" placeholder="Search" aria-label="Search" oninput="searchContentTypes()">
 			</li>
 
