@@ -81,8 +81,15 @@ def generate_document_template(request:HttpRequest) -> HttpResponse:
                 file_base64 = base64.b64encode(file_bytes).decode('utf-8')
 
                 return render(request, 'components/generate_document_template.html', context={'file_bytes': file_base64, 'form':form})
+            except TypeError as e:
+                if 'RelatedManager' in str(e):
+                    form.add_error(None, "Please make sure that when using a for-loop, '.all' is used at the end.")
+                else:
+                    form.add_error(None, str(e))
+                return render(request, 'components/generate_document_template.html', context={'form': form})
             except Exception as e:
-                return HttpResponse(e, status=200)
+                form.add_error(None, str(e))
+                return render(request, 'components/generate_document_template.html', context={'form': form})
             
     else:
         # Get the document template from the GET request
