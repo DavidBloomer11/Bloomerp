@@ -164,32 +164,15 @@ class Command(BaseCommand):
             except AttributeError as e:
                 self.stderr.write(self.style.ERROR(f"Error processing model {Model.__name__}: {e}"))
 
+
+        # Remove all ApplicationFields for which the model no longer exists
+        content_type_ids = [ct.id for ct in ContentType.objects.all()]
+        stale_entries = ApplicationField.objects.exclude(
+            content_type_id__in=content_type_ids
+        )
+        stale_entries.delete()
+
         self.stdout.write(self.style.SUCCESS('ApplicationField model synced successfully'))
-        print('Number of non-db fields', num)
-        database_schema = {}
-
         
-        from django.db import connection
-        # Access the introspection class via the current database connection
-        introspection = connection.introspection
-
-        with connection.cursor() as cursor:
-            # Retrieve all table names in the current database schema
-            table_names = introspection.table_names(cursor)
-
-            # Iterate through each table to get the column names and types
-            for table_name in table_names:
-                fields = introspection.get_table_description(cursor, table_name)
-                
-                # Retrieve the column details
-                columns = []
-                for field in fields:
-                    field_type = introspection.get_field_type(field.type_code, field)
-                    columns.append((field.name, field_type))
-
-                database_schema[table_name] = columns
-
-
-        self.stdout.write(self.style.SUCCESS('Database schema saved to tables_with_columns variable'))
 
 

@@ -154,9 +154,8 @@
 </div>
 <!-- End variables modal -->
 
-{% include "snippets/llm_modal_snippet.html" with id="document_template_ai" modal_id="document_template_ai_modal" query_type="document_template" target="llm_output" args=args %}
+{% include "snippets/llm_modal_snippet.html" with id='document_template_ai' query_type="document_template" target="llm_output" args=args %}
 
-<textarea id="llm_output" class="d-none"></textarea>
 
 <script>
 	(function() {
@@ -197,7 +196,7 @@
 					text: 'AI',
 					onAction: function () {
 						// Show the modal
-						const modal = new bootstrap.Modal(document.getElementById("document_template_ai_modal"));
+						const modal = new bootstrap.Modal(document.getElementById("modal_document_template_ai"));
 						modal.show();
 					}
 				});
@@ -265,7 +264,6 @@
 		document.getElementById('preview_content').innerHTML = content
 
 	});
-
 
 	// Add content after llm query
 	llm_output_div = document.getElementById('llm_output_document_template_ai');

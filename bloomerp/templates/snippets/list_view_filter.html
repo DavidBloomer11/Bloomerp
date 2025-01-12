@@ -13,22 +13,24 @@ Variables:
 
 <div class="d-flex justify-content-between">
 
-    <!-- Search -->
-    <div class="d-flex">
-        <input 
-            type="text" 
-            class="form-control form-control-sm" 
-            placeholder="Search" 
-            autocomplete="off"
-            name="data_table_string_search"
-            hx-get="{% url 'components_datatable' %}?data_table_content_type_id={{ content_type_id }}&data_table_include_actions={{ include_actions }}{% if initial_query %}&{{initial_query}}{% endif %}"
-            hx-target="#{{ datatable_id }}"
-            hx-swap="innerHTML"
-            hx-include="#filterForm{{ datatable_id }}"
-            hx-trigger="keyup delay:500ms"
-            >
+    <div class="d-flex gap-2">
+        <!-- Search -->
+        <div class="d-flex">
+            <input 
+                type="text" 
+                class="form-control form-control-sm" 
+                placeholder="Search" 
+                autocomplete="off"
+                name="data_table_string_search"
+                hx-get="{% url 'components_datatable' %}?data_table_content_type_id={{ content_type_id }}&data_table_include_actions={{ include_actions }}{% if initial_query %}&{{initial_query}}{% endif %}"
+                hx-target="#{{ datatable_id }}"
+                hx-swap="innerHTML"
+                hx-include="#filterForm{{ datatable_id }}"
+                hx-trigger="keyup delay:500ms"
+                >
+        </div>
+        <!-- End search -->
     </div>
-    <!-- End search -->
 
     <div class="d-flex">
 

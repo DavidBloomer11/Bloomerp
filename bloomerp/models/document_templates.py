@@ -9,6 +9,8 @@ from bloomerp.models import FileFolder
 # Document Template Model
 # ---------------------------------
 class DocumentTemplateHeader(BloomerpModel):
+    avatar = None
+
     class Meta(BloomerpModel.Meta):
         managed = True
         db_table = 'bloomerp_document_template_header'
@@ -36,6 +38,8 @@ class DocumentTemplateHeader(BloomerpModel):
 # Document Template Free Variable Model
 # ---------------------------------
 class DocumentTemplateFreeVariable(BloomerpModel):
+    avatar = None
+
     class Meta(BloomerpModel.Meta):
         managed = True
         db_table = 'bloomerp_document_template_free_variable'
@@ -79,6 +83,8 @@ class DocumentTemplateFreeVariable(BloomerpModel):
 # Document Template Styling Model
 # ---------------------------------
 class DocumentTemplateStyling(BloomerpModel):
+    avatar = None
+
     class Meta(BloomerpModel.Meta):
         managed = True
         db_table = 'bloomerp_document_template_styling'
@@ -97,6 +103,8 @@ class DocumentTemplate(BloomerpModel):
     class Meta(BloomerpModel.Meta):
         managed = True
         db_table = 'bloomerp_document_template'
+
+    avatar = None
 
     ORIENTATION_CHOICES = [
         ('portrait', 'Portrait'),
@@ -219,7 +227,7 @@ class DocumentTemplate(BloomerpModel):
 
         # Add the application fields
         for field in self.application_fields:
-            variables.append((field.field, field.field_type, 'Object variable'))
+            variables.append(('object.'+field.field, field.field_type, 'Object field'))
 
         # Add the free variables
         for variable in self.free_variables.all():

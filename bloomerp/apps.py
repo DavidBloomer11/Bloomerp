@@ -5,6 +5,12 @@ class BloomerpConfig(AppConfig):
     name = "bloomerp"
 
     def ready(self) -> None:
-        import bloomerp.signals
+        
+        # import bloomerp.signals
+        from bloomerp.utils.config import BloomerpConfigChecker
+        checker = BloomerpConfigChecker()
+        checker.check()
+        
+        
 
 
