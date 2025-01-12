@@ -1,4 +1,4 @@
-<textarea id='{{widget.name}}' name="{{ widget.name }}">{{ widget.value }}</textarea>
+<textarea id='{{widget.name}}' name="{{ widget.name }}">{% if widget.value %}{{ widget.value }}{% endif %}</textarea>
 
 
 <!--AI Modal-->
@@ -30,6 +30,15 @@
 						modal.show();
 					}
 				});
+
+				// Update the hidden <textarea> on any change in TinyMCE
+				const hiddenTextarea = document.querySelector(`textarea[id='${widget}']`);
+				editor.on('Change KeyUp Input Undo Redo SetContent', function() {
+					if (hiddenTextarea) {
+						hiddenTextarea.value = editor.getContent();
+					}
+				});
+
 			}
 		});
 
@@ -42,6 +51,8 @@
 			// Set the content to the widget
 			tinymce.get(widget).setContent(llm_output_div.innerHTML);
 		});
+
+		
 		
 
 

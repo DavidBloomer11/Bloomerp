@@ -77,7 +77,7 @@
         <div class="border border-1 p-2 rounded">
             <div class="row">
                 <div class="col-8">
-                    <p>{% if todo.content %}{{todo.content}}{% else %}<span class="fw-light">No todo description provided</span>{% endif %}</p>
+                    <p>{% if todo.content %}{{todo.content_safe}}{% else %}<span class="fw-light">No todo description provided</span>{% endif %}</p>
                 </div>
 
                 <div class="col-4 justify-content-end d-flex">

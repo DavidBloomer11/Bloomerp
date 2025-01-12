@@ -315,6 +315,7 @@ class Comment(
 # ---------------------------------
 # Bloomerp Todo Model
 # ---------------------------------
+from bloomerp.models.fields import TextEditorField
 class Todo(BloomerpModel):
     class Meta(BloomerpModel.Meta):
         managed = True
@@ -335,7 +336,7 @@ class Todo(BloomerpModel):
         )
 
     title = models.CharField(max_length=255, help_text=_("The name of the todo"))
-    content = models.TextField(blank=True, null=True)
+    content = TextEditorField(blank=True, null=True)
 
     is_completed = models.BooleanField(default=False)
     datetime_completed = models.DateTimeField(null=True, blank=True)
@@ -348,6 +349,11 @@ class Todo(BloomerpModel):
 
     allow_string_search = False # Do not allow string search for todos (we dont want to-do's to be searchable in the search bar)
     string_search_fields = ['content'] # Allow string search for content
+
+    @property
+    def content_safe(self):
+        from django.utils.safestring import mark_safe
+        return mark_safe(self.content)
 
     @property
     def priority_string(self):
@@ -733,7 +739,9 @@ class UserDetailViewTab(
 
         return super().clean()
 
-
+# ---------------------------------
+# Workspace Model
+# ---------------------------------
 def get_default_workspace():
     links = Link.objects.all()
     widgets = Widget.objects.all()
