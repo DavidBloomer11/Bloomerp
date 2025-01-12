@@ -26,3 +26,4 @@ global-exclude query.sql
 global-exclude media
 global-exclude bloomerp.io
 global-exclude project_structure.py
+global-exclude urls.txt

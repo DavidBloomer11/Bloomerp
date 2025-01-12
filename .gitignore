@@ -3,7 +3,6 @@ manage.py
 test_environment
 db.sqlite3
 test_app
-bloomerp/migrations
 .vscode
 others
 query.sql
@@ -20,3 +19,9 @@ __pycache__
 dist
 build
 notebooks
+Bloomerp.egg-info
+.prettierrc
+commands.md
+urls.txt
+langchain.ipynb
+notebook.ipynb
