@@ -79,11 +79,6 @@ class BloomerpModel(
         return enhanced_layout
 
 
-        
-    
-
-
-
 # ---------------------------------
 # ApplicationField Model
 # ---------------------------------
@@ -221,9 +216,6 @@ class ApplicationField(models.Model):
                 "db_column", "db_field_type"
             )
             tables.append((table_name, columns))
-
-        print(tables)
-
         return tables
 
 
@@ -268,7 +260,7 @@ class File(
     file = models.FileField(upload_to=upload_to)
     name = models.CharField(max_length=100, null=True, blank=True)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
-    object_id = models.PositiveIntegerField(null=True, blank=True)
+    object_id = models.CharField(max_length=36, null=True, blank=True) # In order to support both UUID and integer primary keys
     content_object = GenericForeignKey("content_type", "object_id")
     persisted = models.BooleanField(default=False) # A field to indicate if the file is temporary or persisted
 
@@ -308,6 +300,7 @@ class File(
 
     def __str__(self):
         return str(self.name)
+
 
     def save(self, *args, **kwargs):
         # Check if a new file is being uploaded
@@ -429,3 +422,5 @@ class FileFolder(
     def children(self):
         """Returns a list of child folders."""
         return FileFolder.objects.filter(parent=self)
+    
+

@@ -1,14 +1,15 @@
 
 async function llmContentStreamer(
     url, // URL endpoint
-    id, // Base ID of the content element
+    conversation_id, // Base ID of the content element
     queryType, // Query type for the llm
     targetElement,
-    args // Are a string value of arguments with the format arg1=value1;arg2=value2
+    args,  // Are a string value of arguments with the format arg1=value1;arg2=value2
+    id // ID of the container element
 ) {
     // Get csrf token from the cookie
     const csrfToken = getCookie("csrftoken");
-    
+
     // Format the arguments
     var argsArray = args.split(";");
     var argsObject = {};
@@ -16,38 +17,6 @@ async function llmContentStreamer(
         var argArray = arg.split("=");
         argsObject[argArray[0]] = argArray[1];
     });
-
-    // First get the conversation element using the id
-    var conversationContainer = document.getElementById(`conversation_container_${id}`);
-
-    // Get both the user and assistance messages
-    var userMessages = conversationContainer.querySelectorAll(".user-bubble");
-    var assistanceMessages = conversationContainer.querySelectorAll(".assistant-bubble");
-
-    // Prepare the conversation history
-    var conversation_history = [];
-
-    // Now return the conversation history with user message first, assistance message, user message, assistance message, and so on
-    let userIndex = 0;
-    let assistanceIndex = 0;
-
-    while (userIndex < userMessages.length || assistanceIndex < assistanceMessages.length) {
-        if (userIndex < userMessages.length) {
-            conversation_history.push({
-                content: userMessages[userIndex].innerText,
-                role: "user",
-            });
-            userIndex++;
-        }
-        if (assistanceIndex < assistanceMessages.length) {
-            conversation_history.push({
-                content: assistanceMessages[assistanceIndex].innerText,
-                role: "assistant",
-            });
-            assistanceIndex++;
-        }
-    }
-
 
     // Get the input element
     var query = document.getElementById(`llm_query_${id}`).value;
@@ -58,23 +27,10 @@ async function llmContentStreamer(
     }
 
     // Create the user message
-    // Generate a random id for the user message
-    var userMessageId = `user_message_${Math.floor(Math.random() * 1000000)}`;
-    var userMessage = bloomAiCreateMessage(query, true, userMessageId, id, queryType);
-
-    // Append the user message to the conversation
-    conversationContainer.appendChild(userMessage);
+    bloomAiCreateMessage(query, true, id, queryType);
 
     // Create the assistance message
-    // Generate a random id for the assistance message
-    var assistanceMessageId = `assistance_message_${Math.floor(Math.random() * 1000000)}`;
-    var assistanceMessage = bloomAiCreateMessage("", false, assistanceMessageId, id, queryType);
-
-    // Append the assistance message to the conversation
-    conversationContainer.appendChild(assistanceMessage);
-
-    // Scroll to the bottom of the conversation
-    conversationContainer.scrollTop = conversationContainer.scrollHeight;
+    var aiMessageId = bloomAiCreateMessage("", false, id, queryType);
 
     // Remove input value
     document.getElementById(`llm_query_${id}`).value = "";
@@ -89,7 +45,7 @@ async function llmContentStreamer(
         body: JSON.stringify({
             query: query,
             query_type: queryType,
-            conversation_history: conversation_history,
+            conversation_id: conversation_id,
             args: argsObject,
         })
     });
@@ -108,17 +64,25 @@ async function llmContentStreamer(
             result = result.replace("```html", "");
             result = result.replace("```", "");
 
-            document.getElementById(assistanceMessageId).innerHTML = result;
+            document.getElementById(aiMessageId).innerHTML = result;
         } else {
             // Markdown to HTML
-            document.getElementById("md-"+assistanceMessageId).innerHTML = result;
+            document.getElementById("md-"+aiMessageId).innerHTML = result;
         }
 
     }
 
 }
 
-function bloomAiCreateMessage(message, isUser, bubbleId, baseElementId, queryType) {
+function bloomAiCreateMessage(
+    message, 
+    isUser, 
+    baseElementId, 
+    queryType
+) {
+    // Generate a random message id
+    var messageId = `message_${Math.floor(Math.random() * 1000000)}`;
+
     var messageContainer = document.createElement("div");
     messageContainer.className = "ai-message-container mb-2";
 
@@ -128,9 +92,9 @@ function bloomAiCreateMessage(message, isUser, bubbleId, baseElementId, queryTyp
 
     // Create bubble
     var messageBubble = document.createElement("div");
-    messageBubble.id = bubbleId;
+    messageBubble.id = messageId;
 
-    messageBubble.className = isUser ? "user-bubble" : "assistant-bubble";
+    messageBubble.className = isUser ? "user-bubble overflow-auto" : "assistant-bubble overflow-auto";
 
     // If the message is from the user, add the content
     if (isUser) {
@@ -139,6 +103,10 @@ function bloomAiCreateMessage(message, isUser, bubbleId, baseElementId, queryTyp
         // Add the spinner
         var spinner = createSpinner(false);
         messageBubble.appendChild(spinner);
+    }
+
+    if (message != "" && queryType != 'bloom_ai') {
+        messageBubble.innerHTML = message;
     }
 
     // Append the message bubble to the wrapper
@@ -154,7 +122,7 @@ function bloomAiCreateMessage(message, isUser, bubbleId, baseElementId, queryTyp
     copyButton.className = "bi bi-clipboard pointer";
     copyButton.title = "Copy to clipboard";
     copyButton.onclick = function () {
-        navigator.clipboard.writeText(document.getElementById(bubbleId).innerText);
+        navigator.clipboard.writeText(document.getElementById(messageId).innerText);
     }
 
     // Add insert to target button
@@ -165,7 +133,7 @@ function bloomAiCreateMessage(message, isUser, bubbleId, baseElementId, queryTyp
 
     // Add the onclick event
     insertButton.onclick = function () {
-        target.innerHTML = document.getElementById(bubbleId).innerHTML;
+        target.innerHTML = document.getElementById(messageId).innerHTML;
         target.dispatchEvent(new Event('llm-inserted'));
     }
     
@@ -177,11 +145,15 @@ function bloomAiCreateMessage(message, isUser, bubbleId, baseElementId, queryTyp
         let zeroMd = document.createElement("zero-md");
         let script = document.createElement("script");
         script.type = "text/markdown";
-        script.id = "md-" + bubbleId;
+        script.id = "md-" + messageId;
         zeroMd.appendChild(script);
 
         if (!isUser) {
             // Add the markdown content to the script
+            if (message != "") {
+                script.innerHTML = message;
+            }
+
             messageBubble.appendChild(zeroMd);
         }
 
@@ -198,7 +170,23 @@ function bloomAiCreateMessage(message, isUser, bubbleId, baseElementId, queryTyp
     // Append the utils div to the message container
     messageContainer.appendChild(utilsDiv);
 
-    return messageContainer;
+    // Append the message container to the conversation container
+    document.getElementById(`conversation_container_${baseElementId}`).appendChild(messageContainer);
+
+    return messageId;
 }
 
+
+function sendAiMessage(id, url) {
+    // Get the conversation id
+    var container = document.getElementById(`conversation_container_${id}`);
+
+    var conversation_id = container.querySelector('#conversation_id').value;
+    var query_type = container.querySelector('#query_type').value;
+    var target = container.querySelector('#target').value;
+    var args = container.querySelector('#args').value;
+
+    // send the message to the llm
+    llmContentStreamer(url, conversation_id, query_type, target, args, id);
+}
 

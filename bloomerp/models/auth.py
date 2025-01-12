@@ -920,7 +920,8 @@ class Workspace(
     @staticmethod
     def create_default_content_type_workspace(
         user: User,
-        content_type: ContentType
+        content_type: ContentType,
+        commit: bool = True
     ) -> Self:
         '''
         Function that creates a default workspace for a user and content type.
@@ -948,18 +949,27 @@ class Workspace(
             ]
         }
 
-        workspace, created = Workspace.objects.get_or_create(
-            user=user,
-            content_type=content_type,
-            name=content_type.model_class()._meta.verbose_name_plural,
-            content=content
-        )
+        if commit:
+            workspace, created = Workspace.objects.get_or_create(
+                user=user,
+                content_type=content_type,
+                name=content_type.model_class()._meta.verbose_name_plural,
+                content=content
+            )
+        else:
+            workspace = Workspace(
+                user=user,
+                content_type=content_type,
+                name=content_type.model_class()._meta.verbose_name_plural,
+                content=content
+            )
 
         return workspace
 
     @staticmethod
     def create_default_workspace(
-        user: User
+        user: User,
+        commit: bool = True
     ) -> Self:
         '''
         Function that creates a default workspace for a user.
@@ -1003,11 +1013,18 @@ class Workspace(
                 'size': 12
             })
 
-        workspace, created = Workspace.objects.get_or_create(
-            user=user,
-            name='Default Workspace',
-            content=content
-        )
+        if commit:
+            workspace, created = Workspace.objects.get_or_create(
+                user=user,
+                name='Default Workspace',
+                content=content
+            )
+        else:
+            workspace = Workspace(
+                user=user,
+                name='Default Workspace',
+                content=content
+            )
 
         return workspace
     

@@ -7,7 +7,7 @@
     <a
         class="pointer"
         data-bs-toggle="modal"
-        data-bs-target="#{{ widget.name }}aiModal"
+        data-bs-target="#modal_{{ widget.name }}bloomAi"
     >
         <img src="{% static 'bloomerp/icons/magic-stick.svg' %}" alt="Magic" width=20 height=20>
     </a>
@@ -21,7 +21,7 @@
 
 
 
-{% include 'snippets/llm_modal_snippet.html' with id=widget.name|add:"bloomAi" modal_id=widget.name|add:"aiModal" title='Generate query' query_type="code" %}
+{% include 'snippets/llm_modal_snippet.html' with id=widget.name|add:"bloomAi" title='Generate query' query_type="code" %}
 
 
 

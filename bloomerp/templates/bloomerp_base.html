@@ -70,8 +70,12 @@
 
 					<!--AI-->
 					<li class="nav-item">
-						<a data-bs-toggle="modal" data-bs-target="#bloomAiModal" class="nav-link nav-icon align-items-center" href="#">
-							AI
+						<a 
+							data-bs-toggle="modal" 
+							data-bs-target="#modal_bloom_ai" 
+							class="nav-link nav-icon align-items-center" 
+							href="#">
+							<img src="{% static 'bloomerp/icons/ai.svg' %}" width="20" height="20">
 						</a>
 					</li>
 					<!--End AI-->
@@ -175,9 +179,9 @@
 		</main>
 		<!-- End-->
 
-		{% generate_uuid as uuid %}
-		{% include "snippets/llm_modal_snippet.html" with modal_id="bloomAiModal" id="bloomAi" title="Bloom AI" query_type="bloom_ai" args="conversation_id="|add:uuid %}
-
+		<!--Bloom AI modal-->
+		{% include "snippets/llm_modal_snippet.html" with id="bloom_ai" title="Bloom AI" query_type="bloom_ai" %}
+		<!--End Bloom AI modal-->
 
 		<!--Messages wrapper-->
 		{% include 'snippets/messages.html' %}

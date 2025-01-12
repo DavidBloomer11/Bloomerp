@@ -1,6 +1,7 @@
 {% load static %}
 {% load crispy_forms_tags %}
 {% load crispy_forms_field %}
+{% load bloomerp %}
 
 <h4 class="card-title">Query builder</h4>
 
@@ -16,7 +17,8 @@
     <!-- Database icon -->
     <a
         class="pointer"
-        onclick="document.getElementById('tablesSearchContainer').classList.toggle('fade'); document.getElementById('tablesSearchContainer').classList.toggle('d-none')"
+        data-bs-toggle="collapse"
+        data-bs-target="#tablesSearchContainer"
     >
         <img src="{% static 'bloomerp/icons/database.svg' %}" alt="SQL" width=20 height=20>
     </a>
@@ -26,19 +28,12 @@
     <a
         class="pointer"
         data-bs-toggle="modal"
-        data-bs-target="#sql_query_generate_modal"
+        data-bs-target="#modal_sql_query_ai"
     >
         <img src="{% static 'bloomerp/icons/magic-stick.svg' %}" alt="Magic" width=20 height=20>
     </a>
     <!--End magic icon-->
 
-    <!-- Filter icon -->
-    <a
-        class="pointer"
-        onclick="document.getElementById('tablesSearchContainer').classList.toggle('fade'); document.getElementById('tablesSearchContainer').classList.toggle('d-none')">
-        <img src="{% static 'bloomerp/icons/filter.svg' %}" alt="Filter" width=20 height=20>
-    </a>
-    <!-- End filter icon -->
 
 </div>
 
@@ -53,7 +48,7 @@
     
     <!-- Database tables search -->
     <div 
-        class="col-6 overflow-auto fade d-none"
+        class="col-6 overflow-auto collapse collapse-horizontal"
         id = "tablesSearchContainer"
         style="height:300px"
         >
@@ -196,7 +191,7 @@
 <!-- End Save query modal -->
 
 <!-- Magic modal -->
-{% include 'snippets/llm_modal_snippet.html' with id='sql_query_generate' modal_id="sql_query_generate_modal" title='Generate SQL query' target="llm_output" query_type="sql" %}
+{% include 'snippets/llm_modal_snippet.html' with id='sql_query_ai' title='Generate SQL query' target="llm_output" query_type="sql" %}
 <!-- End magic modal -->
 
 <script>
@@ -250,7 +245,7 @@
     }
 
     // Add the generated query to the editor
-    document.getElementById('llm_output_sql_query_generate').addEventListener('llm-inserted', function(e) {
+    document.getElementById('llm_output_sql_query_ai').addEventListener('llm-inserted', function(e) {
         editor.setValue(e.target.innerHTML)
     });
 

@@ -2,7 +2,7 @@
 
 
 <!--AI Modal-->
-{% include "snippets/llm_modal_snippet.html" with id=widget.name|add:"bloomAi" modal_id=widget.name|add:"aiModal" query_type="tiny_mce_content" title="Generate content" %}
+{% include "snippets/llm_modal_snippet.html" with id=widget.name|add:"bloomAi" query_type="tiny_mce_content" title="Generate content" %}
 <!--End AI Modal-->
 
 
@@ -26,7 +26,7 @@
 					text: 'AI',
 					onAction: function () {
 						// Show the modal
-						const modal = new bootstrap.Modal(document.getElementById("{{widget.name}}aiModal"));
+						const modal = new bootstrap.Modal(document.getElementById("modal_{{ widget.name }}bloomAi"));
 						modal.show();
 					}
 				});
