@@ -25,6 +25,7 @@
 <div class="d-none save-layout-div d-flex gap-2">
     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addItemModal">Add items</button>
     <button class="btn btn-primary" onclick="saveLayout('{{ workspace.pk }}')">Save layout</button>
+    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#resetLayoutModal">Reset layout</button>
     <button class="btn btn-secondary" onclick="changeLayout()">Cancel</button>
 </div>
 <!--End save layout div-->
@@ -117,6 +118,62 @@
         </div>
     </div>
 </div>
+
+<!--Reset layout modal-->
+<div
+    class="modal fade"
+    id="resetLayoutModal"
+    tabindex="-1"
+    data-bs-backdrop="static"
+    data-bs-keyboard="false"
+    role="dialog"
+    aria-labelledby="resetLayoutModalTitle"
+    aria-hidden="true"
+>
+    <div
+        class="modal-dialog modal-dialog-scrollable modal-dialog-centered"
+        role="document"
+    >
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="resetLayoutModalTitle">
+                    Reset layout
+                </h5>
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                ></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    Are you sure you want to reset the layout?
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal"
+                >
+                    Close
+                </button>
+                <button
+                    type="button"
+                    class="btn btn-danger"
+                    hx-post="{% url 'components_reset_workspace' %}"
+                    hx-vals='{"workspace_id": "{{ workspace.pk }}"}'
+                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                    hx-on:htmx:after-request="document.location.reload()"
+                >
+                    Reset layout
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--End reset layout modal-->
 
 <script>
     function changeLayout() {

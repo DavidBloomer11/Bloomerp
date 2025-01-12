@@ -1,0 +1,15 @@
+<svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+	<title>ai</title>
+	<style>
+		tspan { white-space:pre } 
+		.s0 { fill: none;stroke: #1c274c;stroke-width: 1.5 } 
+		.t1 { font-size: 18px;fill: #1c274c;font-weight: 450;font-family: "IBMPlexSans-Text", "IBM Plex Sans Text" } 
+	</style>
+	<g id="Layer 1">
+		<path class="s0" d="m2 12c0-4.7 0-7.1 1.5-8.5 1.4-1.5 3.8-1.5 8.5-1.5 4.7 0 7.1 0 8.5 1.5 1.5 1.4 1.5 3.8 1.5 8.5 0 4.7 0 7.1-1.5 8.5-1.4 1.5-3.8 1.5-8.5 1.5-4.7 0-7.1 0-8.5-1.5-1.5-1.4-1.5-3.8-1.5-8.5z"/>
+		<text id="AI" style="transform: matrix(1,0,0,1,2.655,18.237)" >
+			<tspan x="0" y="0" class="t1">A</tspan><tspan  y="0" class="t1">I
+</tspan>
+		</text>
+	</g>
+</svg>

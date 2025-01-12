@@ -32,20 +32,25 @@ def sign_file(request:HttpRequest) -> HttpResponse:
     except:
         return HttpResponse('Invalid file id', status=200)
 
-    # Get the bytes of the signature
-    signature_data = base64.b64decode(signature_data.split(",")[1])
+    try:
+        # Get the bytes of the signature
+        signature_data = base64.b64decode(signature_data.split(",")[1])
 
-    # Get the file or return a 404
-    file = File.objects.get(id=file_id)
+        # Get the file or return a 404
+        file = File.objects.get(id=file_id)
 
-    # Sign the file
-    document_controller = DocumentController(user=request.user)
+        # Sign the file
+        document_controller = DocumentController(user=request.user)
 
-    # Sign the file
-    signed_file = document_controller.sign_pdf(file, signature_data)    
+        # Sign the file
+        signed_file = document_controller.sign_pdf(file, signature_data)    
 
-    # Display success message
-    messages.success(request, f'File has been signed')
+        # Display success message
+        messages.success(request, f'File has been signed')
 
-    # Redirect user to page where request was made
-    return redirect(request.META.get('HTTP_REFERER', '/'))
+        # Redirect user to page where request was made
+        return redirect(request.META.get('HTTP_REFERER', '/'))
+    
+    except Exception as e:
+        messages.error(request, f'Error signing file: {e}')
+        return redirect(request.META.get('HTTP_REFERER', '/'))

@@ -303,7 +303,7 @@ class Comment(
         db_table = 'bloomerp_comment'
 
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
+    object_id = models.CharField(max_length=36) # In order to support both UUID and integer primary keys
     content_object = GenericForeignKey("content_type", "object_id")
     content = models.TextField()
 
@@ -342,7 +342,7 @@ class Todo(BloomerpModel):
 
     # For if the todo is related to a model
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
-    object_id = models.PositiveIntegerField(null=True, blank=True)
+    object_id = models.CharField(max_length=36, null=True, blank=True) # In order to support both UUID and integer primary keys
     content_object = GenericForeignKey("content_type", "object_id")
 
 
@@ -779,7 +779,6 @@ def get_default_workspace():
         ]
     }
 
-
 class Workspace(
     AbsoluteUrlModelMixin,
     models.Model,
@@ -1011,3 +1010,43 @@ class Workspace(
         )
 
         return workspace
+    
+
+# ---------------------------------
+# AI Conversation Model
+# ---------------------------------
+import uuid
+class AIConversation(BloomerpModel):
+    class Meta:
+        managed = True
+        db_table = "bloomerp_ai_conversation"
+        verbose_name = "AI conversation"
+        verbose_name_plural = "AI conversations"
+
+    CONVERSATION_TYPES = [
+        ('sql', 'SQL'), 
+        ('document_template', 'Document Template Generator'), 
+        ('tiny_mce_content', 'TinyMCE Content Generator'), 
+        ('bloom_ai', 'Bloom AI'),
+        ('code', 'Code Generator')
+    ]
+
+    avatar = None
+    title = models.CharField(max_length=255, default='AI Conversation')
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey('bloomerp.User', on_delete=models.CASCADE)
+    conversation_history = models.JSONField(null=True, blank=True)
+    conversation_type = models.CharField(max_length=20, choices=CONVERSATION_TYPES, default='bloom_ai')
+    auto_named = models.BooleanField(default=False, help_text="Whether the conversation has been auto-named")
+
+
+    allow_string_search = False
+    string_search_fields = ['title']
+
+    @property
+    def number_of_messages(self):
+        return len(self.conversation_history)
+    
+    def __str__(self):
+        return self.title
+    
