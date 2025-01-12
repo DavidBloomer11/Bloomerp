@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="Bloomerp",
-    version="0.3.0",
+    version="0.3.1",
     packages=find_packages(),
     include_package_data=True,
     license="MIT License",
@@ -41,6 +41,7 @@ setup(
         'langchain-core>=0.3.23',
         'langchain-openai>=0.2.12',
         'langgraph>=0.2.60',
+        'colorama>=0.4.6',
     ],
     extras_require={
         'images': ['Pillow>=8.0.0'],
