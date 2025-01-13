@@ -9,7 +9,6 @@ Variables:
 -->
 {% load static %}
 {% load bloomerp %}
-
 <div
     class="modal fade"
     id="modal_{{ id }}"
@@ -53,7 +52,7 @@ Variables:
                         type="button"
                         data-bs-toggle="collapse"
                         data-bs-target="#conversation_history_{{ id }}"
-                        hx-get="{% url 'components_ai_conversations' %}?conversation_type={{ query_type }}&target={{ id }}"
+                        hx-get="{% url 'components_ai_conversations' %}?conversation_type={{ query_type }}&target={{ id }}&args={{ args }}"
                         hx-target="#conversation_history_{{ id }}"
                         >
                         <span>Chat history</span>
@@ -62,7 +61,7 @@ Variables:
                     <button
                         class="btn btn-sm border"
                         type="button"
-                        hx-get="{% url 'components_ai_conversations' %}?conversation_type={{ query_type }}&target={{ id }}&new_conversation=true"
+                        hx-get="{% url 'components_ai_conversations' %}?conversation_type={{ query_type }}&target={{ id }}&new_conversation=true&args={{ args }}"
                         hx-target="#conversation_container_{{ id }}"
                         >
                         <span>New conversation</span>
@@ -84,7 +83,6 @@ Variables:
                             hx-get="{% url 'components_ai_conversations' %}?latest=true&conversation_type={{ query_type }}&args={{ args }}&target={{ id }}"
                             hx-target="#conversation_container_{{ id }}"
                             hx-trigger="load"
-
                             >
 
                         </div>

@@ -1,7 +1,7 @@
 from bloomerp.utils.router import route
 from django.shortcuts import render
 from django.http import HttpResponse, HttpRequest, StreamingHttpResponse
-from bloomerp.utils.llm import BloomerpOpenAI, BloomerpLangChain
+from bloomerp.utils.llm import BloomerpLangChain
 from bloomerp.models import ApplicationField, DocumentTemplate, AIConversation
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
@@ -11,7 +11,9 @@ from bloomerp.langchain_tools import BLOOMAI_TOOLS
 import uuid
 from django.contrib.auth.models import User
 from django.views.decorators.http import require_POST
-
+from bloomerp.utils.config import BloomerpConfigChecker
+import time
+from django.contrib.contenttypes.models import ContentType
 
 @require_POST
 @login_required
@@ -20,16 +22,23 @@ def llm_executor(request:HttpRequest) -> HttpResponse:
     '''
     Component to execute LLM queries.
     '''
-    LLM_QUERY_TYPES = ['sql', 'document_template', 'tiny_mce_content', 'bloom_ai','code']
+    LLM_QUERY_TYPES = [
+        'sql', 
+        'document_template', 
+        'tiny_mce_content', 
+        'bloom_ai',
+        'code',
+        'object_bloom_ai'
+        ]
     
 
     # Get the json data from the request
     json_data : dict = json.loads(request.body)
-
     query_type = json_data.get('query_type', None)
     query = json_data.get('query', None)
     conversation_id = json_data.get('conversation_id', None)
-
+    args = json_data.get('args', None)
+    
     # Some preprocessing
     if not query_type:
         return HttpResponse('No llm query type provided')
@@ -42,14 +51,11 @@ def llm_executor(request:HttpRequest) -> HttpResponse:
     openai_key = settings.BLOOMERP_SETTINGS.get('OPENAI_API_KEY', None)
     if not openai_key:
         return HttpResponse('OpenAI key not found in settings')
-    
-    # Init the OpenAI class
-    openai = BloomerpOpenAI(openai_key)
+
 
     # Check if the key is valid
-    if not openai.is_valid_key():
-        return HttpResponse('Invalid OpenAI key')
-    
+    # Not doing this at the moment because it is too slow
+        
     # Parse uuid
     try:
         id = uuid.UUID(conversation_id)
@@ -74,7 +80,8 @@ def llm_executor(request:HttpRequest) -> HttpResponse:
     # Init the BloomerpLangChain executor
     executor = BloomerpLangChain(
         api_key=openai_key, 
-        conversation_history=conversation_history
+        conversation_history=conversation_history,
+        user=request.user
     )   
 
     return StreamingHttpResponse(
@@ -132,6 +139,29 @@ def stream_response(
 
     elif query_type == 'code':
         for item in executor.invoke_code(query):
+            yield item
+
+    elif query_type == 'object_bloom_ai':
+        from bloomerp.utils.models import stringify_object
+
+        # Get the object id from args
+        object_id = json_data['args'].get('object_id', None)
+        content_type_id = json_data['args'].get('content_type_id', None)
+
+        if not object_id or not content_type_id:
+            return HttpResponse('Object id or content type id not provided')
+
+        try: 
+            object = ContentType.objects.get_for_id(content_type_id).model_class().objects.get(pk=object_id)        
+            stringified_object = stringify_object(object)
+        except Exception as e:
+            return HttpResponse('Object not found')
+
+        for item in executor.invoke_object_bloom_ai(
+                query, 
+                BLOOMAI_TOOLS,
+                object_representation=stringified_object, 
+                user=user):
             yield item
 
     # Get the conversation history

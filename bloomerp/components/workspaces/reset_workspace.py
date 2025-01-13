@@ -18,11 +18,7 @@ def reset_workspace(request:HttpRequest) -> HttpResponse:
     if not request.user.has_perm('bloomerp.change_workspace'):
         return HttpResponse('User does not have permission to view work', status=200)
 
-    print(request.POST)
-
     workspace_id = request.POST.get('workspace_id')
-
-    print(workspace_id)
 
     try:
         workspace = Workspace.objects.get(id=workspace_id)
@@ -43,4 +39,5 @@ def reset_workspace(request:HttpRequest) -> HttpResponse:
         ).content
 
     workspace.save()
- 
+    
+    return HttpResponse('Workspace reset successfully', status=200)

@@ -1053,7 +1053,8 @@ class AIConversation(BloomerpModel):
         ('document_template', 'Document Template Generator'), 
         ('tiny_mce_content', 'TinyMCE Content Generator'), 
         ('bloom_ai', 'Bloom AI'),
-        ('code', 'Code Generator')
+        ('code', 'Code Generator'),
+        ('object_bloom_ai', 'Object Bloom AI')
     ]
 
     avatar = None
@@ -1063,7 +1064,7 @@ class AIConversation(BloomerpModel):
     conversation_history = models.JSONField(null=True, blank=True)
     conversation_type = models.CharField(max_length=20, choices=CONVERSATION_TYPES, default='bloom_ai')
     auto_named = models.BooleanField(default=False, help_text="Whether the conversation has been auto-named")
-
+    args = models.JSONField(null=True, blank=True, help_text="Extra arguments for the conversation")
 
     allow_string_search = False
     string_search_fields = ['title']

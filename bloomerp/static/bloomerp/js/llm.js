@@ -60,14 +60,14 @@ async function llmContentStreamer(
         result += decoder.decode(value, { stream: true });
 
         // Remove the ```html or ``` from the result, only when not bloom_ai
-        if (queryType != 'bloom_ai') {
+        if (!['bloom_ai','object_bloom_ai'].includes(queryType)) {
             result = result.replace("```html", "");
             result = result.replace("```", "");
 
             document.getElementById(aiMessageId).innerHTML = result;
         } else {
             // Markdown to HTML
-            document.getElementById("md-"+aiMessageId).innerHTML = result;
+            document.getElementById("md-" + aiMessageId).innerHTML = result;
         }
 
     }
@@ -105,7 +105,7 @@ function bloomAiCreateMessage(
         messageBubble.appendChild(spinner);
     }
 
-    if (message != "" && queryType != 'bloom_ai') {
+    if (message != "" && !['bloom_ai','object_bloom_ai'].includes(queryType)) {
         messageBubble.innerHTML = message;
     }
 
@@ -140,7 +140,7 @@ function bloomAiCreateMessage(
     // Add data-bs-dismiss attribute
     insertButton.setAttribute("data-bs-dismiss", "modal");
 
-    if (queryType == 'bloom_ai') {
+    if (['bloom_ai','object_bloom_ai'].includes(queryType)) {
         // Add zero-md to the utils div
         let zeroMd = document.createElement("zero-md");
         let script = document.createElement("script");
@@ -162,7 +162,7 @@ function bloomAiCreateMessage(
     }
 
     // Append the copy button to the utils div
-    if (queryType != 'bloom_ai') {
+    if (!['bloom_ai','object_bloom_ai'].includes(queryType)) {
     utilsDiv.appendChild(insertButton);
     }
     utilsDiv.appendChild(copyButton);

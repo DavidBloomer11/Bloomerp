@@ -138,6 +138,7 @@ class BloomerpModelContextMixin:
         - update_view_url
         - list_view_url
         - detail_view_url
+        - llm_args
 
     Note: consider splitting this mixin into list and detail mixins.
     '''
@@ -181,6 +182,11 @@ class BloomerpModelContextMixin:
         context['detail_view_url'] = get_detail_view_url(self.model)
         context['bulk_upload_url'] = get_bulk_upload_view_url(self.model)
 
+        try:
+            if hasattr(self, 'object'):
+                context['llm_args'] = 'content_type_id=' + str(context['content_type_id']) + ';object_id=' + str(self.object.pk)
+        except:
+            pass
         # Application fields context data
         context['application_fields'] = ApplicationField.objects.filter(content_type_id=context['content_type_id'])
         return context

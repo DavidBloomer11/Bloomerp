@@ -8,7 +8,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                     <a
-                        hx-get="{% url 'components_ai_conversations' %}?conversation_id={{ conversation.id }}&target={{ target }}"
+                        hx-get="{% url 'components_ai_conversations' %}?conversation_id={{ conversation.id }}&target={{ target }}&args={{ args }}"
                         hx-target="#conversation_container_{{ target }}"
                         hx-swap="innerHTML"
                         hx-trigger="click"
@@ -22,7 +22,7 @@
                             class="form-control collapse mult-collapse-{{conversation.pk}}" 
                             value="{{ conversation.title }}"
                             name="rename"
-                            hx-get="{% url 'components_ai_conversations' %}?conversation_id={{ conversation.id }}&target={{ target }}&conversation_type={{ conversation.conversation_type }}"
+                            hx-get="{% url 'components_ai_conversations' %}?conversation_id={{ conversation.id }}&target={{ target }}&conversation_type={{ conversation.conversation_type }}&args={{ args }}"
                             hx-target="#conversation_history_{{ target }}"
                             hx-trigger="blur"
                             >
@@ -47,7 +47,7 @@
                             <li><a 
                                     class="dropdown-item"
                                     href="#"
-                                    hx-get="{% url 'components_ai_conversations' %}?conversation_id={{ conversation.id }}&target={{ target }}&delete=true&conversation_type={{ conversation.conversation_type }}"
+                                    hx-get="{% url 'components_ai_conversations' %}?conversation_id={{ conversation.id }}&target={{ target }}&delete=true&conversation_type={{ conversation.conversation_type }}&args={{ args }}"
                                     hx-target="#conversation_history_{{ target }}"
                                     hx-swap="innerHTML"
                                     hx-trigger="click"

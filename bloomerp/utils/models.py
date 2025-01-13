@@ -416,10 +416,6 @@ def search_objects_by_content_types(query:str, content_types:list[ContentType], 
     return results
                 
 
-
-
-
-
 # ---------------------------------
 # OTHER
 # ---------------------------------
@@ -428,3 +424,51 @@ def get_initials(object:Model) -> str:
     This function returns the initials of the object.
     """
     return ''.join([word[0].upper() for word in object.__str__().split()])[0:2]
+
+
+def stringify_object(object: Model) -> str:
+    """
+    Returns a robust string representation of a Django model instance, 
+    handling different field types and potential errors gracefully.
+
+    Parameters:
+    object (Model): A Django model instance.
+
+    Returns:
+    str: String representation of the object with field names and values.
+    """
+    object_string = ''
+
+    # Get model and fields
+    model = object._meta.model
+    fields = model._meta.fields
+
+    object_string += f'Object: {object.__str__()} | ID {object.pk}\n'
+    object_string += f'Object from model: {model._meta.verbose_name}\n'
+    object_string += f'Database table: {model._meta.db_table} \n\n'
+    object_string += 'Fields:\n'
+
+    for field in fields:
+        field_name = field.name
+        try:
+            # Get the field value
+            value = getattr(object, field_name)
+
+            # Handle special cases for field types
+            if hasattr(value, '__str__'):
+                # Convert to string with truncation if necessary
+                value_str = str(value)[:100] + ' (first 100 chars shown)' if len(str(value)) > 100 else str(value)
+            else:
+                value_str = str(value)
+
+            # Add field name and value to the output string
+            object_string += f'{field_name}: {value_str}\n'
+        except Exception as e:
+            # Log or include information about the error
+            object_string += f'{field_name}: [Error retrieving value: {str(e)}]\n'
+
+    return object_string
+
+
+
+

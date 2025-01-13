@@ -67,7 +67,8 @@ def ai_conversations(request:HttpRequest) -> HttpResponse:
 
         context = {
             'ai_conversations': ai_conversations,
-            'target': target
+            'target': target,
+            'args': args
         }
         return render(request, 'components/llm/ai_conversations.html', context) 
 
@@ -82,7 +83,7 @@ def ai_conversations(request:HttpRequest) -> HttpResponse:
 
             conversations = filter_ai_conversations(request.user, conversation_type)
 
-            return render(request, 'components/llm/ai_conversations.html', {'ai_conversations': conversations, 'target': target})        
+            return render(request, 'components/llm/ai_conversations.html', {'ai_conversations': conversations, 'target': target, 'args': args})        
 
         if rename:
             try:
@@ -95,7 +96,7 @@ def ai_conversations(request:HttpRequest) -> HttpResponse:
 
             conversations = filter_ai_conversations(request.user, conversation_type)
 
-            return render(request, 'components/llm/ai_conversations.html', {'ai_conversations': conversations, 'target': target})
+            return render(request, 'components/llm/ai_conversations.html', {'ai_conversations': conversations, 'target': target, 'args': args})
 
 
         # Parse uuid
@@ -106,7 +107,7 @@ def ai_conversations(request:HttpRequest) -> HttpResponse:
             return HttpResponse('Invalid conversation id')
         
         # Get the AIConversation object
-        return render(request, 'components/llm/ai_conversation.html', {'ai_conversation': ai_conversation_object, 'target': target})
+        return render(request, 'components/llm/ai_conversation.html', {'ai_conversation': ai_conversation_object, 'target': target, 'args': args})
 
 
 def filter_ai_conversations(user, conversation_type:str):
