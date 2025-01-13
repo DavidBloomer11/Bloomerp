@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="Bloomerp",
-    version="0.3.1",
+    version="0.3.2-dev",
     packages=find_packages(),
     include_package_data=True,
     license="MIT License",
