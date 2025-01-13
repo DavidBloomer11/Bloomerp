@@ -5,7 +5,9 @@
 from django.urls import include, path,  register_converter
 from django.contrib.auth import views as auth_views
 from django.contrib.contenttypes.models import ContentType
-from bloomerp.components import generate_document_template, datatable, llm_executor
+from bloomerp.components import datatable, todos
+from bloomerp.components.document_templates import generate_document_template
+from bloomerp.components.llm import llm_executor, ai_conversations
 from bloomerp.views.document_templates import router as document_template_router
 from django.db.models import Model
 from bloomerp.utils.models import (
