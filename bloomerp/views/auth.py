@@ -5,14 +5,15 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse, reverse_lazy
 from django.contrib import messages
-from bloomerp.forms.auth import UserDetailViewPreferenceForm, UserDetailViewPreferenceFormset
+from bloomerp.forms.auth import UserDetailViewPreferenceForm
 from bloomerp.forms.core import ListViewFieldsSelectForm
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator
 from bloomerp.views.mixins import HtmxMixin
 from bloomerp.models import (
     UserDetailViewPreference,
-    User
+    User,
+    ApplicationField
     )
 from bloomerp.utils.models import model_name_plural_underline
 from django.contrib.auth.mixins import PermissionRequiredMixin
@@ -23,7 +24,9 @@ from bloomerp.views.core import BloomerpBaseDetailView
 from django.contrib.auth.forms import PasswordChangeForm, AdminPasswordChangeForm
 from django.views.generic.edit import FormView, UpdateView
 from django.contrib.auth import update_session_auth_hash
-
+from django.forms import modelformset_factory
+from bloomerp.forms.auth import UserDetailViewPreferenceForm
+import time
 
 class ProfileMixin:
     tabs = [
@@ -117,9 +120,12 @@ class UserListViewPreferenceView(ProfileMixin, BloomerpBaseDetailView):
         content_type_list = ContentType.objects.all()
         content_type_id = self.request.GET.get('content_type_id',None)
 
+        # Necessary context data
+        context['url_name'] = 'users_my_profile_list_view_preference'
+        context['title'] = 'List view preferences'
         
         if content_type_id:
-            context['selected_model'] = ContentType.objects.get(pk=int(content_type_id)).model
+            context['selected_content_type'] = ContentType.objects.get(pk=int(content_type_id))
 
             form = ListViewFieldsSelectForm(
                 content_type=ContentType.objects.get(pk=content_type_id),
@@ -150,7 +156,11 @@ class UserListViewPreferenceView(ProfileMixin, BloomerpBaseDetailView):
         else:
             return render(request, self.template_name, {'form': form})
 
-        
+
+# ---------------------------
+# USER DETAIL VIEW PREFERENCE VIEW
+# ---------------------------
+from django.views.generic.edit import FormView
 @router.bloomerp_route(
     path="my-profile/detail-view-preferences/",
     models=User,
@@ -158,48 +168,90 @@ class UserListViewPreferenceView(ProfileMixin, BloomerpBaseDetailView):
     name="Detail view preference",
     description="Detail view preference for a user",
     url_name="my_profile_detail_view_preference"
-)
+    )
 class UserDetailViewPreferenceView(ProfileMixin, BloomerpBaseDetailView):
     template_name = 'user_views/bloomerp_detail_view_preference_view.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        selected_content_type = self.get_content_type()
 
-        content_type_id = self.request.GET.get('content_type_id',None)
+        # Necessary context data
+        context['url_name'] = 'users_my_profile_detail_view_preference'
+        context['title'] = 'Detail view preferences'
 
-        list = UserDetailViewPreference.get_application_fields_info(content_type_id,self.request.user)
+        if selected_content_type and self.request.method == 'GET':
+            formset = self.get_formset(content_type_id=selected_content_type.id)
+            context['formset'] = formset
 
-        Formset = formset_factory(UserDetailViewPreferenceForm, formset=UserDetailViewPreferenceFormset,extra=0)
-        
-        formset = Formset(initial=list)
 
-        context['formset'] = formset
-        context['content_type_list'] = ContentType.objects.all()
-        if content_type_id:
-            context['selected_model'] = ContentType.objects.get(pk=int(content_type_id)).model
-
+        context['return_to'] = self.request.GET.get('return_to', None)
+        context['selected_content_type'] = selected_content_type
         return context
 
-    def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
-        content_type_id = request.GET.get('content_type_id',None)
-        
-        return_to = request.GET.get('return_to',None)
+    def post(self, request, *args, **kwargs):
+        content_type = self.get_content_type()
+        context = self.get_context_data()
 
-        Formset = formset_factory(UserDetailViewPreferenceForm, formset=UserDetailViewPreferenceFormset)
+        if not content_type:
+            return self.form_invalid_response()
 
-
-        formset = Formset(request.POST)
+        formset = self.get_formset(content_type_id=content_type.pk, data=request.POST)
 
         if formset.is_valid():
-            formset.user = self.request.user
             formset.save()
-            messages.success(self.request, 'Preferences saved successfully.')
-            if return_to:
-                return redirect(return_to)
-            else:
-                return redirect(reverse('detail_view_preference') + f'?content_type_id={content_type_id}')
+
+            if request.GET.get('return_to', None):
+                return redirect(request.GET.get('return_to'))
+
+            return redirect(reverse('users_my_profile_detail_view_preference') + f'?content_type_id={content_type.pk}')
         else:
-            return render(request, self.template_name, {'formset': formset})
+            context['formset'] = formset
+            return render(request, self.template_name, context)
+
+    def get_formset(self, content_type_id, data=None):
+        """Returns a formset for the UserDetailViewPreference model."""
+        user = self.request.user
+        application_fields = ApplicationField.objects.filter(
+            content_type=content_type_id
+        ).order_by('field')
+
+        n = application_fields.count()
+        selected_content_type = ContentType.objects.get(pk=content_type_id)
+        queryset = UserDetailViewPreference.objects.filter(
+            user=user,
+            application_field__content_type=selected_content_type
+        ).order_by('application_field__field')
+
+        # Prepare initial data for missing application fields
+        initial_data = [
+            {
+                'application_field': af.pk,
+                'user': user.pk,
+                'position': 'LEFT',
+                'selected': False,
+                'application_field_str': af.field.replace('_', ' ').capitalize()
+            }
+            for af in application_fields if not queryset.filter(application_field=af).exists()
+        ]
+    
+        formset_factory = modelformset_factory(
+            UserDetailViewPreference,
+            form=UserDetailViewPreferenceForm,
+            fields=('application_field', 'position', 'selected', 'user', 'id'),
+            min_num=n,
+            max_num=n
+        )
+
+        return formset_factory(queryset=queryset, initial=initial_data, data=data)
+
+    def get_content_type(self):
+        """Retrieves the content type based on the GET parameter."""
+        if self.request.method == 'POST':
+            content_type_id = self.request.POST.get('content_type_id', None)
+        else:
+            content_type_id = self.request.GET.get('content_type_id', None)
+        return ContentType.objects.get(pk=content_type_id) if content_type_id else None
 
 
 # ---------------------------

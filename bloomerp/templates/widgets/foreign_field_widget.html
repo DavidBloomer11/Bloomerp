@@ -15,7 +15,7 @@
 {% load bloomerp %}
 
 {% if widget_type == 'm2m' %}
-<div class="d-none" id="{{ widget.name }}_input_div">
+<div class="d-none" id="{{ widget.name }}_input_div" {% for attr, value in widget.attrs %} {{attr}}={{value}} {% endfor %}>
     {% for choice in selected_choices %}
         <input value="{{choice.pk}}" id="{{widget.name}}_{{ choice.pk }}" name="{{ widget.name }}"/>
     {% endfor %}
@@ -26,6 +26,7 @@
     name="{{ widget.name }}" 
     id="{{ widget.name }}_hidden_input" 
     {% if widget.value != None %}value="{{ widget.value }}"{% endif %} 
+    {% for attr, value in widget.attrs.items %}{{attr}}="{{value}}" {% endfor %}
 />
 {% endif %}
 <div class="dropdown {% if invalid %}is-invalid{% endif %}">

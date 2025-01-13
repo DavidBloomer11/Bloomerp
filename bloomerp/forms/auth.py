@@ -3,48 +3,37 @@ from django import forms
 # ---------------------------------
 # User Detail View Preference Form
 # ---------------------------------
-from bloomerp.models import UserDetailViewPreference
+from bloomerp.models import UserDetailViewPreference, ApplicationField
+class UserDetailViewPreferenceForm(forms.ModelForm):
+    class Meta:
+        model = UserDetailViewPreference
+        fields = '__all__'
 
-class UserDetailViewPreferenceForm(forms.Form):
-    field = forms.CharField(max_length=100, required=False)
-    id = forms.IntegerField(required=False)
-    position = forms.ChoiceField(required=False, choices=UserDetailViewPreference.POSITION_CHOICES, initial=UserDetailViewPreference.POSITION_CHOICES[0][0])
-    is_used = forms.BooleanField(required=False)
+    selected = forms.BooleanField(required=False)
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-class UserDetailViewPreferenceFormset(forms.BaseFormSet):
-    user = None
+        # Set initial value of selected field to True
+        if self.instance and self.instance.pk:
+            self.fields['selected'].initial = True
+
+    @property
+    def application_field_str(self):
+        try:
+            return ApplicationField.objects.get(pk=self.initial.get('application_field')).field.replace(' ','_').capitalize()
+        except:
+            print('Error getting application field', self.initial.get('application_field'))
+            return 'Unknown'
+
+
     def save(self, *args, **kwargs):
-        for form in self.forms:
-            form: UserDetailViewPreferenceForm
-            if form.cleaned_data.get('id'):
-                # Extract relevant data from the form
-                id = form.cleaned_data.get('id',None)
-                is_used = form.cleaned_data.get('is_used',False)
-                position = form.cleaned_data.get('position',False)
-
-                # Check if UserListViewPreference with specified conditions exists
-                existing_preference = UserDetailViewPreference.objects.filter(
-                    user=self.user,
-                    application_field_id=id,
-                ).first()
-
-                # Implement your business logic here
-                if existing_preference:
-                    # UserListViewPreference with given conditions exists
-                    if not is_used:
-                        # If is_used is False, delete the existing preference
-                        existing_preference.delete()
-                    # Note: If is_used is True, no further action is required as we want to create it if it doesn't exist
-                else:
-                    # UserListViewPreference with given conditions does not exist
-                    if is_used:
-                        
-                        # If is_used is True, create a new preference
-                        UserDetailViewPreference.objects.create(
-                            user=self.user,
-                            application_field_id=id,
-                            position=position
-                        )
+        if self.cleaned_data.get('selected'):
+            return super().save(*args, **kwargs)
+        else:
+            if self.instance.pk:
+                self.instance.delete()
+            return None
 
 
 # ---------------------------------

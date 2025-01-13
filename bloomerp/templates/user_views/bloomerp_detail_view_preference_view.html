@@ -1,95 +1,128 @@
-<h5 class="card-title">Object View Preferences</h5>
-<p class="text-muted">
-  Here, you can customize the visibility of fields for a specific model by
-  adjusting the settings.
-</p>
+{% extends "user_views/snippets/user_content_type_selection_snippet.html" %}
+{% load bloomerp_ui %}
+{% load crispy_forms_field %}
 
-<div class="mb-3 col-3">
-  <label for="" class="form-label">Model</label>
-  <select
-    class="form-select form-select"
-    name="content_type"
-    id="selectContentType"
-  >
-    <option selected>Select one</option>
-    {% for content_type in content_type_list %}
-    <option value="{{content_type.pk}}">{{content_type}}</option>
-    {% endfor %}
-  </select>
-</div>
+{% block selection_content %}
 
-{% if selected_model %}
-<p class="fw-bold my-2">Selected Model: {{selected_model|title}}</p>
+{% if selected_content_type %}
+<div class="d-flex justify-content-between align-items-center my-4">
+	<div>
+		<input type="text" class="form-control" placeholder="Search" id="search" oninput="searchTable(this)">
+	</div>
 
-
-<form method="POST" action="">
-<div
-    class="row align-items-center g-2"
->
-    <div class="col-2">
-        <input type="text" class="form-control" id="searchField" placeholder="Search field">
-    </div>
-    <div class="col-2"><button type="submit" class="btn btn-primary">Save Preferences</button></div>
+	<div>
+		<button class="btn border" onclick="selectAll()">
+			Select/deselect all
+		</button>
+	</div>
 </div>
 
 
+<div>	
+	<form
+		method="post"
+		action="{% url 'users_my_profile_detail_view_preference' %}{% if return_to %}?return_to={{return_to}}{% endif %}"
+		>
+		{% csrf_token %}
+
+		<input
+			type="hidden"
+			name="content_type_id"
+			value="{{ selected_content_type.id }}"
+			>
+	
+	<!--Errors-->
+	{% if formset.errors %}
+		<div class="alert alert-danger">
+			<ul>
+				{% for error in formset.errors %}
+					<li>{{ error }}</li>
+				{% endfor %}
+			</ul>
+		</div>
+	{% endif %}
+	<!--End errors-->
+
+	{{ formset.management_form }}
+	<div
+		class="table-responsive"
+	>
+		<table
+			class="table"
+			id="searchable_table"
+		>
+			<thead>
+				<tr>
+					<th scope="col">Field</th>
+					<th scope="col">Position</th>
+					<th scope="col">Selected</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for form in formset %}
+				<tr class="" class="d-flex justify-content-center">
+					<td class="d-none">
+						<input type="text" name="form-{{forloop.counter0}}-application_field" value="{{ form.application_field.value }}">
+						<input type="text" name="form-{{forloop.counter0}}-user" value="{{ request.user.pk }}">
+						{% if form.id.value %}
+							<input type="text" name="form-{{forloop.counter0}}-id" value="{{ form.id.value }}">
+						{% endif %}
+					</td>
+
+					<td scope="row" class="searchable">
+						{{ form.application_field_str }} {{ form.index}}
+					</td>
+					<td>{% crispy_field form.position 'class' 'form-control form-control-sm' %}</td>
+					<td>{{ form.selected }}</td>
+				</tr>
+				
+				{% endfor %}
+
+			</tbody>
+		</table>
+	</div>
+
+	<button
+		type="submit"
+		class="btn btn-primary"
+	>
+		Save
+	</button>
+	</form>
+</div>
 
 <script>
-document.getElementById("searchField").addEventListener("input", function () {
-    var searchValue = this.value.toLowerCase(); // Get the search value
-
-    // Loop through each row in the table
-    var rows = document.querySelectorAll(".table tbody tr");
-    rows.forEach(function (row) {
-        var fieldValue = row.querySelector(".fw-bold").textContent.toLowerCase(); // Get the field value
-
-        // Check if the field value contains the search value
-        if (fieldValue.includes(searchValue)) {
-            row.style.display = ""; // Show the row
-        } else {
-            row.style.display = "none"; // Hide the row
-        }
-    });
-});
-</script>
-
-{% if formset %}
-
-  {% csrf_token %} {{ formset.management_form }}
-  <div class="table-responsive">
-    <table class="table">
-      <thead>
-        <tr>
-          <th scope="col">Field</th>
-          <th scope="col">Using</th>
-          <th scope="col">Field position</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for form in formset %}
-        <tr class="">
-            <td scope="row" class="fw-bold">{{ form.field.value }} <span class="d-none">{{form.id}}</span></td>
-            <td>{{form.is_used}}</td>
-            <td>{{form.position}}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+	function searchTable(input) {
+	  const value = input.value.toLowerCase();
+	  const rows = document.querySelectorAll("#searchable_table tbody tr");
   
-</form>
+	  rows.forEach(row => {
+		const searchableCells = row.querySelectorAll(".searchable");
+		const match = Array.from(searchableCells).some(cell =>
+		  cell.innerText.toLowerCase().includes(value)
+		);
+  
+		if (match) {
+		  row.classList.remove("d-none");
+		} else {
+		  row.classList.add("d-none");
+		}
+	  });
+	}
 
-{% endif %}
-{% endif %}
-<script>
-  document
-    .getElementById("selectContentType")
-    .addEventListener("change", function () {
-      var selectedValue = this.value; // Get the selected value
+	function selectAll() {
+		const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+		const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
+		checkboxes.forEach(checkbox => {
+			checkbox.checked = !allChecked;
+		});
+	}
 
-      // Redirect to the desired URL with the selected value as a query parameter
-      // Replace '/url/' with the actual path you wish to navigate to
-      window.location.href = `{{request.path}}?content_type_id=${selectedValue}`;
-    });
 </script>
+
+
+{% endif %}
+
+{% endblock selection_content %}
+
 

@@ -1,22 +1,21 @@
-from typing import Any
-from django.forms import ValidationError
-from bloomerp.models import ApplicationField, User, File, UserDetailViewTab, Link, UserListViewPreference
+from bloomerp.models import ApplicationField, User, File, UserDetailViewTab, Link, UserListViewPreference, UserDetailViewPreference
 from django import forms
 from django.contrib.contenttypes.models import ContentType
 from django.forms.models import modelform_factory
-from django.utils import timezone
-from datetime import timedelta
-from django.core.files import File as DjangoFile
-from django.template.loader import get_template
 from django.db.models import Model
 from uuid import UUID
 from bloomerp.utils.models import (
-    get_file_fields_dict_for_model,
     get_bloomerp_file_fields_for_model,
     get_foreign_key_fields_for_model
     )
 from django.contrib.postgres.fields import JSONField
 from django.db.models import JSONField as DefaultJSONField
+from bloomerp.widgets.foreign_key_widget import ForeignKeyWidget
+from bloomerp.widgets.code_editor_widget import AceEditorWidget
+from bloomerp.widgets.multiple_model_select_widget import MultipleModelSelect
+from django.forms.widgets import DateInput, DateTimeInput
+from bloomerp.forms.layouts import BloomerpModelformHelper
+
 # ---------------------------------
 # Bloomerp Bulk Upload Form
 # ---------------------------------
@@ -35,51 +34,10 @@ class BulkUploadForm(forms.Form):
         if 'last_updated_by' in self.fields:
             del self.fields['last_updated_by']
 
-# ---------------------------------
-# Object file form
-# ---------------------------------
-
-class ObjectFileForm(forms.ModelForm):
-    class Meta:
-        model = File
-        fields = ['name', 'file']
-
-    def __init__(self,
-                 related_object:Model=None,
-                 user:User=None,
-                *args, **kwargs):
-
-        self.related_object = related_object
-        self.user = user
-
-        super().__init__(*args, **kwargs)
-
-
-    def save(self, commit=True):
-        # Override the save method to set the content_type and object_id
-        instance:File = super().save(commit=False)
-
-        if self.related_object:
-            instance.content_type = ContentType.objects.get_for_model(self.related_object)
-            instance.object_id = self.related_object.pk
-    
-        if self.user:
-            instance.uploaded_by = self.user
-
-
-        if commit:
-            instance.save()
-        return instance
 
 # ---------------------------------
 # Bloomerp Model Form
 # ---------------------------------
-from bloomerp.widgets.foreign_key_widget import ForeignKeyWidget
-from bloomerp.widgets.code_editor_widget import AceEditorWidget
-from bloomerp.widgets.multiple_model_select_widget import MultipleModelSelect
-from django.forms.widgets import DateInput, DateTimeInput
-from bloomerp.forms.layouts import BloomerpModelformHelper
-
 class BloomerpModelForm(forms.ModelForm):
     model:Model = None
     user:User = None
@@ -308,8 +266,6 @@ class BloomerpDownloadBulkUploadTemplateForm(forms.Form):
         return []
     
 
-    
-
 # ---------------------------------
 # Links select form
 # ---------------------------------
@@ -318,7 +274,7 @@ class DetailLinksSelectForm(forms.Form):
         super(DetailLinksSelectForm, self).__init__(*args, **kwargs)
         
         # Get all of the links that are available for the content type
-        qs = Link.objects.filter(content_type=content_type, level='DETAIL') 
+        qs = Link.objects.filter(content_type=content_type, level='DETAIL').order_by('name')
         
         for link in qs:
             if link.number_of_args() > 1:
@@ -367,24 +323,36 @@ class DetailLinksSelectForm(forms.Form):
 
         print("Links saved")
 
+# ---------------------------------
+# Links select form
+# ---------------------------------
+class ApplicationFieldModelChoiceField(forms.ModelMultipleChoiceField):
+    '''Special model choice field for ApplicationField model'''
+
+    def label_from_instance(self, obj:ApplicationField) -> str:
+        # Customize the label here, e.g., add additional details
+        string = obj.field
+        return string.replace('_', ' ').capitalize()
 
 class ListViewFieldsSelectForm(forms.Form):
     def __init__(self, content_type:ContentType, user:User, *args, **kwargs):
         super(ListViewFieldsSelectForm, self).__init__(*args, **kwargs)
-        
+                
+
         # Get all of the Application fields that are available for the content type
-        qs = ApplicationField.objects.filter(content_type=content_type)
+        qs = ApplicationField.objects.filter(content_type=content_type).order_by('field')
         
         
         # Get the links that the user has access to
         application_fields = UserListViewPreference.objects.filter(user=user, application_field__in=qs).values_list('application_field_id', flat=True)
         
-        self.fields['fields'] = forms.ModelMultipleChoiceField(
+        self.fields['fields'] = ApplicationFieldModelChoiceField(
             queryset=qs,
             widget=forms.CheckboxSelectMultiple
         )
 
         self.fields['fields'].initial = application_fields
+        self.fields['fields'].label = '' 
 
         # Add content type id as hidden field
         self.fields['content_type_id'] = forms.IntegerField(widget=forms.HiddenInput(), initial=content_type.pk)
