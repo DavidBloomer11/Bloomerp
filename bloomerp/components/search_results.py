@@ -1,7 +1,7 @@
 from django.apps import apps
 from django.shortcuts import render
 from django.http import HttpRequest, HttpResponse
-from bloomerp.models import BloomerpModel, User
+from bloomerp.models import BloomerpModel, AbstractBloomerpUser
 from bloomerp.utils.router import route
 from bloomerp.models import Link
 from bloomerp.utils.models import search_content_types_by_query, search_objects_by_content_types
@@ -78,7 +78,7 @@ def search_results(request: HttpRequest) -> HttpResponse:
 
         else:
             # Get all models from the app
-            content_types = User.get_content_types_for_user(request.user)
+            content_types = AbstractBloomerpUser.get_content_types_for_user(request.user)
             
             results = search_objects_by_content_types(query, content_types=content_types, limit=5, user=request.user)
 

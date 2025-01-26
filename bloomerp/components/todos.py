@@ -2,7 +2,7 @@ from bloomerp.utils.router import route
 from django.shortcuts import render
 from django.http import HttpResponse, HttpRequest
 from bloomerp.forms.core import BloomerpModelForm
-from bloomerp.models import Todo, User
+from bloomerp.models import Todo, AbstractBloomerpUser
 from django.forms import modelform_factory
 from django.utils import timezone
 from django.contrib.contenttypes.models import ContentType
@@ -88,7 +88,7 @@ def todos(request: HttpRequest) -> HttpResponse:
 
 
 
-def filter_todos(user: User, content_type_id: int, object_id: int):
+def filter_todos(user: AbstractBloomerpUser, content_type_id: int, object_id: int):
     """
     Filter todos based on the user, content type, and object id.
     """

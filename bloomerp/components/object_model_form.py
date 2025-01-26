@@ -4,7 +4,7 @@ from django.http import HttpResponse, HttpRequest
 from django.contrib.contenttypes.models import ContentType
 from django.forms.models import modelform_factory
 from bloomerp.forms.core import BloomerpModelForm
-from bloomerp.models import User
+from bloomerp.models import AbstractBloomerpUser
 from django.contrib.auth.decorators import login_required
 from django import forms
 from bloomerp.utils.requests import parse_bool_parameter
@@ -28,7 +28,7 @@ def object_model_form(request:HttpRequest) -> HttpResponse:
 
 
     # Add permission check here
-    user : User = request.user
+    user : AbstractBloomerpUser = request.user
 
     # Attributes to be passed to the template
     created = False

@@ -1,4 +1,4 @@
-from bloomerp.models import ApplicationField, User, File, UserDetailViewTab, Link, UserListViewPreference, UserDetailViewPreference
+from bloomerp.models import ApplicationField, AbstractBloomerpUser, File, UserDetailViewTab, Link, UserListViewPreference, UserDetailViewPreference
 from django import forms
 from django.contrib.contenttypes.models import ContentType
 from django.forms.models import modelform_factory
@@ -40,14 +40,14 @@ class BulkUploadForm(forms.Form):
 # ---------------------------------
 class BloomerpModelForm(forms.ModelForm):
     model:Model = None
-    user:User = None
+    user:AbstractBloomerpUser = None
     instance:Model = None
     is_new_instance:bool = True
 
     def __init__(
             self, 
             model:Model, 
-            user:User=None,
+            user:AbstractBloomerpUser=None,
             apply_helper=True,
             hide_default_fields=True,
             *args, **kwargs):
@@ -270,7 +270,7 @@ class BloomerpDownloadBulkUploadTemplateForm(forms.Form):
 # Links select form
 # ---------------------------------
 class DetailLinksSelectForm(forms.Form):
-    def __init__(self, content_type:ContentType, user:User, *args, **kwargs):
+    def __init__(self, content_type:ContentType, user:AbstractBloomerpUser, *args, **kwargs):
         super(DetailLinksSelectForm, self).__init__(*args, **kwargs)
         
         # Get all of the links that are available for the content type
@@ -321,7 +321,6 @@ class DetailLinksSelectForm(forms.Form):
         # Remove UserDetailViewTab objects
         UserDetailViewTab.objects.filter(user=self.user, link_id__in=links_to_remove).delete()
 
-        print("Links saved")
 
 # ---------------------------------
 # Links select form
@@ -335,7 +334,7 @@ class ApplicationFieldModelChoiceField(forms.ModelMultipleChoiceField):
         return string.replace('_', ' ').capitalize()
 
 class ListViewFieldsSelectForm(forms.Form):
-    def __init__(self, content_type:ContentType, user:User, *args, **kwargs):
+    def __init__(self, content_type:ContentType, user:AbstractBloomerpUser, *args, **kwargs):
         super(ListViewFieldsSelectForm, self).__init__(*args, **kwargs)
                 
 

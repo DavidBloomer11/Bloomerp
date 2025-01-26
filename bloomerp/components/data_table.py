@@ -5,7 +5,7 @@ from django.http import HttpResponse, HttpRequest
 from bloomerp.utils.filters import dynamic_filterset_factory
 from bloomerp.utils.models import string_search_on_qs
 from django.contrib.contenttypes.models import ContentType
-from bloomerp.models import User, UserListViewPreference
+from bloomerp.models import AbstractBloomerpUser, UserListViewPreference
 from bloomerp.utils.models import model_name_plural_underline
 from bloomerp.utils.model_io import BloomerpModelIO
 from bloomerp.models import ApplicationField
@@ -27,7 +27,7 @@ def data_table(request:HttpRequest) -> HttpResponse:
     - data_table_foreign_key_field: The foreign key field to filter the data table by
     - data_table_foreign_key_value: The foreign key value to filter the data table by
     """
-    user:User = request.user
+    user:AbstractBloomerpUser = request.user
     content_type_id = request.GET.get('data_table_content_type_id', None)
     include_actions = request.GET.get('data_table_include_actions', True) # Actions will be rendered to the right of the table for each row
     data_table_string_search = request.GET.get('data_table_string_search', None)

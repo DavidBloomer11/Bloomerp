@@ -1,6 +1,6 @@
 from django.test import TestCase, RequestFactory
 from django.urls import reverse
-from bloomerp.models import User, Bookmark, ContentType, File, BloomerpModel, Link
+from bloomerp.models import AbstractBloomerpUser, Bookmark, ContentType, File, BloomerpModel, Link
 from bloomerp.components.bookmark import bookmark
 from bloomerp.components.bulk_update_objects import bulk_update_objects
 from django.contrib.auth.models import AnonymousUser
@@ -18,7 +18,7 @@ class BookmarkComponentTests(TestCase):
     def setUp(self):
         self.url = reverse('components_bookmark')
         self.factory = RequestFactory()
-        self.user = User.objects.create_user(username='testuser', password='12345')
+        self.user = AbstractBloomerpUser.objects.create_user(username='testuser', password='12345')
         self.content_type = ContentType.objects.create(app_label='test_app', model='testmodel')
 
     def test_bookmark_creation(self):
@@ -76,7 +76,7 @@ class BulkUpdateObjectsTests(TestCase):
     def setUp(self):
         self.url = reverse('components_bulk_update_objects')
         self.factory = RequestFactory()
-        self.user = User.objects.create_user(username='testuser', password='12345', is_superuser=True)
+        self.user = AbstractBloomerpUser.objects.create_user(username='testuser', password='12345', is_superuser=True)
         self.content_type = ContentType.objects.get_for_model(File)
         self.file1 = File.objects.create(name='file1')
         self.file2 = File.objects.create(name='file2')
@@ -194,8 +194,8 @@ class TestBulkUploadTableComponent(TestCase):
         self.url = reverse('components_bulk_upload_table')
 
         # Create users
-        self.superuser = User.objects.create_user(username='testuser', password='12345', is_superuser=True)
-        self.user = User.objects.create_user(username='testuser2', password='12345')
+        self.superuser = AbstractBloomerpUser.objects.create_user(username='testuser', password='12345', is_superuser=True)
+        self.user = AbstractBloomerpUser.objects.create_user(username='testuser2', password='12345')
         
         # Create request factory
         self.factory = RequestFactory()
@@ -314,7 +314,7 @@ from bloomerp.components.search_results import search_results
 class TestSearchResultsComponent(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
-        self.user = User.objects.create_user(username='testuser', password='12345', is_superuser=True)
+        self.user = AbstractBloomerpUser.objects.create_user(username='testuser', password='12345', is_superuser=True)
         self.content_type = ContentType.objects.create(app_label='test_app', model='testmodel')
         Link.objects.create(name='Test Link', url='test/url', level='LIST', content_type=self.content_type)
         self.url = reverse('components_search_results')

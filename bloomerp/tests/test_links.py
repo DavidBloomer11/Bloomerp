@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import reverse, NoReverseMatch
 from bloomerp.models import Link, ContentType
 from bloomerp.models import Workspace
-from bloomerp.models import User
+from bloomerp.models import AbstractBloomerpUser
 
 class LinkModelTests(TestCase):
     def setUp(self):
@@ -26,7 +26,7 @@ class LinkModelTests(TestCase):
 
     def test_invalid_workspace_link(self):
         # Create user
-        user = User.objects.create_user(
+        user = AbstractBloomerpUser.objects.create_user(
             username="test_user",
             password="test_password"
         )

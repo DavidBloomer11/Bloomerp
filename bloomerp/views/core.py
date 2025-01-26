@@ -18,8 +18,7 @@ from bloomerp.models import (
     Widget,
     SqlQuery,
     UserDetailViewPreference,
-    Bookmark,
-    User
+    Bookmark
 )
 from bloomerp.forms.core import BloomerpDownloadBulkUploadTemplateForm
 from django.contrib import messages
@@ -36,6 +35,9 @@ from bloomerp.utils.router import BloomerpRouter, _get_name_or_slug
 from django.forms.models import modelform_factory
 from bloomerp.forms.core import BloomerpModelForm
 from django import forms
+from django.contrib.auth import get_user_model
+User = get_user_model()
+
 
 router = BloomerpRouter()
 

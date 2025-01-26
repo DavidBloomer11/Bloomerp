@@ -2,34 +2,32 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
-from django.db.models import Q, QuerySet
+from django.db.models import Q, QuerySet, F, Value
+from django.db.models.functions import Concat
 from django.contrib.auth.models import Permission
 from django.forms import ValidationError
-from bloomerp.models.core import BloomerpModel, ApplicationField
-from bloomerp.models.widgets import Widget
 from django.utils.translation import gettext as _
-from bloomerp.utils.models import model_name_plural_underline, get_detail_view_url
 from django.urls import reverse, NoReverseMatch
+from typing import Self
+from bloomerp.models.widgets import Widget
+from bloomerp.models.core import BloomerpModel, ApplicationField
 from bloomerp.models.mixins import (
     AbsoluteUrlModelMixin,
     TimestampedModelMixin,
-    ContentLayoutModelMixin,
     StringSearchModelMixin,
     UserStampedModelMixin
 )
-from typing import Self
+from bloomerp.utils.models import get_detail_view_url
+from django.contrib.auth import get_user_model
 
 # ---------------------------------
-# User Model
+# Abstract Bloomerp User Model
 # ---------------------------------
-class AbstractBloomerpUser(
-    AbstractUser,
-    AbsoluteUrlModelMixin,
-    ):
+class AbstractBloomerpUser(AbstractUser, StringSearchModelMixin, AbsoluteUrlModelMixin):
     class Meta:
         abstract = True
 
-
+    # String search mixin fields
     string_search_fields = ['first_name+last_name', 'username']
     allow_string_search = True
 
@@ -67,14 +65,9 @@ class AbstractBloomerpUser(
         max_length=20, default="d-m-Y H:i", choices=DATETIME_VIEW_PREFERENCE_CHOICES, help_text=_("The datetime format to be used in the application")
     )
 
-    #sidebar_preference = models.JSONField(default=dict)
     
-
     def __str__(self):
         return self.username
-
-    def is_employee(self):
-        return hasattr(self, "employee")
 
     def get_content_types_for_user(self, permission_types:list[str]=["view"]) -> QuerySet[ContentType]:
         """
@@ -115,7 +108,6 @@ class AbstractBloomerpUser(
         '''
         return self.get_content_types_for_user(permission_types=["view"])
 
-    
     def latest_bookmarks(self) -> QuerySet:
         '''
         Property that returns the latest bookmarks for the user.
@@ -129,10 +121,13 @@ class AbstractBloomerpUser(
         return Workspace.objects.filter(user=self, content_type=None)
 
 
-class User(AbstractBloomerpUser, StringSearchModelMixin):
+class User(AbstractBloomerpUser):
     class Meta(BloomerpModel.Meta):
         db_table = "auth_user"
         swappable = "AUTH_USER_MODEL"
+
+
+UserModel : AbstractBloomerpUser = get_user_model()
 
 
 # ---------------------------------
@@ -148,7 +143,7 @@ class UserDetailViewPreference(
 
     allow_string_search = False
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE,related_name = 'detail_view_preference')
+    user = models.ForeignKey(UserModel, on_delete=models.CASCADE,related_name = 'detail_view_preference')
     application_field = models.ForeignKey(ApplicationField, on_delete=models.CASCADE)
     position = models.CharField(max_length=10, choices=POSITION_CHOICES)
 
@@ -191,7 +186,7 @@ class UserDetailViewPreference(
 
 
     @classmethod
-    def generate_default_for_user(cls, user: User, content_type: ContentType) -> QuerySet[Self]:
+    def generate_default_for_user(cls, user: AbstractBloomerpUser, content_type: ContentType) -> QuerySet[Self]:
         '''
         Method that generates default detail view preference for a user.
         '''
@@ -223,7 +218,7 @@ class UserDetailViewPreference(
 class UserListViewPreference(models.Model):
     allow_string_search = False
     
-    user = models.ForeignKey(User, on_delete=models.CASCADE,related_name = 'list_view_preference')
+    user = models.ForeignKey(UserModel, on_delete=models.CASCADE,related_name = 'list_view_preference')
     application_field = models.ForeignKey(ApplicationField, on_delete=models.CASCADE)
 
     @property
@@ -237,7 +232,7 @@ class UserListViewPreference(models.Model):
 
 
     @classmethod
-    def generate_default_for_user(cls, user: User, content_type: ContentType) -> QuerySet[Self]:
+    def generate_default_for_user(cls, user: AbstractBloomerpUser, content_type: ContentType) -> QuerySet[Self]:
         '''
         Method that generates default list view preference for a user.
         '''
@@ -270,7 +265,7 @@ class Bookmark(models.Model):
         managed = True
         db_table = "bloomerp_bookmark"
     
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     object : models.Model = GenericForeignKey("content_type", "object_id")
@@ -322,8 +317,8 @@ class Todo(BloomerpModel):
         db_table = 'bloomerp_todo'
 
     avatar = None
-    assigned_to = models.ForeignKey(User, on_delete=models.CASCADE, related_name='todos')
-    requested_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE, related_name='requested_todos', help_text=_("The user who requested the todo"))
+    assigned_to = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name='todos')
+    requested_by = models.ForeignKey(UserModel, null=True, blank=True, on_delete=models.CASCADE, related_name='requested_todos', help_text=_("The user who requested the todo"))
 
     required_by = models.DateField(
         null=True, blank=True,
@@ -694,12 +689,12 @@ class UserDetailViewTab(
         db_table = 'bloomerp_user_detail_view_tab'
         unique_together = ('user','link')
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
     link = models.ForeignKey(Link, help_text=_("The link to be displayed in the detail view tab"), on_delete=models.CASCADE)
 
     allow_string_search = False
 
-    def get_detail_view_tabs(user:User, content_type:ContentType) -> QuerySet[Self]:
+    def get_detail_view_tabs(user:AbstractBloomerpUser, content_type:ContentType) -> QuerySet[Self]:
         '''
         Returns the detail view tabs for the user and content type.
         '''
@@ -707,7 +702,7 @@ class UserDetailViewTab(
         return qs
 
     @classmethod
-    def generate_default_for_user(cls, user: User, content_type: ContentType) -> QuerySet[Self]:
+    def generate_default_for_user(cls, user: AbstractBloomerpUser, content_type: ContentType) -> QuerySet[Self]:
         '''
         Method that generates default detail view tabs for a user.
         '''
@@ -805,7 +800,7 @@ class Workspace(
         "query_filter_list"
     ]
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
     content_type = models.ForeignKey(ContentType, on_delete=models.SET_NULL, null=True, blank=True, help_text=_("The content type related to the workspace"))
     name = models.CharField(max_length=255, help_text=_("The name of the workspace"))
     content = models.JSONField(help_text=_("The content of the workspace"), default=get_default_workspace)
@@ -927,7 +922,7 @@ class Workspace(
     
     @staticmethod
     def create_default_content_type_workspace(
-        user: User,
+        user: AbstractBloomerpUser,
         content_type: ContentType,
         commit: bool = True
     ) -> Self:
@@ -976,7 +971,7 @@ class Workspace(
 
     @staticmethod
     def create_default_workspace(
-        user: User,
+        user: AbstractBloomerpUser,
         commit: bool = True
     ) -> Self:
         '''
@@ -1060,7 +1055,7 @@ class AIConversation(BloomerpModel):
     avatar = None
     title = models.CharField(max_length=255, default='AI Conversation')
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey('bloomerp.User', on_delete=models.CASCADE)
+    user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
     conversation_history = models.JSONField(null=True, blank=True)
     conversation_type = models.CharField(max_length=20, choices=CONVERSATION_TYPES, default='bloom_ai')
     auto_named = models.BooleanField(default=False, help_text="Whether the conversation has been auto-named")
