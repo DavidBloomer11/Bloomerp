@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name="User",
+            name=settings.AUTH_USER_MODEL.split(".")[-1],
             fields=[
                 (
                     "id",
