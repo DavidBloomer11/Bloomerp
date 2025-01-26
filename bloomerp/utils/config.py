@@ -40,20 +40,51 @@ class BloomerpConfigChecker:
         
         return self.OKAY, 'Login URL is set correctly'
 
+    def _check_auto_link_generator(self) -> tuple[int, str]:
+        '''Check if the auto link generator is set'''
+        auto_link_generator = self.settings.BLOOMERP_SETTINGS.get('AUTO_GENERATE_LINKS', False)
+
+        if not auto_link_generator:
+            msg = '''Auto link generator is not turned on. To enable it, set AUTO_LINK_GENERATOR to True.\nIf you want to manually generate links, you can use the command python manage.py create_links.\nNot recommended to turn on in production.'''
+
+            return self.OKAY, msg
+        
+        return self.WARNING, 'Auto link generator is turned on. Recommended to set AUTO_LINK_GENERATOR to False in production.'
+
+    def _check_auto_generate_api(self) -> tuple[int, str]:
+        '''Check if the auto generate api is set'''
+        auto_generate_api = self.settings.BLOOMERP_SETTINGS.get('AUTO_GENERATE_API', False)
+
+        if not auto_generate_api:
+            msg = '''Auto generate API is not turned on.'''
+
+            return self.OKAY, msg
+        
+        return self.OKAY, 'Auto generate API is turned on.'
+
     def check(self) -> bool:
         '''Check the configuration'''
         print(f'{Fore.BLUE}Checking Bloomerp configuration{Style.RESET_ALL}')
-
+        print('---------------------------------')
         checks = [
             self._check_open_ai_key,
-            self._check_login_url
+            self._check_login_url,
+            self._check_auto_link_generator
         ]
 
         for check in checks:
+            # Get the function name
+            name = check.__name__.replace('_check_', '').replace('_', ' ').capitalize()
+
             status, message = check()
+            print(f'{Fore.BLUE}{name}{Style.RESET_ALL}')
+
             if status == self.OKAY:
                 print(f'{Fore.GREEN}OK: {message}{Style.RESET_ALL}')
             elif status == self.WARNING:
                 print(f'{Fore.YELLOW}WARNING: {message}{Style.RESET_ALL}')
             else:
                 print(f'{Fore.LIGHTRED_EX}ERROR: {message}{Style.RESET_ALL}')
+
+            print('---------------------------------')
+        

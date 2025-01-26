@@ -10,22 +10,12 @@ from bloomerp.components.document_templates import generate_document_template
 from bloomerp.components.llm import llm_executor, ai_conversations
 from bloomerp.views.document_templates import router as document_template_router
 from django.db.models import Model
-from bloomerp.utils.models import (
-    get_attribute_name_for_foreign_key, 
+from bloomerp.utils.models import ( 
     model_name_plural_underline, 
-    model_name_plural_slug,
-    get_foreign_occurences_for_model,
-    get_model_dashboard_view_url,
-    get_bulk_upload_view_url,
     get_base_model_route,
-    get_detail_view_url,
-    get_create_view_url,
-    get_list_view_url,
-    get_update_view_url
     )
 from bloomerp.utils.api import generate_serializer, generate_model_viewset_class
 from bloomerp.views.api import BloomerpModelViewSet
-from bloomerp.models import Link, User
 from bloomerp.utils.urls import IntOrUUIDConverter
 from rest_framework.routers import DefaultRouter
 from bloomerp.utils.router import _get_routers_from_settings, RouteFinder, BloomerpRouterHandler
@@ -55,7 +45,9 @@ custom_routers.append(auth_router)
 
 
 custom_router_handler = BloomerpRouterHandler(custom_routers)
-custom_router_handler.generate_links()
+
+if settings.BLOOMERP_SETTINGS.get('AUTO_GENERATE_LINKS', False):
+    custom_router_handler.generate_links()
 
 # ---------------------------------
 # START GENERATION OF URL PATTERNS
@@ -157,6 +149,7 @@ for content_type in content_types:
         )
 
         try:
+
             drf_router.register(
                 prefix = model_name_plural_underline(model), 
                 viewset = ApiViewSet, 
@@ -179,6 +172,7 @@ for content_type in content_types:
 # ---------------------------------
 # API URL patterns
 # ---------------------------------
+
 urlpatterns += [
     path('api/', include(drf_router.urls))
 ]
@@ -193,7 +187,6 @@ components_dir = os.path.join(current_dir, 'components')
 
 route_finder = RouteFinder(directory=components_dir, url_route_prefix='components/', url_name_prefix='components')
 urlpatterns += route_finder.generate_urlpatterns()
-
 
 
 # ---------------------------------

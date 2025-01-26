@@ -135,7 +135,6 @@ def get_widget_by_id(id:int):
     except:
         return 
     
-
 @register.inclusion_tag('snippets/workspace_item.html')
 def workspace_item(item:dict):
     '''
@@ -377,7 +376,6 @@ def breadcrumb(title:str=None, model:Model = None, object:Model=None):
     return context
 
 
-
 @register.inclusion_tag('snippets/avatar.html')
 def avatar(object:Model, avatar_attribute:str='avatar', size:int=30, class_name=''):
     '''
@@ -513,3 +511,25 @@ def calendar(queryset: QuerySet, start_date_field: str, end_date_field: str = No
         "id": id,
         "parse":parse
     }
+
+
+@register.filter
+def get_nested_attribute(obj, attribute_path: str):
+    """Get a nested attribute from an object.
+
+    Args:
+        obj (object): The object to get the attribute from.
+        attribute_path (str): The path to the attribute.
+
+    Returns:
+        object: The value of the attribute.
+
+    Example usage:
+    {{ object|get_nested_attribute:'attribute1.attribute2.attribute3' }}
+    """
+    try:
+        for attr in attribute_path.split('.'):
+            obj = getattr(obj, attr)
+        return obj
+    except AttributeError:
+        return None
