@@ -392,9 +392,9 @@ class FileFolder(
         db_table = "bloomerp_file_folder"   
 
     name = models.CharField(max_length=255)
-    files = models.ManyToManyField(File, related_name='folders', blank=True, null=True)
+    files = models.ManyToManyField(File, related_name='folders')
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
-    content_types = models.ManyToManyField(ContentType, blank=True, null=True, help_text="Restrict folders to certain models.", verbose_name="Models")
+    content_types = models.ManyToManyField(ContentType, help_text="Restrict folders to certain models.", verbose_name="Models")
 
     def __str__(self):
         return self.name

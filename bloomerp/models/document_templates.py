@@ -136,8 +136,6 @@ class DocumentTemplate(BloomerpModel):
         ) # Many to many field to Content Type
     free_variables = models.ManyToManyField(
         DocumentTemplateFreeVariable,
-        blank=True,
-        null=True,
         help_text=_("A free variable is a variable that is not from a model, and can be inserted in the template at creation time.")
         ) # Many to many field of free variable, a free variable is a variable that is not from a model
     
