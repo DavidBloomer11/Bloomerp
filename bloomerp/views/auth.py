@@ -23,8 +23,10 @@ from django.contrib.auth import update_session_auth_hash
 from django.forms import modelformset_factory
 from bloomerp.forms.auth import UserDetailViewPreferenceForm
 import time
-from django.contrib.auth import get_user_model
 
+router = BloomerpRouter()
+
+from django.contrib.auth import get_user_model
 User = get_user_model()
 
 class ProfileMixin:
@@ -42,7 +44,8 @@ class ProfileMixin:
         return User.objects.get(pk=self.request.user.pk)
     model = User
 
-router = BloomerpRouter()
+
+
 
 @router.bloomerp_route(
     path="my-profile/",

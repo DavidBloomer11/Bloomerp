@@ -43,7 +43,6 @@ custom_routers.append(core_router)
 custom_routers.append(widget_router)
 custom_routers.append(auth_router)
 
-
 custom_router_handler = BloomerpRouterHandler(custom_routers)
 
 if settings.BLOOMERP_SETTINGS.get('AUTO_GENERATE_LINKS', False):

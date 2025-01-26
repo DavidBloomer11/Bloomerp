@@ -18,7 +18,7 @@ from bloomerp.models.mixins import (
     UserStampedModelMixin
 )
 from bloomerp.utils.models import get_detail_view_url
-from django.contrib.auth import get_user_model
+from django.conf import settings
 
 # ---------------------------------
 # Abstract Bloomerp User Model
@@ -127,8 +127,6 @@ class User(AbstractBloomerpUser):
         swappable = "AUTH_USER_MODEL"
 
 
-UserModel : AbstractBloomerpUser = get_user_model()
-
 
 # ---------------------------------
 # User Detail View Preference Model
@@ -143,7 +141,7 @@ class UserDetailViewPreference(
 
     allow_string_search = False
 
-    user = models.ForeignKey(UserModel, on_delete=models.CASCADE,related_name = 'detail_view_preference')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,related_name = 'detail_view_preference')
     application_field = models.ForeignKey(ApplicationField, on_delete=models.CASCADE)
     position = models.CharField(max_length=10, choices=POSITION_CHOICES)
 
@@ -218,7 +216,7 @@ class UserDetailViewPreference(
 class UserListViewPreference(models.Model):
     allow_string_search = False
     
-    user = models.ForeignKey(UserModel, on_delete=models.CASCADE,related_name = 'list_view_preference')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,related_name = 'list_view_preference')
     application_field = models.ForeignKey(ApplicationField, on_delete=models.CASCADE)
 
     @property
@@ -265,7 +263,7 @@ class Bookmark(models.Model):
         managed = True
         db_table = "bloomerp_bookmark"
     
-    user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     object : models.Model = GenericForeignKey("content_type", "object_id")
@@ -317,8 +315,8 @@ class Todo(BloomerpModel):
         db_table = 'bloomerp_todo'
 
     avatar = None
-    assigned_to = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name='todos')
-    requested_by = models.ForeignKey(UserModel, null=True, blank=True, on_delete=models.CASCADE, related_name='requested_todos', help_text=_("The user who requested the todo"))
+    assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='todos')
+    requested_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE, related_name='requested_todos', help_text=_("The user who requested the todo"))
 
     required_by = models.DateField(
         null=True, blank=True,
@@ -689,7 +687,7 @@ class UserDetailViewTab(
         db_table = 'bloomerp_user_detail_view_tab'
         unique_together = ('user','link')
 
-    user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     link = models.ForeignKey(Link, help_text=_("The link to be displayed in the detail view tab"), on_delete=models.CASCADE)
 
     allow_string_search = False
@@ -800,7 +798,7 @@ class Workspace(
         "query_filter_list"
     ]
 
-    user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     content_type = models.ForeignKey(ContentType, on_delete=models.SET_NULL, null=True, blank=True, help_text=_("The content type related to the workspace"))
     name = models.CharField(max_length=255, help_text=_("The name of the workspace"))
     content = models.JSONField(help_text=_("The content of the workspace"), default=get_default_workspace)
@@ -1055,7 +1053,7 @@ class AIConversation(BloomerpModel):
     avatar = None
     title = models.CharField(max_length=255, default='AI Conversation')
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     conversation_history = models.JSONField(null=True, blank=True)
     conversation_type = models.CharField(max_length=20, choices=CONVERSATION_TYPES, default='bloom_ai')
     auto_named = models.BooleanField(default=False, help_text="Whether the conversation has been auto-named")
