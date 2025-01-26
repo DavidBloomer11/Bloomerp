@@ -58,16 +58,6 @@ class TimestampedModelMixin(models.Model):
     class Meta:
         abstract = True
 
-class UserStampedModelMixin(models.Model):
-    """
-    A mixin for models that need to be stamped with the user that created or updated them.
-    """
-    created_by = models.ForeignKey('bloomerp.User', on_delete=models.SET_NULL, related_name='%(class)s_created', null=True)
-    updated_by = models.ForeignKey('bloomerp.User', on_delete=models.SET_NULL, related_name='%(class)s_updated', null=True)
-
-    class Meta:
-        abstract = True
-
 class AbsoluteUrlModelMixin(models.Model):
     """
     A mixin for models that need to have an absolute URL.
@@ -188,7 +178,6 @@ class ContentLayoutModelMixin(models.Model):
             self.content_layout = self.generate_layout()
             super().save(update_fields=['content_layout'])
 
-
 class AvatarModelMixin(models.Model):
     """
     A mixin for models that need to have an avatar.
@@ -197,3 +186,18 @@ class AvatarModelMixin(models.Model):
         abstract = True
 
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
+
+
+# ---------------------------------
+# User Stamped Model Mixin
+# ---------------------------------
+class UserStampedModelMixin(models.Model):
+    """
+    A mixin for models that need to be stamped with the user that created or updated them.
+    """
+    from django.conf import settings
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, related_name='%(class)s_created', null=True)
+    updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, related_name='%(class)s_updated', null=True)
+
+    class Meta:
+        abstract = True

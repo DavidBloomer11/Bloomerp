@@ -1,6 +1,4 @@
-from bloomerp.models import (
-    DocumentTemplate, User, FileFolder,
-    File)
+from bloomerp.models import DocumentTemplate, FileFolder, File, AbstractBloomerpUser
 from bloomerp.utils.pdf import generate_pdf
 from django.db.models import Model
 from django.core.files.base import ContentFile
@@ -8,13 +6,15 @@ from django.template import engines
 from django.template.loader import render_to_string
 from bloomerp.utils.pdf import PdfHandler
 
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 class DocumentController:
     '''
     Controller class for everything related to documents.
     '''
 
-    def __init__(self, document_template : DocumentTemplate=None, user : User = None) -> None:
+    def __init__(self, document_template : DocumentTemplate=None, user : AbstractBloomerpUser = None) -> None:
         self.document_template = document_template
         self.user = user
 

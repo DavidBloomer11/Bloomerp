@@ -1,11 +1,11 @@
 from langchain_core.tools import tool, StructuredTool, BaseTool
 from bloomerp.utils.sql import SqlQueryExecutor
-from bloomerp.models import ApplicationField, User, Link
+from bloomerp.models import ApplicationField, AbstractBloomerpUser, Link
     
 
 class BaseBloomerpTool(BaseTool):
     requires_user : bool = False # Tool that requires user id
-    user : User = None
+    user : AbstractBloomerpUser = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

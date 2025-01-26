@@ -10,11 +10,7 @@ from bloomerp.forms.core import ListViewFieldsSelectForm
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator
 from bloomerp.views.mixins import HtmxMixin
-from bloomerp.models import (
-    UserDetailViewPreference,
-    User,
-    ApplicationField
-    )
+from bloomerp.models import (UserDetailViewPreference,ApplicationField)
 from bloomerp.utils.models import model_name_plural_underline
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from bloomerp.utils.router import BloomerpRouter
@@ -27,6 +23,11 @@ from django.contrib.auth import update_session_auth_hash
 from django.forms import modelformset_factory
 from bloomerp.forms.auth import UserDetailViewPreferenceForm
 import time
+
+router = BloomerpRouter()
+
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 class ProfileMixin:
     tabs = [
@@ -43,7 +44,8 @@ class ProfileMixin:
         return User.objects.get(pk=self.request.user.pk)
     model = User
 
-router = BloomerpRouter()
+
+
 
 @router.bloomerp_route(
     path="my-profile/",

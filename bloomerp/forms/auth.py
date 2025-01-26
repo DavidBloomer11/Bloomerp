@@ -1,4 +1,7 @@
 from django import forms
+from bloomerp.models import AbstractBloomerpUser
+from django.contrib.auth import get_user_model
+User:AbstractBloomerpUser = get_user_model()
 
 # ---------------------------------
 # User Detail View Preference Form
@@ -39,7 +42,6 @@ class UserDetailViewPreferenceForm(forms.ModelForm):
 # ---------------------------------
 # User selection form
 # ---------------------------------
-from bloomerp.models import User
 class UserSelectionForm(forms.Form):
     users = forms.ModelChoiceField(
         queryset=User.objects.all(),

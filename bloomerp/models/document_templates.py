@@ -4,6 +4,8 @@ from bloomerp.models.core import BloomerpModel, ApplicationField
 from bloomerp.models.fields import CodeField, TextEditorField, BloomerpFileField, StatusField
 from django.utils.translation import gettext_lazy as _
 from bloomerp.models import FileFolder
+from django.contrib.auth import get_user_model
+from django.conf import settings
 
 # ---------------------------------
 # Document Template Model
@@ -267,7 +269,7 @@ class SignatureRequest:
     avatar = None
 
     recipient = models.ForeignKey(
-        'bloomerp.User',
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         help_text=_("Recipient of the signature request."),
         related_name='incoming_signature_requests',
@@ -283,7 +285,7 @@ class SignatureRequest:
 
 
     sender = models.ForeignKey(
-        'bloomerp.User',
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         help_text=_("Sender of the signature request.")
         ) # Foreign key to the sender

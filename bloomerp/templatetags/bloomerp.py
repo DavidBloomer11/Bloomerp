@@ -7,7 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from bloomerp.models import Link, Widget
 from django.utils.safestring import mark_safe
 import uuid
-from bloomerp.models import Bookmark, User, ApplicationField, UserListViewPreference
+from bloomerp.models import Bookmark, AbstractBloomerpUser, ApplicationField, UserListViewPreference
 from django.db.models.functions import Cast
 from django.db.models import DateTimeField, F
 from django.db.models import QuerySet
@@ -171,7 +171,7 @@ def render_link(link_id:int):
         return mark_safe("<p>Link not found</p>")
 
 @register.inclusion_tag('components/bookmark.html')
-def render_bookmark(object:Model, user:User, size:int, target:str):
+def render_bookmark(object:Model, user:AbstractBloomerpUser, size:int, target:str):
     '''
     Returns a bookmark object.
 
@@ -194,7 +194,7 @@ def render_bookmark(object:Model, user:User, size:int, target:str):
 
 from bloomerp.models import File
 @register.simple_tag(name='field_value')
-def field_value(object:Model, application_field:ApplicationField, user:User, datatable_item:bool=False):
+def field_value(object:Model, application_field:ApplicationField, user:AbstractBloomerpUser, datatable_item:bool=False):
     '''
     Returns the formatted html value of a field in an object.
     Marks it as safe.
@@ -415,7 +415,7 @@ import uuid
 @register.inclusion_tag('snippets/datatable_and_filter.html')
 def datatable(
     content_type_id:int,
-    user:User,
+    user:AbstractBloomerpUser,
     include_actions:bool=True,
     initial_query:str='',
     request=None,

@@ -1,7 +1,7 @@
 from bloomerp.utils.router import route
 from django.shortcuts import render
 from django.http import HttpResponse, HttpRequest
-from bloomerp.models import Bookmark, User
+from bloomerp.models import Bookmark, AbstractBloomerpUser
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 
@@ -10,7 +10,7 @@ from django.contrib.auth.decorators import login_required
 @route('bookmark')
 def bookmark(request:HttpRequest) -> HttpResponse:
     # Get variables
-    user:User = request.user
+    user:AbstractBloomerpUser = request.user
     size = request.GET.get('size', 30)
 
     # Get the content_type_id and object_id from the request

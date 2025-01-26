@@ -1,7 +1,7 @@
 from bloomerp.utils.router import route
 from django.shortcuts import render
 from django.http import HttpResponse, HttpRequest
-from bloomerp.models import File, FileFolder, User
+from bloomerp.models import File, FileFolder, AbstractBloomerpUser
 from django.contrib.contenttypes.models import ContentType
 from bloomerp.forms.core import BloomerpModelForm
 from django.forms.models import modelform_factory
@@ -28,7 +28,7 @@ def files(request: HttpRequest) -> HttpResponse:
         return HttpResponse('User does not have permission to view files')
 
     # get the accessible content types for the user
-    user : User = request.user
+    user : AbstractBloomerpUser = request.user
     accessible_content_types = user.get_content_types_for_user('view')
 
 

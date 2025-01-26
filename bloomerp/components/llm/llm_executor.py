@@ -2,14 +2,13 @@ from bloomerp.utils.router import route
 from django.shortcuts import render
 from django.http import HttpResponse, HttpRequest, StreamingHttpResponse
 from bloomerp.utils.llm import BloomerpLangChain
-from bloomerp.models import ApplicationField, DocumentTemplate, AIConversation
+from bloomerp.models import ApplicationField, DocumentTemplate, AIConversation, AbstractBloomerpUser
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 import json
 from django.core.cache import cache
 from bloomerp.langchain_tools import BLOOMAI_TOOLS
 import uuid
-from django.contrib.auth.models import User
 from django.views.decorators.http import require_POST
 from bloomerp.utils.config import BloomerpConfigChecker
 import time
@@ -99,7 +98,7 @@ def stream_response(
         executor:BloomerpLangChain,
         ai_conversation_object:AIConversation,
         query:str,
-        user:User,
+        user:AbstractBloomerpUser,
         query_type:str = 'bloom_ai',
         json_data:dict = None
     ):

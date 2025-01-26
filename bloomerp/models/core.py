@@ -1,13 +1,10 @@
 from django.db import models
-from django.db.models import Q
-from django.urls import reverse
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation, GenericForeignKey
 from django.db.models.query import QuerySet
 from bloomerp.models import mixins
 import os
 import uuid
-from django.contrib.auth.models import Permission
 
 
 # ---------------------------------

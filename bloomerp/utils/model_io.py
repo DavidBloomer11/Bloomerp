@@ -5,7 +5,6 @@ from io import BytesIO, StringIO, TextIOWrapper
 import csv
 import openpyxl
 from django.core.exceptions import ValidationError
-from bloomerp.models import User
 
 class BloomerpModelIO:
     def __init__(self, model: models.Model):
