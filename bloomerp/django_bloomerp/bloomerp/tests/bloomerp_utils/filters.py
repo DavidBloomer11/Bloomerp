@@ -26,6 +26,7 @@ class TestFilterUtil(BaseBloomerpModelTestCase):
             model_defs={
                 "FilterTag": {
                     "name": models.CharField(max_length=100),
+                    "is_public": models.BooleanField(default=False),
                     "__str__": lambda self: self.name,
                 },
                 "FilterPrimary": {
@@ -214,6 +215,15 @@ class TestFilterUtil(BaseBloomerpModelTestCase):
         )
         self.assert_filtered_ids({"foreign_key_field__isnull": "true"}, [null_record.id])
         self.assert_filtered_ids({"foreign_key_field__name__icontains": "back"}, [backend_record.id])
+
+    def test_related_boolean_lookup_filters_coerce_string_values(self):
+        public_tag = self.TagModel.objects.create(name="Public", is_public=True)
+        private_tag = self.TagModel.objects.create(name="Private", is_public=False)
+        public_record = self.create_primary(foreign_key_field=public_tag)
+        private_record = self.create_primary(foreign_key_field=private_tag)
+
+        self.assert_filtered_ids({"foreign_key_field__is_public__equals": "true"}, [public_record.id])
+        self.assert_filtered_ids({"foreign_key_field__is_public__exact": "false"}, [private_record.id])
 
     def test_many_to_many_filters_keep_relation_specific_behavior(self):
         backend = self.TagModel.objects.create(name="Backend")
