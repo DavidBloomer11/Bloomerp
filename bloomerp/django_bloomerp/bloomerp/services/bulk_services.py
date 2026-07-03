@@ -517,7 +517,22 @@ class BulkCrudService:
                     form.save_m2m()
                 created_count += 1
 
+        self._send_completion_message(created_count=created_count)
         return created_count
+
+    def _send_completion_message(self, *, created_count: int) -> None:
+        """Notify the initiating user that a bulk upload finished."""
+
+        from bloomerp.utils.realtime import send_user_message
+
+        send_user_message(
+            self.user.pk,
+            payload={
+                "type": "toast",
+                "message": f"Bulk upload completed. Created {created_count} object(s).",
+                "level": "success",
+            },
+        )
 
     def get_review_model_form_class(self, *, fields: list[str]):
         base_form_class = bloomerp_modelform_factory(self.model, fields=fields)
