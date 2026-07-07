@@ -101,11 +101,10 @@
                     <button 
                         class="btn btn-sm btn-secondary w-full justify-center sm:w-auto"
                         data-dataview-add-button="true"
-                        hx-push-url="false"
-                        bloomerp-open-modal="create-object-modal"
-                        hx-get="{% url 'components_create_object' content_type_id=content_type_id %}{% if create_querystring %}?{{ create_querystring }}{% endif %}"
-                        hx-target="#create-object-modal-body"
-                        hx-swap="innerHTML"
+                        data-dataview-create-button="true"
+                        data-modal-id="create-object-modal"
+                        data-create-url="{% url 'components_create_object' content_type_id=content_type_id %}{% if create_querystring %}?{{ create_querystring }}{% endif %}"
+                        data-target="#create-object-modal-body"
                     >
                         <i class="fa fa-plus"></i>
                         <span>Add</span>

@@ -33,7 +33,9 @@ export class DataViewContainer extends BaseComponent {
     private bulkAllClickHandler: ((event: Event) => void) | null = null;
     private bulkSelectionClickHandler: ((event: Event) => void) | null = null;
     private bulkActionCompleteHandler: ((event: Event) => void) | null = null;
+    private addButtonClickHandler: ((event: MouseEvent) => void) | null = null;
     private selectedObjectIds: Set<string> = new Set();
+    private createObjectModalLoaded: boolean = false;
 
     private static readonly RESERVED_FILTER_KEYS = new Set<string>([
         "q",
@@ -109,6 +111,8 @@ export class DataViewContainer extends BaseComponent {
         this.renderDefaultFilters();
 
         this.bindDisplayOptionsCallback();
+
+        this.setupAddButton();
 
         // Setup bulk checkbox listeners
         this.addBulkListeners();
@@ -384,6 +388,46 @@ export class DataViewContainer extends BaseComponent {
     
     protected onAdd(_event: MouseEvent): boolean {
         return false;
+    }
+
+    private setupAddButton(): void {
+        const addButton = this.element?.querySelector<HTMLElement>('[data-dataview-create-button="true"]');
+        if (!addButton) return;
+
+        if (this.addButtonClickHandler) {
+            addButton.removeEventListener('click', this.addButtonClickHandler);
+        }
+
+        this.addButtonClickHandler = (event: MouseEvent) => this.handleAddButtonClick(event);
+        addButton.addEventListener('click', this.addButtonClickHandler);
+    }
+
+    private handleAddButtonClick(event: MouseEvent): void {
+        event.preventDefault();
+
+        if (this.onAdd(event)) return;
+
+        const addButton = event.currentTarget as HTMLElement | null;
+        const modalId = addButton?.dataset.modalId;
+        const createUrl = addButton?.dataset.createUrl;
+        const targetSelector = addButton?.dataset.target;
+        const target = targetSelector ? document.querySelector<HTMLElement>(targetSelector) : null;
+        const modal = modalId ? getModal(modalId) : null;
+
+        modal?.open();
+
+        if (!createUrl || !target || this.createObjectModalLoaded) return;
+
+        insertSkeleton(target);
+
+        void htmx.ajax('get', createUrl, {
+            target,
+            swap: 'innerHTML',
+        }).then(() => {
+            this.createObjectModalLoaded = true;
+        }).catch((error) => {
+            console.error('Failed to load create object modal:', error);
+        });
     }
 
     protected onCellClick(_cell: BaseDataViewCell): boolean {
@@ -840,6 +884,10 @@ export class DataViewContainer extends BaseComponent {
         }
         if (this.bulkActionCompleteHandler) {
             document.body.removeEventListener('bloomerp:bulk-action-complete', this.bulkActionCompleteHandler);
+        }
+        const addButton = this.element?.querySelector<HTMLElement>('[data-dataview-create-button="true"]');
+        if (addButton && this.addButtonClickHandler) {
+            addButton.removeEventListener('click', this.addButtonClickHandler);
         }
         const openModalForAllBtn = this.element?.querySelector<HTMLElement>('#bulk-actions-all-btn');
         const openModalForSelectionBtn = this.element?.querySelector<HTMLElement>('#bulk-actions-selection-btn');
