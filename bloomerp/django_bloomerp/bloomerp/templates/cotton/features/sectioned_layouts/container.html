@@ -18,7 +18,7 @@
         data-layout-header-section
     >   
         <!--Right Section-->
-        <div class="flex w-full flex-wrap gap-2 sm:w-auto" data-layout-action-group>
+        <div class="flex w-full flex-wrap gap-2 sm:w-auto [&_.btn]:w-full [&_.btn]:justify-center sm:[&_.btn]:w-auto" data-layout-action-group>
             <c-ui.shortcut_tooltip 
                 shortcut="mod+/" 
                 action="click" 
@@ -35,7 +35,7 @@
         <!--End Right Section-->
 
         <!--Left section-->
-        <div class="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end" data-layout-action-group>
+        <div class="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end [&_.btn]:w-full [&_.btn]:justify-center sm:[&_.btn]:w-auto" data-layout-action-group>
             {{ buttons_right }}
             {% if can_edit %}
             <c-ui.shortcut_tooltip 
@@ -48,7 +48,7 @@
                 </button>
             </c-ui.shortcut_tooltip>
 
-            <div class="hidden flex-wrap gap-2" data-layout-open-sidebar data-layout-action-group>
+            <div class="hidden w-full flex-wrap gap-2 sm:w-auto [&_.btn]:w-full [&_.btn]:justify-center sm:[&_.btn]:w-auto" data-layout-open-sidebar data-layout-action-group>
                 <c-ui.shortcut_tooltip 
                     shortcut="mod+m" 
                     action="click" 

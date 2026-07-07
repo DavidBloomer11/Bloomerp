@@ -50,7 +50,7 @@
             :extra_attrs="layout_container_extra_attrs"
         >
             <c-slot name="buttons_left">
-                <div data-toggle-non-required-fields-container>
+                <div class="w-full sm:w-auto" data-toggle-non-required-fields-container>
                     <c-ui.shortcut_tooltip
                         shortcut="mod+."
                         position="bottom">
@@ -79,7 +79,7 @@
                     selected_preference_name="{{ layout_preference_object.name }}"
                 />
 
-                <div class="hidden flex gap-3" id="object-crud-container-buttons">
+                <div class="hidden flex w-full flex-wrap gap-2 sm:w-auto" id="object-crud-container-buttons">
                     <button type="button" class="btn btn-sm btn-secondary" id="object-crud-container-back-button">
                         <i class="fa fa-arrow-left"></i>
                         <c-i18n.blocktrans>
@@ -137,7 +137,7 @@
                     selected_preference_name="{{ layout_preference_object.name }}"
                 />
 
-                <div class="hidden flex gap-3" id="object-crud-container-buttons">
+                <div class="hidden flex w-full flex-wrap gap-2 sm:w-auto" id="object-crud-container-buttons">
                     <button type="button" class="btn btn-sm btn-secondary" id="object-crud-container-back-button">
                         <i class="fa fa-arrow-left"></i>
                         <c-i18n.blocktrans>
@@ -199,7 +199,7 @@
         :extra_attrs="layout_container_extra_attrs"
     >
         <c-slot name="buttons_left">
-            <div data-toggle-non-required-fields-container>
+            <div class="w-full sm:w-auto" data-toggle-non-required-fields-container>
                 <c-ui.shortcut_tooltip
                     shortcut="mod+."
                     position="bottom">

@@ -175,7 +175,7 @@
 					<h2 class="text-2xl font-semibold text-gray-900">{{ object }}</h2>
 				</div>
 				<div class="flex flex-col xl:min-h-0 xl:flex-1">
-					<div class="flex flex-wrap justify-center gap-2">
+					<div class="flex flex-wrap justify-center gap-2 px-4 [&_.btn]:max-w-full [&_.btn]:whitespace-normal [&_.btn]:text-center">
 						<button 
 							class="btn btn-secondary btn-sm"
 							hx-get="{% url 'components_activity_log' %}?content_type_id={{ content_type_id }}&object_id={{ object.id }}"

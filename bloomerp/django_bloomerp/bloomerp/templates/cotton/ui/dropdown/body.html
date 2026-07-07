@@ -200,6 +200,7 @@ Parameters:
                     {% if direction == 'up' %}origin-bottom-right{% else %}origin-top-right{% endif %} right-0
                 {% endif %}
             {% endif %}
+                max-w-[calc(100vw-1rem)] max-h-[calc(100vh-1rem)] overflow-auto
                 bg-white border border-gray-200 rounded-xl focus:outline-none transition-all duration-200 ease-in-out
             {{ menu_class }}
             shadow-lg
