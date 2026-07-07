@@ -130,7 +130,6 @@ export default class Breadcrumb extends BaseComponent {
             "aria-label",
             this.expanded ? "Hide breadcrumb path" : "Show breadcrumb path",
         );
-        this.toggleButton.classList.toggle("bg-gray-100", this.expanded);
         this.toggleButton.classList.toggle("text-primary-600", this.expanded);
     }
 
