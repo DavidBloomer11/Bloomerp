@@ -12,7 +12,7 @@
     {% endfor %}
     >
     {% if text %}
-    <p class="mb-4 text-sm text-gray-600">{{ text }}</p>
+    <p class="mb-4 text-sm text-gray-600">{{ text | safe }}</p>
     {% endif %}
 
     {% csrf_token %}

@@ -66,14 +66,14 @@ class BaseEmailAdapter:
         self.email_account = email_account
     
     
-    def mark_as_read(self, email_id: str):
+    def mark_as_read(self, email_id: str, *, mailbox: str = "INBOX"):
         """
         Mark an email as read in the external service.
         This method should be implemented by subclasses.
         """
         raise NotImplementedError("Subclasses must implement this method.")
     
-    def delete_email(self, email_id: str):
+    def delete_email(self, email_id: str, *, mailbox: str = "INBOX"):
         """
         Delete an email from the external service.
         This method should be implemented by subclasses.
@@ -101,7 +101,7 @@ class BaseEmailAdapter:
         raise NotImplementedError("Subclasses must implement this method.")
     
     
-    def fetch_email_content(self, email_id: str) -> str:
+    def fetch_email_content(self, email_id: str, *, mailbox: str = "INBOX") -> str:
         """
         Fetch the content of an email from the external service.
         This method should be implemented by subclasses.

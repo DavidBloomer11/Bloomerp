@@ -22,12 +22,13 @@ def _provider_sync_interval_minutes(email_account: EmailAccount) -> int:
     Returns:
         int: The sync interval in minutes.
     """
-    provider : EmailProviderDefinition = EmailProvider.from_key(email_account.provider).value
+    provider = EmailProvider.from_key(email_account.provider)
     if provider is None:
         return email_account.sync_interval_minutes or 5
+    provider_definition: EmailProviderDefinition = provider.value
     return (
         email_account.sync_interval_minutes
-        or provider.sync_capabilities.default_poll_interval_minutes
+        or provider_definition.sync_capabilities.default_poll_interval_minutes
     )
 
 
@@ -40,10 +41,11 @@ def _account_sync_mode(email_account: EmailAccount) -> str | None:
     Returns:
         str | None: The sync mode.
     """
-    provider : EmailProviderDefinition = EmailProvider.from_key(email_account.provider).value
+    provider = EmailProvider.from_key(email_account.provider)
     if provider is None:
         return email_account.sync_mode or None
-    return email_account.sync_mode or provider.sync_capabilities.default_mode.value
+    provider_definition: EmailProviderDefinition = provider.value
+    return email_account.sync_mode or provider_definition.sync_capabilities.default_mode.value
 
 
 def _next_sync_at(email_account: EmailAccount):

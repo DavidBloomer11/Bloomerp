@@ -7,6 +7,7 @@ from django.http import HttpRequest
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
 
+from bloomerp.communication.emails.actions import get_mailboxes_for_account
 from bloomerp.communication.utils.crypto import encrypt_email_secret
 from bloomerp.communication.emails.email_providers import EmailProvider
 from bloomerp.models.communication import EmailAccount
@@ -234,16 +235,25 @@ class CreateEmailAccountView(WizardMixin, BaseBloomerpView, TemplateView):
                 step=0,
             )
         
-        # TODO: Add sync email functionality
-        with transaction.atomic():
-            email_account = EmailAccount(
-                provider=provider.value.key,
-                status=EmailAccount.Status.DRAFT,
-                created_by=self.request.user,
-                updated_by=self.request.user,
-                **settings,
+        try:
+            with transaction.atomic():
+                email_account = EmailAccount(
+                    provider=provider.value.key,
+                    status=EmailAccount.Status.DRAFT,
+                    created_by=self.request.user,
+                    updated_by=self.request.user,
+                    **settings,
+                )
+                email_account.save()
+                email_account.mailboxes = get_mailboxes_for_account(email_account)
+                email_account.save(update_fields=["mailboxes", "datetime_updated"])
+        except Exception as exc:
+            return WizardError(
+                message=str(exc),
+                title=_("Mailbox connection failed"),
+                step=1,
             )
-            email_account.save()
+            
 
         self.add_message(
             text=_("Email account '%(account)s' created successfully.") % {"account": email_account},

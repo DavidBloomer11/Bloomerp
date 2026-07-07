@@ -11,6 +11,7 @@ export class Inbox extends BaseComponent {
     private searchInputHandler: (() => void) | null = null;
     private searchDebounceTimer: number | null = null;
     private inboxActionClickHandler: ((event: Event) => void) | null = null;
+    private subfolderClickHandler: ((event: Event) => void) | null = null;
 
     public initialize(): void {
         if (!this.element) return;
@@ -21,13 +22,14 @@ export class Inbox extends BaseComponent {
         // Setup event listeners
         this.setupAddFolderBtnListener();
         this.setupSelectFolderListener();
+        this.setupSubfolderFilterListener();
         this.setupSearchInputListener();
         this.setupInboxActionListener();
         
     }
 
-    private queryInbox(query?:Map<string, string>) {
-        const folderId = this.getDataAttribute('inboxFolderId');
+    private queryInbox(query?:Map<string, string>, folderId?: string) {
+        folderId = folderId || this.getDataAttribute('inboxFolderId') || '';
         if (!folderId) return;
         const target = this.element?.querySelector('#inbox-items');
         insertSkeleton(target as HTMLElement);
@@ -118,6 +120,28 @@ export class Inbox extends BaseComponent {
 
             this.searchInput.addEventListener('input', this.searchInputHandler);
         }
+    }
+
+    private setupSubfolderFilterListener() {
+        if (!this.element) return;
+
+        this.subfolderClickHandler = (event: Event) => {
+            const trigger = (event.target as HTMLElement | null)?.closest<HTMLElement>('[data-inbox-subfolder]');
+            if (!trigger || !this.element?.contains(trigger)) return;
+
+            event.preventDefault();
+            const rawFilters = trigger.dataset.inboxSubfolderFilters || '{}';
+            let filters: Record<string, string> = {};
+            try {
+                filters = JSON.parse(rawFilters);
+            } catch {
+                filters = {};
+            }
+
+            this.queryInbox(new Map(Object.entries(filters)), trigger.dataset.inboxSubfolderFolderId);
+        };
+
+        this.element.addEventListener('click', this.subfolderClickHandler);
     }
 
     private setupDeepSearchListener() {
@@ -235,6 +259,9 @@ export class Inbox extends BaseComponent {
         if (this.element && this.inboxActionClickHandler) {
             this.element.removeEventListener('click', this.inboxActionClickHandler);
         }
+        if (this.element && this.subfolderClickHandler) {
+            this.element.removeEventListener('click', this.subfolderClickHandler);
+        }
         if (this.searchInput && this.searchInputHandler) {
             this.searchInput.removeEventListener('input', this.searchInputHandler);
         }
@@ -245,5 +272,6 @@ export class Inbox extends BaseComponent {
         this.searchInputHandler = null;
         this.searchDebounceTimer = null;
         this.inboxActionClickHandler = null;
+        this.subfolderClickHandler = null;
     }
 }

@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from bloomerp.communication.emails.base_adapter import BaseEmailAdapter
 
 DEEP_QUERY_LIMIT = 50
+DEFAULT_MAILBOX = "INBOX"
 
 
 def _resolve_provider(email_account: EmailAccount) -> EmailProviderDefinition:
@@ -74,8 +75,9 @@ def render_email(inbox_item:"InboxItem", request: HttpRequest) -> str:
         str: _description_
     """
     adapter = _resolve_email_adapter(inbox_item, request)
+    mailbox = (inbox_item.raw_meta_data or {}).get("mailbox") or DEFAULT_MAILBOX
     try:
-        return adapter.fetch_email_content(email_id=inbox_item.related_item_id)
+        return adapter.fetch_email_content(email_id=inbox_item.related_item_id, mailbox=mailbox)
     finally:
         close = getattr(adapter, "close", None)
         if callable(close):
@@ -84,14 +86,16 @@ def render_email(inbox_item:"InboxItem", request: HttpRequest) -> str:
 
 def mark_email_as_read(inbox_item:"InboxItem", request: HttpRequest):
     adapter = _resolve_email_adapter(inbox_item, request)
-    adapter.mark_as_read(email_id=inbox_item.related_item_id)
+    mailbox = (inbox_item.raw_meta_data or {}).get("mailbox") or DEFAULT_MAILBOX
+    adapter.mark_as_read(email_id=inbox_item.related_item_id, mailbox=mailbox)
     inbox_item.is_read = True
     inbox_item.save(update_fields=["is_read"])
 
 
 def delete_email(inbox_item:"InboxItem", request: HttpRequest):
     adapter = _resolve_email_adapter(inbox_item, request)
-    adapter.delete_email(email_id=inbox_item.related_item_id)
+    mailbox = (inbox_item.raw_meta_data or {}).get("mailbox") or DEFAULT_MAILBOX
+    adapter.delete_email(email_id=inbox_item.related_item_id, mailbox=mailbox)
 
 
 def _query_local_email_items(
@@ -114,6 +118,16 @@ def _query_local_email_items(
             | Q(actor__icontains=search_string)
         )
 
+    mailbox = (filters or {}).get("mailbox")
+    if mailbox:
+        queryset = queryset.filter(raw_meta_data__mailbox=mailbox)
+
+    is_read_filter = (filters or {}).get("is_read")
+    if is_read_filter is not None:
+        from bloomerp.utils.requests import parse_bool_parameter
+
+        queryset = queryset.filter(is_read=parse_bool_parameter(is_read_filter))
+
     return queryset.distinct().order_by("-datetime_received", "-datetime_created")
 
 
@@ -129,6 +143,7 @@ def _upsert_email_inbox_item(email: BloomerpEmail, folder: "InboxFolder") -> "In
             folder=folder,
             related_item_id=email.provider_message_id,
             raw_meta_data__email_account_id=email.email_account_id,
+            raw_meta_data__mailbox=email.mailbox,
         )
         .first()
     )
@@ -166,6 +181,9 @@ def query_emails(
     Returns:
         QuerySet[InboxItem]: Matching email inbox items.
     """
+    filters = filters or {}
+    mailbox = filters.get("mailbox") or DEFAULT_MAILBOX
+    
     local_queryset = _query_local_email_items(filters, folder)
     if deep_query and not local_queryset.exists():
         email_account = _resolve_email_account_from_folder(folder)
@@ -175,7 +193,7 @@ def query_emails(
         try:
             emails = adapter.search_emails(
                 search_string,
-                mailbox="INBOX",
+                mailbox=mailbox,
                 limit=DEEP_QUERY_LIMIT,
             )
         finally:
@@ -197,6 +215,7 @@ def _fetch_synced_emails_for_account(
     from_date: datetime.date | datetime.datetime | None = None,
     to_date: datetime.date | datetime.datetime | None = None,
     limit: int = 50,
+    mailbox: str = DEFAULT_MAILBOX,
 ) -> list[BloomerpEmail]:
     adapter = _resolve_email_adapter_for_account(email_account)
     try:
@@ -204,7 +223,7 @@ def _fetch_synced_emails_for_account(
             from_date=from_date,
             to_date=to_date,
             limit=limit,
-            mailbox="INBOX",
+            mailbox=mailbox,
         )
     finally:
         close = getattr(adapter, "close", None)
@@ -227,22 +246,62 @@ def _sync_email_account_to_folder(
     from_date: datetime.date | datetime.datetime | None = None,
     to_date: datetime.date | datetime.datetime | None = None,
     limit: int = 50,
+    mailboxes: list[str] | None = None,
 ) -> int:
-    emails = _fetch_synced_emails_for_account(
-        email_account,
-        from_date=from_date,
-        to_date=to_date,
-        limit=limit,
-    )
+    emails: list[BloomerpEmail] = []
+    for mailbox in _normalize_mailboxes(mailboxes, email_account):
+        emails.extend(
+            _fetch_synced_emails_for_account(
+                email_account,
+                from_date=from_date,
+                to_date=to_date,
+                limit=limit,
+                mailbox=mailbox,
+            )
+        )
     return _upsert_emails_to_folder(emails, folder)
 
 
+def _normalize_mailboxes(mailboxes: list[str] | tuple[str, ...] | None, email_account: EmailAccount) -> list[str]:
+    selected_mailboxes = [mailbox for mailbox in (mailboxes or []) if mailbox]
+    if selected_mailboxes:
+        return selected_mailboxes
+    cached_mailboxes = [mailbox for mailbox in (email_account.mailboxes or []) if mailbox]
+    return cached_mailboxes or [DEFAULT_MAILBOX]
+
+def get_mailboxes_for_account(email_account: EmailAccount) -> list[str]:
+    """Syncs the email account's mailboxes with the local database.
+
+    Args:
+        email_account (EmailAccount): email account to sync mailboxes for
+
+    Returns:
+        list[str]: List of synced mailbox names.
+    """
+    adapter = _resolve_email_adapter_for_account(email_account)
+    try:
+        mailboxes = adapter.list_mailboxes()
+        return mailboxes
+    finally:
+        close = getattr(adapter, "close", None)
+        if callable(close):
+            close()
+
+
+def refresh_mailboxes_for_account(email_account: EmailAccount, *, save: bool = True) -> list[str]:
+    mailboxes = get_mailboxes_for_account(email_account)
+    email_account.mailboxes = mailboxes
+    if save:
+        email_account.save(update_fields=["mailboxes", "datetime_updated"])
+    return mailboxes
+    
 def sync_emails_for_account(
     email_account: EmailAccount,
     *,
     from_date: datetime.date | datetime.datetime | None = None,
     to_date: datetime.date | datetime.datetime | None = None,
     limit: int = 50,
+    mailboxes: list[str] | None = None,
 ) -> int:
     """
     Sync emails for every inbox folder connected to the email account.
@@ -259,12 +318,18 @@ def sync_emails_for_account(
     if not folders:
         return 0
 
-    emails = _fetch_synced_emails_for_account(
-        email_account,
-        from_date=from_date,
-        to_date=to_date,
-        limit=limit,
-    )
+    selected_mailboxes = _normalize_mailboxes(mailboxes, email_account)
+    emails: list[BloomerpEmail] = []
+    for mailbox in selected_mailboxes:
+        emails.extend(
+            _fetch_synced_emails_for_account(
+                email_account,
+                from_date=from_date,
+                to_date=to_date,
+                limit=limit,
+                mailbox=mailbox,
+            )
+        )
 
     synced_count = len(emails)
     for folder in folders:
@@ -278,6 +343,7 @@ def sync_emails_for_folder(
     from_date: datetime.date | datetime.datetime | None = None,
     to_date: datetime.date | datetime.datetime | None = None,
     limit: int = 50,
+    mailboxes: list[str] | None = None,
 ) -> int:
     """
     Sync emails for the given inbox folder.
@@ -286,6 +352,7 @@ def sync_emails_for_folder(
         folder (InboxFolder): The email inbox folder to sync.
         from_date (datetime | None): The start date for email synchronization.
         to_date (datetime | None): The end date for email synchronization.
+        limit (int): The maximum number of emails to sync.
     """
     email_account = _resolve_email_account_from_folder(folder)
     started_at = timezone.now()
@@ -300,19 +367,23 @@ def sync_emails_for_folder(
             from_date=from_date,
             to_date=to_date,
             limit=limit,
+            mailboxes=mailboxes,
         )
+        available_mailboxes = refresh_mailboxes_for_account(email_account, save=False)
     except Exception as exc:
         email_account.last_sync_error = str(exc)
         email_account.save(update_fields=["last_sync_error", "datetime_updated"])
         raise
-
+    
     email_account.last_sync_finished_at = timezone.now()
     email_account.last_sync_error = ""
+    email_account.mailboxes = available_mailboxes
     email_account.save(
         update_fields=[
             "last_sync_finished_at",
             "last_sync_error",
             "datetime_updated",
+            "mailboxes",
         ]
     )
     return synced_count

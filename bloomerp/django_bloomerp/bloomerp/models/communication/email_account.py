@@ -178,6 +178,7 @@ class EmailAccount(BloomerpModel):
         blank=True,
         help_text="Provider-specific settings that do not have dedicated fields yet.",
     )
+    # Synchronization fields
     sync_enabled = models.BooleanField(
         default=True,
         help_text="Whether this account should be synchronized automatically.",
@@ -230,6 +231,12 @@ class EmailAccount(BloomerpModel):
         blank=True,
         editable=False,
     )
+    mailboxes = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Cached list of folders/mailboxes for this account.",
+    )
+    
     
     def save(self, *args, **kwargs):
         if not self.name:

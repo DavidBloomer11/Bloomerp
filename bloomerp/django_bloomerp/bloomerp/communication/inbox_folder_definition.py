@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from operator import is_
 from typing import Callable, Literal, Optional, TYPE_CHECKING, Type
 from django.db.models import Q, QuerySet
 from django.http import HttpRequest, HttpResponse
@@ -164,6 +163,13 @@ class InboxFolderTypeDefinition:
     
     # Is default folder
     is_default: bool = False
+
+    def resolve_filters(self, folder: "InboxFolder") -> list[InboxFolderTypeFilterDefinition]:
+        if not self.filters:
+            return []
+        if callable(self.filters):
+            return self.filters(folder) or []
+        return self.filters
     
     def get_source_model_class(self) -> Optional[Type[Model]]:
         """
@@ -304,39 +310,7 @@ class InboxFolderType(BaseTypeDefinition):
             ),
             DELETE_INBOX_FOLDER_ACTION,    
         ],
-        filters=[
-            # Subfolders
-            InboxFolderTypeFilterDefinition(
-                key="inbox",
-                name="Inbox",
-                filters={"mailbox": "inbox"},
-                is_subfolder=True
-            ),
-            InboxFolderTypeFilterDefinition(
-                key="sent",
-                name="Sent",
-                filters={"mailbox": "sent"},
-                is_subfolder=True
-            ),
-            InboxFolderTypeFilterDefinition(
-                key="drafts",
-                name="Drafts",
-                filters={"mailbox": "drafts"},
-                is_subfolder=True
-            ),
-            InboxFolderTypeFilterDefinition(
-                key="spam",
-                name="Spam",
-                filters={"mailbox": "spam"},
-                is_subfolder=True
-            ),
-            InboxFolderTypeFilterDefinition(
-                key="trash",
-                name="Trash",
-                filters={"mailbox": "trash"},
-                is_subfolder=True
-            ),
-            
+        filters=lambda folder: [
             # Regular filters
             InboxFolderTypeFilterDefinition(
                 key="unread",
@@ -347,7 +321,17 @@ class InboxFolderType(BaseTypeDefinition):
                 key="read",
                 name="Read",
                 filters={"is_read": "true"}
-            )  
+            ),
+            *(
+                [
+                    InboxFolderTypeFilterDefinition(
+                        key="mailbox_" + mailbox,
+                        name=mailbox,
+                        filters={"mailbox": mailbox},
+                        is_subfolder=True
+                    ) for mailbox in folder.related_object().mailboxes
+                ] if folder.related_object() else []
+            )
         ],
         item_type=InboxItemTypeDefinition(
             key="email",
@@ -364,32 +348,6 @@ class InboxFolderType(BaseTypeDefinition):
             ],
         )
     )
-    
-    # INTERNAL_MESSAGES = InboxFolderTypeDefinition(
-    #     key="internal_messages",
-    #     name="Internal Messages",
-    #     description="All internal messages",
-    #     icon="fa fa-comment",
-    #     item_type=InboxItemTypeDefinition(
-    #         key="internal_message",
-    #         name="Message",
-    #         name_plural="Messages",
-    #         icon="fa fa-comment",
-    #         source_model="bloomerp.Channel"
-    #     )
-    # )
-    
-    # MESSAGING_APP = InboxFolderTypeDefinition(
-    #     key="messaging_app",
-    #     name="Messaging Apps",
-    #     icon="fa fa-comment",
-    #     item_type=InboxItemTypeDefinition(
-    #         key="external_message",
-    #         name="Message",
-    #         name_plural="Messages",
-    #         icon="fa fa-comment",
-    #     )
-    # )
     
     @classmethod
     def get_item_type_by_key(cls, key: str) -> InboxItemTypeDefinition:

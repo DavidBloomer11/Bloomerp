@@ -24,23 +24,35 @@
                 position="left"
                 >
 
-                {% for folder in inbox_preference.selected_inbox.folders.all %}
-                    <c-ui.dropdown.item text="{{ folder.name }}" icon="{{ folder.icon }}" id="select-folder-{{ folder.id }}"/>
+                {% for folder_option in folder_options %}
+                    {% if folder_option.subfolders %}
+                        <c-ui.dropdown.submenu
+                            text="{{ folder_option.folder.name }}"
+                            icon="{{ folder_option.folder.icon }}"
+                            id="folder-menu-{{ folder_option.folder.id }}">
+                            <c-ui.dropdown.item text="{{ folder_option.folder.name }}" icon="{{ folder_option.folder.icon }}" id="select-folder-{{ folder_option.folder.id }}" />
+                            <c-ui.dropdown.item type="divider" />
+                            {% for subfolder in folder_option.subfolders %}
+                                <button
+                                    id="select-subfolder-{{ folder_option.folder.id }}-{{ forloop.counter }}"
+                                    type="button"
+                                    class="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-150 hover:bg-gray-100 hover:text-primary-800"
+                                    role="menuitem"
+                                    data-inbox-subfolder
+                                    data-inbox-subfolder-folder-id="{{ folder_option.folder.id }}"
+                                    data-inbox-subfolder-key="{{ subfolder.key }}"
+                                    data-inbox-subfolder-filters='{{ subfolder.filters_json }}'
+                                    @click="$dispatch('dropdown-close')"
+                                >
+                                    <i class="fa fa-folder mr-3 h-4 w-4 flex-shrink-0"></i>
+                                    <span class="truncate">{{ subfolder.name }}</span>
+                                </button>
+                            {% endfor %}
+                        </c-ui.dropdown.submenu>
+                    {% else %}
+                        <c-ui.dropdown.item text="{{ folder_option.folder.name }}" icon="{{ folder_option.folder.icon }}" id="select-folder-{{ folder_option.folder.id }}"/>
+                    {% endif %}
                 {% endfor %}
-                <c-ui.dropdown.submenu 
-                            text="Select Sidebar" 
-                            icon="fa fa-bars" 
-                            id="select-sidebar-btn">
-                            <div
-                                hx-get="{% url 'components_workspaces_sidebar_select_menu' %}"
-                                hx-trigger="click from:#select-sidebar-btn"
-                                hx-target="this"
-                                hx-swap="innerHTML"
-                                class="min-w-48"
-                            >
-                                <div class="px-4 py-2 text-xs text-gray-500">Loading sidebars...</div>
-                            </div>
-                </c-ui.dropdown.submenu>
 
                 <c-ui.dropdown.item text="Add folder" icon="fa fa-plus" id="add-folder-btn" />
 

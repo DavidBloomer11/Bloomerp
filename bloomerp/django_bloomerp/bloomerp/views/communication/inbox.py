@@ -1,3 +1,5 @@
+import json
+
 from bloomerp.communication.inbox_folder_definition import INBOX_ITEM_RENDER_TARGET, INBOX_ITEMS_TARGET, INBOX_MESSAGE_TARGET, InboxFolderType
 from bloomerp.models.communication.inbox.inbox import Inbox
 from bloomerp.models.communication.inbox.user_inbox_preference import UserInboxPreference
@@ -23,8 +25,19 @@ class InboxView(BaseBloomerpView, TemplateView):
         ctx["inbox_preference"] = inbox_preference
         
         if inbox_preference and inbox_preference.selected_inbox_folder:
-            ctx["filters"] = inbox_preference.selected_inbox_folder.inbox_folder_type().filters or []
-            actions = inbox_preference.selected_inbox_folder.inbox_folder_type().actions or []
+            folders = inbox_preference.selected_inbox.folders.all()
+            selected_folder = inbox_preference.selected_inbox_folder
+            folder_type = selected_folder.inbox_folder_type()
+            filters = folder_type.resolve_filters(selected_folder)
+            ctx["folder_options"] = [
+                {
+                    "folder": folder,
+                    "subfolders": self.get_subfolder_filter_options(folder),
+                }
+                for folder in folders
+            ]
+            ctx["filters"] = [filter_definition for filter_definition in filters if not filter_definition.is_subfolder]
+            actions = folder_type.actions or []
             ctx["actions"] = actions
             ctx["primary_actions"] = [action for action in actions if action.is_primary_action]
             ctx["secondary_actions"] = [action for action in actions if not action.is_primary_action]
@@ -37,6 +50,17 @@ class InboxView(BaseBloomerpView, TemplateView):
         }
         
         return ctx
+
+    def get_subfolder_filter_options(self, folder):
+        return [
+            {
+                "key": filter_definition.key,
+                "name": filter_definition.name,
+                "filters_json": json.dumps(filter_definition.filters or {}),
+            }
+            for filter_definition in folder.inbox_folder_type().resolve_filters(folder)
+            if filter_definition.is_subfolder
+        ]
     
     def get_inbox_preference(self) -> UserInboxPreference | None:
         preference = (

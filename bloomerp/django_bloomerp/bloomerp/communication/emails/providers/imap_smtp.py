@@ -101,14 +101,14 @@ class ImapSmtpAdapter(BaseEmailAdapter):
             finally:
                 self.connection = None
 
-    def mark_as_read(self, email_id: str):
+    def mark_as_read(self, email_id: str, *, mailbox: str = "INBOX"):
         connection = self.connect()
-        self._select_mailbox("INBOX")
+        self._select_mailbox(mailbox)
         connection.uid("STORE", email_id, "+FLAGS", r"(\Seen)")
 
-    def delete_email(self, email_id: str):
+    def delete_email(self, email_id: str, *, mailbox: str = "INBOX"):
         connection = self.connect()
-        self._select_mailbox("INBOX")
+        self._select_mailbox(mailbox)
         connection.uid("STORE", email_id, "+FLAGS", r"(\Deleted)")
         connection.expunge()
 
@@ -184,9 +184,9 @@ class ImapSmtpAdapter(BaseEmailAdapter):
 
         return message_id
 
-    def fetch_email_content(self, email_id: str) -> str:
+    def fetch_email_content(self, email_id: str, *, mailbox: str = "INBOX") -> str:
         connection = self.connect()
-        self._select_mailbox("INBOX", readonly=True)
+        self._select_mailbox(mailbox, readonly=True)
         status, data = connection.uid("FETCH", email_id, "(BODY.PEEK[])")
         if status != "OK":
             return ""
@@ -303,7 +303,7 @@ class ImapSmtpAdapter(BaseEmailAdapter):
 
     def _fetch_email_index(self, uid: str, *, mailbox: str) -> BloomerpEmail | None:
         connection = self.connect()
-        status, data = connection.uid("FETCH", uid, "(UID FLAGS RFC822.HEADER)")
+        status, data = connection.uid("FETCH", uid, "(UID FLAGS BODY.PEEK[HEADER])")
         if status != "OK":
             return None
 
@@ -332,7 +332,7 @@ class ImapSmtpAdapter(BaseEmailAdapter):
             cc=self._parse_address_header(message, "cc"),
             date=self._parse_date(message.get("date")),
             message_id=message.get("message-id"),
-            is_read="\\Seen" in flags,
+            is_read=self._has_seen_flag(flags),
             flags=flags,
             raw={
                 "imap_uid": provider_message_id,
@@ -349,7 +349,14 @@ class ImapSmtpAdapter(BaseEmailAdapter):
         match = FLAGS_PATTERN.search(response_meta)
         if not match:
             return []
-        return match.group(1).decode("utf-8", errors="ignore").split()
+        return [
+            flag.strip().strip('"')
+            for flag in match.group(1).decode("utf-8", errors="ignore").split()
+            if flag.strip()
+        ]
+
+    def _has_seen_flag(self, flags: list[str]) -> bool:
+        return any(flag.lower() == r"\seen" for flag in flags)
 
     def _decode_header_value(self, value: str) -> str:
         if not value:
