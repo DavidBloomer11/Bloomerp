@@ -757,7 +757,7 @@ export type DocumentTemplateQuery = Partial<Record<DocumentTemplateFieldName | `
 export const documentTemplatesFields: Record<DocumentTemplateFieldName, BloomerpFieldMetadata> = {
   "content_types": {"name": "content_types", "title": "Content Types", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "ContentType", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
   "created_by": {"name": "created_by", "title": "Created By", "fieldType": "UserField", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
-  "custom_styling": {"name": "custom_styling", "title": "Custom Styling", "fieldType": "TextField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "custom_styling": {"name": "custom_styling", "title": "Custom Styling", "fieldType": "TextField", "dbFieldType": "text", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "datetime_created": {"name": "datetime_created", "title": "Datetime Created", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "datetime_updated": {"name": "datetime_updated", "title": "Datetime Updated", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "footer": {"name": "footer", "title": "Footer", "fieldType": "TextField", "dbFieldType": "text", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
@@ -1148,6 +1148,221 @@ export class FormSubmissionApi extends ModelApi<FormSubmission, FormSubmissionId
   }
 }
 
+export interface Inbox {
+  avatar: string | null;
+  created_by: number | null;
+  datetime_created: string;
+  datetime_updated: string;
+  id: string;
+  members: Array<number>;
+  name: string;
+  owner: number | null;
+  updated_by: number | null;
+}
+
+export type InboxId = string;
+export type InboxFieldName = "avatar" | "created_by" | "datetime_created" | "datetime_updated" | "id" | "members" | "name" | "owner" | "updated_by";
+
+export interface InboxCreate {
+  avatar?: string | null;
+  created_by?: number | null;
+  members?: Array<number>;
+  name: string;
+  owner?: number | null;
+  updated_by?: number | null;
+}
+
+export type InboxUpdate = Partial<InboxCreate>;
+export type InboxQuery = Partial<Record<InboxFieldName | `${InboxFieldName}__${string}`, QueryValue | QueryValue[]>>;
+
+export const inboxsFields: Record<InboxFieldName, BloomerpFieldMetadata> = {
+  "avatar": {"name": "avatar", "title": "Avatar", "fieldType": "FileField", "dbFieldType": "varchar(100)", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
+  "created_by": {"name": "created_by", "title": "Created By", "fieldType": "UserField", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
+  "datetime_created": {"name": "datetime_created", "title": "Datetime Created", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "datetime_updated": {"name": "datetime_updated", "title": "Datetime Updated", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "UUIDField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "members": {"name": "members", "title": "Members", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
+  "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": null},
+  "owner": {"name": "owner", "title": "Owner", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
+  "updated_by": {"name": "updated_by", "title": "Updated By", "fieldType": "UserField", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
+} as const;
+
+export const inboxsCapabilities: BloomerpModelCapabilities = {"list": true, "retrieve": true, "create": true, "createMany": true, "update": true, "partialUpdate": true, "destroy": true} as const;
+export const inboxsPublicAccess: BloomerpModelPublicAccessMetadata = {"listAllowed": false, "readAllowed": false, "listFields": [], "readFields": [], "nesting": [], "authenticatedFallbackEnabled": true} as const;
+
+export class InboxApi extends ModelApi<Inbox, InboxId, InboxCreate, InboxUpdate, InboxQuery, InboxFieldName> {
+  constructor(client: BloomerpHttpClient) {
+    super(client, "/api/inboxs/");
+  }
+}
+
+export interface InboxFolder {
+  avatar: string | null;
+  created_by: number | null;
+  datetime_created: string;
+  datetime_updated: string;
+  id: string;
+  inbox: string;
+  related_object_id: string | null;
+  type: string;
+  updated_by: number | null;
+}
+
+export type InboxFolderId = string;
+export type InboxFolderFieldName = "avatar" | "created_by" | "datetime_created" | "datetime_updated" | "id" | "inbox" | "related_object_id" | "type" | "updated_by";
+
+export interface InboxFolderCreate {
+  avatar?: string | null;
+  created_by?: number | null;
+  inbox: string;
+  related_object_id?: string | null;
+  type: string;
+  updated_by?: number | null;
+}
+
+export type InboxFolderUpdate = Partial<InboxFolderCreate>;
+export type InboxFolderQuery = Partial<Record<InboxFolderFieldName | `${InboxFolderFieldName}__${string}`, QueryValue | QueryValue[]>>;
+
+export const inboxFoldersFields: Record<InboxFolderFieldName, BloomerpFieldMetadata> = {
+  "avatar": {"name": "avatar", "title": "Avatar", "fieldType": "FileField", "dbFieldType": "varchar(100)", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
+  "created_by": {"name": "created_by", "title": "Created By", "fieldType": "UserField", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
+  "datetime_created": {"name": "datetime_created", "title": "Datetime Created", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "datetime_updated": {"name": "datetime_updated", "title": "Datetime Updated", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "UUIDField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "inbox": {"name": "inbox", "title": "Inbox", "fieldType": "ForeignKey", "dbFieldType": "char(32)", "nullable": false, "many": false, "relatedModel": "Inbox", "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": null},
+  "related_object_id": {"name": "related_object_id", "title": "Related Object Id", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
+  "type": {"name": "type", "title": "Type", "fieldType": "CharField", "dbFieldType": "varchar(50)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": [{"value": "all", "label": "All"}, {"value": "in_app_notifications", "label": "Notifications"}, {"value": "email", "label": "Emails"}, {"value": "internal_messages", "label": "Internal Messages"}]},
+  "updated_by": {"name": "updated_by", "title": "Updated By", "fieldType": "UserField", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
+} as const;
+
+export const inboxFoldersCapabilities: BloomerpModelCapabilities = {"list": true, "retrieve": true, "create": true, "createMany": true, "update": true, "partialUpdate": true, "destroy": true} as const;
+export const inboxFoldersPublicAccess: BloomerpModelPublicAccessMetadata = {"listAllowed": false, "readAllowed": false, "listFields": [], "readFields": [], "nesting": [], "authenticatedFallbackEnabled": true} as const;
+
+export class InboxFolderApi extends ModelApi<InboxFolder, InboxFolderId, InboxFolderCreate, InboxFolderUpdate, InboxFolderQuery, InboxFolderFieldName> {
+  constructor(client: BloomerpHttpClient) {
+    super(client, "/api/inbox_folders/");
+  }
+}
+
+export interface InboxItem {
+  actor: string | null;
+  avatar: string | null;
+  created_by: number | null;
+  datetime_created: string;
+  datetime_updated: string;
+  folders: Array<string>;
+  id: string;
+  is_read: boolean;
+  raw_meta_data: unknown;
+  related_item_id: string | null;
+  snippet: string | null;
+  title: string;
+  updated_by: number | null;
+}
+
+export type InboxItemId = string;
+export type InboxItemFieldName = "actor" | "avatar" | "created_by" | "datetime_created" | "datetime_updated" | "folders" | "id" | "is_read" | "raw_meta_data" | "related_item_id" | "snippet" | "title" | "updated_by";
+
+export interface InboxItemCreate {
+  actor?: string | null;
+  avatar?: string | null;
+  created_by?: number | null;
+  folders?: Array<string>;
+  is_read?: boolean;
+  raw_meta_data?: unknown;
+  related_item_id?: string | null;
+  snippet?: string | null;
+  title: string;
+  updated_by?: number | null;
+}
+
+export type InboxItemUpdate = Partial<InboxItemCreate>;
+export type InboxItemQuery = Partial<Record<InboxItemFieldName | `${InboxItemFieldName}__${string}`, QueryValue | QueryValue[]>>;
+
+export const inboxItemsFields: Record<InboxItemFieldName, BloomerpFieldMetadata> = {
+  "actor": {"name": "actor", "title": "Actor", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
+  "avatar": {"name": "avatar", "title": "Avatar", "fieldType": "FileField", "dbFieldType": "varchar(100)", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
+  "created_by": {"name": "created_by", "title": "Created By", "fieldType": "UserField", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
+  "datetime_created": {"name": "datetime_created", "title": "Datetime Created", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "datetime_updated": {"name": "datetime_updated", "title": "Datetime Updated", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "folders": {"name": "folders", "title": "Folders", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "InboxFolder", "editable": true, "requiredOnCreate": false, "tsType": "Array<string>", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "UUIDField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "is_read": {"name": "is_read", "title": "Is Read", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
+  "raw_meta_data": {"name": "raw_meta_data", "title": "Raw Meta Data", "fieldType": "JSONField", "dbFieldType": "text", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "unknown", "choices": null},
+  "related_item_id": {"name": "related_item_id", "title": "Related Item Id", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
+  "snippet": {"name": "snippet", "title": "Snippet", "fieldType": "TextField", "dbFieldType": "text", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
+  "title": {"name": "title", "title": "Title", "fieldType": "CharField", "dbFieldType": "varchar(1000)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": null},
+  "updated_by": {"name": "updated_by", "title": "Updated By", "fieldType": "UserField", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
+} as const;
+
+export const inboxItemsCapabilities: BloomerpModelCapabilities = {"list": true, "retrieve": true, "create": true, "createMany": true, "update": true, "partialUpdate": true, "destroy": true} as const;
+export const inboxItemsPublicAccess: BloomerpModelPublicAccessMetadata = {"listAllowed": false, "readAllowed": false, "listFields": [], "readFields": [], "nesting": [], "authenticatedFallbackEnabled": true} as const;
+
+export class InboxItemApi extends ModelApi<InboxItem, InboxItemId, InboxItemCreate, InboxItemUpdate, InboxItemQuery, InboxItemFieldName> {
+  constructor(client: BloomerpHttpClient) {
+    super(client, "/api/inbox_items/");
+  }
+}
+
+export interface Initiative {
+  completed_at: string;
+  created_by: number | null;
+  datetime_created: string;
+  datetime_updated: string;
+  description: string | null;
+  id: string;
+  labels: Array<string>;
+  name: string;
+  owner: number | null;
+  start_date: string;
+  status: string;
+  target_date: string;
+  updated_by: number | null;
+}
+
+export type InitiativeId = string;
+export type InitiativeFieldName = "completed_at" | "created_by" | "datetime_created" | "datetime_updated" | "description" | "id" | "labels" | "name" | "owner" | "start_date" | "status" | "target_date" | "updated_by";
+
+export interface InitiativeCreate {
+  created_by?: number | null;
+  description?: string | null;
+  labels?: Array<string>;
+  name: string;
+  owner?: number | null;
+  start_date?: string;
+  status?: string;
+  target_date?: string;
+  updated_by?: number | null;
+}
+
+export type InitiativeUpdate = Partial<InitiativeCreate>;
+export type InitiativeQuery = Partial<Record<InitiativeFieldName | `${InitiativeFieldName}__${string}`, QueryValue | QueryValue[]>>;
+
+export const initiativesFields: Record<InitiativeFieldName, BloomerpFieldMetadata> = {
+  "completed_at": {"name": "completed_at", "title": "Completed At", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": true, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "created_by": {"name": "created_by", "title": "Created By", "fieldType": "UserField", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
+  "datetime_created": {"name": "datetime_created", "title": "Datetime Created", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "datetime_updated": {"name": "datetime_updated", "title": "Datetime Updated", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "description": {"name": "description", "title": "Description", "fieldType": "TextField", "dbFieldType": "text", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "UUIDField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "labels": {"name": "labels", "title": "Labels", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "TodoLabel", "editable": true, "requiredOnCreate": false, "tsType": "Array<string>", "choices": null},
+  "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": null},
+  "owner": {"name": "owner", "title": "Owner", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
+  "start_date": {"name": "start_date", "title": "Start Date", "fieldType": "DateField", "dbFieldType": "date", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "status": {"name": "status", "title": "Status", "fieldType": "CharField", "dbFieldType": "varchar(20)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": [{"value": "backlog", "label": "Backlog"}, {"value": "in_progress", "label": "In Progress"}, {"value": "on_hold", "label": "On Hold"}, {"value": "completed", "label": "Completed"}, {"value": "canceled", "label": "Canceled"}]},
+  "target_date": {"name": "target_date", "title": "Target Date", "fieldType": "DateField", "dbFieldType": "date", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "updated_by": {"name": "updated_by", "title": "Updated By", "fieldType": "UserField", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
+} as const;
+
+export const initiativesCapabilities: BloomerpModelCapabilities = {"list": true, "retrieve": true, "create": true, "createMany": true, "update": true, "partialUpdate": true, "destroy": true} as const;
+export const initiativesPublicAccess: BloomerpModelPublicAccessMetadata = {"listAllowed": false, "readAllowed": false, "listFields": [], "readFields": [], "nesting": [], "authenticatedFallbackEnabled": true} as const;
+
+export class InitiativeApi extends ModelApi<Initiative, InitiativeId, InitiativeCreate, InitiativeUpdate, InitiativeQuery, InitiativeFieldName> {
+  constructor(client: BloomerpHttpClient) {
+    super(client, "/api/initiatives/");
+  }
+}
+
 export interface Policy {
   created_by: number | null;
   datetime_created: string;
@@ -1501,7 +1716,8 @@ export interface Todo {
   datetime_updated: string;
   effort: number;
   id: string;
-  labels: Array<number>;
+  initiative: string | null;
+  labels: Array<string>;
   object_id: string | null;
   priority: string;
   requested_by: number | null;
@@ -1512,7 +1728,7 @@ export interface Todo {
 }
 
 export type TodoId = string;
-export type TodoFieldName = "assigned_to" | "content" | "content_type" | "created_by" | "datetime_completed" | "datetime_created" | "datetime_updated" | "effort" | "id" | "labels" | "object_id" | "priority" | "requested_by" | "required_by" | "status" | "title" | "updated_by";
+export type TodoFieldName = "assigned_to" | "content" | "content_type" | "created_by" | "datetime_completed" | "datetime_created" | "datetime_updated" | "effort" | "id" | "initiative" | "labels" | "object_id" | "priority" | "requested_by" | "required_by" | "status" | "title" | "updated_by";
 
 export interface TodoCreate {
   assigned_to?: number | null;
@@ -1520,7 +1736,8 @@ export interface TodoCreate {
   content_type?: number | null;
   created_by?: number | null;
   effort?: number;
-  labels?: Array<number>;
+  initiative?: string | null;
+  labels?: Array<string>;
   object_id?: string | null;
   priority?: string;
   requested_by?: number | null;
@@ -1543,7 +1760,8 @@ export const todosFields: Record<TodoFieldName, BloomerpFieldMetadata> = {
   "datetime_updated": {"name": "datetime_updated", "title": "Datetime Updated", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "effort": {"name": "effort", "title": "Effort", "fieldType": "IntegerField", "dbFieldType": "integer", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": [{"value": 1, "label": "XS"}, {"value": 2, "label": "S"}, {"value": 4, "label": "M"}, {"value": 8, "label": "L"}, {"value": 16, "label": "XL"}]},
   "id": {"name": "id", "title": "Id", "fieldType": "UUIDField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
-  "labels": {"name": "labels", "title": "Labels", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "TodoLabel", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
+  "initiative": {"name": "initiative", "title": "Initiative", "fieldType": "ForeignKey", "dbFieldType": "char(32)", "nullable": true, "many": false, "relatedModel": "Initiative", "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
+  "labels": {"name": "labels", "title": "Labels", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "TodoLabel", "editable": true, "requiredOnCreate": false, "tsType": "Array<string>", "choices": null},
   "object_id": {"name": "object_id", "title": "Object Id", "fieldType": "CharField", "dbFieldType": "varchar(36)", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
   "priority": {"name": "priority", "title": "Priority", "fieldType": "CharField", "dbFieldType": "varchar(20)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": [{"value": "urgent", "label": "Urgent"}, {"value": "high", "label": "High"}, {"value": "medium", "label": "Medium"}, {"value": "low", "label": "Low"}]},
   "requested_by": {"name": "requested_by", "title": "Requested By", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
@@ -1564,16 +1782,22 @@ export class TodoApi extends ModelApi<Todo, TodoId, TodoCreate, TodoUpdate, Todo
 
 export interface TodoLabel {
   color: string;
-  id: number;
+  created_by: number | null;
+  datetime_created: string;
+  datetime_updated: string;
+  id: string;
   name: string;
+  updated_by: number | null;
 }
 
-export type TodoLabelId = number;
-export type TodoLabelFieldName = "color" | "id" | "name";
+export type TodoLabelId = string;
+export type TodoLabelFieldName = "color" | "created_by" | "datetime_created" | "datetime_updated" | "id" | "name" | "updated_by";
 
 export interface TodoLabelCreate {
   color: string;
+  created_by?: number | null;
   name: string;
+  updated_by?: number | null;
 }
 
 export type TodoLabelUpdate = Partial<TodoLabelCreate>;
@@ -1581,8 +1805,12 @@ export type TodoLabelQuery = Partial<Record<TodoLabelFieldName | `${TodoLabelFie
 
 export const todoLabelsFields: Record<TodoLabelFieldName, BloomerpFieldMetadata> = {
   "color": {"name": "color", "title": "Color", "fieldType": "CharField", "dbFieldType": "varchar(7)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": null},
-  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "created_by": {"name": "created_by", "title": "Created By", "fieldType": "UserField", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
+  "datetime_created": {"name": "datetime_created", "title": "Datetime Created", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "datetime_updated": {"name": "datetime_updated", "title": "Datetime Updated", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "UUIDField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(100)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": null},
+  "updated_by": {"name": "updated_by", "title": "Updated By", "fieldType": "UserField", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
 } as const;
 
 export const todoLabelsCapabilities: BloomerpModelCapabilities = {"list": true, "retrieve": true, "create": true, "createMany": true, "update": true, "partialUpdate": true, "destroy": true} as const;
@@ -1600,7 +1828,6 @@ export interface User {
   date_view_preference: string;
   datetime_view_preference: string;
   email: string;
-  file_view_preference: string;
   first_name: string;
   groups: Array<number>;
   id: number;
@@ -1615,7 +1842,7 @@ export interface User {
 }
 
 export type UserId = number;
-export type UserFieldName = "avatar" | "date_joined" | "date_view_preference" | "datetime_view_preference" | "email" | "file_view_preference" | "first_name" | "groups" | "id" | "is_active" | "is_staff" | "is_superuser" | "last_login" | "last_name" | "password" | "user_permissions" | "username";
+export type UserFieldName = "avatar" | "date_joined" | "date_view_preference" | "datetime_view_preference" | "email" | "first_name" | "groups" | "id" | "is_active" | "is_staff" | "is_superuser" | "last_login" | "last_name" | "password" | "user_permissions" | "username";
 
 export interface UserCreate {
   avatar?: string | null;
@@ -1623,7 +1850,6 @@ export interface UserCreate {
   date_view_preference?: string;
   datetime_view_preference?: string;
   email?: string;
-  file_view_preference?: string;
   first_name?: string;
   groups?: Array<number>;
   is_active?: boolean;
@@ -1645,7 +1871,6 @@ export const usersFields: Record<UserFieldName, BloomerpFieldMetadata> = {
   "date_view_preference": {"name": "date_view_preference", "title": "Date View Preference", "fieldType": "CharField", "dbFieldType": "varchar(20)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": [{"value": "d-m-Y", "label": "Day-Month-Year (15-08-2000)"}, {"value": "m-d-Y", "label": "Month-Day-Year (08-15-2000)"}, {"value": "Y-m-d", "label": "Year-Month-Day (2000-08-15)"}]},
   "datetime_view_preference": {"name": "datetime_view_preference", "title": "Datetime View Preference", "fieldType": "CharField", "dbFieldType": "varchar(20)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": [{"value": "d-m-Y H:i", "label": "Day-Month-Year Hour:Minute (15-08-2000 12:30)"}, {"value": "m-d-Y H:i", "label": "Month-Day-Year Hour:Minute (08-15-2000 12:30)"}, {"value": "Y-m-d H:i", "label": "Year-Month-Day Hour:Minute (2000-08-15 12:30)"}]},
   "email": {"name": "email", "title": "Email", "fieldType": "CharField", "dbFieldType": "varchar(254)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
-  "file_view_preference": {"name": "file_view_preference", "title": "File View Preference", "fieldType": "CharField", "dbFieldType": "varchar(20)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": [{"value": "card", "label": "Card View"}, {"value": "list", "label": "List View"}]},
   "first_name": {"name": "first_name", "title": "First Name", "fieldType": "CharField", "dbFieldType": "varchar(150)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "groups": {"name": "groups", "title": "Groups", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "Group", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
   "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
@@ -1753,6 +1978,54 @@ export class UserDetailViewPreferenceApi extends ModelApi<UserDetailViewPreferen
   }
 }
 
+export interface UserInboxPreference {
+  avatar: string | null;
+  created_by: number | null;
+  datetime_created: string;
+  datetime_updated: string;
+  id: string;
+  selected_inbox: string | null;
+  selected_inbox_folder: string | null;
+  updated_by: number | null;
+  user: number;
+}
+
+export type UserInboxPreferenceId = string;
+export type UserInboxPreferenceFieldName = "avatar" | "created_by" | "datetime_created" | "datetime_updated" | "id" | "selected_inbox" | "selected_inbox_folder" | "updated_by" | "user";
+
+export interface UserInboxPreferenceCreate {
+  avatar?: string | null;
+  created_by?: number | null;
+  selected_inbox?: string | null;
+  selected_inbox_folder?: string | null;
+  updated_by?: number | null;
+  user: number;
+}
+
+export type UserInboxPreferenceUpdate = Partial<UserInboxPreferenceCreate>;
+export type UserInboxPreferenceQuery = Partial<Record<UserInboxPreferenceFieldName | `${UserInboxPreferenceFieldName}__${string}`, QueryValue | QueryValue[]>>;
+
+export const userInboxPreferencesFields: Record<UserInboxPreferenceFieldName, BloomerpFieldMetadata> = {
+  "avatar": {"name": "avatar", "title": "Avatar", "fieldType": "FileField", "dbFieldType": null, "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
+  "created_by": {"name": "created_by", "title": "Created By", "fieldType": "UserField", "dbFieldType": null, "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
+  "datetime_created": {"name": "datetime_created", "title": "Datetime Created", "fieldType": "DateTimeField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "datetime_updated": {"name": "datetime_updated", "title": "Datetime Updated", "fieldType": "DateTimeField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "UUIDField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "selected_inbox": {"name": "selected_inbox", "title": "Selected Inbox", "fieldType": "ForeignKey", "dbFieldType": null, "nullable": true, "many": false, "relatedModel": "Inbox", "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
+  "selected_inbox_folder": {"name": "selected_inbox_folder", "title": "Selected Inbox Folder", "fieldType": "ForeignKey", "dbFieldType": null, "nullable": true, "many": false, "relatedModel": "InboxFolder", "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
+  "updated_by": {"name": "updated_by", "title": "Updated By", "fieldType": "UserField", "dbFieldType": null, "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
+  "user": {"name": "user", "title": "User", "fieldType": "OneToOneField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
+} as const;
+
+export const userInboxPreferencesCapabilities: BloomerpModelCapabilities = {"list": true, "retrieve": true, "create": true, "createMany": true, "update": true, "partialUpdate": true, "destroy": true} as const;
+export const userInboxPreferencesPublicAccess: BloomerpModelPublicAccessMetadata = {"listAllowed": false, "readAllowed": false, "listFields": [], "readFields": [], "nesting": [], "authenticatedFallbackEnabled": true} as const;
+
+export class UserInboxPreferenceApi extends ModelApi<UserInboxPreference, UserInboxPreferenceId, UserInboxPreferenceCreate, UserInboxPreferenceUpdate, UserInboxPreferenceQuery, UserInboxPreferenceFieldName> {
+  constructor(client: BloomerpHttpClient) {
+    super(client, "/api/user_inbox_preferences/");
+  }
+}
+
 export interface UserListViewPreference {
   content_type: number;
   default_filters: unknown;
@@ -1857,14 +2130,16 @@ export class WorkflowApi extends ModelApi<Workflow, WorkflowId, WorkflowCreate, 
 export interface WorkflowEdge {
   from_node: number;
   id: number;
+  name: string | null;
   to_node: number;
 }
 
 export type WorkflowEdgeId = number;
-export type WorkflowEdgeFieldName = "from_node" | "id" | "to_node";
+export type WorkflowEdgeFieldName = "from_node" | "id" | "name" | "to_node";
 
 export interface WorkflowEdgeCreate {
   from_node: number;
+  name?: string | null;
   to_node: number;
 }
 
@@ -1874,6 +2149,7 @@ export type WorkflowEdgeQuery = Partial<Record<WorkflowEdgeFieldName | `${Workfl
 export const workflowEdgesFields: Record<WorkflowEdgeFieldName, BloomerpFieldMetadata> = {
   "from_node": {"name": "from_node", "title": "From Node", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": false, "many": false, "relatedModel": "WorkflowNode", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
   "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(1000)", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
   "to_node": {"name": "to_node", "title": "To Node", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": false, "many": false, "relatedModel": "WorkflowNode", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
 } as const;
 
@@ -2142,6 +2418,30 @@ export class BloomerpSdk {
         publicAccess: formSubmissionsPublicAccess,
         fields: formSubmissionsFields,
       },
+      inboxs: {
+        endpoint: "/api/inboxs/",
+        capabilities: inboxsCapabilities,
+        publicAccess: inboxsPublicAccess,
+        fields: inboxsFields,
+      },
+      inboxFolders: {
+        endpoint: "/api/inbox_folders/",
+        capabilities: inboxFoldersCapabilities,
+        publicAccess: inboxFoldersPublicAccess,
+        fields: inboxFoldersFields,
+      },
+      inboxItems: {
+        endpoint: "/api/inbox_items/",
+        capabilities: inboxItemsCapabilities,
+        publicAccess: inboxItemsPublicAccess,
+        fields: inboxItemsFields,
+      },
+      initiatives: {
+        endpoint: "/api/initiatives/",
+        capabilities: initiativesCapabilities,
+        publicAccess: initiativesPublicAccess,
+        fields: initiativesFields,
+      },
       accessControlPolicies: {
         endpoint: "/api/access_control_policies/",
         capabilities: accessControlPoliciesCapabilities,
@@ -2220,6 +2520,12 @@ export class BloomerpSdk {
         publicAccess: userDetailViewPreferencesPublicAccess,
         fields: userDetailViewPreferencesFields,
       },
+      userInboxPreferences: {
+        endpoint: "/api/user_inbox_preferences/",
+        capabilities: userInboxPreferencesCapabilities,
+        publicAccess: userInboxPreferencesPublicAccess,
+        fields: userInboxPreferencesFields,
+      },
       userListViewPreferences: {
         endpoint: "/api/user_list_view_preferences/",
         capabilities: userListViewPreferencesCapabilities,
@@ -2277,6 +2583,10 @@ export class BloomerpSdk {
   public readonly fileFolders: FileFolderApi;
   public readonly forms: FormApi;
   public readonly formSubmissions: FormSubmissionApi;
+  public readonly inboxs: InboxApi;
+  public readonly inboxFolders: InboxFolderApi;
+  public readonly inboxItems: InboxItemApi;
+  public readonly initiatives: InitiativeApi;
   public readonly accessControlPolicies: PolicyApi;
   public readonly accessControlRowPolicies: RowPolicyApi;
   public readonly accessControlRowPolicyRules: RowPolicyRuleApi;
@@ -2290,6 +2600,7 @@ export class BloomerpSdk {
   public readonly users: UserApi;
   public readonly userCreateViewPreferences: UserCreateViewPreferenceApi;
   public readonly userDetailViewPreferences: UserDetailViewPreferenceApi;
+  public readonly userInboxPreferences: UserInboxPreferenceApi;
   public readonly userListViewPreferences: UserListViewPreferenceApi;
   public readonly workflows: WorkflowApi;
   public readonly workflowEdges: WorkflowEdgeApi;
@@ -2314,6 +2625,10 @@ export class BloomerpSdk {
     this.fileFolders = new FileFolderApi(this.client);
     this.forms = new FormApi(this.client);
     this.formSubmissions = new FormSubmissionApi(this.client);
+    this.inboxs = new InboxApi(this.client);
+    this.inboxFolders = new InboxFolderApi(this.client);
+    this.inboxItems = new InboxItemApi(this.client);
+    this.initiatives = new InitiativeApi(this.client);
     this.accessControlPolicies = new PolicyApi(this.client);
     this.accessControlRowPolicies = new RowPolicyApi(this.client);
     this.accessControlRowPolicyRules = new RowPolicyRuleApi(this.client);
@@ -2327,6 +2642,7 @@ export class BloomerpSdk {
     this.users = new UserApi(this.client);
     this.userCreateViewPreferences = new UserCreateViewPreferenceApi(this.client);
     this.userDetailViewPreferences = new UserDetailViewPreferenceApi(this.client);
+    this.userInboxPreferences = new UserInboxPreferenceApi(this.client);
     this.userListViewPreferences = new UserListViewPreferenceApi(this.client);
     this.workflows = new WorkflowApi(this.client);
     this.workflowEdges = new WorkflowEdgeApi(this.client);

@@ -1,4 +1,5 @@
 from ipaddress import ip_address
+from django.contrib import messages
 import re
 from typing import Any, Literal, Optional
 from django.contrib.contenttypes.models import ContentType
@@ -195,6 +196,24 @@ def render_page_refresh() -> HttpResponse:
     """Returns a HTMX page refresh"""
     from django_htmx.http import HttpResponseClientRefresh
     return HttpResponseClientRefresh()
+
+def render_message_and_refresh(
+    request: HttpRequest,
+    message: str,
+    type: Literal["info", "warning", "error", "success"],
+) -> HttpResponse:
+    """Renders a message and refreshes the page
+
+    Args:
+        request (HttpRequest): the request object
+        message (str): the message to render
+        type (Literal["info", "warning", "error", "success"]): the type of message
+
+    Returns:
+        HttpResponse: the response object
+    """
+    messages.add_message(request, getattr(messages, type.upper()), message)
+    return render_page_refresh()
 
 def render_oob_swap(
         request: HttpRequest,

@@ -42,6 +42,28 @@
         </c-ui.shortcut_tooltip>
         <!-- End search bar -->
 
+        <!-- Inbox -->
+         <c-ui.shortcut_tooltip shortcut="mod+i" action="click" position="right">
+            <div class="mt-2">
+                <button 
+                    id="inbox-btn" 
+                    type="button" 
+                    aria-haspopup="dialog" 
+                    aria-controls="global-search-modal"
+                    class="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-xl hover:cursor-pointer focus:outline-none w-full hover:bg-gray-200"
+                    hx-get="{% url 'inbox' %}"
+                    hx-target="#main-content"
+                    hx-swap="innerHTML"
+                    hx-push-url="true"
+                    hx-animation
+                    >
+                    <i class="fa fa-inbox text-gray-500"></i>
+                    <span class="text-sm text-gray-600">Inbox</span>
+                </button>
+            </div>
+        </c-ui.shortcut_tooltip>
+        <!-- End Inbox -->
+
 
         <hr class="text-gray-300 my-4">
 
@@ -148,24 +170,7 @@
                 {% include "components/sidebar/content.html" with sidebar=sidebar %}
             </div>
         </div>
-        {% endwith %}
-
-        <div class="mt-4">
-            <div class="flex justify-between">
-            <span class="text-gray-500 text-sm  px-2">Channels</span>
-            <div>
-                <c-ui.dropdown.body
-                    trigger_icon_class="fa-solid fa-ellipsis"
-                    trigger_button_class="ml-auto p-1 text-xs rounded-md bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700 hover:cursor-pointer"
-                    size="sm" 
-                    direction="down"
-                    >
-
-                </c-ui.dropdown.body>
-            </div>
-            </div>
-        </div>
-        
+        {% endwith %}        
 
         <!-- Profile -->
         <div class="mt-auto pt-3">

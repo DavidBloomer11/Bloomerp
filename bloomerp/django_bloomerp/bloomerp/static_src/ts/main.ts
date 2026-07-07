@@ -62,6 +62,9 @@ import { DataViewDisplayOptions } from './components/data_view_components/Displa
 
 import { openModal } from './utils/modals';
 import { closeModal } from './utils/modals';
+import { Inbox } from './components/inbox/Inbox';
+import { InboxItem } from './components/inbox/InboxItem';
+import { EmailEditor } from './components/inbox/EmailEditor';
 
 Object.assign(window, { showMessage });
 
@@ -151,6 +154,11 @@ registerComponent('ordered-field-select', OrderedFieldSelect);
 
 registerComponent('focus-on-form', FocusOnForm);
 registerComponent('base-wizard', BaseWizard)
+
+registerComponent('inbox', Inbox)
+registerComponent('inbox-item', InboxItem)
+
+registerComponent('email-editor', EmailEditor)
 
 // Auto init comonents
 setupComponentAutoInit();

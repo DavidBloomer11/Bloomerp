@@ -11,6 +11,10 @@
     {{ arg }}="{{ value }}"
     {% endfor %}
     >
+    {% if text %}
+    <p class="mb-4 text-sm text-gray-600">{{ text }}</p>
+    {% endif %}
+
     {% csrf_token %}
     {% if form %}
     {{ form | crispy }}
@@ -21,9 +25,7 @@
     {% endfor %}
     {% endif %}
 
-    {% if text %}
-    <p class="mb-4 text-sm text-gray-600">{{ text }}</p>
-    {% endif %}
+    
 
     <div class="mt-4 flex justify-start gap-2">
         <button 

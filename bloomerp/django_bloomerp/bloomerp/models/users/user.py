@@ -54,14 +54,6 @@ class AbstractBloomerpUser(
 
     allow_string_search = True
 
-    # ------------------------------------------------
-    # User Preferences
-    # ------------------------------------------------
-    FILE_VIEW_PREFERENCE_CHOICES = [
-        ("card", "Card View"),
-        ("list", "List View"),
-    ]
-
     DATE_VIEW_PREFERENCE_CHOICES = [
         ("d-m-Y", "Day-Month-Year (15-08-2000)"),
         ("m-d-Y", "Month-Day-Year (08-15-2000)"),
@@ -74,9 +66,6 @@ class AbstractBloomerpUser(
         ("Y-m-d H:i", "Year-Month-Day Hour:Minute (2000-08-15 12:30)"),
     ]
 
-    file_view_preference = models.CharField(
-        max_length=20, default="card", choices=FILE_VIEW_PREFERENCE_CHOICES
-    )
 
     date_view_preference = models.CharField(
         max_length=20, default="d-m-Y", choices=DATE_VIEW_PREFERENCE_CHOICES, help_text=_("The date format to be used in the application")
@@ -85,7 +74,6 @@ class AbstractBloomerpUser(
     datetime_view_preference = models.CharField(
         max_length=20, default="d-m-Y H:i", choices=DATETIME_VIEW_PREFERENCE_CHOICES, help_text=_("The datetime format to be used in the application")
     )
-
     
     def __str__(self):
         return self.username

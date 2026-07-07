@@ -1,12 +1,12 @@
+from bloomerp.communication.system_messages.utils import SystemMessage
 from bloomerp.utils.realtime import send_user_message
-from bloomerp.widgets.foreign_field_widget import ForeignFieldWidget
 
 from bloomerp.automation.base_executor import BaseExecutor
-from bloomerp.automation.schema import WorkflowInputRequirement, WorkflowIOSchema, WorkflowValueField, WorkflowValueType
+from bloomerp.automation.schema import WorkflowInputRequirement, WorkflowIOSchema, WorkflowValueType
 from django.forms import Form
 from django import forms
-from django.contrib.contenttypes.models import ContentType
-
+from django.conf import settings
+from django.contrib.auth import get_user_model
 
 # TODO: Choices should be defined in a central place
 class SendUserMessageForm(Form):
@@ -38,6 +38,17 @@ class SendUserMessage(BaseExecutor):
     def execute(self, input_data: dict) -> dict:
         params = self.resolve_config(input_data)
         user_id = params.get("user_id")
+        
+        
+        
+        SystemMessage.send_message(
+            type="general",
+            users=get_user_model().objects.filter(
+                id=user_id    
+            ),
+            message=str(params.get("message"))
+        )
+        
         send_user_message(
             user_id,
             payload={

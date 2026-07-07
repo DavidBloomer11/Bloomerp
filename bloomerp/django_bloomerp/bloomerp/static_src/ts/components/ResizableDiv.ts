@@ -3,7 +3,7 @@ import { getCookie, setCookie } from "../utils/cookies";
 
 const DEFAULT_START_WIDTH = "320px";
 const MIN_WIDTH = 0;
-const MAX_WIDTH_RATIO = 0.5;
+const MAX_WIDTH_RATIO = 0.75;
 const DESKTOP_MEDIA_QUERY = "(min-width: 1280px)";
 const HANDLE_SELECTOR = "[data-resizable-div-handle]";
 const PANEL_SELECTOR = "[data-resizable-div-panel]";

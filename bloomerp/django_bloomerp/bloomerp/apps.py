@@ -23,6 +23,7 @@ class BloomerpApp(AppConfig):
         from bloomerp.config.validator import validate_runtime_configuration
         from bloomerp.services.permission_services import ensure_bloomerp_model_permissions
         from bloomerp.signals.automations import setup_automation_signals
+        from bloomerp.signals.email_sync import ensure_email_sync_dispatcher_schedule
         from bloomerp.modules.definition import module_registry
         from bloomerp.signals.activity_log import before_save_of_object  # noqa: F401
         from bloomerp.signals.activity_log import after_save_of_object
@@ -34,6 +35,11 @@ class BloomerpApp(AppConfig):
             ensure_bloomerp_model_permissions,
             sender=self,
             dispatch_uid="bloomerp.ensure_bloomerp_model_permissions",
+        )
+        post_migrate.connect(
+            ensure_email_sync_dispatcher_schedule,
+            sender=self,
+            dispatch_uid="bloomerp.ensure_email_sync_dispatcher_schedule",
         )
 
         try:
