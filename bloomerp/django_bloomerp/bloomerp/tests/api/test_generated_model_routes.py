@@ -1,11 +1,12 @@
 import asyncio
 
+from django_celery_beat.models import CrontabSchedule
 from django.test import SimpleTestCase
 from django.urls import resolve
 
 from bloomerp.models.project_management.initiative import Initiative
 from bloomerp.utils.api import generate_model_viewset_class, generate_serializer
-from bloomerp.views.api.api_views import BloomerpModelViewSet
+from bloomerp.views.api.models import BloomerpModelViewSet
 
 
 class GeneratedModelApiRouteTests(SimpleTestCase):
@@ -25,3 +26,10 @@ class GeneratedModelApiRouteTests(SimpleTestCase):
         match = resolve("/api/initiatives/")
 
         self.assertEqual(match.url_name, "initiatives-list")
+
+    def test_generated_serializer_normalizes_object_choice_values(self):
+        serializer = generate_serializer(CrontabSchedule)()
+        timezone_choices = serializer.fields["timezone"].choices
+
+        first_choice_value = next(iter(timezone_choices.keys()))
+        self.assertIsInstance(first_choice_value, str)

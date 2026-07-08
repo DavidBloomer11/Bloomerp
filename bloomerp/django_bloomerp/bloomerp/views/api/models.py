@@ -26,6 +26,7 @@ from bloomerp.views.api.authentication import BloomerpApiKeyAuthentication
 
 class BloomerpModelViewSet(viewsets.ModelViewSet):
     # The model will be injected dynamically when the viewset is initialized
+    model: type[Model] | None = None
     queryset = None
     serializer_class = None
     authentication_classes = (
@@ -479,6 +480,13 @@ class BloomerpModelViewSet(viewsets.ModelViewSet):
             ):
                 raise PermissionDenied("You do not have permission to create an object with these values.")
 
+
+    def get_serializer_class(self):
+        return self.serializer_class
+
+    # ---------------------------------------
+    # Actual viewset methods
+    # ---------------------------------------
     def get_queryset(self):
         if self._should_use_user_access():
             return apply_queryset_nesting(
@@ -505,9 +513,6 @@ class BloomerpModelViewSet(viewsets.ModelViewSet):
             self.action,
         )
 
-    def get_serializer_class(self):
-        return self.serializer_class
-
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         permission_str = self._get_permission_str("list")
@@ -528,7 +533,7 @@ class BloomerpModelViewSet(viewsets.ModelViewSet):
         permission_str = self._get_permission_str("retrieve")
         self._apply_field_permissions(serializer, permission_str, "retrieve")
         return Response(serializer.data)
-
+    
     def create(self, request, *args, **kwargs):
         is_many = isinstance(request.data, list)
         permission_action = "bulk_create" if is_many else "create"
@@ -571,24 +576,3 @@ class BloomerpModelViewSet(viewsets.ModelViewSet):
         kwargs["partial"] = True
         return self.update(request, *args, **kwargs)
 
-
-class BloomerpLoginView(LoginView):
-    authentication_form = BloomerpAuthenticationForm
-    template_name = "views/auth/login.html"
-    next_page = reverse_lazy("bloomerp_home_view")
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        interactive_auth = get_interactive_auth_settings()
-        social_providers = get_social_login_providers()
-        context.update(
-            {
-                "interactive_auth": interactive_auth,
-                "login_field_label": get_login_field_label(),
-                "login_help_text": get_login_help_text(),
-                "social_login_providers": social_providers,
-                "social_login_enabled": bool(social_providers),
-                "social_login_runtime_ready": allauth_is_enabled(),
-            }
-        )
-        return context
