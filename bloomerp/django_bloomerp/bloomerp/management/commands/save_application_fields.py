@@ -1,11 +1,10 @@
 from django.core.management.base import BaseCommand
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
-from pydantic import Field
 from bloomerp.models import ApplicationField
 from django.db import models
 from django import db
-from bloomerp.field_types import FieldType
+from bloomerp.field_types.types import FieldType
 from bloomerp.services.permission_services import ensure_bloomerp_model_permissions
 from django.utils.encoding import force_str
 
@@ -104,9 +103,6 @@ class Command(BaseCommand):
 
                             # UUID-backed primary keys should not become selectable
                             # ApplicationFields for CRUD layouts or permissions.
-                            if getattr(field, "primary_key", False):
-                                continue
-
                             try:
                                 # Get database column for field
                                 if hasattr(field, 'db_column') or hasattr(field, 'column'):
