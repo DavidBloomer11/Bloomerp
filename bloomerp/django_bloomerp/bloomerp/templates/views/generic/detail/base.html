@@ -194,8 +194,7 @@
 							<i class="fa fa-comments"></i>
 							<c-i18n.blocktrans>Comments</c-i18n.blocktrans>
 						</button>
-						{% if model_name != 'Todo' %}
-						{% if model_name != 'Initiative' %}
+						{% if model_name != 'todo' and model_name != 'initiative' %}
 						<button 
 							class="btn btn-secondary btn-sm"
 							hx-get="{% url 'components_create_todo_for_object' content_type_id=content_type_id object_id=object.id %}?content_type_id={{ content_type_id }}&object_id={{ object.id }}"
@@ -208,7 +207,6 @@
 							<i class="fa fa-list-check"></i>
 							<c-i18n.blocktrans>Create Todo</c-i18n.blocktrans>
 						</button>
-						{% endif %}
 						{% endif %}
 						{% for button in extra_buttons %}
 							{% render_object_action action=button object=object request=request content_type_id=content_type_id %}

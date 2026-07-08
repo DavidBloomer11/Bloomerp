@@ -14,6 +14,7 @@ from bloomerp.models import (
     RowPolicyRule,
     File,
 )
+from bloomerp.models.project_management import Initiative, Todo
 from bloomerp.models.users.user_detail_view_preference import UserDetailViewPreference
 from bloomerp.tests.views.crud_test_mixin import CrudViewTestMixin
 
@@ -194,6 +195,53 @@ class TestOverviewView(CrudViewTestMixin):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'name="age"', html=False)
         self.assertContains(response, "disabled", html=False)
+
+    def test_customer_detail_shows_create_todo_button(self):
+        """
+        Use case: A regular model detail page renders its side-section actions.
+        Expected result: The create-todo action remains available.
+        """
+        # 1. Authenticate as an admin user with detail access.
+        self.client.force_login(self.admin_user)
+
+        # 2. Render a customer detail page.
+        response = self.client.get(self.get_url())
+
+        # 3. Verify the create-todo action is still rendered.
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "/components/todo/create-todo-for-object/", html=False)
+
+    def test_todo_detail_hides_create_todo_button(self):
+        """
+        Use case: A Todo detail page renders its side-section actions.
+        Expected result: The create-todo action is hidden to avoid self-referential to-dos.
+        """
+        # 1. Create a todo and authenticate as an admin user with detail access.
+        todo = Todo.objects.create(title="Fix recursive todo action")
+        self.client.force_login(self.admin_user)
+
+        # 2. Render the todo detail page.
+        response = self.client.get(reverse("todos_detail_overview", kwargs={"pk": todo.pk}))
+
+        # 3. Verify the create-todo action is not rendered.
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "/components/todo/create-todo-for-object/", html=False)
+
+    def test_initiative_detail_hides_create_todo_button(self):
+        """
+        Use case: An Initiative detail page renders its side-section actions.
+        Expected result: The create-todo action is hidden to avoid recursive planning objects.
+        """
+        # 1. Create an initiative and authenticate as an admin user with detail access.
+        initiative = Initiative.objects.create(name="Launch planning")
+        self.client.force_login(self.admin_user)
+
+        # 2. Render the initiative detail page.
+        response = self.client.get(reverse("initiatives_detail_overview", kwargs={"pk": initiative.pk}))
+
+        # 3. Verify the create-todo action is not rendered.
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "/components/todo/create-todo-for-object/", html=False)
 
     def test_POST_on_fields_user_has_no_access_to_gives_error_msg(self):
         self.grant_policy(
