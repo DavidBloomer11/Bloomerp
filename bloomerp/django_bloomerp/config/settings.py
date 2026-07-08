@@ -20,6 +20,7 @@ from bloomerp.config.settings import (
     BLOOMERP_MIDDLEWARE,
     BLOOMERP_SITE_ID,
     BLOOMERP_USER_MODEL,
+    REST_FRAMEWORK,
 )
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -171,3 +172,5 @@ CHANNEL_LAYERS = {
 BLOOMERP_CONFIG = BloomerpConfig(
     auto_generate_api_endpoints=True
 )
+
+

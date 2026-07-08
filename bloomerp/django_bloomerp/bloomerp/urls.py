@@ -13,7 +13,7 @@ from bloomerp.views.api.access_control import PolicyViewSet
 from django.db.models import Model
 from bloomerp.utils.models import (model_name_plural_underline)
 from bloomerp.utils.api import generate_serializer, generate_model_viewset_class
-from bloomerp.views.api.api_views import BloomerpModelViewSet
+from bloomerp.views.api.models import BloomerpModelViewSet
 from bloomerp.models.definition import BloomerpModelConfig
 from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
 from bloomerp.utils.urls import IntOrUUIDConverter
@@ -25,6 +25,8 @@ from django.urls import reverse_lazy
 from django.conf import settings
 from bloomerp.views.api.auth import csrf_view, login_view, logout_view, register_view, session_view
 from bloomerp.auth import allauth_is_enabled
+from bloomerp.views.api.docs.schema import BloomerpOpenAPISchemaView
+from bloomerp.views.api.docs.schema_ui import BloomerpRedocSchemaView
 from bloomerp.views.auth.login import BloomerpLoginView
 
 logger = logging.getLogger(__name__)
@@ -192,6 +194,8 @@ urlpatterns += [
         ),
     ),
     path('api/', include(drf_router.urls)),
+    path('api/schema/', BloomerpOpenAPISchemaView.as_view(), name='schema'),
+    path('api/schema/ui/', BloomerpRedocSchemaView.as_view(url_name='schema')),
 ]
 
 # Create url patterns
