@@ -488,6 +488,9 @@ class BloomerpModelViewSet(viewsets.ModelViewSet):
     # Actual viewset methods
     # ---------------------------------------
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return self.model.objects.none()
+
         if self._should_use_user_access():
             return apply_queryset_nesting(
                 self._get_user_queryset(),
@@ -575,4 +578,3 @@ class BloomerpModelViewSet(viewsets.ModelViewSet):
     def partial_update(self, request, *args, **kwargs):
         kwargs["partial"] = True
         return self.update(request, *args, **kwargs)
-

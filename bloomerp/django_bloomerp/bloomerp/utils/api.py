@@ -645,6 +645,9 @@ def generate_model_viewset_class(
     '''
 
     def get_filterset_class(self):
+        if getattr(self, "swagger_fake_view", False):
+            return _fallback_filterset_class(model)
+
         filterset_class = getattr(self.__class__, "_bloomerp_filterset_class", None)
         if filterset_class is not None:
             return filterset_class

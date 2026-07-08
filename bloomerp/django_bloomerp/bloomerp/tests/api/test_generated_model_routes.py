@@ -1,4 +1,5 @@
 import asyncio
+from unittest.mock import patch
 
 from django_celery_beat.models import CrontabSchedule
 from django.test import SimpleTestCase
@@ -33,3 +34,33 @@ class GeneratedModelApiRouteTests(SimpleTestCase):
 
         first_choice_value = next(iter(timezone_choices.keys()))
         self.assertIsInstance(first_choice_value, str)
+
+    def test_schema_fake_view_queryset_does_not_require_database_access(self):
+        viewset = generate_model_viewset_class(
+            model=Initiative,
+            serializer=generate_serializer(Initiative),
+            base_viewset=BloomerpModelViewSet,
+        )
+        view = viewset()
+        view.swagger_fake_view = True
+
+        queryset = view.get_queryset()
+
+        self.assertEqual(queryset.model, Initiative)
+
+    def test_schema_fake_view_filterset_does_not_require_application_fields(self):
+        viewset = generate_model_viewset_class(
+            model=Initiative,
+            serializer=generate_serializer(Initiative),
+            base_viewset=BloomerpModelViewSet,
+        )
+        view = viewset()
+        view.swagger_fake_view = True
+
+        with patch(
+            "bloomerp.utils.api.ApplicationField.get_for_model",
+            side_effect=RuntimeError("database unavailable"),
+        ):
+            filterset_class = view.filterset_class
+
+        self.assertEqual(filterset_class.Meta.model, Initiative)
