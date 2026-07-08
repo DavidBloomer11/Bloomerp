@@ -3,32 +3,34 @@ from django.http import HttpRequest, JsonResponse
 
 from bloomerp.router import router
 from bloomerp.services.sql_services import DatabaseTable, SqlExecutor
+from rest_framework.views import APIView
 
+@router.register(
+    path="api/sql/accessible-tables/", 
+    name="api_sql_accessible_tables"
+    )
+class AccessibleTablesView(APIView):
+    def get(self, request: HttpRequest) -> JsonResponse:
+        search = request.GET.get("search", "").strip().lower()
+        refresh = request.GET.get("refresh", "false").lower() == "true"
 
-@router.register(path="api/sql/accessible-tables/", name="api_sql_accessible_tables")
-@login_required
-def accessible_tables(request: HttpRequest) -> JsonResponse:
-    search = request.GET.get("search", "").strip().lower()
-    refresh = request.GET.get("refresh", "false").lower() == "true"
+        executor = SqlExecutor(request.user)
+        tables = executor.get_accessible_tables_and_fields()
 
-    executor = SqlExecutor(request.user)
-    tables = executor.get_accessible_tables_and_fields()
+        if search:
+            tables = _filter_tables_by_search(tables, search)
 
-    if search:
-        tables = _filter_tables_by_search(tables, search)
-
-    response = {
-        "databases": [
-            {
-                "name": "bloomerp",
-                "icon": "fa-solid fa-database",
-                "tables": [table.model_dump() for table in tables],
-            }
-        ],
-        "refreshed": refresh,
-    }
-
-    return JsonResponse(response)
+        response = {
+            "databases": [
+                {
+                    "name": "bloomerp",
+                    "icon": "fa-solid fa-database",
+                    "tables": [table.model_dump() for table in tables],
+                }
+            ],
+            "refreshed": refresh,
+        }
+        return JsonResponse(response)
 
 
 def _filter_tables_by_search(tables: list[DatabaseTable], search: str) -> list[DatabaseTable]:
