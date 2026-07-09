@@ -794,9 +794,6 @@
   .min-h-20 {
     min-height: calc(var(--spacing) * 20);
   }
-  .min-h-32 {
-    min-height: calc(var(--spacing) * 32);
-  }
   .min-h-64 {
     min-height: calc(var(--spacing) * 64);
   }
@@ -2294,9 +2291,6 @@
   }
   .text-emerald-900 {
     color: var(--color-emerald-900);
-  }
-  .text-emerald-950 {
-    color: var(--color-emerald-950);
   }
   .text-gray-300 {
     color: var(--color-gray-300);

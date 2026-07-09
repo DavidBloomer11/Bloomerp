@@ -1,9 +1,13 @@
 from django.test import RequestFactory
 
 from bloomerp.models.workspaces.tile import Tile
+from bloomerp.services.permission_services import UserPermissionManager
 from bloomerp.services.workspace_services import render_tile_to_string
 from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.workspaces.links_tile.model import Link, LinkTileConfig
+from bloomerp.workspaces.links_tile.render import LinksTileRenderer
 from bloomerp.workspaces.tiles import TileType
+from bloomerp.workspaces.utils import UserParameterResolver
 
 
 class WorkspaceTileRenderingTests(BaseBloomerpModelTestCase):
@@ -36,3 +40,79 @@ class WorkspaceTileRenderingTests(BaseBloomerpModelTestCase):
         # 3. Verify the template content renders instead of the template file name.
         self.assertIn("Visible workspace tile", html)
         self.assertNotIn("cotton/workspaces/tiles/text.html", html)
+
+    def test_user_parameter_resolver_replaces_current_user_attribute(self):
+        resolver = UserParameterResolver(self.admin_user)
+
+        rendered = resolver.resolve("/employees/?user={{ current_user.id }}")
+
+        self.assertEqual(rendered, f"/employees/?user={self.admin_user.id}")
+
+    def test_user_parameter_resolver_replaces_current_user_with_spaces(self):
+        resolver = UserParameterResolver(self.normal_user)
+
+        rendered = resolver.resolve("/employees/?user={{   current_user   }}")
+
+        self.assertEqual(rendered, f"/employees/?user={self.normal_user.pk}")
+
+    def test_link_tile_resolves_current_user_parameters(self):
+        config = LinkTileConfig(
+            links=[
+                Link(
+                    url="/employees/?user={{ current_user.id }}",
+                    name="Employees",
+                    is_internal=True,
+                )
+            ]
+        )
+        request = self.factory.get("/")
+        request.user = self.admin_user
+
+        html = LinksTileRenderer.render(config, request)
+
+        self.assertIn(f'href="/employees/?user={self.admin_user.id}"', html)
+        self.assertEqual(config.links[0].url, "/employees/?user={{ current_user.id }}")
+
+    def test_user_parameter_resolver_hides_model_object_without_view_permission(self):
+        customer = self.CustomerModel.objects.create(
+            first_name="Blocked",
+            last_name="Customer",
+            age=30,
+            created_by=self.normal_user,
+        )
+        self.normal_user.visible_customers = self.CustomerModel.objects.filter(pk=customer.pk)
+        resolver = UserParameterResolver(self.normal_user)
+
+        rendered = resolver.resolve(
+            "/customers/?customer={{ current_user.visible_customers.first() }}"
+        )
+
+        self.assertEqual(rendered, "/customers/?customer=")
+        self.assertTrue(self.CustomerModel.objects.filter(pk=customer.pk).exists())
+
+    def test_user_parameter_resolver_serializes_permitted_model_object_pk(self):
+        customer = self.CustomerModel.objects.create(
+            first_name="Allowed",
+            last_name="Customer",
+            age=30,
+            created_by=self.normal_user,
+        )
+        UserPermissionManager(self.normal_user).assign_creator_permission(
+            self.CustomerModel,
+            field_policy={"__all__": "__all__"},
+            row_permissions=["view"],
+        )
+        self.assertTrue(
+            UserPermissionManager(self.normal_user)
+            .get_queryset(self.CustomerModel, "view_customer")
+            .filter(pk=customer.pk)
+            .exists()
+        )
+        self.normal_user.visible_customers = self.CustomerModel.objects.filter(pk=customer.pk)
+        resolver = UserParameterResolver(self.normal_user)
+
+        rendered = resolver.resolve(
+            "/customers/?customer={{ current_user.visible_customers.first() }}"
+        )
+
+        self.assertEqual(rendered, f"/customers/?customer={customer.pk}")
