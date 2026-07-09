@@ -1,6 +1,10 @@
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
 
+from bloomerp.field_types import FieldType
+from bloomerp.models.access_control.row_policy import RowPolicy
+from bloomerp.models.access_control.row_policy_rule import RowPolicyRule
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.models.access_control.row_policy_rule import RowPolicyRuleContent
 from bloomerp.serializers.access_control import PolicySerializer
@@ -15,6 +19,17 @@ class TestPolicySerializer(BaseBloomerpModelTestCase):
         self.first_name_field = ApplicationField.objects.get(
             content_type=self.content_type,
             field="first_name",
+        )
+        self.property_field = ApplicationField.objects.create(
+            content_type=self.content_type,
+            field="display_name",
+            field_type=FieldType.PROPERTY.id,
+        )
+        self.one_to_many_field = ApplicationField.objects.create(
+            content_type=self.content_type,
+            field="timesheets",
+            field_type=FieldType.ONE_TO_MANY_FIELD.id,
+            related_model=self.content_type,
         )
         self._ensure_permission("view")
         self._ensure_permission("change")
@@ -69,6 +84,61 @@ class TestPolicySerializer(BaseBloomerpModelTestCase):
         serializer = PolicySerializer(data=payload)
 
         self.assertTrue(serializer.is_valid(), serializer.errors)
+
+    def test_serializer_accepts_property_and_one_to_many_field_policies(self):
+        payload = self.build_payload(
+            global_permissions=["view_customer", "change_customer"],
+            row_permissions=["view_customer"],
+            field_permissions=["change_customer"],
+        )
+        payload["field_policy"]["rules"] = {
+            str(self.property_field.pk): ["view_customer", "change_customer"],
+            str(self.one_to_many_field.pk): ["view_customer", "change_customer"],
+        }
+
+        serializer = PolicySerializer(data=payload)
+
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+
+    def test_serializer_rejects_property_and_one_to_many_row_policy_conditions(self):
+        for application_field in [self.property_field, self.one_to_many_field]:
+            with self.subTest(field_type=application_field.field_type):
+                payload = self.build_payload(
+                    global_permissions=["view_customer"],
+                    row_permissions=["view_customer"],
+                    field_permissions=["view_customer"],
+                )
+                payload["row_policy"]["rules"][0]["rule"]["conditions"][0]["application_field_id"] = str(
+                    application_field.pk
+                )
+
+                serializer = PolicySerializer(data=payload)
+
+                self.assertFalse(serializer.is_valid())
+                self.assertIn("row_policy", serializer.errors)
+
+    def test_row_policy_rule_model_rejects_property_and_one_to_many_conditions(self):
+        row_policy = RowPolicy.objects.create(
+            content_type=self.content_type,
+            name="Customer row policy",
+        )
+
+        for application_field in [self.property_field, self.one_to_many_field]:
+            with self.subTest(field_type=application_field.field_type):
+                with self.assertRaises(ValidationError):
+                    RowPolicyRule.objects.create(
+                        row_policy=row_policy,
+                        rule=RowPolicyRuleContent(
+                            connector="OR",
+                            conditions=[
+                                {
+                                    "application_field_id": str(application_field.pk),
+                                    "operator": "exact",
+                                    "value": "Alice",
+                                }
+                            ],
+                        ).model_dump(),
+                    )
 
     def test_serializer_rejects_permissions_not_present_in_global_permissions(self):
         payload = self.build_payload(

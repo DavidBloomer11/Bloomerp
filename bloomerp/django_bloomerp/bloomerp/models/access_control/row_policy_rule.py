@@ -6,8 +6,14 @@ from django.contrib.auth.models import Permission
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
 from bloomerp.models import ApplicationField
+from bloomerp.field_types import FieldType
 from bloomerp.models.mixins.absolute_url_model_mixin import AbsoluteUrlModelMixin
 from pydantic import BaseModel, ValidationError as PydanticValidationError, field_validator, model_validator
+
+ROW_POLICY_DISALLOWED_FIELD_TYPE_IDS = {
+    FieldType.ONE_TO_MANY_FIELD.id,
+    FieldType.PROPERTY.id,
+}
 
 class RowPolicyRuleCondition(BaseModel):
     application_field_id : Optional[int|str] = None
@@ -214,6 +220,8 @@ class RowPolicyRule(AbsoluteUrlModelMixin, models.Model):
             raise ValidationError("Incorrect application field")
 
         operator = rule_condition.operator
+        if application_field.field_type in ROW_POLICY_DISALLOWED_FIELD_TYPE_IDS:
+            raise ValidationError("Properties and one-to-many fields cannot be used in row policies")
 
         field_path = rule_condition.field
         if isinstance(field_path, str) and "__" in field_path:

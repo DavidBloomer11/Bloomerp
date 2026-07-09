@@ -4,11 +4,18 @@ from django.contrib.auth.models import Permission
 from bloomerp.models.access_control.row_policy_rule import RowPolicyRule, RowPolicyRuleContent
 from bloomerp.models.access_control.row_policy import RowPolicy
 from bloomerp.models.access_control.field_policy import FieldPolicy
+from bloomerp.models.application_field import ApplicationField
+from bloomerp.field_types import FieldType
 from django.db import transaction
 from django.contrib.contenttypes.models import ContentType
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from pydantic import ValidationError as PydanticValidationError
+
+ROW_POLICY_DISALLOWED_FIELD_TYPE_IDS = {
+    FieldType.ONE_TO_MANY_FIELD.id,
+    FieldType.PROPERTY.id,
+}
 
 
 @extend_schema_field(OpenApiTypes.STR)
@@ -92,6 +99,9 @@ class PolicySerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         global_permissions = attrs.get("global_permissions", [])
         allowed_permission_codenames = {permission.codename for permission in global_permissions}
+        content_type_id = attrs.get("content_type_id")
+        if content_type_id is None and self.instance is not None:
+            content_type_id = self.instance.row_policy.content_type_id
 
         row_policy = attrs.get("row_policy") or {}
         row_policy_rules = row_policy.get("rules", [])
@@ -120,6 +130,14 @@ class PolicySerializer(serializers.ModelSerializer):
             errors["row_policy"] = [
                 "Row policy permissions must also be selected as global permissions."
             ]
+        invalid_row_policy_field_ids = self._get_invalid_row_policy_field_ids(
+            content_type_id,
+            row_policy_rules,
+        )
+        if invalid_row_policy_field_ids:
+            errors["row_policy"] = [
+                "Properties and one-to-many fields cannot be used in row policies."
+            ]
         if invalid_field_permissions:
             errors["field_policy"] = [
                 "Field policy permissions must also be selected as global permissions."
@@ -129,6 +147,33 @@ class PolicySerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(errors)
 
         return attrs
+
+    def _get_invalid_row_policy_field_ids(self, content_type_id, row_policy_rules) -> set[str]:
+        if not content_type_id:
+            return set()
+
+        disallowed_field_ids = {
+            str(field_id)
+            for field_id in ApplicationField.objects.filter(
+                content_type_id=content_type_id,
+                field_type__in=ROW_POLICY_DISALLOWED_FIELD_TYPE_IDS,
+            ).values_list("id", flat=True)
+        }
+        if not disallowed_field_ids:
+            return set()
+
+        invalid_field_ids = set()
+        for rule in row_policy_rules:
+            rule_content = (rule or {}).get("rule") or {}
+            conditions = rule_content.get("conditions", []) if isinstance(rule_content, dict) else []
+            for condition in conditions:
+                if not isinstance(condition, dict):
+                    continue
+                application_field_id = str(condition.get("application_field_id", "")).strip()
+                if application_field_id and application_field_id != "__all__" and application_field_id in disallowed_field_ids:
+                    invalid_field_ids.add(application_field_id)
+
+        return invalid_field_ids
         
     
     @transaction.atomic

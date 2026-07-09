@@ -31,23 +31,26 @@
         <div class="flex flex-wrap gap-2">
             {% for field in application_fields %}
                 <span
-                    class="px-3 py-1 text-xs border rounded-md transition-all cursor-move border-base bg-white text-gray-700 hover:bg-base hover:shadow-md"
+                    class="px-3 py-1 text-xs border rounded-xl transition-all cursor-move border-base bg-white text-gray-700 hover:bg-base hover:shadow-md"
                     draggable="true"
                     data-field-draggable
                     data-field-id="{{ field.id }}"
                     data-field-name="{{ field.field }}"
                     data-field-label="{{ field.title }}"
+                    data-row-policy-allowed="{{ field.is_row_policy_allowed|yesno:'true,false' }}"
                 >
                     {{ field.title }}
+                    <i class="{{ field.icon }} text-xs ml-2"></i>
                 </span>
             {% endfor %}
             <span
-                class="px-3 py-1 text-xs border rounded-md transition-all cursor-move border-base bg-white text-gray-700 hover:bg-base hover:shadow-md"
+                class="px-3 py-1 text-xs border rounded-xl bg-light transition-all cursor-move border-base bg-white text-gray-700 hover:bg-base hover:shadow-md"
                 draggable="true"
                 data-field-draggable
                 data-field-id="__all__"
                 data-field-name="__all__"
                 data-field-label="All"
+                data-row-policy-allowed="true"
             >
                 <c-i18n.blocktrans>All</c-i18n.blocktrans>
             </span>
