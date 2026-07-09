@@ -25,7 +25,7 @@ class AccessibleTablesView(APIView):
                 {
                     "name": "bloomerp",
                     "icon": "fa-solid fa-database",
-                    "tables": [table.model_dump() for table in tables],
+                    "tables": [table.model_dump(include_field_icons=False) for table in tables],
                 }
             ],
             "refreshed": refresh,

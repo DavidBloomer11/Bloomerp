@@ -1,13 +1,13 @@
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
-from numpy import tri
 from bloomerp.models.automation.workflow import Workflow
 from bloomerp.services.workflow_services import run_workflow
 from bloomerp.router import router
 
 @router.register(
-    path="api/webhook/<str:workflow_id>/",
-    url_name="api_workflow_webhook",
+    path="webhook/",
+    route_type="api_detail",
+    models=[Workflow]
 )
 def workflow_webhook(request:HttpRequest, workflow_id:str) -> HttpResponse:
     """

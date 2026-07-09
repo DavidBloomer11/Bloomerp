@@ -1,39 +1,34 @@
-from collections.abc import Mapping
-
-from django.contrib.auth.views import LoginView
-from django.urls import reverse_lazy
-from rest_framework import viewsets, status
-from rest_framework.authentication import BasicAuthentication, SessionAuthentication
-from django_filters import rest_framework as filters
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.exceptions import PermissionDenied
-from rest_framework.response import Response
+from bloomerp.models.application_field import ApplicationField
+from bloomerp.models.definition import BloomerpModelConfig
+from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
+from bloomerp.utils.api import apply_queryset_nesting
+from bloomerp.api.authentication_classes import BloomerpApiKeyAuthentication
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import FieldDoesNotExist
 from django.db import transaction
-from django.db.models import Model, Q
+from django.db.models import Q, Model
+from django_filters import rest_framework as filters
+from rest_framework import status, viewsets
+from rest_framework.authentication import BasicAuthentication, SessionAuthentication
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from collections.abc import Mapping
 
-from bloomerp.auth import allauth_is_enabled, get_interactive_auth_settings, get_login_field_label, get_login_help_text, get_social_login_providers
-from bloomerp.forms.auth import BloomerpAuthenticationForm
-from bloomerp.models.application_field import ApplicationField
-from bloomerp.models.definition import BloomerpModelConfig
-from bloomerp.services.permission_services import (
-    UserPermissionManager,
-    create_permission_str,
+
+AUTHENTICATION_CLASSES = (
+    BloomerpApiKeyAuthentication,
+    SessionAuthentication,
+    BasicAuthentication,
 )
-from bloomerp.utils.api import apply_queryset_nesting
-from bloomerp.views.api.authentication import BloomerpApiKeyAuthentication
 
 class BloomerpModelViewSet(viewsets.ModelViewSet):
     # The model will be injected dynamically when the viewset is initialized
     model: type[Model] | None = None
     queryset = None
     serializer_class = None
-    authentication_classes = (
-        BloomerpApiKeyAuthentication,
-        SessionAuthentication,
-        BasicAuthentication,
-    )
+    authentication_classes = AUTHENTICATION_CLASSES
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_fields = '__all__'
     permission_classes = (IsAuthenticated,)
@@ -533,7 +528,7 @@ class BloomerpModelViewSet(viewsets.ModelViewSet):
         permission_str = self._get_permission_str("retrieve")
         self._apply_field_permissions(serializer, permission_str, "retrieve")
         return Response(serializer.data)
-    
+
     def create(self, request, *args, **kwargs):
         is_many = isinstance(request.data, list)
         permission_action = "bulk_create" if is_many else "create"
@@ -575,4 +570,5 @@ class BloomerpModelViewSet(viewsets.ModelViewSet):
     def partial_update(self, request, *args, **kwargs):
         kwargs["partial"] = True
         return self.update(request, *args, **kwargs)
-
+    
+    

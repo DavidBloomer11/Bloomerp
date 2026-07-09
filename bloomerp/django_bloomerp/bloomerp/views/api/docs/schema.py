@@ -5,7 +5,13 @@ from collections.abc import Iterable
 from django.db.models import Model
 from drf_spectacular.views import SpectacularAPIView
 from bloomerp.utils.api import ApiAccessResolver
+from bloomerp.router import router
 
+@router.register(
+    path="schema/",
+    route_type="api",
+    url_name="schema",
+)
 class BloomerpOpenAPISchemaView(SpectacularAPIView):
     """
     Custom OpenAPI schema view for the Bloomerp API.

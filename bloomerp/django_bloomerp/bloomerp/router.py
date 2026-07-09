@@ -10,8 +10,6 @@ import os
 from functools import wraps
 from typing import Callable, List, Literal
 
-from numpy import isin
-from regex import B
 from bloomerp.models.definition import get_model_config
 from bloomerp.modules.definition import BloomerpModule, ModuleConfig, module_registry
 logger = logging.getLogger(__name__)
@@ -142,6 +140,9 @@ class RouteType(Enum):
     MODEL = "model"
     DETAIL = "detail"
     MODULE = "module"
+    API = "api"
+    API_MODEL = "api_model"
+    API_DETAIL = "api_detail"
 
 class ViewType(Enum):
     CLASS = "class"
@@ -172,7 +173,7 @@ class BloomerpRoute:
 # ------------------------
 def _retrieve_models(models:list[Model], exclude_models:list[Model], route_type: RouteType) -> list[Model]:
     """Retrieves the used models from the parameters"""
-    if route_type in [RouteType.APP, RouteType.MODULE]:
+    if route_type in [RouteType.APP, RouteType.MODULE, RouteType.API]:
         return [None]  # App routes don't need models
     
     if not models and not exclude_models:
@@ -201,10 +202,46 @@ def _retrieve_models(models:list[Model], exclude_models:list[Model], route_type:
     return [None]
 
 
+def _is_model_route(route_type: RouteType) -> bool:
+    return route_type in {
+        RouteType.MODEL,
+        RouteType.DETAIL,
+        RouteType.API_MODEL,
+        RouteType.API_DETAIL,
+    }
+
+
+def _is_module_model_route(route_type: RouteType) -> bool:
+    return route_type in {RouteType.MODEL, RouteType.DETAIL}
+
+
+def _is_api_route(route_type: RouteType) -> bool:
+    return route_type in {
+        RouteType.API,
+        RouteType.API_MODEL,
+        RouteType.API_DETAIL,
+    }
+
+
+def _get_api_model_path(model: Model) -> str:
+    return model._meta.verbose_name_plural.replace(" ", "_").lower()
+
+
+def _with_api_prefix(path: Optional[str], default_path: str = "") -> str:
+    raw_path = path if path else default_path
+    raw_path = str(raw_path or "").strip("/")
+
+    if not raw_path:
+        return "/api/"
+    if raw_path == "api" or raw_path.startswith("api/"):
+        return f"/{raw_path}/"
+    return f"/api/{raw_path}/"
+
+
 def _generate_path(path: str, route_type: RouteType, model: Optional[Model] = None, module: Optional[ModuleConfig] = None) -> str:
     """Auto-generates a URL path based on the route type and model information."""
     # Validate that models are provided for routes that need them
-    if route_type in [RouteType.DETAIL, RouteType.MODEL] and not model:
+    if _is_model_route(route_type) and not model:
         raise ValueError(f"Model required for route type '{route_type.value}'")
     if route_type in [RouteType.DETAIL, RouteType.MODEL, RouteType.MODULE] and not module:
         raise ValueError(f"Module required for route type '{route_type.value}'")
@@ -238,6 +275,20 @@ def _generate_path(path: str, route_type: RouteType, model: Optional[Model] = No
         if path:
             return f"/{module_path}/{model_name}/<int_or_uuid:pk>{path}"
         return f"/{module_path}/{model_name}/<int_or_uuid:pk>/"
+    elif route_type == RouteType.API:
+        return _with_api_prefix(path, "auto-route")
+
+    elif route_type == RouteType.API_MODEL:
+        model_path = _get_api_model_path(model)
+        if path:
+            return _with_api_prefix(f"{model_path}{path}")
+        return _with_api_prefix(model_path)
+
+    elif route_type == RouteType.API_DETAIL:
+        model_path = _get_api_model_path(model)
+        if path:
+            return _with_api_prefix(f"{model_path}/<int_or_uuid:pk>{path}")
+        return _with_api_prefix(f"{model_path}/<int_or_uuid:pk>")
     else:
         return path if path else "/auto-route/"
 
@@ -249,7 +300,7 @@ def _auto_generate_url_name(name: Optional[str], route_type: RouteType, model: O
             return "unnamed_route"
         return value.lower().replace(" ","_")
 
-    if route_type in [RouteType.DETAIL, RouteType.MODEL] and model is None:
+    if _is_model_route(route_type) and model is None:
         raise ValueError(f"Model required for '{route_type.value}' route type")
     if route_type == RouteType.MODULE and module is None:
         raise ValueError("Module required for 'module' route type")
@@ -257,6 +308,14 @@ def _auto_generate_url_name(name: Optional[str], route_type: RouteType, model: O
     match route_type:
         case RouteType.APP:
             return _transform_str(name)
+        case RouteType.API:
+            return _transform_str(name)
+        case RouteType.API_MODEL:
+            model_path = _get_api_model_path(model)
+            return f"{model_path}-list" if name is None else _transform_str(name)
+        case RouteType.API_DETAIL:
+            model_path = _get_api_model_path(model)
+            return f"{model_path}-detail" if name is None else _transform_str(name)
         case RouteType.DETAIL:
             return _transform_str(model._meta.verbose_name_plural) + "_" + route_type.value + "_" + _transform_str(name)
         case RouteType.MODEL:
@@ -399,7 +458,7 @@ class BloomerpRouteRegistry:
     def register(
         self,
         path: str = None,
-        route_type: Literal['app', 'module', 'detail', 'model'] = 'app',
+        route_type: Literal['app', 'module', 'detail', 'model', 'api', 'api_model', 'api_detail'] = 'app',
         models: Union[Model, List[Model], str, None] = None,
         modules: Union[BloomerpModule, List[BloomerpModule], str, None] = None,
         exclude_models:Union[Model, List[Model], str, None] = None,
@@ -415,7 +474,7 @@ class BloomerpRouteRegistry:
         Args:
             path: The URL path for the route (optional, auto-generated if not provided)
             models: The model(s) associated with this route
-            route_type: Type of route ('app', 'module', 'detail', 'model')
+            route_type: Type of route ('app', 'module', 'detail', 'model', 'api', 'api_model', 'api_detail')
             name: Name for the route (optional, derived from view if not provided)
             description: Description of the route
             override: Whether to override existing routes with same path
@@ -426,7 +485,7 @@ class BloomerpRouteRegistry:
             _description = description
             _path = path
             _url_name = url_name
-            _route_type = RouteType(route_type)
+            _route_type = route_type if isinstance(route_type, RouteType) else RouteType(str(route_type).lower())
             _modules = modules
             
             # Determine view type and handle accordingly
@@ -446,7 +505,7 @@ class BloomerpRouteRegistry:
                 raise TypeError("The provided view is neither a valid function-based view nor a class-based view.")
             
             def _auto_path() -> str:
-                if _path:
+                if _path is not None:
                     return _path
                 if hasattr(view, '__name__'):
                     return f"/{view.__name__.replace('_', '-')}/"
@@ -523,7 +582,7 @@ class BloomerpRouteRegistry:
                             )
                         )
 
-                case RouteType.MODEL | RouteType.DETAIL:
+                case RouteType.MODEL | RouteType.DETAIL | RouteType.API_MODEL | RouteType.API_DETAIL:
                     # Store template so late-arriving models can be registered later
                     self._model_route_templates.append({
                         'path': _auto_path(),
@@ -540,6 +599,9 @@ class BloomerpRouteRegistry:
                     })
 
                     for model in _retrieve_models(models, exclude_models, _route_type):
+                        if model is None:
+                            continue
+
                         config = get_model_config(model)
                         
                         # Skip for detail view
@@ -553,28 +615,53 @@ class BloomerpRouteRegistry:
                         
                         actual_path = _auto_path()
 
-                        module = module_registry.get_module_for_model(model) if model else None
-                        if not module:
+                        module = module_registry.get_module_for_model(model) if _is_module_model_route(_route_type) else None
+                        if _is_module_model_route(_route_type) and not module:
                             continue
-                        for module in [module]:
-                            actual_name = _generate_name(_name, model, registered_view, module)
-                            actual_description = _auto_description(actual_name)
-                            actual_url_name = _url_name if _url_name else actual_name
-                            route = BloomerpRoute(
-                                path=_generate_path(actual_path, _route_type, model, module),
-                                model=model,
-                                module=module,
-                                route_type=_route_type,
-                                name=actual_name,
-                                url_name=_auto_generate_url_name(actual_url_name, _route_type, model, module),
-                                view=registered_view,
-                                view_type=view_type,
-                                description=_generate_description(actual_description, model, registered_view, module),
-                                override=override,
-                            )
 
-                            self._add_route(route)
-   
+                        actual_name = _generate_name(_name, model, registered_view, module)
+                        actual_description = _auto_description(actual_name)
+                        actual_url_name = _url_name if _url_name else (
+                            _name if _is_api_route(_route_type) else actual_name
+                        )
+                        route = BloomerpRoute(
+                            path=_generate_path(actual_path, _route_type, model, module),
+                            model=model,
+                            module=module,
+                            route_type=_route_type,
+                            name=actual_name,
+                            url_name=_auto_generate_url_name(actual_url_name, _route_type, model, module),
+                            view=registered_view,
+                            view_type=view_type,
+                            description=_generate_description(actual_description, model, registered_view, module),
+                            override=override,
+                        )
+
+                        self._add_route(route)
+
+                case RouteType.API:
+                    if _modules or models or exclude_models:
+                        raise ValueError("Modules and models parameters are not applicable for 'api' route type")
+
+                    actual_name = _generate_name(_name, None, registered_view, None)
+                    actual_description = _auto_description(actual_name)
+                    actual_path = _auto_path()
+                    actual_url_name = _url_name if _url_name else actual_name
+
+                    self._add_route(
+                        BloomerpRoute(
+                            path=_generate_path(actual_path, _route_type),
+                            route_type=_route_type,
+                            name=actual_name,
+                            url_name=_auto_generate_url_name(actual_url_name, _route_type),
+                            view=registered_view,
+                            view_type=view_type,
+                            module=None,
+                            description=_generate_description(actual_description, None, registered_view, None),
+                            override=override,
+                        )
+                    )
+
             # Return the original view (for CBV) or wrapped view (for FBV)
             return view if view_type == ViewType.CLASS else registered_view
 
@@ -595,38 +682,41 @@ class BloomerpRouteRegistry:
             if not self._template_applies_to_model(template, model):
                 continue
 
-            module = module_registry.get_module_for_model(model)
-            if not module:
+            route_type = template['route_type']
+            module = module_registry.get_module_for_model(model) if _is_module_model_route(route_type) else None
+            if _is_module_model_route(route_type) and not module:
                 continue
-            for module in [module]:
-                actual_path = template['path']
-                actual_name = _generate_name(template['name'], model, template['view'], module)
 
-                def _auto_desc(name: str, tmpl: dict = template) -> str:
-                    if tmpl['description']:
-                        return tmpl['description']
-                    view = tmpl['view']
-                    if hasattr(view, '__doc__') and view.__doc__:
-                        return view.__doc__.strip()
-                    return f"Route for {name}"
+            actual_path = template['path']
+            actual_name = _generate_name(template['name'], model, template['view'], module)
 
-                actual_description = _auto_desc(actual_name)
-                actual_url_name_raw = template['url_name'] if template['url_name'] else actual_name
-                url_name = _auto_generate_url_name(actual_url_name_raw, template['route_type'], model, module)
+            def _auto_desc(name: str, tmpl: dict = template) -> str:
+                if tmpl['description']:
+                    return tmpl['description']
+                view = tmpl['view']
+                if hasattr(view, '__doc__') and view.__doc__:
+                    return view.__doc__.strip()
+                return f"Route for {name}"
 
-                route = BloomerpRoute(
-                    path=_generate_path(actual_path, template['route_type'], model, module),
-                    model=model,
-                    module=module,
-                    route_type=template['route_type'],
-                    name=actual_name,
-                    url_name=url_name,
-                    view=template['registered_view'],
-                    view_type=template['view_type'],
-                    description=_generate_description(actual_description, model, template['view'], module),
-                    override=template['override'],
-                )
-                self._add_route(route)
+            actual_description = _auto_desc(actual_name)
+            actual_url_name_raw = template['url_name'] if template['url_name'] else (
+                template['name'] if _is_api_route(route_type) else actual_name
+            )
+            url_name = _auto_generate_url_name(actual_url_name_raw, route_type, model, module)
+
+            route = BloomerpRoute(
+                path=_generate_path(actual_path, route_type, model, module),
+                model=model,
+                module=module,
+                route_type=route_type,
+                name=actual_name,
+                url_name=url_name,
+                view=template['registered_view'],
+                view_type=template['view_type'],
+                description=_generate_description(actual_description, model, template['view'], module),
+                override=template['override'],
+            )
+            self._add_route(route)
 
     def _template_applies_to_model(self, template: dict, model: Model) -> bool:
         models = template.get('models')
@@ -665,10 +755,11 @@ class BloomerpRouteRegistry:
         self._auto_import_views()
         return [route for route in self.routes if route.model == model]
 
-    def get_routes_by_type(self, route_type: str) -> List[BloomerpRoute]:
+    def get_routes_by_type(self, route_type: str | RouteType) -> List[BloomerpRoute]:
         """Get all routes of a specific type."""
         self._auto_import_views()
-        return [route for route in self.routes if route.route_type == route_type]
+        resolved_route_type = route_type if isinstance(route_type, RouteType) else RouteType(str(route_type).lower())
+        return [route for route in self.routes if route.route_type == resolved_route_type]
 
     def get_function_based_routes(self) -> List[BloomerpRoute]:
         """Get all function-based view routes."""
@@ -735,7 +826,7 @@ class BloomerpRouteRegistry:
 
     def filter(
         self,
-        route_type: Optional[Literal['app', 'model', 'module', 'detail']] | Optional[RouteType] = None,
+        route_type: Optional[Literal['app', 'model', 'module', 'detail', 'api', 'api_model', 'api_detail']] | Optional[RouteType] = None,
         model: Optional[Model] = None,
         module: Optional[ModuleConfig] = None,
         view_type: Optional[str] | Optional[ViewType] = None,
@@ -750,7 +841,7 @@ class BloomerpRouteRegistry:
 
         Args
         - `route_type`: Optional; a `RouteType` enum or its string value
-            (e.g. 'app', 'module', 'model', 'detail'). If provided only routes
+            (e.g. 'app', 'module', 'model', 'detail', 'api'). If provided only routes
             of that type are returned.
         - `model`: Optional Django `Model` class. If provided only routes
             associated with that model are returned.
@@ -820,6 +911,7 @@ class BloomerpRouteRegistry:
 
         return results
     
+
 
 # ------------------------
 # Init router

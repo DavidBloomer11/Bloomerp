@@ -15,7 +15,7 @@ from bloomerp.models.definition import (
 from bloomerp.services.permission_services import UserPermissionManager
 from bloomerp.services.permission_services import ensure_model_permissions
 from bloomerp.utils.api import generate_model_viewset_class, generate_serializer
-from bloomerp.views.api.models import BloomerpModelViewSet
+from bloomerp.api.base import BloomerpModelViewSet
 from bloomerp.views.api.docs.schema import filter_openapi_schema_for_request
 from bloomerp.models.users import User
 from django.contrib.contenttypes.models import ContentType

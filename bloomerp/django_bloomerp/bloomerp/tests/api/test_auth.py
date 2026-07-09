@@ -12,7 +12,7 @@ from bloomerp.config.definition import (
 )
 from bloomerp.models.api_key import ApiKey
 from bloomerp.tests.base import BaseBloomerpModelTestCase
-from bloomerp.views.api.authentication import BloomerpApiKeyAuthentication
+from bloomerp.api.authentication_classes import BloomerpApiKeyAuthentication
 
 
 class TestBloomerpAuthApi(BaseBloomerpModelTestCase):

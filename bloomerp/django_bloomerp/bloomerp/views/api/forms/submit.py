@@ -55,8 +55,9 @@ def _get_public_form(pk) -> tuple[Form | None, JsonResponse | None]:
     return form, None
 
 @router.register(
-    path="api/forms/<int_or_uuid:pk>/submit/",
-    name="api_form_submit",
+    path="submit/",
+    route_type="api_detail",
+    models=[Form]
 )
 @csrf_exempt
 @require_http_methods(["GET", "POST", "OPTIONS"])

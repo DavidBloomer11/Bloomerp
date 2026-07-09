@@ -1,4 +1,4 @@
-from rest_framework import serializers, viewsets, status
+from rest_framework import status
 from bloomerp.models.access_control.policy import Policy
 from bloomerp.serializers.access_control import (
     PolicySerializer,
@@ -7,7 +7,11 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from django.db import transaction
 
-class PolicyViewSet(viewsets.ModelViewSet):
+from bloomerp.router import router
+from bloomerp.views.api.generic.base import BaseModelApiView
+
+
+class PolicyViewSet(BaseModelApiView):
     """
     API endpoint for managing access control policies.
 
@@ -54,3 +58,29 @@ class PolicyViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED,
             headers=headers,
         )
+
+
+@router.register(
+    path="",
+    route_type="api_model",
+    models=Policy,
+)
+class PolicyListAPIView(PolicyViewSet):
+    actions = {
+        "get": "list",
+        "post": "create",
+    }
+
+
+@router.register(
+    path="",
+    route_type="api_detail",
+    models=Policy,
+)
+class PolicyDetailAPIView(PolicyViewSet):
+    actions = {
+        "get": "retrieve",
+        "put": "update",
+        "patch": "partial_update",
+        "delete": "destroy",
+    }

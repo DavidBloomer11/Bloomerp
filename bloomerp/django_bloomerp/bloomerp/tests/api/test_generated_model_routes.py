@@ -6,7 +6,7 @@ from django.urls import resolve
 
 from bloomerp.models.project_management.initiative import Initiative
 from bloomerp.utils.api import generate_model_viewset_class, generate_serializer
-from bloomerp.views.api.models import BloomerpModelViewSet
+from bloomerp.api.base import BloomerpModelViewSet
 
 
 class GeneratedModelApiRouteTests(SimpleTestCase):

@@ -36,6 +36,30 @@ class SqlExecuteApiTests(BaseBloomerpModelTestCase):
         self.assertEqual(payload["page"], 1)
         self.assertEqual(payload["page_size"], 3)
         self.assertEqual(payload["rows"][0], {"first_name": "Alice"})
+        self.assertNotIn("icon", payload["output_fields"]["fields"][0])
+
+    def test_accessible_tables_api_omits_field_icons(self):
+        """
+        Use case: A user loads SQL builder table metadata through the API.
+        Expected result: The field metadata does not include UI icon classes.
+        """
+        # 1. Authenticate a superuser so accessible table metadata is available.
+        self.client.force_login(self.admin_user)
+
+        # 2. Request accessible SQL tables.
+        response = self.client.get("/api/sql/accessible-tables/")
+
+        # 3. Verify field metadata omits icon attributes.
+        self.assertEqual(response.status_code, 200)
+        databases = response.json()["databases"]
+        fields = [
+            field
+            for database in databases
+            for table in database["tables"]
+            for field in table["fields"]
+        ]
+        self.assertTrue(fields)
+        self.assertTrue(all("icon" not in field for field in fields))
 
     def test_execute_sql_api_requires_permission(self):
         """

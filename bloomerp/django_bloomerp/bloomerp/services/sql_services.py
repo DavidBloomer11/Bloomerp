@@ -27,6 +27,16 @@ class DatabaseTable(BaseModel):
     content_type_id:int | None = None
     fields:list[Field]
 
+    def model_dump(self, *args, include_field_icons: bool = True, **kwargs) -> dict:
+        data = super().model_dump(*args, **kwargs)
+        if include_field_icons:
+            return data
+
+        for field in data.get("fields", []):
+            if isinstance(field, dict):
+                field.pop("icon", None)
+        return data
+
 
 class SqlQueryResponse(BaseModel):
     """Structured SQL response used by the SQL preview and analytics builder."""
