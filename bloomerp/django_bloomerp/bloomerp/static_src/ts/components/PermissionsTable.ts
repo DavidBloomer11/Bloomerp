@@ -13,6 +13,7 @@ interface FieldData {
     id: string;
     name: string;
     label: string;
+    rowPolicyAllowed: boolean;
 }
 
 type RowPolicyConnector = "AND" | "OR";
@@ -169,17 +170,23 @@ export class PermissionsTable extends BaseComponent {
         this.fieldLookup.clear();
 
         this.draggableFields.forEach((field) => {
-            const id = field.dataset.fieldId || "";
-            if (!id) {
+            const fieldData = this.getFieldDataFromElement(field);
+            if (!fieldData.id) {
                 return;
             }
 
-            this.fieldLookup.set(id, {
-                id,
-                name: field.dataset.fieldName || "",
-                label: field.dataset.fieldLabel || field.textContent?.trim() || field.dataset.fieldName || id,
-            });
+            this.fieldLookup.set(fieldData.id, fieldData);
         });
+    }
+
+    private getFieldDataFromElement(field: HTMLElement): FieldData {
+        const id = field.dataset.fieldId || "";
+        return {
+            id,
+            name: field.dataset.fieldName || "",
+            label: field.dataset.fieldLabel || field.textContent?.trim() || field.dataset.fieldName || id,
+            rowPolicyAllowed: field.dataset.rowPolicyAllowed !== "false",
+        };
     }
 
     private initializePermissionComponents(): void {
@@ -271,11 +278,7 @@ export class PermissionsTable extends BaseComponent {
         }
 
         const fieldId = target.dataset.fieldId || "";
-        this.currentDroppedField = this.fieldLookup.get(fieldId) || {
-            id: fieldId,
-            name: target.dataset.fieldName || "",
-            label: target.dataset.fieldLabel || target.textContent?.trim() || fieldId,
-        };
+        this.currentDroppedField = this.fieldLookup.get(fieldId) || this.getFieldDataFromElement(target);
 
         if (event.dataTransfer) {
             event.dataTransfer.effectAllowed = "move";
@@ -293,11 +296,19 @@ export class PermissionsTable extends BaseComponent {
     }
 
     private handleDragOver(event: DragEvent): void {
+        const target = event.currentTarget as HTMLElement | null;
+        if (target?.dataset.dropZone === "row" && this.currentDroppedField && !this.currentDroppedField.rowPolicyAllowed) {
+            if (event.dataTransfer) {
+                event.dataTransfer.dropEffect = "none";
+            }
+            return;
+        }
+
         event.preventDefault();
         if (event.dataTransfer) {
             event.dataTransfer.dropEffect = "move";
         }
-        (event.currentTarget as HTMLElement | null)?.classList.add("drop-zone-active");
+        target?.classList.add("drop-zone-active");
     }
 
     private handleDragLeave(event: DragEvent): void {
@@ -326,6 +337,10 @@ export class PermissionsTable extends BaseComponent {
         dropZone.classList.remove("drop-zone-active");
 
         if (dropZoneType === "row") {
+            if (!field.rowPolicyAllowed) {
+                alert("Properties and one-to-many fields cannot be used in row policies.");
+                return;
+            }
             void this.openRowPolicyModal(field);
             return;
         }
@@ -496,11 +511,19 @@ export class PermissionsTable extends BaseComponent {
     private highlightAllDropZones(highlight: boolean): void {
         this.dropZones.forEach((zone) => {
             if (highlight) {
+                if (
+                    zone.dataset.dropZone === "row"
+                    && this.currentDroppedField
+                    && !this.currentDroppedField.rowPolicyAllowed
+                ) {
+                    zone.classList.add("opacity-50", "cursor-not-allowed");
+                    return;
+                }
                 zone.classList.add("drop-zone-available");
                 return;
             }
 
-            zone.classList.remove("drop-zone-available", "drop-zone-active");
+            zone.classList.remove("drop-zone-available", "drop-zone-active", "opacity-50", "cursor-not-allowed");
         });
     }
 
