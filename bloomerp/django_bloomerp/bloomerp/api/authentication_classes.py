@@ -2,15 +2,25 @@ from drf_spectacular.extensions import OpenApiAuthenticationExtension
 
 from bloomerp.config.definition import get_bloomerp_config
 from bloomerp.models.api_key import ApiKey
-
+from drf_spectacular.extensions import OpenApiAuthenticationExtension
 
 from rest_framework.authentication import BaseAuthentication, get_authorization_header
 from rest_framework.exceptions import AuthenticationFailed
 
+class BloomerpApiKeyAuthenticationExtension(OpenApiAuthenticationExtension):
+    target_class = "bloomerp.views.api.authentication.BloomerpApiKeyAuthentication"
+    name = "BloomerpApiKeyAuthentication"
+    
+    def get_security_definition(self, auto_schema):
+        return {
+            "type": "apiKey",
+            "name": get_bloomerp_config().auth.api_key.header_name,
+            "in": "header",
+        }
 
 class BloomerpApiKeyAuthentication(BaseAuthentication):
     keyword = "Bearer"
-
+    
     def authenticate(self, request):
         if not self._is_enabled():
             return None

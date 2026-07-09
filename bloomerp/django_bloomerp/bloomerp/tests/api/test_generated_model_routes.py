@@ -1,4 +1,5 @@
 import asyncio
+from unittest.mock import patch
 
 from django_celery_beat.models import CrontabSchedule
 from django.test import SimpleTestCase

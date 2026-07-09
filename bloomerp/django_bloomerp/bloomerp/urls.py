@@ -132,6 +132,5 @@ urlpatterns = [
 
 if allauth_is_enabled():
     urlpatterns.append(path("accounts/", include("allauth.urls")))
-
 # Create url patterns
 urlpatterns.extend(router.create_url_patterns())

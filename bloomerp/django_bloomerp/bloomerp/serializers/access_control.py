@@ -6,8 +6,12 @@ from bloomerp.models.access_control.row_policy import RowPolicy
 from bloomerp.models.access_control.field_policy import FieldPolicy
 from django.db import transaction
 from django.contrib.contenttypes.models import ContentType
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema_field
 from pydantic import ValidationError as PydanticValidationError
 
+
+@extend_schema_field(OpenApiTypes.STR)
 class PermissionCodenameField(serializers.RelatedField):
     def to_representation(self, value: Permission):
         return value.codename
