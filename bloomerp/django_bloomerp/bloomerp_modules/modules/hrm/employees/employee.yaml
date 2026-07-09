@@ -127,11 +127,16 @@ fields:
         - ["terminated", "Terminated"]
       default: "active"
   
-  - id: initiation_week
-    name: Initiation week
-    description: Week in which employee has initiation
-    type: WeekField
-    
+  - id: user
+    name: User Account
+    description: Associated user account for login
+    type: OneToOneUserField
+    options:
+      on_delete: SET_NULL
+      null: true
+      blank: true
+      
+  
 
 
 field_layout:

@@ -1093,6 +1093,16 @@ Dashboard
   .alert-danger {
     @apply bg-danger-light text-danger-dark border-danger-100;
   }
+  
+  .alert-warning {
+    @apply bg-warning-light text-warning-dark border-warning-light;
+  }
+
+  .alert-info {
+    @apply bg-blue-50 text-blue-800 border-blue-100;
+  }
+
+
 }
 
 @layer components {

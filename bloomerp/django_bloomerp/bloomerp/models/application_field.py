@@ -196,6 +196,10 @@ class ApplicationField(models.Model):
         """Returns the related model class for this application field, if any."""
         if self.related_model:
             return self.related_model.model_class()
+        try:
+            return getattr(self._get_model_field(), "related_model", None)
+        except FieldDoesNotExist:
+            return None
         return None
 
     def _get_model_field(self) -> models.Field:
