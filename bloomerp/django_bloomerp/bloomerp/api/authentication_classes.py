@@ -1,18 +1,11 @@
-from __future__ import annotations
+from drf_spectacular.extensions import OpenApiAuthenticationExtension
 
-from django.conf import settings
-from rest_framework.authentication import BaseAuthentication, get_authorization_header
-from rest_framework.exceptions import AuthenticationFailed
-
-from bloomerp.config.definition import BloomerpConfig
+from bloomerp.config.definition import get_bloomerp_config
 from bloomerp.models.api_key import ApiKey
 from drf_spectacular.extensions import OpenApiAuthenticationExtension
 
-def get_bloomerp_config() -> BloomerpConfig:
-    config = getattr(settings, "BLOOMERP_CONFIG", None)
-    if isinstance(config, BloomerpConfig):
-        return config
-    return BloomerpConfig()
+from rest_framework.authentication import BaseAuthentication, get_authorization_header
+from rest_framework.exceptions import AuthenticationFailed
 
 class BloomerpApiKeyAuthenticationExtension(OpenApiAuthenticationExtension):
     target_class = "bloomerp.views.api.authentication.BloomerpApiKeyAuthentication"
@@ -79,3 +72,15 @@ class BloomerpApiKeyAuthentication(BaseAuthentication):
             raise AuthenticationFailed("Invalid Authorization header.")
 
         return auth[1].decode("utf-8", errors="ignore").strip()
+
+
+class BloomerpApiKeyAuthenticationExtension(OpenApiAuthenticationExtension):
+    target_class = "bloomerp.api.authentication_classes.BloomerpApiKeyAuthentication"
+    name = "BloomerpApiKeyAuthentication"
+
+    def get_security_definition(self, auto_schema):
+        return {
+            "type": "apiKey",
+            "name": get_bloomerp_config().auth.api_key.header_name,
+            "in": "header",
+        }
