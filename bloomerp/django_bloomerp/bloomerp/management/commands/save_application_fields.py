@@ -128,15 +128,9 @@ class Command(BaseCommand):
                                 
                                     
                             #----------------------------------------------
-                            # Processing many-to-many fields and ForeignKeys
+                            # Processing relation fields
                             #----------------------------------------------
-                            if field_type in [
-                                FieldType.FOREIGN_KEY.id,
-                                FieldType.MANY_TO_MANY_FIELD.id,
-                                FieldType.BLOOMERP_FILE_FIELD.id,
-                                FieldType.FILES_RELATION_FIELD.id,
-                                FieldType.USER_FIELD.id
-                            ]:
+                            if getattr(field, "is_relation", False) and getattr(field, "related_model", None):
                                 meta['related_model'] = ContentType.objects.get_for_model(field.related_model).pk
 
                             #----------------------------------------------

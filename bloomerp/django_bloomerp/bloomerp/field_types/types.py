@@ -12,6 +12,7 @@ from bloomerp.form_fields.week_field import WeekFormField
 from bloomerp.model_fields.address_field import AddressField
 from bloomerp.model_fields.code_field import CodeField
 from bloomerp.model_fields.icon_field import IconField
+from bloomerp.model_fields.one_to_one_user_field import OneToOneUserField
 from bloomerp.model_fields.phone_number_field import PhoneNumberField
 from bloomerp.model_fields.user_field import UserField
 from bloomerp.model_fields.week_field import WeekField
@@ -712,6 +713,32 @@ class FieldType(Enum):
             ON_DELETE_FIELD_OPTION,
         ],
     )
+    
+    ONE_TO_ONE_USER_FIELD = FieldTypeDefinition(
+        id="OneToOneUserField",
+        display_name="One To One User Field",
+        icon="fa-solid fa-user",
+        model_field_cls=OneToOneUserField,
+        widget_cls=ForeignFieldWidget,
+        default_widget_args={
+            "is_m2m" : False
+        },
+        lookups=[
+            Lookup.IS_NULL,
+            Lookup.EQUALS_USER,
+            Lookup.EQUALS
+        ],
+        field_options=[
+            VERBOSE_NAME_FIELD_OPTION,
+            NULL_FIELD_OPTION,
+            BLANK_FIELD_OPTION,
+            DB_INDEX_FIELD_OPTION,
+            RELATED_NAME_FIELD_OPTION,
+            HELP_TEXT_FIELD_OPTION,
+            ON_DELETE_FIELD_OPTION,
+        ],
+    )
+    
 
     # Other Fields
     UUID_FIELD = FieldTypeDefinition(
