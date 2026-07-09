@@ -573,8 +573,3 @@ class BloomerpModelViewSet(viewsets.ModelViewSet):
     def partial_update(self, request, *args, **kwargs):
         kwargs["partial"] = True
         return self.update(request, *args, **kwargs)
-<<<<<<<< HEAD:bloomerp/django_bloomerp/bloomerp/api/base.py
-    
-    
-========
->>>>>>>> main:bloomerp/django_bloomerp/bloomerp/views/api/models.py
