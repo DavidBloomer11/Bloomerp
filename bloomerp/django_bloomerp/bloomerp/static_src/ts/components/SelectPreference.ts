@@ -53,8 +53,26 @@ export class SelectPreference extends BaseComponent {
             return;
         }
 
+        const deleteButton = target.closest<HTMLElement>("[data-delete-preference]");
+        if (deleteButton) {
+            this.launchDeleteModal(deleteButton.dataset.deletePreference || "");
+            return;
+        }
+
         const renameButton = target.closest<HTMLElement>("[data-rename-preference]");
         if (renameButton) this.beginRename(renameButton.dataset.renamePreference || "", renameButton);
+    }
+
+    private launchDeleteModal(preferenceId: string): void {
+        if (!preferenceId) return;
+
+        const modal = getGeneralModal();
+        const title = "Delete " + (this.element?.dataset.modelVerboseName || "Preference");
+        modal.setTitle(title);
+        htmx.ajax("get", this.getDeletePreferenceUrl(preferenceId), {
+            target: modal.getBodyElement(),
+            swap: "innerHTML",
+        }).then(() => modal.open());
     }
 
     private postSelection(preferenceId: string): void {
@@ -102,6 +120,10 @@ export class SelectPreference extends BaseComponent {
 
     private getSharePreferenceUrl(preferenceId: string): string {
         return (this.element?.dataset.sharePreferenceUrl || "").replace("REPLACE_WITH_ID", preferenceId);
+    }
+
+    private getDeletePreferenceUrl(preferenceId: string): string {
+        return (this.element?.dataset.deletePreferenceUrl || "").replace("REPLACE_WITH_ID", preferenceId);
     }
 
     private getApiProperty(): string {

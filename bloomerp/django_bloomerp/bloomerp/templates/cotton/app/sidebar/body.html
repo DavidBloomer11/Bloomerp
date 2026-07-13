@@ -60,7 +60,9 @@
                         <c-ui.dropdown.submenu 
                             text="Select Sidebar" 
                             icon="fa fa-bars" 
-                            id="select-sidebar-btn">
+                            id="select-sidebar-btn"
+                            width="w-80"
+                            >
                             <div
                                 hx-get="{% url 'components_select_preference' model='Sidebar' %}"
                                 hx-trigger="click from:#select-sidebar-btn"

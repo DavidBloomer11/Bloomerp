@@ -7,6 +7,7 @@
     data-select-preference-url="{% url 'components_select_preference' model=model %}"
     data-new-preference-url="{% url 'components_new_preference' model=model %}"
     data-share-preference-url="{% url 'components_share_preference' model_name=model preference_id='REPLACE_WITH_ID' %}"
+    data-delete-preference-url="{% url 'components_delete_preference' model=model preference_id='REPLACE_WITH_ID' %}"
     data-model-verbose-name="{{ model_verbose_name }}"
 >
     {% for preference in preferences %}
@@ -31,6 +32,9 @@
                 </button>
                 <button type="button" class="btn btn-ghost btn-xs" data-share-preference="{{ preference.id }}" aria-label="Share preference">
                     <i class="fa fa-share-nodes"></i>
+                </button>
+                <button type="button" class="btn btn-ghost btn-xs text-danger" data-delete-preference="{{ preference.id }}" aria-label="Delete preference">
+                    <i class="fa fa-trash"></i>
                 </button>
             {% endif %}
         </div>

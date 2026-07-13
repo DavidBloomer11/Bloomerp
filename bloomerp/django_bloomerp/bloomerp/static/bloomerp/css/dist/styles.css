@@ -1003,6 +1003,9 @@
   .min-w-72 {
     min-width: calc(var(--spacing) * 72);
   }
+  .min-w-128 {
+    min-width: calc(var(--spacing) * 128);
+  }
   .min-w-\[12rem\] {
     min-width: 12rem;
   }
