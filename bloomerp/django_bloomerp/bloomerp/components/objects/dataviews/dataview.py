@@ -7,9 +7,10 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.middleware.csrf import get_token
 from bloomerp.components.application_fields.filters import filters_init
+from bloomerp.forms.auth import User
 from bloomerp.models.definition import ObjectAction, get_model_config
+from bloomerp.services.preference_services import PreferenceManager
 from bloomerp.utils.models import get_model_and_content_type_or_404
-from bloomerp.utils.requests import render_message
 from bloomerp.router import router
 from django.http import HttpRequest
 from django.http import HttpResponse
@@ -30,7 +31,6 @@ from pydantic import ValidationError as PydanticValidationError
 from bloomerp.dataviews.base import DataviewPagination
 from bloomerp.dataviews.base import DataviewRenderState
 
-from bloomerp.utils.stopwatch import Stopwatch
 
 # -----------------------------------
 # Filter helpers
@@ -78,7 +78,9 @@ def _build_data_view_query_state(request: HttpRequest, content_type_id: int) -> 
     queryset = permission_manager.get_queryset(Model, create_permission_str(Model, "view"))
     
     # Get preference and options
-    preference = UserListViewPreference.get_or_create_for_user(request.user, content_type)
+    preference = PreferenceManager(request.user).get_or_create_selected(UserListViewPreference, {
+        "content_type_id": content_type.id,
+    })
     dataview_options = _get_data_view_options(preference)
     data_view_fields = get_data_view_fields(preference)
     avatar_field, data_view_render_fields = _split_avatar_field(data_view_fields)
@@ -548,10 +550,14 @@ def change_data_view_preference(request: HttpRequest, content_type_id: int) -> H
     # Get the content type, user, and list view preference
     content_type = get_object_or_404(ContentType, id=content_type_id)
     user = request.user
-    preference = UserListViewPreference.get_or_create_for_user(
-        user=user,
-        content_type_or_model=content_type,
-    )
+    manager = PreferenceManager(user)
+    preference = manager.get_or_create_selected(UserListViewPreference, {
+        "content_type_id": content_type.id,
+    })
+    
+    if not manager.can_manage(preference):
+        return HttpResponse("Forbidden", status=403)
+    
     operation = _get_preference_operation(request.POST)
     match operation:
         case "change_type":
@@ -577,6 +583,3 @@ def change_data_view_preference(request: HttpRequest, content_type_id: int) -> H
     
     return _render_display_options(request, content_type_id, preference)
 
-
-    
-    

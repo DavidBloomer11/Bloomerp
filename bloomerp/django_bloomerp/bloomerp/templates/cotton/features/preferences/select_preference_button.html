@@ -1,4 +1,3 @@
-
 <c-ui.dropdown.body
     trigger_text="{{ selected_preference_name|default:'Preference' }}"
     trigger_icon_class="fa fa-bookmark"
@@ -10,8 +9,8 @@
     width="w-80"
 >
     <div
-        id="select-preference-dropdown-{{ content_type_id }}-{{ type|default:'list' }}"
-        hx-get="{% url 'components_select_preference' content_type_id=content_type_id type=type|default:'list' %}"
+        id="select-preference-dropdown-{{ model }}"
+        hx-get="{% url 'components_select_preference' model=model%}?{% if args %}{% for key, value in args.items %}{{ key }}={{ value }}&{% endfor %}{% endif %}"
         hx-trigger="revealed once"
         hx-target="this"
         hx-swap="innerHTML"

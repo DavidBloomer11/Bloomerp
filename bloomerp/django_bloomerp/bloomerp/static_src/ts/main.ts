@@ -62,6 +62,7 @@ import { DataViewDisplayOptions } from './components/data_view_components/Displa
 
 import { openModal } from './utils/modals';
 import { closeModal } from './utils/modals';
+import { SelectPreference } from './components/SelectPreference';
 
 Object.assign(window, { showMessage });
 
@@ -151,6 +152,7 @@ registerComponent('ordered-field-select', OrderedFieldSelect);
 
 registerComponent('focus-on-form', FocusOnForm);
 registerComponent('base-wizard', BaseWizard)
+registerComponent('select-preference', SelectPreference)
 
 // Auto init comonents
 setupComponentAutoInit();

@@ -3,6 +3,8 @@ from django.db.models.manager import Manager
 from django.db.models import Model
 from django.http import HttpRequest, HttpResponse
 from bloomerp.models.definition import ObjectAction, ObjectHTML
+from bloomerp.models.users.base_preference import BasePreference
+from bloomerp.services.preference_services import PreferenceManager
 from bloomerp.utils.models import get_initials, get_detail_view_url, get_delete_view_url
 from django.urls import reverse 
 from django.contrib.contenttypes.models import ContentType
@@ -110,9 +112,6 @@ def getattr_filter(obj, attr):
         return None
 
    
-
-
-
 @register.inclusion_tag('snippets/workspace_item.html')
 def workspace_item(item:dict):
     '''
@@ -125,8 +124,6 @@ def workspace_item(item:dict):
     item['id'] = uuid.uuid4()
 
     return {'item': item}
-
-
 
 
 @register.inclusion_tag('components/bookmark.html')
@@ -495,3 +492,21 @@ def render_object_action(
         action.label,
     )
     
+@register.simple_tag
+def can_manage_preference_object(user:AbstractBloomerpUser, object:BasePreference) -> bool:
+    """Checks if a user can manage a preference object.
+
+    Args:
+        user (AbstractBloomerpUser): the user
+        object (BasePreference): the object
+    Returns:
+        bool: whether the user can manage the object or not.
+        
+    Example usage:
+    {% can_manage_preference_object user object as can_manage %}
+    """
+    try:
+        manager = PreferenceManager(user)
+        return manager.can_manage(object)
+    except:
+        return False

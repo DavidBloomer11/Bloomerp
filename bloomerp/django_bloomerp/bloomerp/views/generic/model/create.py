@@ -23,6 +23,7 @@ from bloomerp.services.create_view_services import (
 from bloomerp.services.one_to_many_field_services import save_submitted_one_to_many_fields
 from bloomerp.services.object_file_field_services import save_layout_uploaded_files
 from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
+from bloomerp.services.preference_services import PreferenceManager
 from bloomerp.views.base import BaseBloomerpView
 from bloomerp.views.mixins.model_form_view_mixin import BloomerpModelFormViewMixin
 from bloomerp.views.mixins.layout_form_mixin import BloomerpLayoutFormMixin
@@ -79,11 +80,16 @@ class BloomerpCreateView(
     def get_layout_object(self):
         return self.get_layout_preference_object().layout_obj
 
-    def get_layout_preference_object(self):
-        return UserCreateViewPreference.get_or_create_for_user(
-            self.request.user,
-            self.model,
+    @cached_property
+    def create_view_preference(self) -> UserCreateViewPreference:
+        """Resolve this request's effective create preference exactly once."""
+        return PreferenceManager(self.request.user).get_or_create_selected(
+            UserCreateViewPreference,
+            scope={"content_type_id": self.layout_content_type.pk},
         )
+
+    def get_layout_preference_object(self):
+        return self.create_view_preference
 
     def get_layout_editable_field_names(self) -> list[str]:
         return list(self.create_access_state.addable_fields.values_list("field", flat=True))

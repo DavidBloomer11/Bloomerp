@@ -48,6 +48,7 @@
             :can_edit="can_change_layout"
             :can_delete="can_delete_layout_object"
             :extra_attrs="layout_container_extra_attrs"
+            :preference_object="layout_preference_object"
         >
             <c-slot name="buttons_left">
                 <div data-toggle-non-required-fields-container>
@@ -74,8 +75,10 @@
             {% if full_form_url %}
             <c-slot name="buttons_right">
                 <c-features.preferences.select_preference_button
-                    type="{{ layout_mode }}"
-                    :content_type_id="content_type_id"
+                    model="{% if layout_mode == 'create' %}UserCreateViewPreference{% else %}UserDetailViewPreference{% endif %}"
+                    :args="{
+                        'content_type_id': '{{ content_type_id }}',
+                    }"
                     selected_preference_name="{{ layout_preference_object.name }}"
                 />
 
@@ -132,8 +135,10 @@
             {% else %}
             <c-slot name="buttons_right">
                 <c-features.preferences.select_preference_button
-                    type="{{ layout_mode }}"
-                    :content_type_id="content_type_id"
+                    model="{% if layout_mode == 'create' %}UserCreateViewPreference{% else %}UserDetailViewPreference{% endif %}"
+                    :args="{
+                        'content_type_id': '{{ content_type_id }}',
+                    }"
                     selected_preference_name="{{ layout_preference_object.name }}"
                 />
 
@@ -197,6 +202,7 @@
         :can_edit="can_change_layout"
         :can_delete="can_delete_layout_object"
         :extra_attrs="layout_container_extra_attrs"
+        :preference_object="layout_preference_object"
     >
         <c-slot name="buttons_left">
             <div data-toggle-non-required-fields-container>
@@ -222,8 +228,10 @@
 
         <c-slot name="buttons_right">
             <c-features.preferences.select_preference_button
-                type="{{ layout_mode }}"
-                :content_type_id="content_type_id"
+                model="{% if layout_mode == 'create' %}UserCreateViewPreference{% else %}UserDetailViewPreference{% endif %}"
+                :args="{
+                    'content_type_id': '{{ content_type_id }}',
+                }"
                 selected_preference_name="{{ layout_preference_object.name }}"
             />
         </c-slot>

@@ -552,7 +552,10 @@ class DetailViewTabsTestCase(BaseBloomerpModelTestCase):
         )
 
         try:
-            preference = UserDetailViewPreference.create_default_for_user(self.admin_user, content_type)
+            preference = UserDetailViewPreference.create_default_for_user(
+                self.admin_user,
+                content_type_id=content_type.pk,
+            )
 
             self.assertEqual(len(preference.layout_obj.rows), 1)
             self.assertEqual(preference.layout_obj.rows[0].title, "Primary")

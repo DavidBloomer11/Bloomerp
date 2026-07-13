@@ -11,7 +11,6 @@ from bloomerp.models.mixins import (
 )
 from bloomerp.models.mixins.absolute_url_model_mixin import AbsoluteUrlModelMixin
 from bloomerp.models.mixins.avatar_model_mixin import AvatarModelMixin
-from bloomerp.models.workspaces.sidebar_item import Sidebar
 
 
 
@@ -124,24 +123,6 @@ class AbstractBloomerpUser(
         # TODO: Get rid of this property
         return self.get_content_types_for_user(permission_types=["view"])
 
-    @property
-    def selected_sidebar(self) -> Sidebar:
-        """
-        Returns the sidebar items for the user's selected sidebar, ordered by position.
-        """
-        selected_sidebar = self.sidebars.filter(selected=True).first()
-        if selected_sidebar:
-            return selected_sidebar
-
-        first_sidebar = self.sidebars.order_by("id").first()
-        if first_sidebar:
-            first_sidebar.select()
-            return first_sidebar
-
-        return Sidebar.objects.create(
-            user=self,
-            selected=True,
-        )
 
 class AbstractBloomerpEmailUser(AbstractBloomerpUser):
     email = models.EmailField(unique=True)

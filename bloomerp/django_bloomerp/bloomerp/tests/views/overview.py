@@ -16,6 +16,7 @@ from bloomerp.models import (
 )
 from bloomerp.models.project_management import Initiative, Todo
 from bloomerp.models.users.user_detail_view_preference import UserDetailViewPreference
+from bloomerp.models.workspaces.sidebar import Sidebar
 from bloomerp.tests.views.crud_test_mixin import CrudViewTestMixin
 
 
@@ -445,3 +446,54 @@ class TestOverviewView(CrudViewTestMixin):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "data-layout-item-id", html=False)
+
+    def test_overview_uses_shared_initial_detail_preference(self):
+        shared_preference = UserDetailViewPreference.objects.create(
+            user=self.normal_user,
+            content_type=self.content_type,
+            name="Shared initial detail",
+            initial_default=True,
+            layout={
+                "rows": [
+                    {
+                        "title": "Shared layout",
+                        "columns": 1,
+                        "items": [
+                            {
+                                "id": self.fields_by_name["first_name"].pk,
+                                "colspan": 1,
+                            }
+                        ],
+                    }
+                ]
+            },
+        )
+        shared_preference.shared_with_users.add(self.admin_user)
+        UserDetailViewPreference.objects.filter(
+            user=self.admin_user,
+            content_type=self.content_type,
+        ).delete()
+        Sidebar.objects.create(
+            user=self.admin_user,
+            name="Test sidebar",
+            selected=True,
+        )
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self.get_url())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Shared layout")
+        reference = UserDetailViewPreference.objects.get(
+            user=self.admin_user,
+            content_type=self.content_type,
+        )
+        self.assertEqual(reference.source_object, shared_preference)
+        self.assertTrue(reference.selected)
+        self.assertFalse(
+            UserDetailViewPreference.objects.filter(
+                user=self.admin_user,
+                content_type=self.content_type,
+                source_object__isnull=True,
+            ).exists()
+        )

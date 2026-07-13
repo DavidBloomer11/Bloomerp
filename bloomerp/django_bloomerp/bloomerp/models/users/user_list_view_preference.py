@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import Any, Callable, Optional
 
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import Q, QuerySet
 
@@ -462,6 +463,11 @@ class UserListViewPreference(BaseViewPreference):
                 condition=Q(selected=True),
                 name="unique_selected_list_view_preference",
             ),
+            models.UniqueConstraint(
+                fields=["user", "source_object"],
+                condition=Q(source_object__isnull=False),
+                name="unique_list_view_preference_reference",
+            ),
         ]
 
     view_type = models.CharField(
@@ -477,8 +483,12 @@ class UserListViewPreference(BaseViewPreference):
     default_filters : dict = models.JSONField(default=dict)
     
     @classmethod
-    def create_default_for_user(cls, user, content_type_or_model) -> "UserListViewPreference":
-        content_type = cls.resolve_content_type(content_type_or_model)
+    def create_default_for_user(cls, user, **scope) -> "UserListViewPreference":
+        """Create the user's default list-view preference for a content type.
+
+        Expected scope: ``content_type_id``.
+        """
+        content_type = ContentType.objects.get(pk=scope["content_type_id"])
         return cls.objects.create(
             user=user,
             content_type=content_type,

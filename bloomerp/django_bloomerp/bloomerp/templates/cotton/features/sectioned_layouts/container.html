@@ -37,7 +37,9 @@
         <!--Left section-->
         <div class="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end" data-layout-action-group>
             {{ buttons_right }}
-            {% if can_edit %}
+            
+            {% can_manage_preference_object request.user preference_object as can_manage %}
+            {% if can_manage %}
             <c-ui.shortcut_tooltip 
                 shortcut="mod+e" 
                 action="click" 
@@ -63,7 +65,7 @@
                     </button>
                 </c-ui.shortcut_tooltip>
 
-                {% if can_delete %}
+                {% if can_manage %}
                     <c-ui.shortcut_tooltip 
                         shortcut="mod+j" 
                         action="click" 

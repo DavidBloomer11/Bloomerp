@@ -1,4 +1,6 @@
+from functools import cached_property
 from typing import Any
+
 from django.views.generic.detail import DetailView
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.models.definition import ObjectHTML, get_model_config
@@ -9,6 +11,7 @@ from bloomerp.router import router
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import FieldDoesNotExist
 from bloomerp.models.users.user_detail_view_preference import UserDetailViewPreference
+from bloomerp.services.preference_services import PreferenceManager
 from bloomerp.services.detail_view_services import resolve_tabs_with_state
 
 
@@ -19,6 +22,15 @@ class BaseBloomerpDetailView(BaseBloomerpView, BloomerpModelContextMixin, Detail
     permissions : list[str] = ["view"]
     permission_fields : list[tuple[str, str]] = []
     htmx_include_addendum_padding = False
+
+    @cached_property
+    def detail_view_preference(self) -> UserDetailViewPreference:
+        """Resolve this request's effective detail preference exactly once."""
+        content_type = ContentType.objects.get_for_model(self.model)
+        return PreferenceManager(self.request.user).get_or_create_selected(
+            UserDetailViewPreference,
+            scope={"content_type_id": content_type.pk},
+        )
     
     def _can_change_avatar(self, content_type: ContentType) -> bool:
         """Whether the user can change the avatar field
@@ -94,7 +106,7 @@ class BaseBloomerpDetailView(BaseBloomerpView, BloomerpModelContextMixin, Detail
         content_type = ContentType.objects.get_for_model(self.model)
         context["detail_view_content_type_id"] = content_type.pk
         context["can_change_avatar"] = self._can_change_avatar(content_type)
-        preference = UserDetailViewPreference.get_or_create_for_user(self.request.user, content_type)
+        preference = self.detail_view_preference
         resolved_tabs, normalized_state = resolve_tabs_with_state(tabs=tabs, state=preference.tab_state_obj)
         if normalized_state != preference.tab_state_obj:
             preference.tab_state = normalized_state
