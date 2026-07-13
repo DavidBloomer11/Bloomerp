@@ -128,10 +128,13 @@ class BasePreference(AbsoluteUrlModelMixin, models.Model):
         for field_name in cls.preference_scope_fields:
             field = cls._meta.get_field(field_name)
             for identifier in (field.name, field.attname):
-                value = params.get(identifier)
-                if value not in (None, ""):
-                    scope[field.attname] = value
-                    break
+                if identifier not in params:
+                    continue
+                value = params[identifier]
+                if value == "":
+                    continue
+                scope[field.attname] = value
+                break
         return scope
 
     def get_scope(self) -> dict[str, Any]:
@@ -213,5 +216,3 @@ class BasePreference(AbsoluteUrlModelMixin, models.Model):
             seen_ids.add(preference.pk)
             preference = preference.source_object
         return preference
-
-    

@@ -39,7 +39,8 @@
             {{ buttons_right }}
             
             {% can_manage_preference_object request.user preference_object as can_manage %}
-            {% if can_manage %}
+            
+            {% if can_manage or force_edit %}
             <c-ui.shortcut_tooltip 
                 shortcut="mod+e" 
                 action="click" 

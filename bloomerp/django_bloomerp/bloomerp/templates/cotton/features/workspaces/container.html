@@ -6,29 +6,10 @@
     :can_edit="True"
     :can_delete="True"
     :extra_attrs="extra_attrs"
+    :preference_object="workspace"
     >
     <c-slot name="buttons_left">
-
-        <c-ui.dropdown.body
-                trigger_text="Share"
-                trigger_button_class="btn btn-sm btn-secondary"
-                trigger_icon_class="fa fa-share-nodes"
-                position="left"
-            >
-            <div
-                id="workspace-share-component-{{ workspace.id }}"
-                class="p-2"
-                hx-get="{% url 'components_workspaces_share_workspace' workspace_id=workspace.id %}"
-                hx-trigger="load"
-                hx-target="this"
-                hx-swap="innerHTML"
-            >
-                <div class="px-3 py-2 text-sm text-slate-500">
-                    <c-i18n.blocktrans>Loading sharing options...</c-i18n.blocktrans>
-                </div>
-            </div>
-        </c-ui.dropdown.body>
-        
+    
         <!--Filters-->
         <div class="w-full sm:w-auto">
             <c-ui.shortcut_tooltip 
@@ -77,6 +58,16 @@
     </c-slot>
     
     <c-slot name="buttons_right">
+        <c-ui.shortcut_tooltip position="bottom" shortcut="mod+6">
+            <c-features.preferences.select_preference_button
+                model="Workspace"
+                :args="{
+                    'module_id': '{{ module_id }}',
+                }"
+                selected_preference_name="{{ workspace.name }}"
+            />
+        </c-ui.shortcut_tooltip>
+
         <button 
             class="btn btn-secondary btn-sm hidden"
             data-create-tile-btn

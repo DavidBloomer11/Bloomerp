@@ -5,8 +5,9 @@ from bloomerp.router import router
 from bloomerp.utils.models import get_create_view_url
 from bloomerp.views.workspaces.base import BaseWorkspaceView
 from bloomerp.models.workspaces.workspace import Workspace
+from bloomerp.services.preference_services import PreferenceManager
 
-
+# TODO: Turn this into a generic dataview component once the default dataview settings are implemented
 @router.register(
     path="workspaces/",
     url_name="my_workspaces",
@@ -22,6 +23,9 @@ class MyWorkspacesView(BaseWorkspaceView, TemplateView):
 
     def get_workspace(self) -> Workspace | None:
         return None
+
+    def get_visible_workspaces(self):
+        return PreferenceManager(self.request.user).get_available(Workspace)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

@@ -455,13 +455,12 @@ class DetailViewTabsTestCase(BaseBloomerpModelTestCase):
     # -------------------
     def test_workspace_layout_save_persists_shape(self):
         self.client.force_login(self.admin_user)
-        workspace = Workspace.get_or_create_for_user(self.admin_user)
+        workspace = Workspace.create_default_for_user(self.admin_user)
         tile = Tile.objects.create(name="Revenue", description="Tile", schema={})
 
         response = self.client.post(
-            "/components/workspaces/save_workspace_layout/",
+            f"/components/layout/save-layout-object/{ContentType.objects.get_for_model(Workspace).pk}/{workspace.pk}/",
             data=json.dumps({
-                "workspace_id": str(workspace.pk),
                 "layout": {
                     "rows": [
                         {
@@ -482,13 +481,12 @@ class DetailViewTabsTestCase(BaseBloomerpModelTestCase):
 
     def test_workspace_layout_save_deduplicates_duplicate_item_ids(self):
         self.client.force_login(self.admin_user)
-        workspace = Workspace.get_or_create_for_user(self.admin_user)
+        workspace = Workspace.create_default_for_user(self.admin_user)
         tile = Tile.objects.create(name="Active deals", description="Tile", schema={})
 
         response = self.client.post(
-            "/components/workspaces/save_workspace_layout/",
+            f"/components/layout/save-layout-object/{ContentType.objects.get_for_model(Workspace).pk}/{workspace.pk}/",
             data=json.dumps({
-                "workspace_id": str(workspace.pk),
                 "layout": {
                     "rows": [
                         {

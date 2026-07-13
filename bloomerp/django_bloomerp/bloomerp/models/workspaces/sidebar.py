@@ -16,6 +16,14 @@ class Sidebar(BasePreference):
             ),
         ]
 
+    @classmethod
+    def create_default_for_user(cls, user, **scope):
+        return cls.objects.create(
+            user=user,
+            name="My Sidebar",
+            selected=True,
+        )
+    
     @property
     def items(self):
         from bloomerp.models.workspaces.sidebar_item import SidebarItem

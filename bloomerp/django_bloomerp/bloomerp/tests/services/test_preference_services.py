@@ -3,7 +3,8 @@ from django.db import IntegrityError, transaction
 
 from bloomerp.models.users.user_list_view_preference import UserListViewPreference
 from bloomerp.models.workspaces.sidebar import Sidebar
-from bloomerp.services.preference_services import PreferenceManager
+from bloomerp.models.workspaces.workspace import Workspace
+from bloomerp.services.preference_services import PreferenceManager, clean_scope
 from bloomerp.tests.base import BaseBloomerpModelTestCase
 
 
@@ -14,6 +15,38 @@ class PreferenceManagerTestCase(BaseBloomerpModelTestCase):
         self.content_type = ContentType.objects.get_for_model(self.CustomerModel)
         self.scope = {"content_type_id": self.content_type.pk}
         self.manager = PreferenceManager(self.admin_user)
+
+    def test_clean_scope_parses_none_and_boolean_values(self):
+        scope = {
+            "python_none": None,
+            "string_none": " None ",
+            "string_null": "NULL",
+            "enabled": " TrUe ",
+            "disabled": "FALSE",
+            "content_type_id": str(self.content_type.pk),
+        }
+
+        result = clean_scope(scope)
+
+        self.assertEqual(
+            result,
+            {
+                "python_none": None,
+                "string_none": None,
+                "string_null": None,
+                "enabled": True,
+                "disabled": False,
+                "content_type_id": str(self.content_type.pk),
+            },
+        )
+        self.assertEqual(scope["enabled"], " TrUe ")
+
+    def test_normalize_scope_preserves_explicit_none(self):
+        self.assertEqual(Sidebar.normalize_scope({}), {})
+        self.assertEqual(
+            Workspace.normalize_scope({"module_id": None}),
+            {"module_id": None},
+        )
 
     def test_get_or_create_selected_returns_existing_selection(self):
         selected = UserListViewPreference.objects.create(

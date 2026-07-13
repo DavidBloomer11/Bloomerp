@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from typing import Any, Optional, Type
 
-from django.db import transaction
 from django.http import HttpRequest
 from django.urls import reverse
 
@@ -32,56 +31,13 @@ PRIMITIVE_FIELD_TYPE_MAP = {
     TileFieldType.BOOL.value.key: FieldType.BOOLEAN_FIELD,
 }
 
-def create_default_workspace(
-        user,
-        module_id:str
-):
-    """
-    Creates the default workspace for a particular user and module.
-    """
-    workspace = Workspace.get_default_for_user(user=user, module_id=module_id)
-    if workspace:
-        return workspace
-
-    workspace = Workspace.objects.create(
-        user=user,
-        name="Default",
-        module_id=module_id,
-        is_default=True,
-        layout={
-            "rows": [
-                {
-                    "title": None,
-                    "columns": 4,
-                    "items": [],
-                }
-            ]
-        },
-    )
-
-    ensure_default_workspace_tiles_for_module(user, module_id)
-    return workspace
 
 
-def set_default_workspace(workspace: Workspace, user: User) -> Workspace:
-    if workspace.user_id != user.id:
-        raise PermissionError("Only the workspace owner can set a default workspace.")
+def select_workspace(workspace: Workspace, user: User) -> Workspace:
+    """Select an owned or shared workspace for the user's module scope."""
+    from bloomerp.services.preference_services import PreferenceManager
 
-    if not workspace.module_id:
-        raise ValueError("Only module workspaces can be set as default.")
-
-    with transaction.atomic():
-        Workspace.objects.filter(
-            user=user,
-            module_id=workspace.module_id,
-            is_default=True,
-        ).exclude(pk=workspace.pk).update(is_default=False)
-
-        if not workspace.is_default:
-            workspace.is_default = True
-            workspace.save(update_fields=["is_default"])
-
-    return workspace
+    return PreferenceManager(user).select(workspace)
 
 
 def ensure_default_workspace_tiles_for_module(user, module_id: str) -> None:
@@ -227,23 +183,23 @@ class WorkspaceManager:
                             type=PRIMITIVE_FIELD_TYPE_MAP[filter_config.type].value.id,
                             label=filter_config.field.replace("_", " ").title()
                         )
-                case TileType.DATAVIEW_TILE:
-                    config = DataViewTileConfig(**tile.schema)
-                    manager = UserPermissionManager(user)
-                    content_type = ContentType.objects.get(id=config.content_type_id)
-                    fields = manager.get_accessible_fields(
-                        content_type,
-                        create_permission_str(
-                            content_type.model_class(),
-                            "view"
-                        )
-                    )
-                    for field in fields:
-                        result[field.field] = WorkspaceFilter(
-                            field=field.field,
-                            type=field.field_type,
-                            label=field.title
-                        )
+                # case TileType.DATAVIEW_TILE:
+                #     config = DataViewTileConfig(**tile.schema)
+                #     manager = UserPermissionManager(user)
+                #     content_type = ContentType.objects.get(id=config.content_type_id)
+                #     fields = manager.get_accessible_fields(
+                #         content_type,
+                #         create_permission_str(
+                #             content_type.model_class(),
+                #             "view"
+                #         )
+                #     )
+                #     for field in fields:
+                #         result[field.field] = WorkspaceFilter(
+                #             field=field.field,
+                #             type=field.field_type,
+                #             label=field.title
+                #         )
                            
         return result
 

@@ -1365,17 +1365,25 @@ export class RowPolicyRulePermissionApi extends ModelApi<RowPolicyRulePermission
 
 export interface Sidebar {
   id: number;
+  initial_default: boolean;
   name: string;
   selected: boolean;
+  shared_with_groups: Array<number>;
+  shared_with_users: Array<number>;
+  source_object: number | null;
   user: number;
 }
 
 export type SidebarId = number;
-export type SidebarFieldName = "id" | "name" | "selected" | "user";
+export type SidebarFieldName = "id" | "initial_default" | "name" | "selected" | "shared_with_groups" | "shared_with_users" | "source_object" | "user";
 
 export interface SidebarCreate {
+  initial_default?: boolean;
   name?: string;
   selected?: boolean;
+  shared_with_groups?: Array<number>;
+  shared_with_users?: Array<number>;
+  source_object?: number | null;
   user: number;
 }
 
@@ -1384,8 +1392,12 @@ export type SidebarQuery = Partial<Record<SidebarFieldName | `${SidebarFieldName
 
 export const sidebarsFields: Record<SidebarFieldName, BloomerpFieldMetadata> = {
   "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "initial_default": {"name": "initial_default", "title": "Initial Default", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
   "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "selected": {"name": "selected", "title": "Selected", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
+  "shared_with_groups": {"name": "shared_with_groups", "title": "Shared With Groups", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "Group", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
+  "shared_with_users": {"name": "shared_with_users", "title": "Shared With Users", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
+  "source_object": {"name": "source_object", "title": "Source Object", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "Sidebar", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
   "user": {"name": "user", "title": "User", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": false, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
 } as const;
 
@@ -1741,29 +1753,29 @@ export class UserApi extends ModelApi<User, UserId, UserCreate, UserUpdate, User
 }
 
 export interface UserCreateViewPreference {
-  Groups: Array<number>;
-  Users: Array<number>;
   content_type: number;
   id: number;
   initial_default: boolean;
   layout: unknown;
   name: string;
   selected: boolean;
+  shared_with_groups: Array<number>;
+  shared_with_users: Array<number>;
   source_object: number | null;
   user: number;
 }
 
 export type UserCreateViewPreferenceId = number;
-export type UserCreateViewPreferenceFieldName = "Groups" | "Users" | "content_type" | "id" | "initial_default" | "layout" | "name" | "selected" | "source_object" | "user";
+export type UserCreateViewPreferenceFieldName = "content_type" | "id" | "initial_default" | "layout" | "name" | "selected" | "shared_with_groups" | "shared_with_users" | "source_object" | "user";
 
 export interface UserCreateViewPreferenceCreate {
-  Groups?: Array<number>;
-  Users?: Array<number>;
   content_type: number;
   initial_default?: boolean;
   layout?: unknown;
   name?: string;
   selected?: boolean;
+  shared_with_groups?: Array<number>;
+  shared_with_users?: Array<number>;
   source_object?: number | null;
   user: number;
 }
@@ -1772,15 +1784,15 @@ export type UserCreateViewPreferenceUpdate = Partial<UserCreateViewPreferenceCre
 export type UserCreateViewPreferenceQuery = Partial<Record<UserCreateViewPreferenceFieldName | `${UserCreateViewPreferenceFieldName}__${string}`, QueryValue | QueryValue[]>>;
 
 export const userCreateViewPreferencesFields: Record<UserCreateViewPreferenceFieldName, BloomerpFieldMetadata> = {
-  "Groups": {"name": "Groups", "title": "Groups", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "Group", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
-  "Users": {"name": "Users", "title": "Users", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
   "content_type": {"name": "content_type", "title": "Content Type", "fieldType": "ForeignKey", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": "ContentType", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
   "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
-  "initial_default": {"name": "initial_default", "title": "Initial Default", "fieldType": "BooleanField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
+  "initial_default": {"name": "initial_default", "title": "Initial Default", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
   "layout": {"name": "layout", "title": "Layout", "fieldType": "JSONField", "dbFieldType": "text", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "unknown", "choices": null},
   "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "selected": {"name": "selected", "title": "Selected", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
-  "source_object": {"name": "source_object", "title": "Source Object", "fieldType": "ForeignKey", "dbFieldType": null, "nullable": true, "many": false, "relatedModel": "UserCreateViewPreference", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
+  "shared_with_groups": {"name": "shared_with_groups", "title": "Shared With Groups", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "Group", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
+  "shared_with_users": {"name": "shared_with_users", "title": "Shared With Users", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
+  "source_object": {"name": "source_object", "title": "Source Object", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "UserCreateViewPreference", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
   "user": {"name": "user", "title": "User", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": false, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
 } as const;
 
@@ -1794,30 +1806,30 @@ export class UserCreateViewPreferenceApi extends ModelApi<UserCreateViewPreferen
 }
 
 export interface UserDetailViewPreference {
-  Groups: Array<number>;
-  Users: Array<number>;
   content_type: number;
   id: number;
   initial_default: boolean;
   layout: unknown;
   name: string;
   selected: boolean;
+  shared_with_groups: Array<number>;
+  shared_with_users: Array<number>;
   source_object: number | null;
   tab_state: unknown;
   user: number;
 }
 
 export type UserDetailViewPreferenceId = number;
-export type UserDetailViewPreferenceFieldName = "Groups" | "Users" | "content_type" | "id" | "initial_default" | "layout" | "name" | "selected" | "source_object" | "tab_state" | "user";
+export type UserDetailViewPreferenceFieldName = "content_type" | "id" | "initial_default" | "layout" | "name" | "selected" | "shared_with_groups" | "shared_with_users" | "source_object" | "tab_state" | "user";
 
 export interface UserDetailViewPreferenceCreate {
-  Groups?: Array<number>;
-  Users?: Array<number>;
   content_type: number;
   initial_default?: boolean;
   layout?: unknown;
   name?: string;
   selected?: boolean;
+  shared_with_groups?: Array<number>;
+  shared_with_users?: Array<number>;
   source_object?: number | null;
   tab_state?: unknown;
   user: number;
@@ -1827,15 +1839,15 @@ export type UserDetailViewPreferenceUpdate = Partial<UserDetailViewPreferenceCre
 export type UserDetailViewPreferenceQuery = Partial<Record<UserDetailViewPreferenceFieldName | `${UserDetailViewPreferenceFieldName}__${string}`, QueryValue | QueryValue[]>>;
 
 export const userDetailViewPreferencesFields: Record<UserDetailViewPreferenceFieldName, BloomerpFieldMetadata> = {
-  "Groups": {"name": "Groups", "title": "Groups", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "Group", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
-  "Users": {"name": "Users", "title": "Users", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
   "content_type": {"name": "content_type", "title": "Content Type", "fieldType": "ForeignKey", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": "ContentType", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
   "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
-  "initial_default": {"name": "initial_default", "title": "Initial Default", "fieldType": "BooleanField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
+  "initial_default": {"name": "initial_default", "title": "Initial Default", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
   "layout": {"name": "layout", "title": "Layout", "fieldType": "JSONField", "dbFieldType": "text", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "unknown", "choices": null},
   "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "selected": {"name": "selected", "title": "Selected", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
-  "source_object": {"name": "source_object", "title": "Source Object", "fieldType": "ForeignKey", "dbFieldType": null, "nullable": true, "many": false, "relatedModel": "UserDetailViewPreference", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
+  "shared_with_groups": {"name": "shared_with_groups", "title": "Shared With Groups", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "Group", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
+  "shared_with_users": {"name": "shared_with_users", "title": "Shared With Users", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
+  "source_object": {"name": "source_object", "title": "Source Object", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "UserDetailViewPreference", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
   "tab_state": {"name": "tab_state", "title": "Tab State", "fieldType": "JSONField", "dbFieldType": "text", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "unknown", "choices": null},
   "user": {"name": "user", "title": "User", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": false, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
 } as const;
@@ -1850,8 +1862,6 @@ export class UserDetailViewPreferenceApi extends ModelApi<UserDetailViewPreferen
 }
 
 export interface UserListViewPreference {
-  Groups: Array<number>;
-  Users: Array<number>;
   content_type: number;
   default_filters: unknown;
   display_fields: unknown;
@@ -1860,6 +1870,8 @@ export interface UserListViewPreference {
   name: string;
   options: unknown;
   selected: boolean;
+  shared_with_groups: Array<number>;
+  shared_with_users: Array<number>;
   source_object: number | null;
   split_view_enabled: boolean;
   user: number;
@@ -1867,11 +1879,9 @@ export interface UserListViewPreference {
 }
 
 export type UserListViewPreferenceId = number;
-export type UserListViewPreferenceFieldName = "Groups" | "Users" | "content_type" | "default_filters" | "display_fields" | "id" | "initial_default" | "name" | "options" | "selected" | "source_object" | "split_view_enabled" | "user" | "view_type";
+export type UserListViewPreferenceFieldName = "content_type" | "default_filters" | "display_fields" | "id" | "initial_default" | "name" | "options" | "selected" | "shared_with_groups" | "shared_with_users" | "source_object" | "split_view_enabled" | "user" | "view_type";
 
 export interface UserListViewPreferenceCreate {
-  Groups?: Array<number>;
-  Users?: Array<number>;
   content_type: number;
   default_filters?: unknown;
   display_fields?: unknown;
@@ -1879,6 +1889,8 @@ export interface UserListViewPreferenceCreate {
   name?: string;
   options?: unknown;
   selected?: boolean;
+  shared_with_groups?: Array<number>;
+  shared_with_users?: Array<number>;
   source_object?: number | null;
   split_view_enabled?: boolean;
   user: number;
@@ -1889,17 +1901,17 @@ export type UserListViewPreferenceUpdate = Partial<UserListViewPreferenceCreate>
 export type UserListViewPreferenceQuery = Partial<Record<UserListViewPreferenceFieldName | `${UserListViewPreferenceFieldName}__${string}`, QueryValue | QueryValue[]>>;
 
 export const userListViewPreferencesFields: Record<UserListViewPreferenceFieldName, BloomerpFieldMetadata> = {
-  "Groups": {"name": "Groups", "title": "Groups", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "Group", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
-  "Users": {"name": "Users", "title": "Users", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
   "content_type": {"name": "content_type", "title": "Content Type", "fieldType": "ForeignKey", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": "ContentType", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
   "default_filters": {"name": "default_filters", "title": "Default Filters", "fieldType": "JSONField", "dbFieldType": "text", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "unknown", "choices": null},
   "display_fields": {"name": "display_fields", "title": "Display Fields", "fieldType": "JSONField", "dbFieldType": "text", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "unknown", "choices": null},
   "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
-  "initial_default": {"name": "initial_default", "title": "Initial Default", "fieldType": "BooleanField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
+  "initial_default": {"name": "initial_default", "title": "Initial Default", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
   "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "options": {"name": "options", "title": "Options", "fieldType": "JSONField", "dbFieldType": "text", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "unknown", "choices": null},
   "selected": {"name": "selected", "title": "Selected", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
-  "source_object": {"name": "source_object", "title": "Source Object", "fieldType": "ForeignKey", "dbFieldType": null, "nullable": true, "many": false, "relatedModel": "UserListViewPreference", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
+  "shared_with_groups": {"name": "shared_with_groups", "title": "Shared With Groups", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "Group", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
+  "shared_with_users": {"name": "shared_with_users", "title": "Shared With Users", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
+  "source_object": {"name": "source_object", "title": "Source Object", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "UserListViewPreference", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
   "split_view_enabled": {"name": "split_view_enabled", "title": "Split View Enabled", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
   "user": {"name": "user", "title": "User", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": false, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
   "view_type": {"name": "view_type", "title": "View Type", "fieldType": "CharField", "dbFieldType": "varchar(50)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": [{"value": "table", "label": "Table"}, {"value": "kanban", "label": "Kanban"}, {"value": "card", "label": "Card"}, {"value": "calendar", "label": "Calendar"}, {"value": "gant", "label": "Gant"}, {"value": "pivot_table", "label": "Pivot"}]},
@@ -2127,23 +2139,29 @@ export class WorkflowRunStepApi extends ModelApi<WorkflowRunStep, WorkflowRunSte
 
 export interface Workspace {
   id: number;
-  is_default: boolean;
+  initial_default: boolean;
   layout: unknown;
-  module_id: string;
+  module_id: string | null;
   name: string;
-  shared_with: Array<number>;
+  selected: boolean;
+  shared_with_groups: Array<number>;
+  shared_with_users: Array<number>;
+  source_object: number | null;
   user: number;
 }
 
 export type WorkspaceId = number;
-export type WorkspaceFieldName = "id" | "is_default" | "layout" | "module_id" | "name" | "shared_with" | "user";
+export type WorkspaceFieldName = "id" | "initial_default" | "layout" | "module_id" | "name" | "selected" | "shared_with_groups" | "shared_with_users" | "source_object" | "user";
 
 export interface WorkspaceCreate {
-  is_default?: boolean;
+  initial_default?: boolean;
   layout?: unknown;
-  module_id?: string;
+  module_id?: string | null;
   name?: string;
-  shared_with: Array<number>;
+  selected?: boolean;
+  shared_with_groups?: Array<number>;
+  shared_with_users?: Array<number>;
+  source_object?: number | null;
   user: number;
 }
 
@@ -2152,11 +2170,14 @@ export type WorkspaceQuery = Partial<Record<WorkspaceFieldName | `${WorkspaceFie
 
 export const workspacesFields: Record<WorkspaceFieldName, BloomerpFieldMetadata> = {
   "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
-  "is_default": {"name": "is_default", "title": "Is Default", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
+  "initial_default": {"name": "initial_default", "title": "Initial Default", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
   "layout": {"name": "layout", "title": "Layout", "fieldType": "JSONField", "dbFieldType": "text", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "unknown", "choices": null},
-  "module_id": {"name": "module_id", "title": "Module Id", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "module_id": {"name": "module_id", "title": "Module Id", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
   "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
-  "shared_with": {"name": "shared_with", "title": "Shared With", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "User", "editable": true, "requiredOnCreate": true, "tsType": "Array<number>", "choices": null},
+  "selected": {"name": "selected", "title": "Selected", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
+  "shared_with_groups": {"name": "shared_with_groups", "title": "Shared With Groups", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "Group", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
+  "shared_with_users": {"name": "shared_with_users", "title": "Shared With Users", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
+  "source_object": {"name": "source_object", "title": "Source Object", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "Workspace", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
   "user": {"name": "user", "title": "User", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": false, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
 } as const;
 

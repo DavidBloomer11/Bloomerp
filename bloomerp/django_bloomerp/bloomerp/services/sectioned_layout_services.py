@@ -123,36 +123,7 @@ def get_model_field_layout(model: Type[Model]) -> FieldLayout | None:
     return None
 
 
-def get_default_workspace_layout() -> FieldLayout:
-    return FieldLayout(
-        rows=[
-            LayoutRow(
-                title="Highlights",
-                columns=4,
-                items=[
-                    LayoutItem(id=9001, colspan=1),
-                    LayoutItem(id=9002, colspan=2),
-                    LayoutItem(id=9004, colspan=1),
-                ],
-            ),
-            LayoutRow(
-                title="Pipeline",
-                columns=4,
-                items=[
-                    LayoutItem(id=9003, colspan=3),
-                    LayoutItem(id=9005, colspan=2),
-                ],
-            ),
-            LayoutRow(
-                title="Resources",
-                columns=4,
-                items=[
-                    LayoutItem(id=9006, colspan=4),
-                    LayoutItem(id=9007, colspan=4),
-                ],
-            ),
-        ]
-    )
+
 
 
 def get_object_field_value(*, obj: Model, application_field: ApplicationField) -> Any:

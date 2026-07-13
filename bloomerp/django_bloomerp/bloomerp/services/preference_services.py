@@ -26,6 +26,34 @@ BASE_PREFERENCE_FIELD_NAMES = {
 }
 
 
+def clean_scope(scope: dict[str, Any] | None) -> dict[str, Any]:
+    """Return a copy of ``scope`` with request-style values parsed.
+
+    Python ``None`` and the strings ``"none"`` and ``"null"`` become
+    explicit ``None`` values.
+    Case-insensitive ``"true"`` and ``"false"`` strings become booleans.
+    Other values remain unchanged, and the input mapping is never mutated.
+
+    Example:
+        clean_scope({"module_id": "None", "enabled": "false"})
+        # {"module_id": None, "enabled": False}
+    """
+    cleaned: dict[str, Any] = {}
+    for key, value in (scope or {}).items():
+        if isinstance(value, str):
+            normalized_value = value.strip().lower()
+            if normalized_value in {"none", "null"}:
+                value = None
+            elif normalized_value == "true":
+                value = True
+            elif normalized_value == "false":
+                value = False
+
+        cleaned[key] = value
+
+    return cleaned
+
+
 class PreferenceManager:
     """Manage the preferences available to one authenticated user.
 
@@ -83,7 +111,7 @@ class PreferenceManager:
                 {"content_type_id": content_type.pk},
             )
         """
-        scope = preference_model.normalize_scope(scope)
+        scope = preference_model.normalize_scope(clean_scope(scope))
         owned_references = preference_model.objects.filter(
             user=self.user,
             source_object__isnull=False,
@@ -115,7 +143,8 @@ class PreferenceManager:
         self,
         preference_model: type[BasePreference],
         scope: dict[str, Any] | None = None,
-    ) -> BasePreference:
+        force_create: bool = True,
+    ) -> BasePreference | None:
         """Get or establish the user's effective selection for a scope.
 
         The lifecycle is deliberately centralized here: return an existing
@@ -130,7 +159,7 @@ class PreferenceManager:
                 {"content_type_id": content_type.pk},
             )
         """
-        scope = preference_model.normalize_scope(scope)
+        scope = preference_model.normalize_scope(clean_scope(scope))
         with transaction.atomic():
             owned = preference_model.objects.filter(
                 user=self.user,
@@ -147,9 +176,12 @@ class PreferenceManager:
                 self._select_entry(entry, scope)
                 return entry.effective_preference
 
-            entry = preference_model.create_default_for_user(self.user, **scope)
-            self._select_entry(entry, scope)
-            return entry.effective_preference
+            if force_create:
+                entry = preference_model.create_default_for_user(self.user, **scope)
+                self._select_entry(entry, scope)
+                return entry.effective_preference
+            
+            return None
 
     def select(self, preference: BasePreference) -> BasePreference:
         """Select an available preference and return its effective object.
@@ -163,7 +195,9 @@ class PreferenceManager:
             assert effective == shared_preference
         """
         preference_model = type(preference)
-        scope = preference.get_scope()
+        scope = preference_model.normalize_scope(
+            clean_scope(preference.get_scope())
+        )
         with transaction.atomic():
             if preference.user_id == self.user.id:
                 entry = preference
@@ -196,7 +230,7 @@ class PreferenceManager:
                 scope={"content_type_id": content_type.pk},
             )
         """
-        scope = preference_model.normalize_scope(scope)
+        scope = preference_model.normalize_scope(clean_scope(scope))
         source = self.get_or_create_selected(preference_model, scope)
         values = self._copy_values(source)
         values.update(scope)
