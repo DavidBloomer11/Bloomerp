@@ -1,17 +1,17 @@
+from bloomerp.models.workspaces.sidebar import Sidebar
 from bloomerp.modules.definition import ModuleConfig, module_registry
 from bloomerp.router import RouteType, router
+from bloomerp.services.preference_services import PreferenceManager
 from bloomerp.utils.models import get_detail_view_url, get_list_view_url
-
 
 from django.urls import reverse
 from django.views.generic import DetailView, UpdateView
 
-
-import random
 from typing import Any
+from bloomerp.views.mixins.get_preference_mixin import GetPreferenceMixin
 
 
-class HtmxMixin:
+class HtmxMixin(GetPreferenceMixin):
     """Updates the template name based on the request.htmx attribute."""
     htmx_template = 'views/htmx_base.html'
     htmx_addendum_template = 'views/htmx_addendum.html'
@@ -147,8 +147,6 @@ class HtmxMixin:
         items.append({"text": route_name, "url": self.request.path, "active": True})
         return items
 
-
-
     def get_context_data(self, **kwargs:Any) -> dict:
         import random
         try:
@@ -176,6 +174,9 @@ class HtmxMixin:
             else:
                 context['template_name'] = base_template_name
             self.template_name = self.htmx_template
+            
+            # Add sidebar 
+            context["sidebar"] = self.get_preference(Sidebar)
 
         # ---------------------
         # HTMX REQUEST

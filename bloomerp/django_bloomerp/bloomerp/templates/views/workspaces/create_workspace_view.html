@@ -10,7 +10,7 @@
         method="post"
         action="{{ url }}"
         hx-post="{{ url }}"
-        hx-target="#create-new-workspace-modal-body"
+        hx-target="#main-content"
         hx-swap="innerHTML"
         bloomerp-component="focus-in"
     >
@@ -31,12 +31,12 @@
 
         <div
             data-generate-default-wrapper
-            class="overflow-hidden rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 transition-all duration-300 ease-out {% if fixed_module_id or form.module_id.value %}max-h-32 opacity-100{% else %}max-h-0 opacity-0 border-transparent bg-transparent px-0 py-0{% endif %}"
+            class="overflow-hidden rounded-xl border border-gray-200 bg-base px-4 py-3 transition-all duration-300 ease-out {% if fixed_module_id or form.module_id.value %}max-h-32 opacity-100{% else %}max-h-0 opacity-0 border-transparent bg-transparent px-0 py-0{% endif %}"
         >
             <label class="flex items-start gap-3">
                 {{ form.generate_default }}
                 <span class="flex flex-col">
-                    <span class="text-sm font-medium text-slate-700">Generate default template</span>
+                    <c-ui.text.text>Generate default template</c-ui.text.text>
                     <c-ui.text.muted class="text-xs">
                         Start this workspace with the module's default template and starter tiles.
                     </c-ui.text.muted>

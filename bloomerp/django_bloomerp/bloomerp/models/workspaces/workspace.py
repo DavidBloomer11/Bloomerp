@@ -1,86 +1,80 @@
 from typing import Any
 
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Case, IntegerField, QuerySet, When
 from django.urls import reverse
-from django.utils.translation import gettext_lazy as _
 
-from bloomerp.models.base_bloomerp_model import BloomerpModel
-from bloomerp.models.mixins.absolute_url_model_mixin import AbsoluteUrlModelMixin
+from bloomerp.models.base_bloomerp_model import BloomerpModel, FieldLayout, LayoutRow
 from bloomerp.models.mixins.content_layout_model_mixin import ContentLayoutModelMixin
+from bloomerp.models.users.base_preference import BasePreference
+from bloomerp.models.users.user import AbstractBloomerpUser
 from bloomerp.models.workspaces.tile import Tile
 
-class Workspace(ContentLayoutModelMixin, AbsoluteUrlModelMixin, models.Model):
+
+class Workspace(ContentLayoutModelMixin, BasePreference):
+    """A selectable, shareable workspace preference scoped by module."""
+
+    preference_scope_fields = ("module_id",)
+
     class Meta(BloomerpModel.Meta):
         managed = True
-        db_table = 'bloomerp_workspace'
+        db_table = "bloomerp_workspace"
         constraints = [
             models.UniqueConstraint(
                 fields=["user", "module_id"],
-                condition=models.Q(is_default=True),
-                name="unique_default_workspace_per_user_module_context",
+                condition=models.Q(selected=True, module_id__isnull=False),
+                name="unique_selected_workspace_per_user_module",
+            ),
+            models.UniqueConstraint(
+                fields=["user"],
+                condition=models.Q(selected=True, module_id__isnull=True),
+                name="unique_selected_general_workspace_per_user",
+            ),
+            models.UniqueConstraint(
+                fields=["user", "source_object"],
+                condition=models.Q(source_object__isnull=False),
+                name="unique_workspace_preference_reference",
             ),
         ]
 
-    name = models.CharField(
-        max_length=255,
-        default=_("Default")
-    )
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.CASCADE
-        )
     module_id = models.CharField(
-        max_length=255, 
-        default=""
-        )
-    is_default = models.BooleanField(
-        help_text=_("Whether it is a default workspace"),
-        default=False
-    )
-    shared_with = models.ManyToManyField(
-        to=settings.AUTH_USER_MODEL,
-        related_name="shared_workspaces"
+        max_length=255,
+        null=True,
+        blank=True,
+        default=None,
     )
 
     def __str__(self):
         return self.name
 
     @classmethod
-    def get_default_for_user(cls, user, module_id: str = ""):
-        return cls.objects.filter(
-            user=user,
-            module_id=module_id,
-            is_default=True,
-        ).order_by("pk").first()
+    def create_default_for_user(
+        cls,
+        user: AbstractBloomerpUser,
+        **scope,
+    ) -> "Workspace":
+        """Create the default workspace for a user's module scope.
 
-    @classmethod
-    def get_or_create_for_user(cls, user, module_id: str = ""):
-        from bloomerp.services.sectioned_layout_services import get_default_workspace_layout, layout_has_items
-
-        workspace = cls.get_default_for_user(
-            user=user,
-            module_id=module_id,
-        )
-        if workspace:
-            if not layout_has_items(workspace.layout):
-                workspace.layout = get_default_workspace_layout().model_dump()
-                workspace.save(update_fields=["layout"])
-            return workspace
+        Example:
+            workspace = Workspace.create_default_for_user(
+                user,
+                module_id="sales",
+            )
+        """
         return cls.objects.create(
-            name=str(_("Default")),
             user=user,
-            module_id=module_id,
-            layout=get_default_workspace_layout().model_dump(),
-            is_default=True,
+            name="Default",
+            module_id=scope.get("module_id"),
+            layout=FieldLayout(
+                rows=[LayoutRow(columns=4, title="My Workspace", items=[])]
+            ).model_dump(),
+            selected=True,
         )
 
     def get_absolute_url(self):
         return reverse("workspace", kwargs={"pk": self.pk})
-    
-    
+
     def get_tiles(self) -> QuerySet[Tile]:
         """Returns the tiles that are on this workspace
 
@@ -115,5 +109,3 @@ class Workspace(ContentLayoutModelMixin, AbsoluteUrlModelMixin, models.Model):
         )
 
         return Tile.objects.filter(pk__in=tile_ids).order_by(preserved_order)
-    
-    

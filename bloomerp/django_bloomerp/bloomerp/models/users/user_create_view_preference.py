@@ -20,14 +20,23 @@ class UserCreateViewPreference(ContentLayoutModelMixin, BaseViewPreference):
                 condition=Q(selected=True),
                 name="unique_selected_create_view_preference",
             ),
+            models.UniqueConstraint(
+                fields=["user", "source_object"],
+                condition=Q(source_object__isnull=False),
+                name="unique_create_view_preference_reference",
+            ),
         ]
     @classmethod
     def create_default_for_user(
         cls,
         user: AbstractBloomerpUser,
-        content_type_or_model: ContentType | models.Model,
+        **scope,
     ) -> "UserCreateViewPreference":
-        content_type = cls.resolve_content_type(content_type_or_model)
+        """Create the user's default create-view preference for a content type.
+
+        Expected scope: ``content_type_id``.
+        """
+        content_type = ContentType.objects.get(pk=scope["content_type_id"])
 
         from bloomerp.services.create_view_services import create_default_create_view_preference
 

@@ -7,6 +7,7 @@ from django.http import HttpRequest, HttpResponse
 from django.forms import Form
 from django.shortcuts import render
 from django.template.loader import render_to_string
+from django.contrib import messages
 
 def parse_bool_parameter(value : Any, default_value=False) -> bool:
     """
@@ -195,6 +196,17 @@ def render_page_refresh() -> HttpResponse:
     """Returns a HTMX page refresh"""
     from django_htmx.http import HttpResponseClientRefresh
     return HttpResponseClientRefresh()
+
+def render_page_refresh_with_message(
+    request: HttpRequest,
+    message: str,
+    type: Literal["info", "warning", "error", "success"],
+) -> HttpResponse:
+    """Returns a HTMX page refresh with a message"""
+    from django_htmx.http import HttpResponseClientRefresh
+    response = HttpResponseClientRefresh()
+    messages.add_message(request, getattr(messages, type.upper()), message)
+    return response
 
 def render_oob_swap(
         request: HttpRequest,

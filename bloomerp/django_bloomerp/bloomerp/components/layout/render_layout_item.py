@@ -23,7 +23,7 @@ from bloomerp.services.sectioned_layout_services import (
 )
 from bloomerp.services.workspace_services import render_tile_to_string
 
-
+# TODO: Permission checks and caching required
 def _tile(request: HttpRequest, content_type: ContentType) -> HttpResponse:
     tile_id = request.GET.get("tile_id")
     if not tile_id:

@@ -539,8 +539,8 @@ class TestDataView(BaseBloomerpModelTestCase):
 
         url = reverse(
             viewname="components_select_preference",
-            kwargs={"content_type_id": content_type.id, "type": "list"},
-        )
+            kwargs={"model": "UserListViewPreference"},
+        ) + f"?content_type_id={content_type.id}"
 
         response = self.client.get(url, HTTP_HX_REQUEST="true")
 
@@ -571,12 +571,16 @@ class TestDataView(BaseBloomerpModelTestCase):
 
         url = reverse(
             viewname="components_select_preference",
-            kwargs={"content_type_id": content_type.id, "type": "list"},
+            kwargs={"model": "UserListViewPreference"},
         )
 
         response = self.client.post(
             url,
-            data={"action": "select", "preference_id": second.id},
+            data={
+                "action": "select",
+                "preference_id": second.id,
+                "content_type_id": content_type.id,
+            },
             HTTP_HX_REQUEST="true",
         )
 
@@ -614,13 +618,13 @@ class TestDataView(BaseBloomerpModelTestCase):
         )
 
         url = reverse(
-            viewname="components_select_preference",
-            kwargs={"content_type_id": content_type.id, "type": "list"},
+            viewname="components_new_preference",
+            kwargs={"model": "UserListViewPreference"},
         )
 
         response = self.client.post(
             url,
-            data={"action": "create", "name": "Ops board"},
+            data={"name": "Ops board", "content_type_id": content_type.id},
             HTTP_HX_REQUEST="true",
         )
 
@@ -638,6 +642,46 @@ class TestDataView(BaseBloomerpModelTestCase):
         self.assertEqual(created.view_type, "kanban")
         self.assertEqual(created.options, source.options)
         self.assertEqual(created.display_fields, source.display_fields)
+
+    def test_selecting_shared_preference_creates_live_reference_without_duplicate_menu_item(self):
+        self.client.force_login(self.admin_user)
+
+        content_type = ContentType.objects.get_for_model(self.CustomerModel)
+        source = UserListViewPreference.objects.create(
+            user=self.normal_user,
+            content_type=content_type,
+            name="Shared board",
+            view_type="kanban",
+        )
+        source.shared_with_users.add(self.admin_user)
+
+        url = reverse(
+            viewname="components_select_preference",
+            kwargs={"model": "UserListViewPreference"},
+        )
+        response = self.client.post(
+            url,
+            data={
+                "action": "select",
+                "preference_id": source.id,
+                "content_type_id": content_type.id,
+            },
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        reference = UserListViewPreference.objects.get(
+            user=self.admin_user,
+            source_object=source,
+        )
+        self.assertTrue(reference.selected)
+        self.assertEqual(reference.effective_preference, source)
+
+        response = self.client.get(
+            f"{url}?content_type_id={content_type.id}",
+            HTTP_HX_REQUEST="true",
+        )
+        self.assertContains(response, "Shared board", count=1)
 
     def test_change_data_view_preference_uses_selected_preference_when_multiple_exist(self):
         self.client.force_login(self.admin_user)

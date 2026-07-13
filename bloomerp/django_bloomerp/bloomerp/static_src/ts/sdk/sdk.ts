@@ -513,7 +513,7 @@ export const aiConversationsFields: Record<AIConversationFieldName, BloomerpFiel
   "created_by": {"name": "created_by", "title": "Created By", "fieldType": "UserField", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
   "datetime_created": {"name": "datetime_created", "title": "Datetime Created", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "datetime_updated": {"name": "datetime_updated", "title": "Datetime Updated", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
-  "id": {"name": "id", "title": "Id", "fieldType": "UUIDField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "UUIDField", "dbFieldType": "char(32)", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "title": {"name": "title", "title": "Title", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "updated_by": {"name": "updated_by", "title": "Updated By", "fieldType": "UserField", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
   "user": {"name": "user", "title": "User", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": false, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
@@ -560,7 +560,7 @@ export const activityLogsFields: Record<ActivityLogFieldName, BloomerpFieldMetad
   "action": {"name": "action", "title": "Action", "fieldType": "CharField", "dbFieldType": "varchar(12)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": [{"value": "CHANGE", "label": "Change"}, {"value": "CREATE", "label": "Create"}, {"value": "DELETE", "label": "Delete"}]},
   "actor": {"name": "actor", "title": "Actor", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
   "content_type": {"name": "content_type", "title": "Content Type", "fieldType": "ForeignKey", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": "ContentType", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
-  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
   "is_create": {"name": "is_create", "title": "Is Create", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
   "object_id": {"name": "object_id", "title": "Object Id", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": null},
   "payload": {"name": "payload", "title": "Payload", "fieldType": "JSONField", "dbFieldType": "text", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "unknown", "choices": null},
@@ -612,8 +612,8 @@ export const applicationFieldsFields: Record<ApplicationFieldFieldName, Bloomerp
   "db_field_type": {"name": "db_field_type", "title": "Db Field Type", "fieldType": "CharField", "dbFieldType": "varchar(100)", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
   "db_table": {"name": "db_table", "title": "Db Table", "fieldType": "CharField", "dbFieldType": "varchar(100)", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
   "field": {"name": "field", "title": "Field", "fieldType": "CharField", "dbFieldType": "varchar(100)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": null},
-  "field_type": {"name": "field_type", "title": "Field Type", "fieldType": "CharField", "dbFieldType": "varchar(100)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": [{"value": "Property", "label": "Property"}, {"value": "AutoField", "label": "Auto Field"}, {"value": "BigAutoField", "label": "Big Auto Field"}, {"value": "SmallAutoField", "label": "Small Auto Field"}, {"value": "CharField", "label": "Char Field"}, {"value": "CodeField", "label": "Code Field"}, {"value": "ChoiceField", "label": "Choice Field"}, {"value": "TextField", "label": "Text Field"}, {"value": "EmailField", "label": "Email Field"}, {"value": "URLField", "label": "URL Field"}, {"value": "AddressField", "label": "Address Field"}, {"value": "PhoneNumberField", "label": "Phone Number Field"}, {"value": "SlugField", "label": "Slug Field"}, {"value": "IntegerField", "label": "Integer Field"}, {"value": "FloatField", "label": "Float Field"}, {"value": "DecimalField", "label": "Decimal Field"}, {"value": "PositiveIntegerField", "label": "Positive Integer Field"}, {"value": "PositiveSmallIntegerField", "label": "Positive Small Integer Field"}, {"value": "BigIntegerField", "label": "Big Integer Field"}, {"value": "SmallIntegerField", "label": "Small Integer Field"}, {"value": "BooleanField", "label": "Boolean Field"}, {"value": "NullBooleanField", "label": "Null Boolean Field"}, {"value": "DateField", "label": "Date Field"}, {"value": "WeekField", "label": "Week Field"}, {"value": "DateTimeField", "label": "DateTime Field"}, {"value": "TimeField", "label": "Time Field"}, {"value": "DurationField", "label": "Duration Field"}, {"value": "FileField", "label": "File Field"}, {"value": "ImageField", "label": "Image Field"}, {"value": "ForeignKey", "label": "Foreign Key"}, {"value": "OneToOneField", "label": "One To One Field"}, {"value": "ManyToManyField", "label": "Many To Many Field"}, {"value": "OneToManyField", "label": "One To Many Field"}, {"value": "UserField", "label": "User Field"}, {"value": "UUIDField", "label": "UUID Field"}, {"value": "BinaryField", "label": "Binary Field"}, {"value": "IPAddressField", "label": "IP Address Field"}, {"value": "GenericIPAddressField", "label": "Generic IP Address Field"}, {"value": "JSONField", "label": "JSON Field"}, {"value": "ArrayField", "label": "Array Field"}, {"value": "HStoreField", "label": "HStore Field"}, {"value": "GenericRelation", "label": "Generic Relation"}, {"value": "GenericForeignKey", "label": "Generic Foreign Key"}, {"value": "StatusField", "label": "Status Field"}, {"value": "IconField", "label": "Icon Field"}, {"value": "BloomerpFileField", "label": "Bloomerp File Field"}, {"value": "FilesRelationField", "label": "Files"}]},
-  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "field_type": {"name": "field_type", "title": "Field Type", "fieldType": "CharField", "dbFieldType": "varchar(100)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": [{"value": "Property", "label": "Property"}, {"value": "AutoField", "label": "Auto Field"}, {"value": "BigAutoField", "label": "Big Auto Field"}, {"value": "SmallAutoField", "label": "Small Auto Field"}, {"value": "CharField", "label": "Char Field"}, {"value": "CodeField", "label": "Code Field"}, {"value": "ChoiceField", "label": "Choice Field"}, {"value": "TextField", "label": "Text Field"}, {"value": "EmailField", "label": "Email Field"}, {"value": "URLField", "label": "URL Field"}, {"value": "AddressField", "label": "Address Field"}, {"value": "PhoneNumberField", "label": "Phone Number Field"}, {"value": "SlugField", "label": "Slug Field"}, {"value": "IntegerField", "label": "Integer Field"}, {"value": "FloatField", "label": "Float Field"}, {"value": "DecimalField", "label": "Decimal Field"}, {"value": "PositiveIntegerField", "label": "Positive Integer Field"}, {"value": "PositiveSmallIntegerField", "label": "Positive Small Integer Field"}, {"value": "BigIntegerField", "label": "Big Integer Field"}, {"value": "SmallIntegerField", "label": "Small Integer Field"}, {"value": "BooleanField", "label": "Boolean Field"}, {"value": "NullBooleanField", "label": "Null Boolean Field"}, {"value": "DateField", "label": "Date Field"}, {"value": "WeekField", "label": "Week Field"}, {"value": "DateTimeField", "label": "DateTime Field"}, {"value": "TimeField", "label": "Time Field"}, {"value": "DurationField", "label": "Duration Field"}, {"value": "FileField", "label": "File Field"}, {"value": "ImageField", "label": "Image Field"}, {"value": "ForeignKey", "label": "Foreign Key"}, {"value": "OneToOneField", "label": "One To One Field"}, {"value": "ManyToManyField", "label": "Many To Many Field"}, {"value": "OneToManyField", "label": "One To Many Field"}, {"value": "UserField", "label": "User Field"}, {"value": "OneToOneUserField", "label": "One To One User Field"}, {"value": "UUIDField", "label": "UUID Field"}, {"value": "BinaryField", "label": "Binary Field"}, {"value": "IPAddressField", "label": "IP Address Field"}, {"value": "GenericIPAddressField", "label": "Generic IP Address Field"}, {"value": "JSONField", "label": "JSON Field"}, {"value": "ArrayField", "label": "Array Field"}, {"value": "HStoreField", "label": "HStore Field"}, {"value": "GenericRelation", "label": "Generic Relation"}, {"value": "GenericForeignKey", "label": "Generic Foreign Key"}, {"value": "StatusField", "label": "Status Field"}, {"value": "IconField", "label": "Icon Field"}, {"value": "BloomerpFileField", "label": "Bloomerp File Field"}, {"value": "FilesRelationField", "label": "Files"}]},
+  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
   "meta": {"name": "meta", "title": "Meta", "fieldType": "JSONField", "dbFieldType": "text", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "unknown", "choices": null},
   "related_model": {"name": "related_model", "title": "Related Model", "fieldType": "ForeignKey", "dbFieldType": "integer", "nullable": true, "many": false, "relatedModel": "ContentType", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
 } as const;
@@ -650,7 +650,7 @@ export type BookmarkQuery = Partial<Record<BookmarkFieldName | `${BookmarkFieldN
 export const bookmarksFields: Record<BookmarkFieldName, BloomerpFieldMetadata> = {
   "content_type": {"name": "content_type", "title": "Content Type", "fieldType": "ForeignKey", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": "ContentType", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
   "datetime_created": {"name": "datetime_created", "title": "Datetime Created", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
-  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
   "object_id": {"name": "object_id", "title": "Object Id", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": null},
   "user": {"name": "user", "title": "User", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": false, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
 } as const;
@@ -695,7 +695,7 @@ export const commentsFields: Record<CommentFieldName, BloomerpFieldMetadata> = {
   "created_by": {"name": "created_by", "title": "Created By", "fieldType": "UserField", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
   "datetime_created": {"name": "datetime_created", "title": "Datetime Created", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "datetime_updated": {"name": "datetime_updated", "title": "Datetime Updated", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
-  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
   "object_id": {"name": "object_id", "title": "Object Id", "fieldType": "CharField", "dbFieldType": "varchar(36)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": null},
   "updated_by": {"name": "updated_by", "title": "Updated By", "fieldType": "UserField", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
 } as const;
@@ -757,12 +757,12 @@ export type DocumentTemplateQuery = Partial<Record<DocumentTemplateFieldName | `
 export const documentTemplatesFields: Record<DocumentTemplateFieldName, BloomerpFieldMetadata> = {
   "content_types": {"name": "content_types", "title": "Content Types", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "ContentType", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
   "created_by": {"name": "created_by", "title": "Created By", "fieldType": "UserField", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
-  "custom_styling": {"name": "custom_styling", "title": "Custom Styling", "fieldType": "TextField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "custom_styling": {"name": "custom_styling", "title": "Custom Styling", "fieldType": "TextField", "dbFieldType": "text", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "datetime_created": {"name": "datetime_created", "title": "Datetime Created", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "datetime_updated": {"name": "datetime_updated", "title": "Datetime Updated", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "footer": {"name": "footer", "title": "Footer", "fieldType": "TextField", "dbFieldType": "text", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
   "free_variables": {"name": "free_variables", "title": "Free Variables", "fieldType": "JSONField", "dbFieldType": "text", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "unknown", "choices": null},
-  "id": {"name": "id", "title": "Id", "fieldType": "UUIDField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "UUIDField", "dbFieldType": "char(32)", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "include_page_numbers": {"name": "include_page_numbers", "title": "Include Page Numbers", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
   "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(100)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": null},
   "page_margin": {"name": "page_margin", "title": "Page Margin", "fieldType": "FloatField", "dbFieldType": "real", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
@@ -823,7 +823,7 @@ export const documentTemplateHeadersFields: Record<DocumentTemplateHeaderFieldNa
   "datetime_updated": {"name": "datetime_updated", "title": "Datetime Updated", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "header": {"name": "header", "title": "Header", "fieldType": "FileField", "dbFieldType": "varchar(100)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": null},
   "height": {"name": "height", "title": "Height", "fieldType": "FloatField", "dbFieldType": "real", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
-  "id": {"name": "id", "title": "Id", "fieldType": "UUIDField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "UUIDField", "dbFieldType": "char(32)", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "margin_bottom": {"name": "margin_bottom", "title": "Margin Bottom", "fieldType": "FloatField", "dbFieldType": "real", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
   "margin_left": {"name": "margin_left", "title": "Margin Left", "fieldType": "FloatField", "dbFieldType": "real", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
   "margin_right": {"name": "margin_right", "title": "Margin Right", "fieldType": "FloatField", "dbFieldType": "real", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
@@ -868,7 +868,7 @@ export const documentTemplateStylingsFields: Record<DocumentTemplateStylingField
   "created_by": {"name": "created_by", "title": "Created By", "fieldType": "UserField", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
   "datetime_created": {"name": "datetime_created", "title": "Datetime Created", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "datetime_updated": {"name": "datetime_updated", "title": "Datetime Updated", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
-  "id": {"name": "id", "title": "Id", "fieldType": "UUIDField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "UUIDField", "dbFieldType": "char(32)", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(100)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": null},
   "styling": {"name": "styling", "title": "Styling", "fieldType": "TextField", "dbFieldType": "text", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "updated_by": {"name": "updated_by", "title": "Updated By", "fieldType": "UserField", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
@@ -904,7 +904,7 @@ export type FieldPolicyQuery = Partial<Record<FieldPolicyFieldName | `${FieldPol
 
 export const accessControlFieldPoliciesFields: Record<FieldPolicyFieldName, BloomerpFieldMetadata> = {
   "content_type": {"name": "content_type", "title": "Content Type", "fieldType": "ForeignKey", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": "ContentType", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
-  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
   "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": null},
   "rule": {"name": "rule", "title": "Rule", "fieldType": "JSONField", "dbFieldType": "text", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "unknown", "choices": null},
 } as const;
@@ -958,7 +958,7 @@ export const filesFields: Record<FileFieldName, BloomerpFieldMetadata> = {
   "datetime_updated": {"name": "datetime_updated", "title": "Datetime Updated", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "file": {"name": "file", "title": "File", "fieldType": "FileField", "dbFieldType": "varchar(100)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": null},
   "folder": {"name": "folder", "title": "Folder", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "FileFolder", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
-  "id": {"name": "id", "title": "Id", "fieldType": "UUIDField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "UUIDField", "dbFieldType": "char(32)", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "meta": {"name": "meta", "title": "Meta", "fieldType": "JSONField", "dbFieldType": "text", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "unknown", "choices": null},
   "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(100)", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
   "object_id": {"name": "object_id", "title": "Object Id", "fieldType": "CharField", "dbFieldType": "varchar(36)", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
@@ -1009,7 +1009,7 @@ export const fileFoldersFields: Record<FileFolderFieldName, BloomerpFieldMetadat
   "created_by": {"name": "created_by", "title": "Created By", "fieldType": "UserField", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
   "datetime_created": {"name": "datetime_created", "title": "Datetime Created", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "datetime_updated": {"name": "datetime_updated", "title": "Datetime Updated", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
-  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
   "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": null},
   "object_id": {"name": "object_id", "title": "Object Id", "fieldType": "CharField", "dbFieldType": "varchar(36)", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
   "parent": {"name": "parent", "title": "Parent", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "FileFolder", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
@@ -1079,7 +1079,7 @@ export const formsFields: Record<FormFieldName, BloomerpFieldMetadata> = {
   "datetime_created": {"name": "datetime_created", "title": "Datetime Created", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "datetime_updated": {"name": "datetime_updated", "title": "Datetime Updated", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "description": {"name": "description", "title": "Description", "fieldType": "TextField", "dbFieldType": "text", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
-  "id": {"name": "id", "title": "Id", "fieldType": "UUIDField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "UUIDField", "dbFieldType": "char(32)", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "initial_payload": {"name": "initial_payload", "title": "Initial Payload", "fieldType": "JSONField", "dbFieldType": "text", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "unknown", "choices": null},
   "layout": {"name": "layout", "title": "Layout", "fieldType": "JSONField", "dbFieldType": "text", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "unknown", "choices": null},
   "max_submissions": {"name": "max_submissions", "title": "Max Submissions", "fieldType": "IntegerField", "dbFieldType": "integer", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
@@ -1133,7 +1133,7 @@ export const formSubmissionsFields: Record<FormSubmissionFieldName, BloomerpFiel
   "datetime_created": {"name": "datetime_created", "title": "Datetime Created", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "datetime_updated": {"name": "datetime_updated", "title": "Datetime Updated", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "form": {"name": "form", "title": "Form", "fieldType": "ForeignKey", "dbFieldType": "char(32)", "nullable": true, "many": false, "relatedModel": "Form", "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
-  "id": {"name": "id", "title": "Id", "fieldType": "UUIDField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "UUIDField", "dbFieldType": "char(32)", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "ip_address": {"name": "ip_address", "title": "Ip Address", "fieldType": "GenericIPAddressField", "dbFieldType": "char(39)", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "unknown", "choices": null},
   "persisted": {"name": "persisted", "title": "Persisted", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
   "updated_by": {"name": "updated_by", "title": "Updated By", "fieldType": "UserField", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
@@ -1145,6 +1145,65 @@ export const formSubmissionsPublicAccess: BloomerpModelPublicAccessMetadata = {"
 export class FormSubmissionApi extends ModelApi<FormSubmission, FormSubmissionId, FormSubmissionCreate, FormSubmissionUpdate, FormSubmissionQuery, FormSubmissionFieldName> {
   constructor(client: BloomerpHttpClient) {
     super(client, "/api/form_submissions/");
+  }
+}
+
+export interface Initiative {
+  completed_at: string;
+  created_by: number | null;
+  datetime_created: string;
+  datetime_updated: string;
+  description: string | null;
+  id: string;
+  labels: Array<string>;
+  name: string;
+  owner: number | null;
+  start_date: string;
+  status: string;
+  target_date: string;
+  updated_by: number | null;
+}
+
+export type InitiativeId = string;
+export type InitiativeFieldName = "completed_at" | "created_by" | "datetime_created" | "datetime_updated" | "description" | "id" | "labels" | "name" | "owner" | "start_date" | "status" | "target_date" | "updated_by";
+
+export interface InitiativeCreate {
+  created_by?: number | null;
+  description?: string | null;
+  labels?: Array<string>;
+  name: string;
+  owner?: number | null;
+  start_date?: string;
+  status?: string;
+  target_date?: string;
+  updated_by?: number | null;
+}
+
+export type InitiativeUpdate = Partial<InitiativeCreate>;
+export type InitiativeQuery = Partial<Record<InitiativeFieldName | `${InitiativeFieldName}__${string}`, QueryValue | QueryValue[]>>;
+
+export const initiativesFields: Record<InitiativeFieldName, BloomerpFieldMetadata> = {
+  "completed_at": {"name": "completed_at", "title": "Completed At", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": true, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "created_by": {"name": "created_by", "title": "Created By", "fieldType": "UserField", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
+  "datetime_created": {"name": "datetime_created", "title": "Datetime Created", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "datetime_updated": {"name": "datetime_updated", "title": "Datetime Updated", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "description": {"name": "description", "title": "Description", "fieldType": "TextField", "dbFieldType": "text", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "UUIDField", "dbFieldType": "char(32)", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "labels": {"name": "labels", "title": "Labels", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "TodoLabel", "editable": true, "requiredOnCreate": false, "tsType": "Array<string>", "choices": null},
+  "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": null},
+  "owner": {"name": "owner", "title": "Owner", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
+  "start_date": {"name": "start_date", "title": "Start Date", "fieldType": "DateField", "dbFieldType": "date", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "status": {"name": "status", "title": "Status", "fieldType": "CharField", "dbFieldType": "varchar(20)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": [{"value": "backlog", "label": "Backlog"}, {"value": "in_progress", "label": "In Progress"}, {"value": "on_hold", "label": "On Hold"}, {"value": "completed", "label": "Completed"}, {"value": "canceled", "label": "Canceled"}]},
+  "target_date": {"name": "target_date", "title": "Target Date", "fieldType": "DateField", "dbFieldType": "date", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "updated_by": {"name": "updated_by", "title": "Updated By", "fieldType": "UserField", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
+} as const;
+
+export const initiativesCapabilities: BloomerpModelCapabilities = {"list": true, "retrieve": true, "create": true, "createMany": true, "update": true, "partialUpdate": true, "destroy": true} as const;
+export const initiativesPublicAccess: BloomerpModelPublicAccessMetadata = {"listAllowed": false, "readAllowed": false, "listFields": [], "readFields": [], "nesting": [], "authenticatedFallbackEnabled": true} as const;
+
+export class InitiativeApi extends ModelApi<Initiative, InitiativeId, InitiativeCreate, InitiativeUpdate, InitiativeQuery, InitiativeFieldName> {
+  constructor(client: BloomerpHttpClient) {
+    super(client, "/api/initiatives/");
   }
 }
 
@@ -1189,7 +1248,7 @@ export const accessControlPoliciesFields: Record<PolicyFieldName, BloomerpFieldM
   "field_policy": {"name": "field_policy", "title": "Field Policy", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": false, "many": false, "relatedModel": "FieldPolicy", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
   "global_permissions": {"name": "global_permissions", "title": "Global Permissions", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "Permission", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
   "groups": {"name": "groups", "title": "Groups", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "Group", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
-  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
   "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": null},
   "row_policy": {"name": "row_policy", "title": "Row Policy", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": false, "many": false, "relatedModel": "RowPolicy", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
   "updated_by": {"name": "updated_by", "title": "Updated By", "fieldType": "UserField", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
@@ -1224,7 +1283,7 @@ export type RowPolicyQuery = Partial<Record<RowPolicyFieldName | `${RowPolicyFie
 
 export const accessControlRowPoliciesFields: Record<RowPolicyFieldName, BloomerpFieldMetadata> = {
   "content_type": {"name": "content_type", "title": "Content Type", "fieldType": "ForeignKey", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": "ContentType", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
-  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
   "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
 } as const;
 
@@ -1257,7 +1316,7 @@ export type RowPolicyRuleUpdate = Partial<RowPolicyRuleCreate>;
 export type RowPolicyRuleQuery = Partial<Record<RowPolicyRuleFieldName | `${RowPolicyRuleFieldName}__${string}`, QueryValue | QueryValue[]>>;
 
 export const accessControlRowPolicyRulesFields: Record<RowPolicyRuleFieldName, BloomerpFieldMetadata> = {
-  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
   "permissions": {"name": "permissions", "title": "Permissions", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "Permission", "editable": true, "requiredOnCreate": true, "tsType": "Array<number>", "choices": null},
   "row_policy": {"name": "row_policy", "title": "Row Policy", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": false, "many": false, "relatedModel": "RowPolicy", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
   "rule": {"name": "rule", "title": "Rule", "fieldType": "JSONField", "dbFieldType": "text", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "unknown", "choices": null},
@@ -1290,7 +1349,7 @@ export type RowPolicyRulePermissionUpdate = Partial<RowPolicyRulePermissionCreat
 export type RowPolicyRulePermissionQuery = Partial<Record<RowPolicyRulePermissionFieldName | `${RowPolicyRulePermissionFieldName}__${string}`, QueryValue | QueryValue[]>>;
 
 export const rowPolicyRulePermissionsFields: Record<RowPolicyRulePermissionFieldName, BloomerpFieldMetadata> = {
-  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
   "permission": {"name": "permission", "title": "Permission", "fieldType": "ForeignKey", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": "Permission", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
   "row_policy_rule": {"name": "row_policy_rule", "title": "Row Policy Rule", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": false, "many": false, "relatedModel": "RowPolicyRule", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
 } as const;
@@ -1306,17 +1365,25 @@ export class RowPolicyRulePermissionApi extends ModelApi<RowPolicyRulePermission
 
 export interface Sidebar {
   id: number;
+  initial_default: boolean;
   name: string;
   selected: boolean;
+  shared_with_groups: Array<number>;
+  shared_with_users: Array<number>;
+  source_object: number | null;
   user: number;
 }
 
 export type SidebarId = number;
-export type SidebarFieldName = "id" | "name" | "selected" | "user";
+export type SidebarFieldName = "id" | "initial_default" | "name" | "selected" | "shared_with_groups" | "shared_with_users" | "source_object" | "user";
 
 export interface SidebarCreate {
+  initial_default?: boolean;
   name?: string;
   selected?: boolean;
+  shared_with_groups?: Array<number>;
+  shared_with_users?: Array<number>;
+  source_object?: number | null;
   user: number;
 }
 
@@ -1324,9 +1391,13 @@ export type SidebarUpdate = Partial<SidebarCreate>;
 export type SidebarQuery = Partial<Record<SidebarFieldName | `${SidebarFieldName}__${string}`, QueryValue | QueryValue[]>>;
 
 export const sidebarsFields: Record<SidebarFieldName, BloomerpFieldMetadata> = {
-  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "initial_default": {"name": "initial_default", "title": "Initial Default", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
   "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "selected": {"name": "selected", "title": "Selected", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
+  "shared_with_groups": {"name": "shared_with_groups", "title": "Shared With Groups", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "Group", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
+  "shared_with_users": {"name": "shared_with_users", "title": "Shared With Users", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
+  "source_object": {"name": "source_object", "title": "Source Object", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "Sidebar", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
   "user": {"name": "user", "title": "User", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": false, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
 } as const;
 
@@ -1371,7 +1442,7 @@ export type SidebarItemQuery = Partial<Record<SidebarItemFieldName | `${SidebarI
 export const sidebarItemsFields: Record<SidebarItemFieldName, BloomerpFieldMetadata> = {
   "color": {"name": "color", "title": "Color", "fieldType": "CharField", "dbFieldType": "varchar(7)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "icon": {"name": "icon", "title": "Icon", "fieldType": "CharField", "dbFieldType": "varchar(100)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": null},
-  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
   "is_folder": {"name": "is_folder", "title": "Is Folder", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
   "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": null},
   "parent": {"name": "parent", "title": "Parent", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "SidebarItem", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
@@ -1419,7 +1490,7 @@ export const sqlQueriesFields: Record<SqlQueryFieldName, BloomerpFieldMetadata> 
   "created_by": {"name": "created_by", "title": "Created By", "fieldType": "UserField", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
   "datetime_created": {"name": "datetime_created", "title": "Datetime Created", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "datetime_updated": {"name": "datetime_updated", "title": "Datetime Updated", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
-  "id": {"name": "id", "title": "Id", "fieldType": "UUIDField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "UUIDField", "dbFieldType": "char(32)", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": null},
   "query": {"name": "query", "title": "Query", "fieldType": "TextField", "dbFieldType": "text", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": null},
   "updated_by": {"name": "updated_by", "title": "Updated By", "fieldType": "UserField", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
@@ -1475,7 +1546,7 @@ export const tilesFields: Record<TileFieldName, BloomerpFieldMetadata> = {
   "datetime_updated": {"name": "datetime_updated", "title": "Datetime Updated", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "description": {"name": "description", "title": "Description", "fieldType": "TextField", "dbFieldType": "text", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
   "icon": {"name": "icon", "title": "Icon", "fieldType": "CharField", "dbFieldType": "varchar(100)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
-  "id": {"name": "id", "title": "Id", "fieldType": "UUIDField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "UUIDField", "dbFieldType": "char(32)", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": null},
   "schema": {"name": "schema", "title": "Schema", "fieldType": "JSONField", "dbFieldType": "text", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "unknown", "choices": null},
   "type": {"name": "type", "title": "Type", "fieldType": "CharField", "dbFieldType": "varchar(32)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": [{"value": "ANALYTICS_TILE", "label": "Analytics Tile"}, {"value": "CANVAS_TILE", "label": "Canvas"}, {"value": "LINKS_TILE", "label": "Links"}, {"value": "TEXT_TILE", "label": "Text"}, {"value": "FORM_TILE", "label": "Form"}]},
@@ -1501,7 +1572,8 @@ export interface Todo {
   datetime_updated: string;
   effort: number;
   id: string;
-  labels: Array<number>;
+  initiative: string | null;
+  labels: Array<string>;
   object_id: string | null;
   priority: string;
   requested_by: number | null;
@@ -1512,7 +1584,7 @@ export interface Todo {
 }
 
 export type TodoId = string;
-export type TodoFieldName = "assigned_to" | "content" | "content_type" | "created_by" | "datetime_completed" | "datetime_created" | "datetime_updated" | "effort" | "id" | "labels" | "object_id" | "priority" | "requested_by" | "required_by" | "status" | "title" | "updated_by";
+export type TodoFieldName = "assigned_to" | "content" | "content_type" | "created_by" | "datetime_completed" | "datetime_created" | "datetime_updated" | "effort" | "id" | "initiative" | "labels" | "object_id" | "priority" | "requested_by" | "required_by" | "status" | "title" | "updated_by";
 
 export interface TodoCreate {
   assigned_to?: number | null;
@@ -1520,7 +1592,8 @@ export interface TodoCreate {
   content_type?: number | null;
   created_by?: number | null;
   effort?: number;
-  labels?: Array<number>;
+  initiative?: string | null;
+  labels?: Array<string>;
   object_id?: string | null;
   priority?: string;
   requested_by?: number | null;
@@ -1542,8 +1615,9 @@ export const todosFields: Record<TodoFieldName, BloomerpFieldMetadata> = {
   "datetime_created": {"name": "datetime_created", "title": "Datetime Created", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "datetime_updated": {"name": "datetime_updated", "title": "Datetime Updated", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "effort": {"name": "effort", "title": "Effort", "fieldType": "IntegerField", "dbFieldType": "integer", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": [{"value": 1, "label": "XS"}, {"value": 2, "label": "S"}, {"value": 4, "label": "M"}, {"value": 8, "label": "L"}, {"value": 16, "label": "XL"}]},
-  "id": {"name": "id", "title": "Id", "fieldType": "UUIDField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
-  "labels": {"name": "labels", "title": "Labels", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "TodoLabel", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "UUIDField", "dbFieldType": "char(32)", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "initiative": {"name": "initiative", "title": "Initiative", "fieldType": "ForeignKey", "dbFieldType": "char(32)", "nullable": true, "many": false, "relatedModel": "Initiative", "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
+  "labels": {"name": "labels", "title": "Labels", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "TodoLabel", "editable": true, "requiredOnCreate": false, "tsType": "Array<string>", "choices": null},
   "object_id": {"name": "object_id", "title": "Object Id", "fieldType": "CharField", "dbFieldType": "varchar(36)", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
   "priority": {"name": "priority", "title": "Priority", "fieldType": "CharField", "dbFieldType": "varchar(20)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": [{"value": "urgent", "label": "Urgent"}, {"value": "high", "label": "High"}, {"value": "medium", "label": "Medium"}, {"value": "low", "label": "Low"}]},
   "requested_by": {"name": "requested_by", "title": "Requested By", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
@@ -1564,16 +1638,22 @@ export class TodoApi extends ModelApi<Todo, TodoId, TodoCreate, TodoUpdate, Todo
 
 export interface TodoLabel {
   color: string;
-  id: number;
+  created_by: number | null;
+  datetime_created: string;
+  datetime_updated: string;
+  id: string;
   name: string;
+  updated_by: number | null;
 }
 
-export type TodoLabelId = number;
-export type TodoLabelFieldName = "color" | "id" | "name";
+export type TodoLabelId = string;
+export type TodoLabelFieldName = "color" | "created_by" | "datetime_created" | "datetime_updated" | "id" | "name" | "updated_by";
 
 export interface TodoLabelCreate {
   color: string;
+  created_by?: number | null;
   name: string;
+  updated_by?: number | null;
 }
 
 export type TodoLabelUpdate = Partial<TodoLabelCreate>;
@@ -1581,8 +1661,12 @@ export type TodoLabelQuery = Partial<Record<TodoLabelFieldName | `${TodoLabelFie
 
 export const todoLabelsFields: Record<TodoLabelFieldName, BloomerpFieldMetadata> = {
   "color": {"name": "color", "title": "Color", "fieldType": "CharField", "dbFieldType": "varchar(7)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": null},
-  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "created_by": {"name": "created_by", "title": "Created By", "fieldType": "UserField", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
+  "datetime_created": {"name": "datetime_created", "title": "Datetime Created", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "datetime_updated": {"name": "datetime_updated", "title": "Datetime Updated", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "UUIDField", "dbFieldType": "char(32)", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(100)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": null},
+  "updated_by": {"name": "updated_by", "title": "Updated By", "fieldType": "UserField", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
 } as const;
 
 export const todoLabelsCapabilities: BloomerpModelCapabilities = {"list": true, "retrieve": true, "create": true, "createMany": true, "update": true, "partialUpdate": true, "destroy": true} as const;
@@ -1648,7 +1732,7 @@ export const usersFields: Record<UserFieldName, BloomerpFieldMetadata> = {
   "file_view_preference": {"name": "file_view_preference", "title": "File View Preference", "fieldType": "CharField", "dbFieldType": "varchar(20)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": [{"value": "card", "label": "Card View"}, {"value": "list", "label": "List View"}]},
   "first_name": {"name": "first_name", "title": "First Name", "fieldType": "CharField", "dbFieldType": "varchar(150)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "groups": {"name": "groups", "title": "Groups", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "Group", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
-  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
   "is_active": {"name": "is_active", "title": "Is Active", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
   "is_staff": {"name": "is_staff", "title": "Is Staff", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
   "is_superuser": {"name": "is_superuser", "title": "Is Superuser", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
@@ -1671,20 +1755,28 @@ export class UserApi extends ModelApi<User, UserId, UserCreate, UserUpdate, User
 export interface UserCreateViewPreference {
   content_type: number;
   id: number;
+  initial_default: boolean;
   layout: unknown;
   name: string;
   selected: boolean;
+  shared_with_groups: Array<number>;
+  shared_with_users: Array<number>;
+  source_object: number | null;
   user: number;
 }
 
 export type UserCreateViewPreferenceId = number;
-export type UserCreateViewPreferenceFieldName = "content_type" | "id" | "layout" | "name" | "selected" | "user";
+export type UserCreateViewPreferenceFieldName = "content_type" | "id" | "initial_default" | "layout" | "name" | "selected" | "shared_with_groups" | "shared_with_users" | "source_object" | "user";
 
 export interface UserCreateViewPreferenceCreate {
   content_type: number;
+  initial_default?: boolean;
   layout?: unknown;
   name?: string;
   selected?: boolean;
+  shared_with_groups?: Array<number>;
+  shared_with_users?: Array<number>;
+  source_object?: number | null;
   user: number;
 }
 
@@ -1693,10 +1785,14 @@ export type UserCreateViewPreferenceQuery = Partial<Record<UserCreateViewPrefere
 
 export const userCreateViewPreferencesFields: Record<UserCreateViewPreferenceFieldName, BloomerpFieldMetadata> = {
   "content_type": {"name": "content_type", "title": "Content Type", "fieldType": "ForeignKey", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": "ContentType", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
-  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "initial_default": {"name": "initial_default", "title": "Initial Default", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
   "layout": {"name": "layout", "title": "Layout", "fieldType": "JSONField", "dbFieldType": "text", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "unknown", "choices": null},
   "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "selected": {"name": "selected", "title": "Selected", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
+  "shared_with_groups": {"name": "shared_with_groups", "title": "Shared With Groups", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "Group", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
+  "shared_with_users": {"name": "shared_with_users", "title": "Shared With Users", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
+  "source_object": {"name": "source_object", "title": "Source Object", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "UserCreateViewPreference", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
   "user": {"name": "user", "title": "User", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": false, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
 } as const;
 
@@ -1712,21 +1808,29 @@ export class UserCreateViewPreferenceApi extends ModelApi<UserCreateViewPreferen
 export interface UserDetailViewPreference {
   content_type: number;
   id: number;
+  initial_default: boolean;
   layout: unknown;
   name: string;
   selected: boolean;
+  shared_with_groups: Array<number>;
+  shared_with_users: Array<number>;
+  source_object: number | null;
   tab_state: unknown;
   user: number;
 }
 
 export type UserDetailViewPreferenceId = number;
-export type UserDetailViewPreferenceFieldName = "content_type" | "id" | "layout" | "name" | "selected" | "tab_state" | "user";
+export type UserDetailViewPreferenceFieldName = "content_type" | "id" | "initial_default" | "layout" | "name" | "selected" | "shared_with_groups" | "shared_with_users" | "source_object" | "tab_state" | "user";
 
 export interface UserDetailViewPreferenceCreate {
   content_type: number;
+  initial_default?: boolean;
   layout?: unknown;
   name?: string;
   selected?: boolean;
+  shared_with_groups?: Array<number>;
+  shared_with_users?: Array<number>;
+  source_object?: number | null;
   tab_state?: unknown;
   user: number;
 }
@@ -1736,10 +1840,14 @@ export type UserDetailViewPreferenceQuery = Partial<Record<UserDetailViewPrefere
 
 export const userDetailViewPreferencesFields: Record<UserDetailViewPreferenceFieldName, BloomerpFieldMetadata> = {
   "content_type": {"name": "content_type", "title": "Content Type", "fieldType": "ForeignKey", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": "ContentType", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
-  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "initial_default": {"name": "initial_default", "title": "Initial Default", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
   "layout": {"name": "layout", "title": "Layout", "fieldType": "JSONField", "dbFieldType": "text", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "unknown", "choices": null},
   "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "selected": {"name": "selected", "title": "Selected", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
+  "shared_with_groups": {"name": "shared_with_groups", "title": "Shared With Groups", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "Group", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
+  "shared_with_users": {"name": "shared_with_users", "title": "Shared With Users", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
+  "source_object": {"name": "source_object", "title": "Source Object", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "UserDetailViewPreference", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
   "tab_state": {"name": "tab_state", "title": "Tab State", "fieldType": "JSONField", "dbFieldType": "text", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "unknown", "choices": null},
   "user": {"name": "user", "title": "User", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": false, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
 } as const;
@@ -1758,24 +1866,32 @@ export interface UserListViewPreference {
   default_filters: unknown;
   display_fields: unknown;
   id: number;
+  initial_default: boolean;
   name: string;
   options: unknown;
   selected: boolean;
+  shared_with_groups: Array<number>;
+  shared_with_users: Array<number>;
+  source_object: number | null;
   split_view_enabled: boolean;
   user: number;
   view_type: string;
 }
 
 export type UserListViewPreferenceId = number;
-export type UserListViewPreferenceFieldName = "content_type" | "default_filters" | "display_fields" | "id" | "name" | "options" | "selected" | "split_view_enabled" | "user" | "view_type";
+export type UserListViewPreferenceFieldName = "content_type" | "default_filters" | "display_fields" | "id" | "initial_default" | "name" | "options" | "selected" | "shared_with_groups" | "shared_with_users" | "source_object" | "split_view_enabled" | "user" | "view_type";
 
 export interface UserListViewPreferenceCreate {
   content_type: number;
   default_filters?: unknown;
   display_fields?: unknown;
+  initial_default?: boolean;
   name?: string;
   options?: unknown;
   selected?: boolean;
+  shared_with_groups?: Array<number>;
+  shared_with_users?: Array<number>;
+  source_object?: number | null;
   split_view_enabled?: boolean;
   user: number;
   view_type?: string;
@@ -1788,10 +1904,14 @@ export const userListViewPreferencesFields: Record<UserListViewPreferenceFieldNa
   "content_type": {"name": "content_type", "title": "Content Type", "fieldType": "ForeignKey", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": "ContentType", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
   "default_filters": {"name": "default_filters", "title": "Default Filters", "fieldType": "JSONField", "dbFieldType": "text", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "unknown", "choices": null},
   "display_fields": {"name": "display_fields", "title": "Display Fields", "fieldType": "JSONField", "dbFieldType": "text", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "unknown", "choices": null},
-  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "initial_default": {"name": "initial_default", "title": "Initial Default", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
   "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "options": {"name": "options", "title": "Options", "fieldType": "JSONField", "dbFieldType": "text", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "unknown", "choices": null},
   "selected": {"name": "selected", "title": "Selected", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
+  "shared_with_groups": {"name": "shared_with_groups", "title": "Shared With Groups", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "Group", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
+  "shared_with_users": {"name": "shared_with_users", "title": "Shared With Users", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
+  "source_object": {"name": "source_object", "title": "Source Object", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "UserListViewPreference", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
   "split_view_enabled": {"name": "split_view_enabled", "title": "Split View Enabled", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
   "user": {"name": "user", "title": "User", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": false, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
   "view_type": {"name": "view_type", "title": "View Type", "fieldType": "CharField", "dbFieldType": "varchar(50)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": [{"value": "table", "label": "Table"}, {"value": "kanban", "label": "Kanban"}, {"value": "card", "label": "Card"}, {"value": "calendar", "label": "Calendar"}, {"value": "gant", "label": "Gant"}, {"value": "pivot_table", "label": "Pivot"}]},
@@ -1839,7 +1959,7 @@ export const workflowsFields: Record<WorkflowFieldName, BloomerpFieldMetadata> =
   "datetime_created": {"name": "datetime_created", "title": "Datetime Created", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "datetime_updated": {"name": "datetime_updated", "title": "Datetime Updated", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "enable_logging": {"name": "enable_logging", "title": "Enable Logging", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
-  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
   "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": null},
   "run_asynchronously": {"name": "run_asynchronously", "title": "Run Asynchronously", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
   "updated_by": {"name": "updated_by", "title": "Updated By", "fieldType": "UserField", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
@@ -1857,14 +1977,16 @@ export class WorkflowApi extends ModelApi<Workflow, WorkflowId, WorkflowCreate, 
 export interface WorkflowEdge {
   from_node: number;
   id: number;
+  name: string | null;
   to_node: number;
 }
 
 export type WorkflowEdgeId = number;
-export type WorkflowEdgeFieldName = "from_node" | "id" | "to_node";
+export type WorkflowEdgeFieldName = "from_node" | "id" | "name" | "to_node";
 
 export interface WorkflowEdgeCreate {
   from_node: number;
+  name?: string | null;
   to_node: number;
 }
 
@@ -1873,7 +1995,8 @@ export type WorkflowEdgeQuery = Partial<Record<WorkflowEdgeFieldName | `${Workfl
 
 export const workflowEdgesFields: Record<WorkflowEdgeFieldName, BloomerpFieldMetadata> = {
   "from_node": {"name": "from_node", "title": "From Node", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": false, "many": false, "relatedModel": "WorkflowNode", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
-  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(1000)", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
   "to_node": {"name": "to_node", "title": "To Node", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": false, "many": false, "relatedModel": "WorkflowNode", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
 } as const;
 
@@ -1922,7 +2045,7 @@ export const workflowNodesFields: Record<WorkflowNodeFieldName, BloomerpFieldMet
   "created_by": {"name": "created_by", "title": "Created By", "fieldType": "UserField", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
   "datetime_created": {"name": "datetime_created", "title": "Datetime Created", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "datetime_updated": {"name": "datetime_updated", "title": "Datetime Updated", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
-  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
   "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
   "pos_x": {"name": "pos_x", "title": "Pos X", "fieldType": "IntegerField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
   "pos_y": {"name": "pos_y", "title": "Pos Y", "fieldType": "IntegerField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
@@ -1959,7 +2082,7 @@ export type WorkflowRunQuery = Partial<Record<WorkflowRunFieldName | `${Workflow
 export const workflowRunsFields: Record<WorkflowRunFieldName, BloomerpFieldMetadata> = {
   "datetime_created": {"name": "datetime_created", "title": "Datetime Created", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "datetime_updated": {"name": "datetime_updated", "title": "Datetime Updated", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
-  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
   "workflow": {"name": "workflow", "title": "Workflow", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": false, "many": false, "relatedModel": "Workflow", "editable": false, "requiredOnCreate": false, "tsType": "number", "choices": null},
 } as const;
 
@@ -1999,7 +2122,7 @@ export const workflowRunStepsFields: Record<WorkflowRunStepFieldName, BloomerpFi
   "action_id": {"name": "action_id", "title": "Action Id", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "string", "choices": null},
   "datetime_created": {"name": "datetime_created", "title": "Datetime Created", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
   "datetime_updated": {"name": "datetime_updated", "title": "Datetime Updated", "fieldType": "DateTimeField", "dbFieldType": "datetime", "nullable": false, "many": false, "relatedModel": null, "editable": false, "requiredOnCreate": false, "tsType": "string", "choices": null},
-  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
   "sequence": {"name": "sequence", "title": "Sequence", "fieldType": "PositiveIntegerField", "dbFieldType": "integer unsigned", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
   "status": {"name": "status", "title": "Status", "fieldType": "CharField", "dbFieldType": "varchar(20)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": [{"value": "COMPLETED", "label": "Completed"}, {"value": "FAILED", "label": "Failed"}]},
   "workflow_run": {"name": "workflow_run", "title": "Workflow Run", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": false, "many": false, "relatedModel": "WorkflowRun", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
@@ -2016,23 +2139,29 @@ export class WorkflowRunStepApi extends ModelApi<WorkflowRunStep, WorkflowRunSte
 
 export interface Workspace {
   id: number;
-  is_default: boolean;
+  initial_default: boolean;
   layout: unknown;
-  module_id: string;
+  module_id: string | null;
   name: string;
-  shared_with: Array<number>;
+  selected: boolean;
+  shared_with_groups: Array<number>;
+  shared_with_users: Array<number>;
+  source_object: number | null;
   user: number;
 }
 
 export type WorkspaceId = number;
-export type WorkspaceFieldName = "id" | "is_default" | "layout" | "module_id" | "name" | "shared_with" | "user";
+export type WorkspaceFieldName = "id" | "initial_default" | "layout" | "module_id" | "name" | "selected" | "shared_with_groups" | "shared_with_users" | "source_object" | "user";
 
 export interface WorkspaceCreate {
-  is_default?: boolean;
+  initial_default?: boolean;
   layout?: unknown;
-  module_id?: string;
+  module_id?: string | null;
   name?: string;
-  shared_with: Array<number>;
+  selected?: boolean;
+  shared_with_groups?: Array<number>;
+  shared_with_users?: Array<number>;
+  source_object?: number | null;
   user: number;
 }
 
@@ -2040,12 +2169,15 @@ export type WorkspaceUpdate = Partial<WorkspaceCreate>;
 export type WorkspaceQuery = Partial<Record<WorkspaceFieldName | `${WorkspaceFieldName}__${string}`, QueryValue | QueryValue[]>>;
 
 export const workspacesFields: Record<WorkspaceFieldName, BloomerpFieldMetadata> = {
-  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
-  "is_default": {"name": "is_default", "title": "Is Default", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "initial_default": {"name": "initial_default", "title": "Initial Default", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
   "layout": {"name": "layout", "title": "Layout", "fieldType": "JSONField", "dbFieldType": "text", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "unknown", "choices": null},
-  "module_id": {"name": "module_id", "title": "Module Id", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "module_id": {"name": "module_id", "title": "Module Id", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": true, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string | null", "choices": null},
   "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
-  "shared_with": {"name": "shared_with", "title": "Shared With", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "User", "editable": true, "requiredOnCreate": true, "tsType": "Array<number>", "choices": null},
+  "selected": {"name": "selected", "title": "Selected", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
+  "shared_with_groups": {"name": "shared_with_groups", "title": "Shared With Groups", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "Group", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
+  "shared_with_users": {"name": "shared_with_users", "title": "Shared With Users", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
+  "source_object": {"name": "source_object", "title": "Source Object", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "Workspace", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
   "user": {"name": "user", "title": "User", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": false, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
 } as const;
 
@@ -2141,6 +2273,12 @@ export class BloomerpSdk {
         capabilities: formSubmissionsCapabilities,
         publicAccess: formSubmissionsPublicAccess,
         fields: formSubmissionsFields,
+      },
+      initiatives: {
+        endpoint: "/api/initiatives/",
+        capabilities: initiativesCapabilities,
+        publicAccess: initiativesPublicAccess,
+        fields: initiativesFields,
       },
       accessControlPolicies: {
         endpoint: "/api/access_control_policies/",
@@ -2277,6 +2415,7 @@ export class BloomerpSdk {
   public readonly fileFolders: FileFolderApi;
   public readonly forms: FormApi;
   public readonly formSubmissions: FormSubmissionApi;
+  public readonly initiatives: InitiativeApi;
   public readonly accessControlPolicies: PolicyApi;
   public readonly accessControlRowPolicies: RowPolicyApi;
   public readonly accessControlRowPolicyRules: RowPolicyRuleApi;
@@ -2314,6 +2453,7 @@ export class BloomerpSdk {
     this.fileFolders = new FileFolderApi(this.client);
     this.forms = new FormApi(this.client);
     this.formSubmissions = new FormSubmissionApi(this.client);
+    this.initiatives = new InitiativeApi(this.client);
     this.accessControlPolicies = new PolicyApi(this.client);
     this.accessControlRowPolicies = new RowPolicyApi(this.client);
     this.accessControlRowPolicyRules = new RowPolicyRuleApi(this.client);

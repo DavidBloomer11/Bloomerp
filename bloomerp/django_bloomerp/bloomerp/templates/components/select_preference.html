@@ -1,24 +1,43 @@
-<div class="max-h-80 overflow-y-auto">
-    {% for preference in preferences %}
-        <form
-            hx-post="{% url 'components_select_preference' content_type_id=content_type_id type=type %}"
-            hx-target="#select-preference-dropdown-{{ content_type_id }}-{{ type }}"
-            hx-swap="innerHTML"
-        >
-            {% csrf_token %}
-            <input type="hidden" name="action" value="select">
-            <input type="hidden" name="preference_id" value="{{ preference.id }}">
+{% load bloomerp %}
 
+<div
+    class="max-h-80 overflow-y-auto"
+    bloomerp-component="select-preference"
+    data-model-name="{{ model }}"
+    data-select-preference-url="{% url 'components_select_preference' model=model %}"
+    data-new-preference-url="{% url 'components_new_preference' model=model %}"
+    data-share-preference-url="{% url 'components_share_preference' model_name=model preference_id='REPLACE_WITH_ID' %}"
+    data-delete-preference-url="{% url 'components_delete_preference' model=model preference_id='REPLACE_WITH_ID' %}"
+    data-model-verbose-name="{{ model_verbose_name }}"
+>
+    {% for preference in preferences %}
+        {% can_manage_preference_object request.user preference as can_manage %}
+
+        <div class="flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-gray-50" data-preference-row>
             <button
-                type="submit"
-                class="flex w-full items-center justify-between gap-3 px-4 py-2 text-left text-sm transition-colors duration-150 hover:bg-gray-100 hover:text-primary-800"
+                type="button"
+                class="min-w-0 flex-1 truncate text-left text-sm font-medium text-gray-800"
+                data-select-preference="{{ preference.id }}"
             >
-                <span class="truncate">{{ preference.name }}</span>
-                {% if preference.selected %}
-                    <span class="text-xs font-medium text-primary-600">Selected</span>
-                {% endif %}
+                {{ preference.effective_preference.name }}
             </button>
-        </form>
+
+            {% if preference.selected %}
+                <span class="text-xs font-medium text-primary-700">Selected</span>
+            {% endif %}
+            
+            {% if can_manage %}
+                <button type="button" class="btn btn-ghost btn-xs" data-rename-preference="{{ preference.id }}" aria-label="Rename preference">
+                    <i class="fa fa-pen"></i>
+                </button>
+                <button type="button" class="btn btn-ghost btn-xs" data-share-preference="{{ preference.id }}" aria-label="Share preference">
+                    <i class="fa fa-share-nodes"></i>
+                </button>
+                <button type="button" class="btn btn-ghost btn-xs text-danger" data-delete-preference="{{ preference.id }}" aria-label="Delete preference">
+                    <i class="fa fa-trash"></i>
+                </button>
+            {% endif %}
+        </div>
     {% empty %}
         <div class="px-4 py-3 text-sm text-gray-500">
             No preferences available yet.
@@ -28,23 +47,19 @@
 
 <div class="border-t border-gray-200 px-4 py-3">
     <div class="mb-2 text-xs font-medium uppercase tracking-wide text-gray-500">
-        New preference
+        New {{ model_verbose_name }}
     </div>
 
-    {% if error %}
-        <div class="mb-2 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">
-            {{ error }}
-        </div>
-    {% endif %}
-
-    <form
-        class="flex items-center gap-2"
-        hx-post="{% url 'components_select_preference' content_type_id=content_type_id type=type %}"
-        hx-target="#select-preference-dropdown-{{ content_type_id }}-{{ type }}"
-        hx-swap="innerHTML"
-    >
+    <form 
+        class="flex items-center gap-2" 
+        hx-post="{% url 'components_new_preference' model=model %}"
+        hx-tigger="submit"
+        hx-target="this"
+        >
         {% csrf_token %}
-        <input type="hidden" name="action" value="create">
+        {% for key, value in scope.items %}
+            <input type="hidden" name="{{ key }}" value="{{ value }}">
+        {% endfor %}
         <input
             type="text"
             name="name"

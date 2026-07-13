@@ -37,7 +37,10 @@
         <!--Left section-->
         <div class="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end" data-layout-action-group>
             {{ buttons_right }}
-            {% if can_edit %}
+            
+            {% can_manage_preference_object request.user preference_object as can_manage %}
+            
+            {% if can_manage or force_edit %}
             <c-ui.shortcut_tooltip 
                 shortcut="mod+e" 
                 action="click" 
@@ -62,26 +65,6 @@
                         <c-i18n.blocktrans>Add items</c-i18n.blocktrans>
                     </button>
                 </c-ui.shortcut_tooltip>
-
-                {% if can_delete %}
-                    <c-ui.shortcut_tooltip 
-                        shortcut="mod+j" 
-                        action="click" 
-                        position="bottom">
-                        <button 
-                            class="btn btn-sm btn-danger" 
-                            bloomerp-open-modal="layout-object-delete-modal"
-                            hx-get="{% url 'components_delete_layout_object' layout_object_content_type_id layout_object_id %}"
-                            hx-target="#layout-object-delete-modal-body"
-                            hx-trigger="click"
-                            hx-push-url="false"
-                            type="button"
-                            >
-                            <i class="fa fa-trash"></i>
-                            <c-i18n.blocktrans>Delete</c-i18n.blocktrans>
-                        </button>
-                    </c-ui.shortcut_tooltip>
-                {% endif %}
             </div>
             {% endif %}
         </div>

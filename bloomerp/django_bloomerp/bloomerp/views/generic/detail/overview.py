@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from functools import cached_property
 from typing import Any
 
 from django.contrib.contenttypes.models import ContentType
@@ -8,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import redirect
 
+from bloomerp.forms.auth import User
 from bloomerp.models import ApplicationField
 from bloomerp.services.object_file_field_services import save_layout_uploaded_files
 from bloomerp.services.one_to_many_field_services import save_submitted_one_to_many_fields
@@ -43,10 +43,11 @@ class BloomerpDetailOverviewView(BloomerpLayoutFormMixin, BaseBloomerpDetailView
     def get_layout_preference_object(self):
         return self.layout_preference
 
-    @cached_property
+    @property
     def layout_preference(self) -> UserDetailViewPreference:
+        """Reuse the preference already resolved for the detail request."""
         content_type = self.get_layout_content_type()
-        preference = UserDetailViewPreference.get_or_create_for_user(self.request.user, content_type)
+        preference = self.detail_view_preference
         if not any(row.items for row in preference.layout_obj.rows):
             preference.layout = get_default_layout(
                 content_type=content_type,

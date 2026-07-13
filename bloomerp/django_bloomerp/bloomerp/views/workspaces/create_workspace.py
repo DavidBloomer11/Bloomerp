@@ -1,7 +1,6 @@
 import json
 
 from django import forms
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.shortcuts import redirect
 from django.views.generic.edit import FormView
 from django_htmx.http import HttpResponseClientRedirect
@@ -9,11 +8,7 @@ from django_htmx.http import HttpResponseClientRedirect
 from bloomerp.models.workspaces.workspace import Workspace
 from bloomerp.modules.definition import module_registry
 from bloomerp.router import router
-from bloomerp.services.workspace_services import ensure_default_workspace_tiles_for_module
-from bloomerp.utils.models import get_create_view_url
 from bloomerp.views.base import BaseBloomerpView
-from bloomerp.views.mixins.conditional_staff_required_mixin import ConditionalStaffRequiredMixin
-from bloomerp.views.mixins.htmx_mixin import HtmxMixin
 
 
 def _module_choice_label(module) -> str:
@@ -52,7 +47,7 @@ class CreateWorkspaceForm(forms.Form):
 
     def clean(self):
         cleaned_data = super().clean()
-        module_id = self.fixed_module_id or cleaned_data.get("module_id") or ""
+        module_id = self.fixed_module_id or cleaned_data.get("module_id") or None
         if module_id and module_registry.get(module_id) is None:
             self.add_error("module_id", "Invalid module selection.")
         cleaned_data["module_id"] = module_id
@@ -91,19 +86,16 @@ class CreateWorkspaceView(BaseBloomerpView, FormView):
         return kwargs
 
     def form_valid(self, form):
-        module_id = form.cleaned_data.get("module_id") or ""
+        module_id = form.cleaned_data.get("module_id") or None
         generate_default = form.cleaned_data.get("generate_default", False)
 
         workspace = Workspace.objects.create(
             user=self.request.user,
             name=form.cleaned_data["name"],
             module_id=module_id,
-            is_default=False,
+            selected=False,
             layout={"rows": [{"title": None, "columns": 4, "items": []}]},
         )
-
-        if generate_default and module_id:
-            ensure_default_workspace_tiles_for_module(self.request.user, module_id)
 
         if self.request.htmx:
             return HttpResponseClientRedirect(workspace.get_absolute_url())

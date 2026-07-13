@@ -45,8 +45,8 @@
 
         <hr class="text-gray-300 my-4">
 
-        {% with request.user.selected_sidebar as sidebar %}
-        <div>
+        
+        <div class="h-full">
             <div class="flex justify-between">
                 <span class="text-gray-500 text-sm  px-2">Sidebar</span>
                 <div>
@@ -60,9 +60,11 @@
                         <c-ui.dropdown.submenu 
                             text="Select Sidebar" 
                             icon="fa fa-bars" 
-                            id="select-sidebar-btn">
+                            id="select-sidebar-btn"
+                            width="w-80"
+                            >
                             <div
-                                hx-get="{% url 'components_workspaces_sidebar_select_menu' %}"
+                                hx-get="{% url 'components_select_preference' model='Sidebar' %}"
                                 hx-trigger="click from:#select-sidebar-btn"
                                 hx-target="this"
                                 hx-swap="innerHTML"
@@ -72,6 +74,9 @@
                             </div>
                         </c-ui.dropdown.submenu>
 
+                        {% can_manage_preference_object request.user sidebar as can_manage %}
+
+                        {% if can_manage %}
                         <c-ui.dropdown.submenu
                             id="create-folder-btn" 
                             text="Create Folder" 
@@ -106,6 +111,7 @@
                         </div>
 
                         </c-ui.dropdown.submenu>
+                        {% endif %}
 
                         <c-ui.dropdown.divider />
                         <c-ui.dropdown.submenu
@@ -129,6 +135,8 @@
                                 <button class="btn btn-primary" type="submit">Create</button>
                             </form>
                         </c-ui.dropdown.submenu>
+                        
+                        {% if can_manage %}
                         <c-ui.dropdown.item 
                             id="delete-sidebar-btn"
                             text="Delete Sidebar"
@@ -140,32 +148,17 @@
                             hx_vals='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'
                             close_menu=True
                         />
+                        {% endif %}
                     </c-ui.dropdown.body>
+
                 </div>
             </div>
 
             <div class="min-h-0 flex-1 overflow-y-auto overflow-x-visible">
-                {% include "components/sidebar/content.html" with sidebar=sidebar %}
+                {% include "components/sidebar/content.html" with sidebar=sidebar can_manage=can_manage %}
             </div>
         </div>
-        {% endwith %}
-
-        <div class="mt-4">
-            <div class="flex justify-between">
-            <span class="text-gray-500 text-sm  px-2">Channels</span>
-            <div>
-                <c-ui.dropdown.body
-                    trigger_icon_class="fa-solid fa-ellipsis"
-                    trigger_button_class="ml-auto p-1 text-xs rounded-md bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700 hover:cursor-pointer"
-                    size="sm" 
-                    direction="down"
-                    >
-
-                </c-ui.dropdown.body>
-            </div>
-            </div>
-        </div>
-        
+                
 
         <!-- Profile -->
         <div class="mt-auto pt-3">

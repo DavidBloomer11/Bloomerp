@@ -155,6 +155,8 @@
             
 
             <!--Display options-->
+            {% can_manage_preference_object request.user preference as can_manage %}
+            {% if can_manage %}
             <div class="w-full sm:w-auto" data-data-view-button="display-options">
                 <c-ui.shortcut_tooltip 
                     position="bottom" 
@@ -183,13 +185,16 @@
                     </c-ui.dropdown.body>
                 </c-ui.shortcut_tooltip>
             </div>
+            {% endif %}
             
             <!--Select-->
             <div data-data-view-button="select-preference">
                 <c-ui.shortcut_tooltip position="bottom" shortcut="mod+6">
                     <c-features.preferences.select_preference_button
-                        type="list"
-                        :content_type_id="content_type_id"
+                        model="UserListViewPreference"
+                        :args="{
+                            'content_type_id': '{{ content_type_id }}',
+                        }"
                         selected_preference_name="{{ preference.name }}"
                     />
                 </c-ui.shortcut_tooltip>

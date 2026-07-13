@@ -42,9 +42,9 @@
                                     {% endfor %}
                                 </div>
                             </div>
-                            {% if item.workspace.is_default %}
+                            {% if item.is_selected %}
                                 <span class="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-emerald-700">
-                                    default
+                                    selected
                                 </span>
                             {% endif %}
                         </div>
