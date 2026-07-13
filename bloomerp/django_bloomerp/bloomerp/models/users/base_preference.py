@@ -5,7 +5,7 @@ from django.db import models, transaction
 from bloomerp.models.definition import ApiSettings, BloomerpModelConfig, UserAccessRule
 from bloomerp.models.mixins.absolute_url_model_mixin import AbsoluteUrlModelMixin
 from bloomerp.models.users.user import AbstractBloomerpUser
-from config import settings
+from django.conf import settings
 
 
 class BasePreference(AbsoluteUrlModelMixin, models.Model):
