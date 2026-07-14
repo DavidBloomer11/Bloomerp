@@ -1,3 +1,5 @@
+from bs4 import BeautifulSoup
+from django.template.loader import render_to_string
 from django.test import RequestFactory
 
 from bloomerp.models.workspaces.tile import Tile
@@ -6,6 +8,8 @@ from bloomerp.services.workspace_services import render_tile_to_string
 from bloomerp.tests.base import BaseBloomerpModelTestCase
 from bloomerp.workspaces.links_tile.model import Link, LinkTileConfig
 from bloomerp.workspaces.links_tile.render import LinksTileRenderer
+from bloomerp.workspaces.text_tile.model import TextTileConfig
+from bloomerp.workspaces.text_tile.render import render_html
 from bloomerp.workspaces.tiles import TileType
 from bloomerp.workspaces.utils import UserParameterResolver
 
@@ -40,6 +44,25 @@ class WorkspaceTileRenderingTests(BaseBloomerpModelTestCase):
         # 3. Verify the template content renders instead of the template file name.
         self.assertIn("Visible workspace tile", html)
         self.assertNotIn("cotton/workspaces/tiles/text.html", html)
+
+    def test_text_tile_renders_sanitized_editor_html(self):
+        html = render_html('<h2>Notes</h2><p>Visible content</p><script>alert("xss")</script>')
+
+        self.assertIn("<h2", html)
+        self.assertIn("Visible content", html)
+        self.assertNotIn("<script", html)
+
+    def test_text_tile_editor_has_valid_htmx_update_expression(self):
+        html = render_to_string(
+            "components/workspaces/tile_builders/text_tile_builder.html",
+            {"config": TextTileConfig(markdown="<p>Initial content</p>")},
+        )
+        soup = BeautifulSoup(html, "html.parser")
+        editor_request = soup.find(attrs={"hx-trigger": "bloomerp:widget-change delay:250ms"})
+
+        self.assertIsNotNone(editor_request)
+        self.assertIn("JSON.stringify", editor_request["hx-vars"])
+        self.assertIn("[data-text-editor-input=true]", editor_request["hx-vars"])
 
     def test_user_parameter_resolver_replaces_current_user_attribute(self):
         resolver = UserParameterResolver(self.admin_user)
