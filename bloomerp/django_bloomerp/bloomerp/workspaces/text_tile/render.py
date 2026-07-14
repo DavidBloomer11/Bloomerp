@@ -2,19 +2,10 @@ import bleach
 from bs4 import BeautifulSoup
 from django.http import HttpRequest
 from django.utils.safestring import mark_safe
-from markdown_it import MarkdownIt
 
 from bloomerp.workspaces.base import BaseTileRenderer
 from bloomerp.workspaces.text_tile.model import TextTileConfig
 
-
-MARKDOWN_RENDERER = MarkdownIt(
-    "commonmark",
-    {
-        "breaks": True,
-        "html": False,
-    },
-).enable("table")
 
 ALLOWED_TAGS = [
     "a",
@@ -88,10 +79,9 @@ def _apply_markdown_classes(html: str) -> str:
     return str(soup)
 
 
-def render_markdown(markdown: str) -> str:
-    rendered = MARKDOWN_RENDERER.render(markdown or "")
+def render_html(html: str) -> str:
     cleaned = bleach.clean(
-        rendered,
+        html or "",
         tags=ALLOWED_TAGS,
         attributes=ALLOWED_ATTRIBUTES,
         protocols=ALLOWED_PROTOCOLS,
@@ -109,6 +99,6 @@ class TextTileRenderer(BaseTileRenderer):
         return cls.render_to_string(
             {
                 "config": config,
-                "rendered_markdown": mark_safe(render_markdown(config.markdown)),
+                "rendered_markdown": mark_safe(render_html(config.markdown)),
             }
         )
