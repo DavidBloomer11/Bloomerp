@@ -3,8 +3,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 from copy import copy
 
+from django.core.exceptions import FieldDoesNotExist
 from django.http import HttpRequest
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiParameter, OpenApiTypes, extend_schema
 from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
@@ -80,6 +81,25 @@ class AssistantMutationResponseSerializer(serializers.Serializer):
 
 class AssistantMutationCatalogResponseSerializer(serializers.Serializer):
     resources = serializers.ListField(child=serializers.DictField())
+    page = serializers.IntegerField()
+    page_size = serializers.IntegerField()
+    total_resources = serializers.IntegerField()
+    total_pages = serializers.IntegerField()
+    has_next = serializers.BooleanField()
+    has_previous = serializers.BooleanField()
+
+
+class AssistantMutationCatalogQuerySerializer(serializers.Serializer):
+    page = serializers.IntegerField(required=False, min_value=1, default=1)
+    page_size = serializers.IntegerField(required=False, min_value=1, max_value=50, default=10)
+    search = serializers.CharField(required=False, allow_blank=True, max_length=100)
+    resource = serializers.CharField(required=False, allow_blank=True, max_length=100)
+
+    def validate_search(self, value: str) -> str:
+        return value.strip()
+
+    def validate_resource(self, value: str) -> str:
+        return value.strip().strip("/")
 
 
 @router.register(
@@ -91,37 +111,117 @@ class AssistantMutationCatalogResponseSerializer(serializers.Serializer):
 class AssistantMutationCatalogView(BaseBloomerpApiView):
     """List generated API resources and writable fields for assistant mutations."""
 
+    _SYSTEM_MANAGED_FIELD_NAMES = frozenset({"created_by", "updated_by"})
+
     permission_classes = (IsAuthenticated,)
     http_method_names = ["get", "options"]
 
     @extend_schema(
         tags=["Assistant"],
+        parameters=[
+            OpenApiParameter(
+                name="page",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description="Page number, starting at 1.",
+            ),
+            OpenApiParameter(
+                name="page_size",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description="Resources per page. Defaults to 10 and may not exceed 50.",
+            ),
+            OpenApiParameter(
+                name="search",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description="Case-insensitive search across resource keys, model names, and labels.",
+            ),
+            OpenApiParameter(
+                name="resource",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description="Exact resource key, for example customers.",
+            ),
+        ],
         responses={200: AssistantMutationCatalogResponseSerializer},
         description=(
             "List generated API resources, operations, and writable API fields available "
-            "to the authenticated user. Use the returned resource and field names with "
+            "to the authenticated user. Results are paginated and can be filtered with "
+            "search or an exact resource key. Use returned resource and field names with "
             "the Assistant Mutations endpoint."
         ),
     )
     def get(self, request: HttpRequest, *args, **kwargs) -> Response:
+        query_serializer = AssistantMutationCatalogQuerySerializer(data=request.query_params)
+        query_serializer.is_valid(raise_exception=True)
+
+        page = query_serializer.validated_data["page"]
+        page_size = query_serializer.validated_data["page_size"]
+        search = query_serializer.validated_data.get("search", "").lower()
+        resource_filter = query_serializer.validated_data.get("resource", "")
         resolver = ApiAccessResolver(request)
+        models = [
+            model
+            for model in sorted(get_auto_api_models(), key=self._resource_key)
+            if self._has_mutation_access(resolver, model)
+            and self._matches_query(model, search, resource_filter)
+        ]
+        total_resources = len(models)
+        total_pages = (total_resources + page_size - 1) // page_size
+        page_start = (page - 1) * page_size
+        page_models = models[page_start : page_start + page_size]
+
         resources = []
-
-        for model in sorted(get_auto_api_models(), key=self._resource_key):
+        for model in page_models:
             operations = self._get_operations(request, resolver, model)
-            if not operations:
-                continue
+            if operations:
+                resources.append(
+                    {
+                        "resource": self._resource_key(model),
+                        "label": str(model._meta.verbose_name_plural),
+                        "object_id": self._primary_key_schema(model),
+                        "operations": operations,
+                    }
+                )
 
-            resources.append(
-                {
-                    "resource": self._resource_key(model),
-                    "label": str(model._meta.verbose_name_plural),
-                    "object_id": self._primary_key_schema(model),
-                    "operations": operations,
-                }
-            )
+        return Response(
+            {
+                "resources": resources,
+                "page": page,
+                "page_size": page_size,
+                "total_resources": total_resources,
+                "total_pages": total_pages,
+                "has_next": page < total_pages,
+                "has_previous": page > 1 and total_resources > 0,
+            }
+        )
 
-        return Response({"resources": resources})
+    def _has_mutation_access(self, resolver: ApiAccessResolver, model) -> bool:
+        if self._has_action_access(resolver, model, "create"):
+            return True
+        if self._has_action_access(resolver, model, "destroy"):
+            return True
+        if not self._has_action_access(resolver, model, "update"):
+            return False
+
+        writable_fields = resolver.get_accessible_field_names(model, "update")
+        return writable_fields is None or bool(writable_fields)
+
+    def _matches_query(self, model, search: str, resource_filter: str) -> bool:
+        resource = self._resource_key(model)
+        if resource_filter and resource != resource_filter:
+            return False
+        if not search:
+            return True
+
+        searchable_values = (
+            resource,
+            model._meta.model_name,
+            str(model._meta.verbose_name),
+            str(model._meta.verbose_name_plural),
+        )
+        return any(search in value.lower() for value in searchable_values)
 
     def _get_operations(self, request, resolver: ApiAccessResolver, model) -> dict:
         operations = {}
@@ -158,8 +258,25 @@ class AssistantMutationCatalogView(BaseBloomerpApiView):
         return [
             self._serialize_field(name, field, action)
             for name, field in serializer.fields.items()
-            if not field.read_only and (allowed_fields is None or name in allowed_fields)
+            if not field.read_only
+            and not self._is_system_managed_field(model, name)
+            and (allowed_fields is None or name in allowed_fields)
         ]
+
+    def _is_system_managed_field(self, model, field_name: str) -> bool:
+        """Exclude fields BloomERP or Django fills in without assistant input."""
+        if field_name in self._SYSTEM_MANAGED_FIELD_NAMES:
+            return True
+
+        try:
+            model_field = model._meta.get_field(field_name)
+        except FieldDoesNotExist:
+            return False
+
+        return bool(
+            getattr(model_field, "auto_now", False)
+            or getattr(model_field, "auto_now_add", False)
+        )
 
     def _get_model_serializer(self, request, model, action: str):
         viewset = BaseModelApiView()
@@ -193,13 +310,13 @@ class AssistantMutationCatalogView(BaseBloomerpApiView):
         if getattr(field, "min_length", None) is not None:
             field_schema["min_length"] = field.min_length
 
-        choices = self._serialize_choices(field)
-        if choices:
-            field_schema["choices"] = choices
-
         related_model = self._related_model(field)
         if related_model is not None:
             field_schema["related_resource"] = self._resource_key(related_model)
+        else:
+            choices = self._serialize_choices(field)
+            if choices:
+                field_schema["choices"] = choices
 
         return field_schema
 

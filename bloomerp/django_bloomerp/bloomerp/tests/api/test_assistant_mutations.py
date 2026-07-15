@@ -11,6 +11,8 @@ from bloomerp.tests.base import BaseBloomerpModelTestCase
 
 
 class AssistantMutationApiTests(BaseBloomerpModelTestCase):
+    create_foreign_models = True
+
     def extendedSetup(self):
         self.url = "/api/mutations/"
         self.CustomerModel.bloomerp_config = BloomerpModelConfig()
@@ -120,9 +122,17 @@ class AssistantMutationApiTests(BaseBloomerpModelTestCase):
         """
         self.client.force_login(self.admin_user)
 
-        response = self.client.get("/api/mutations/catalog/")
+        response = self.client.get(
+            f"/api/mutations/catalog/?resource={self.resource}&page=1&page_size=1"
+        )
 
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["page"], 1)
+        self.assertEqual(response.json()["page_size"], 1)
+        self.assertEqual(response.json()["total_resources"], 1)
+        self.assertEqual(response.json()["total_pages"], 1)
+        self.assertFalse(response.json()["has_next"])
+        self.assertFalse(response.json()["has_previous"])
         resource = next(
             item for item in response.json()["resources"] if item["resource"] == self.resource
         )
@@ -137,6 +147,48 @@ class AssistantMutationApiTests(BaseBloomerpModelTestCase):
         self.assertTrue(create_fields["first_name"]["required"])
         self.assertFalse(update_fields["first_name"]["required"])
         self.assertEqual(create_fields["age"]["type"], "integer")
+        self.assertNotIn("created_by", create_fields)
+        self.assertNotIn("updated_by", create_fields)
+        self.assertNotIn("datetime_created", create_fields)
+        self.assertNotIn("datetime_updated", create_fields)
+
+    def test_catalog_represents_foreign_keys_by_resource_without_choices(self):
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(
+            f"/api/mutations/catalog/?resource={self.resource}&page_size=1"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        customer_resource = response.json()["resources"][0]
+        country_field = next(
+            field
+            for field in customer_resource["operations"]["create"]["fields"]
+            if field["name"] == "country"
+        )
+
+        self.assertEqual(
+            country_field["related_resource"],
+            self.CountryModel._meta.verbose_name_plural.replace(" ", "_").lower(),
+        )
+        self.assertNotIn("choices", country_field)
+
+    def test_catalog_supports_search_and_pagination(self):
+        self.client.force_login(self.admin_user)
+
+        search_response = self.client.get("/api/mutations/catalog/?search=customer&page_size=1")
+        page_response = self.client.get(
+            f"/api/mutations/catalog/?resource={self.resource}&page=2&page_size=1"
+        )
+
+        self.assertEqual(search_response.status_code, 200)
+        self.assertEqual(search_response.json()["total_resources"], 1)
+        self.assertEqual(search_response.json()["resources"][0]["resource"], self.resource)
+        self.assertEqual(page_response.status_code, 200)
+        self.assertEqual(page_response.json()["resources"], [])
+        self.assertEqual(page_response.json()["total_resources"], 1)
+        self.assertTrue(page_response.json()["has_previous"])
+        self.assertFalse(page_response.json()["has_next"])
 
     def test_catalog_uses_operation_specific_field_permissions(self):
         """
@@ -195,9 +247,11 @@ class AssistantMutationApiTests(BaseBloomerpModelTestCase):
         """
         self.client.force_login(self.normal_user)
 
-        response = self.client.get("/api/mutations/catalog/")
+        response = self.client.get(f"/api/mutations/catalog/?resource={self.resource}")
 
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["total_resources"], 0)
+        self.assertEqual(response.json()["total_pages"], 0)
         self.assertNotIn(
             self.resource,
             [resource["resource"] for resource in response.json()["resources"]],
@@ -216,3 +270,8 @@ class AssistantMutationApiTests(BaseBloomerpModelTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("/api/mutations/", response.json()["paths"])
         self.assertIn("/api/mutations/catalog/", response.json()["paths"])
+        parameters = response.json()["paths"]["/api/mutations/catalog/"]["get"]["parameters"]
+        self.assertEqual(
+            {parameter["name"] for parameter in parameters},
+            {"page", "page_size", "search", "resource"},
+        )
