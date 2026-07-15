@@ -57,11 +57,12 @@ def _get_public_form(pk) -> tuple[Form | None, JsonResponse | None]:
 @router.register(
     path="submit/",
     route_type="api_detail",
-    models=[Form]
+    models=[Form],
+    url_name="api_form_submit",
 )
 @csrf_exempt
 @require_http_methods(["GET", "POST", "OPTIONS"])
-def form_submit_view(request: HttpRequest, pk) -> HttpResponse:
+def form_submit_view(request: HttpRequest, pk, model: type[Form]) -> HttpResponse:
     if request.method == "OPTIONS":
         return _cors_response(HttpResponse(status=204), request=request)
 

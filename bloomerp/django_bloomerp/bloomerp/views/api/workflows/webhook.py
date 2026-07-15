@@ -7,21 +7,22 @@ from bloomerp.router import router
 @router.register(
     path="webhook/",
     route_type="api_detail",
-    models=[Workflow]
+    models=[Workflow],
+    url_name="api_workflow_webhook",
 )
-def workflow_webhook(request:HttpRequest, workflow_id:str) -> HttpResponse:
+def workflow_webhook(request: HttpRequest, pk, model: type[Workflow]) -> HttpResponse:
     """
     Args:
         request (HttpRequest): The HTTP request object.
-        workflow_id (str): The ID of the workflow to be triggered.
+        pk: The ID of the workflow to be triggered.
 
     Returns:
         HttpResponse: The HTTP response indicating the result of the workflow execution.
     """
     # TODO: Authentication
-    
+
     # Get the workflow
-    workflow = get_object_or_404(Workflow, id=workflow_id)
+    workflow = get_object_or_404(Workflow, pk=pk)
     
     # Get the trigger
     trigger = workflow.get_trigger()
@@ -42,16 +43,8 @@ def workflow_webhook(request:HttpRequest, workflow_id:str) -> HttpResponse:
         return JsonResponse(
             {
                 "status": "Workflow queued for asynchronous execution.",
-                "workflow_id": workflow_id,
+                "workflow_id": str(workflow.pk),
             },
         )
         
     workflow_run = run_workflow(workflow=workflow, trigger_data={"payload": payload})
-    
-    
-    
-    
-    
-    
-    
-    
