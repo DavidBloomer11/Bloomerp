@@ -6,6 +6,7 @@ from django import forms
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.middleware.csrf import get_token
+from django.core.exceptions import FieldDoesNotExist
 from bloomerp.components.application_fields.filters import filters_init
 from bloomerp.forms.auth import User
 from bloomerp.models.definition import ObjectAction, get_model_config
@@ -106,6 +107,10 @@ def _build_data_view_query_state(request: HttpRequest, content_type_id: int) -> 
     )
     
     queryset = filter_model(Model, filter_querydict, queryset)
+    queryset = _select_related_rendered_relations(
+        queryset,
+        data_view_render_fields + ([avatar_field] if avatar_field else []),
+    )
     
     queryset, renderer_context = definition.renderer_cls.apply_sorting(
         queryset,
@@ -140,6 +145,27 @@ def _split_avatar_field(data_view_fields) -> tuple[ApplicationField | None, list
         fields.append(field)
 
     return avatar_field, fields
+
+
+def _select_related_rendered_relations(
+    queryset: QuerySet,
+    application_fields: list[ApplicationField],
+) -> QuerySet:
+    """Eager-load direct relations required to render the current DataView page."""
+    relation_names = []
+    for application_field in application_fields:
+        try:
+            model_field = queryset.model._meta.get_field(application_field.field)
+        except FieldDoesNotExist:
+            continue
+
+        if model_field.many_to_one or model_field.one_to_one:
+            relation_names.append(model_field.name)
+
+    if not relation_names:
+        return queryset
+
+    return queryset.select_related(*dict.fromkeys(relation_names))
 
 
 def _get_accessible_application_fields(data_view_fields) -> list[ApplicationField]:
@@ -582,4 +608,3 @@ def change_data_view_preference(request: HttpRequest, content_type_id: int) -> H
         return error_response
     
     return _render_display_options(request, content_type_id, preference)
-

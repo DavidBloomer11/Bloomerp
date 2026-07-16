@@ -109,8 +109,11 @@ class ApplicationField(models.Model):
 
     def get_for_model(model:models.Model) -> QuerySet['ApplicationField']:
         """Returns application fields for a specific model"""
-        return ApplicationField.objects.filter(
-            content_type=ContentType.objects.get_for_model(model)
+        return (
+            ApplicationField.objects.filter(
+                content_type=ContentType.objects.get_for_model(model)
+            )
+            .select_related("content_type", "related_model")
         )
         
     @staticmethod
@@ -184,8 +187,11 @@ class ApplicationField(models.Model):
         Returns:
             QuerySet: the application fields
         """
-        return ApplicationField.objects.filter(
-            content_type_id=content_type_id
+        return (
+            ApplicationField.objects.filter(
+                content_type_id=content_type_id
+            )
+            .select_related("content_type", "related_model")
         )
 
     def get_model(self) -> models.Model:

@@ -489,7 +489,9 @@ class UserPermissionManager:
         
         # Return all fields if user is superuser
         if self.user.is_superuser:
-            return ApplicationField.objects.filter(content_type=content_type)
+            return ApplicationField.objects.filter(content_type=content_type).select_related(
+                "content_type", "related_model"
+            )
         
         permission_value = str(permission_str)
 
@@ -512,7 +514,9 @@ class UserPermissionManager:
                     continue
 
                 if field_id == "__all__":
-                    return ApplicationField.objects.filter(content_type=content_type)
+                    return ApplicationField.objects.filter(content_type=content_type).select_related(
+                        "content_type", "related_model"
+                    )
 
                 allowed_field_ids.add(str(field_id))
 
@@ -521,8 +525,8 @@ class UserPermissionManager:
 
         return ApplicationField.objects.filter(
             content_type=content_type,
-            id__in=allowed_field_ids
-        )
+            id__in=allowed_field_ids,
+        ).select_related("content_type", "related_model")
         
     def has_access_to_object(self, object:models.Model, permission_str:str, check_global:bool=True) -> bool:
         """Returns a boolean that checks whether a user has access to a particular object
@@ -1014,4 +1018,3 @@ class UserPermissionManager:
                 | Q(permission__access_control_policies__in=self.policies)
             )
         ).distinct()
-

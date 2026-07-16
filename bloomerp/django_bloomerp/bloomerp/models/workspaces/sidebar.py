@@ -35,3 +35,25 @@ class Sidebar(BasePreference):
         from bloomerp.models.workspaces.sidebar_item import SidebarItem
 
         return SidebarItem.objects.filter(sidebar=self, parent=None).order_by("position")
+
+    @property
+    def item_tree(self):
+        """Return the complete sidebar tree after loading its items once."""
+        from bloomerp.models.workspaces.sidebar_item import SidebarItem
+
+        items = list(
+            SidebarItem.objects.filter(sidebar=self).order_by("position", "id")
+        )
+        children_by_parent_id = {item.id: [] for item in items}
+        root_items = []
+
+        for item in items:
+            item.tree_children = children_by_parent_id[item.id]
+            if item.parent_id is None:
+                root_items.append(item)
+            else:
+                parent_children = children_by_parent_id.get(item.parent_id)
+                if parent_children is not None:
+                    parent_children.append(item)
+
+        return root_items
