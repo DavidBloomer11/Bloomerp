@@ -1,4 +1,5 @@
 from django.test import RequestFactory, TestCase
+from django.template.loader import render_to_string
 
 from bloomerp.components.workspaces.sidebar import (
     sidebar_create,
@@ -47,6 +48,29 @@ class SidebarSelectionComponentTests(TestCase):
         self.assertTrue(self.secondary_sidebar.selected)
         self.assertContains(response, 'id="sidebar-content"', html=False)
         self.assertNotContains(response, "Current Sidebar")
+
+    def test_sidebar_content_loads_nested_item_tree_in_one_query(self) -> None:
+        parent = SidebarItem.create_folder(self.primary_sidebar, "Parent", position=0)
+        child = SidebarItem.create_folder(self.primary_sidebar, "Child", parent=parent, position=0)
+        SidebarItem.create_link(
+            self.primary_sidebar,
+            "Nested link",
+            "/nested/",
+            parent=child,
+            position=0,
+        )
+        SidebarItem.create_link(self.primary_sidebar, "Root link", "/root/", position=1)
+
+        with self.assertNumQueries(1):
+            html = render_to_string(
+                "components/sidebar/content.html",
+                {"sidebar": self.primary_sidebar, "can_manage": False},
+            )
+
+        self.assertIn("Parent", html)
+        self.assertIn("Child", html)
+        self.assertIn("Nested link", html)
+        self.assertIn("Root link", html)
 
     def test_sidebar_create_folder_get_renders_small_form(self) -> None:
         request = self.factory.get(f"/components/workspaces/sidebar/{self.primary_sidebar.id}/folders/create/")

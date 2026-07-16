@@ -1,6 +1,6 @@
 {% load bloomerp %}
 
-{% with children=item.children.all %}
+{% with children=item.tree_children %}
 <li class="list-none">
     <div
         data-sidebar-dropzone
@@ -66,7 +66,7 @@
             {% endwith %}
             <div class="min-w-0 flex-1 text-sm font-medium leading-6 break-words">{{ item.name }}</div>
 
-            {% if item.is_folder and item.children.exists %}
+            {% if item.is_folder and children %}
             <button
                 @click.stop="expanded = !expanded"
                 :aria-expanded="expanded.toString()"

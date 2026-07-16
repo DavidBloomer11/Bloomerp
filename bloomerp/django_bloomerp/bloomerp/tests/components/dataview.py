@@ -6,6 +6,7 @@ from bloomerp.models import ApplicationField
 from bloomerp.models import Policy, FieldPolicy, RowPolicy, RowPolicyRule
 from bloomerp.models.users.user_list_view_preference import UserListViewPreference
 from bloomerp.services.user_services import get_data_view_fields, get_user_list_view_preference
+from bloomerp.components.objects.dataviews.dataview import _select_related_rendered_relations
 
 
 class TestDataView(BaseBloomerpModelTestCase):
@@ -13,6 +14,31 @@ class TestDataView(BaseBloomerpModelTestCase):
 
     def extendedSetup(self):
         return super().extendedSetup()    
+
+    def test_data_view_eager_loads_rendered_foreign_keys(self):
+        planet = self.PlanetModel.objects.create(name="Test planet")
+        country = self.CountryModel.objects.create(name="Test country", planet=planet)
+        customers = [
+            self.CustomerModel.objects.create(
+                first_name=f"Customer {index}",
+                last_name="Test",
+                age=20,
+                country=country,
+            )
+            for index in range(2)
+        ]
+
+        country_field = ApplicationField.get_by_field(self.CustomerModel, "country")
+        queryset = _select_related_rendered_relations(
+            self.CustomerModel.objects.filter(pk__in=[customer.pk for customer in customers]),
+            [country_field],
+        )
+
+        with self.assertNumQueries(1):
+            self.assertEqual(
+                [customer.country.pk for customer in queryset.order_by("pk")],
+                [country.pk, country.pk],
+            )
 
     def _ensure_permissions_for_model(self, model):
         """

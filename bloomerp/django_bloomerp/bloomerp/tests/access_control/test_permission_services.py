@@ -393,6 +393,22 @@ class TestUserPermissionManager(BaseBloomerpModelTestCase):
         
         # 3. Check that all fields are returned
         self.assertEqual(accessible_fields.count(), self.customer_model_fields.count())
+
+    def test_accessible_fields_eager_load_content_type_metadata(self):
+        """
+        UC: We want to ensure that the accessible fields returned by the UserPermissionManager
+        Expected Result: The accessible fields should have their content_type and related_model attributes eagerly loaded to avoid additional database queries.
+        """
+        manager = UserPermissionManager(self.admin_user)
+        accessible_fields = list(manager.get_accessible_fields(
+            ContentType.objects.get_for_model(self.CustomerModel),
+            "view_customer",
+        ))
+
+        self.assertTrue(accessible_fields)
+        for application_field in accessible_fields:
+            self.assertIn("content_type", application_field._state.fields_cache)
+            self.assertIn("related_model", application_field._state.fields_cache)
     
     def test_normal_user_accessible_fields(self):
         """

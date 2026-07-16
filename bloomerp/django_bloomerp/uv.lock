@@ -232,7 +232,7 @@ wheels = [
 
 [[package]]
 name = "bloomerp"
-version = "1.10.3"
+version = "1.10.4"
 source = { editable = "." }
 dependencies = [
     { name = "annotated-types" },
@@ -272,6 +272,7 @@ dependencies = [
     { name = "django-celery-beat" },
     { name = "django-cotton" },
     { name = "django-crispy-forms" },
+    { name = "django-debug-toolbar" },
     { name = "django-filter" },
     { name = "django-formtools" },
     { name = "django-htmx" },
@@ -427,6 +428,7 @@ requires-dist = [
     { name = "django-celery-beat", specifier = ">=2.9.0" },
     { name = "django-cotton", specifier = "==2.6.1" },
     { name = "django-crispy-forms", specifier = "==2.3" },
+    { name = "django-debug-toolbar", specifier = ">=6,<7" },
     { name = "django-filter", specifier = "==24.3" },
     { name = "django-formtools", specifier = "==2.5.1" },
     { name = "django-htmx", specifier = "==1.19.0" },
@@ -988,6 +990,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/04/f6/5bce7ae3512171c7c0ca3de31689e2a1ced8b030f156fcf13d2870e5468e/django_crispy_forms-2.3.tar.gz", hash = "sha256:2db17ae08527201be1273f0df789e5f92819e23dd28fec69cffba7f3762e1a38", size = 278849, upload-time = "2024-07-19T13:08:16.264Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/4c/3b/5dc3faf8739d1ce7a73cedaff508b4af8f6aa1684120ded6185ca0c92734/django_crispy_forms-2.3-py3-none-any.whl", hash = "sha256:efc4c31e5202bbec6af70d383a35e12fc80ea769d464fb0e7fe21768bb138a20", size = 31411, upload-time = "2024-07-19T13:08:14.498Z" },
+]
+
+[[package]]
+name = "django-debug-toolbar"
+version = "6.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+    { name = "sqlparse" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d8/ea/b62673424dd72d2dbf5adf4145281a421d5792f47380d9bc8e3b11e1a769/django_debug_toolbar-6.3.0.tar.gz", hash = "sha256:f830a86fe02e17f625a22cfbed24a5bd1500762e201ec959c50efb0f9327282b", size = 334079, upload-time = "2026-04-02T16:07:01.385Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7d/9e/d8c3c845f4b5ccac7377c19f4049e7e00c6f121846a81f69a497b45734df/django_debug_toolbar-6.3.0-py3-none-any.whl", hash = "sha256:a199ce3d0f884739a9096835ad417479fede05f3b3c4824bc8b354721ba8f629", size = 298304, upload-time = "2026-04-02T16:06:59.617Z" },
 ]
 
 [[package]]
