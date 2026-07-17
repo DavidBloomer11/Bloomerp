@@ -10,6 +10,7 @@
     data-content-type-id="{{ content_type_id }}"
     data-gant-start="{{ gant_start_ms }}"
     data-gant-end="{{ gant_end_ms }}"
+    data-resizable-div-container
     class="relative h-full min-h-[400px] w-full min-w-0 overflow-auto rounded-xl border border-gray-200 bg-base focus:outline-none focus:ring-0"
 >
     <div class="sticky left-0 top-0 z-50 flex h-11 w-full items-center justify-end gap-1 border-b border-gray-200 bg-base px-2 shadow-xs">
@@ -36,17 +37,24 @@
     </div>
 
     <div class="sticky top-11 z-40 grid h-16 border-b border-gray-200 bg-base shadow-xs" data-gant-layout>
-        <div class="sticky left-0 z-30 flex min-w-0 items-center border-r border-gray-200 bg-base px-3">
-            <div>
-                <div class="text-sm font-medium text-dark"><c-i18n.blocktrans>Records</c-i18n.blocktrans></div>
-                <div class="text-xs text-gray-500" data-gant-visible-range></div>
+        <c-ui.resizable_div
+            id="gant-records-{{ content_type_id }}"
+            start_width="320px"
+            resize_from="right"
+            class="sticky left-0 z-30 h-16 bg-base"
+        >
+            <div class="flex h-full min-w-0 items-center overflow-hidden border-r border-gray-200 bg-base px-3" data-resizable-div-panel data-gant-sidebar>
+                <div class="min-w-0">
+                    <div class="text-sm font-medium text-dark"><c-i18n.blocktrans>Records</c-i18n.blocktrans></div>
+                    <div class="truncate text-xs text-gray-500" data-gant-visible-range></div>
+                </div>
             </div>
-        </div>
+        </c-ui.resizable_div>
         <div class="relative h-16 overflow-hidden bg-base" data-gant-timeline-header></div>
     </div>
 
     <div class="relative" data-gant-rows>
-        <div class="pointer-events-none absolute inset-y-0 z-0" data-gant-grid aria-hidden="true"></div>
+        <div class="pointer-events-none absolute inset-y-0 z-10" data-gant-grid aria-hidden="true"></div>
         {% include "components/objects/dataview_gant_rows.html" %}
     </div>
 

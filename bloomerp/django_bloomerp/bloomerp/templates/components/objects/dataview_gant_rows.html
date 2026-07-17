@@ -7,7 +7,13 @@
     data-gant-row
     data-object-id="{{ row.object.pk }}"
 >
-    <div class="sticky left-0 z-20 min-w-0 border-r border-gray-200 bg-base px-3 py-2">
+    <div
+        class="sticky left-0 z-30 min-w-0 cursor-pointer overflow-hidden border-r border-gray-200 bg-base px-3 py-2"
+        data-detail-url="{{ row.object.get_absolute_url }}"
+        data-object-id="{{ row.object.pk }}"
+        data-object-string="{{ row.object }}"
+        bloomerp-component="gant-chart-sidebar-item"
+    >
         <div class="truncate text-sm font-medium text-dark" title="{{ row.object }}">{{ row.object }}</div>
         <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1">
             {% for field in fields %}
@@ -22,7 +28,7 @@
     <div class="relative min-h-16 bg-base" data-gant-timeline-row>
         {% if row.scheduled %}
         <div
-            class="absolute top-3 z-10 flex h-10 min-w-1 cursor-pointer items-center rounded-xl bg-primary px-2 text-xs font-medium text-white shadow-xs hover:brightness-95"
+            class="absolute top-3 z-20 flex h-10 min-w-1 cursor-pointer items-center rounded-xl bg-primary px-2 text-xs font-medium text-white shadow-xs hover:brightness-95"
             title="{{ row.object }} · {% if row.shows_time %}{{ row.start|date:'M j, Y H:i' }} – {{ row.end|date:'M j, Y H:i' }}{% else %}{{ row.start|date:'M j, Y' }} – {{ row.end|date:'M j, Y' }}{% endif %}"
             data-gant-item
             data-start="{{ row.start_ms }}"
