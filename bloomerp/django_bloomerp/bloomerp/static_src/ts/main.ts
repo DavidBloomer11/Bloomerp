@@ -59,6 +59,7 @@ import showMessage from './utils/messages';
 import Breadcrumb from './components/Breadcrumb';
 import ResizableDiv from './components/ResizableDiv';
 import { DataViewDisplayOptions } from './components/data_view_components/DisplayOptions';
+import { PivotTable } from './components/data_view_components/PivotTable';
 
 import { openModal } from './utils/modals';
 import { closeModal } from './utils/modals';
@@ -77,6 +78,7 @@ registerComponent('resizable-div', ResizableDiv);
 registerComponent('dataview-container', DataViewContainer);
 registerComponent('document-templates-dataview', DocumentTemplateDataViewContainer);
 registerComponent('dataview-display-options', DataViewDisplayOptions);
+registerComponent('pivot-table', PivotTable);
 
 // Datatable
 registerComponent('datatable', DataTable);
