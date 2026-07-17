@@ -22,8 +22,6 @@ from django.contrib.admin.sites import AlreadyRegistered
 from django.urls import reverse_lazy
 from django.conf import settings
 from bloomerp.auth import allauth_is_enabled
-from bloomerp.views.api.docs.schema import BloomerpOpenAPISchemaView
-from bloomerp.views.api.docs.schema_ui import BloomerpRedocSchemaView
 from bloomerp.views.auth.login import BloomerpLoginView
 
 logger = logging.getLogger(__name__)

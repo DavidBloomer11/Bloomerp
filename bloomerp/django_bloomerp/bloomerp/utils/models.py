@@ -330,3 +330,45 @@ def get_model_and_content_type_or_404(content_type_id:int) -> tuple[type[Model],
     ModelCls = content_type.model_class()
     
     return ModelCls, content_type
+
+
+def resolve_model_and_content_type(
+    model_or_content_type: type[Model] | Model | ContentType,
+    fetch_content_type:bool=True
+) -> tuple[type[Model], ContentType] | tuple[type[Model], None]:
+    """Resolve a Django model class, model instance, or content type.
+
+    Args:
+        model_or_content_type: The model class, model instance, or content type
+            to resolve.
+
+    Returns:
+        The resolved model class and content type.
+
+    Raises:
+        TypeError: If the value is not a Django model class, model instance,
+            or content type.
+        ValueError: If the content type does not resolve to an installed model.
+    """
+    if isinstance(model_or_content_type, ContentType):
+        model = model_or_content_type.model_class()
+        if model is None:
+            raise ValueError("The content type does not resolve to an installed model")
+        return model, model_or_content_type
+
+    if isinstance(model_or_content_type, Model):
+        model_or_content_type = type(model_or_content_type)
+        
+        if not fetch_content_type:
+            return (model_or_content_type, None)
+
+    if not (
+        isinstance(model_or_content_type, type)
+        and issubclass(model_or_content_type, Model)
+    ):
+        raise TypeError(
+            "model_or_content_type must be a Django model, model class, or ContentType"
+        )
+
+    content_type = ContentType.objects.get_for_model(model_or_content_type)
+    return model_or_content_type, content_type

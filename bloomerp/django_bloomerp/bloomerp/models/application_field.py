@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from django import forms
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
@@ -126,6 +128,51 @@ class ApplicationField(models.Model):
             )
         except ApplicationField.DoesNotExist:
             return None
+
+    @classmethod
+    def resolve_for_content_type(
+        cls,
+        content_type: ContentType,
+        field: str | "ApplicationField",
+    ) -> "ApplicationField":
+        """Resolve a field name or ApplicationField within a content type.
+
+        Args:
+            content_type: The content type that must own the field.
+            field: A field name or an existing ApplicationField instance.
+
+        Returns:
+            The resolved ApplicationField.
+
+        Raises:
+            TypeError: If the arguments have unsupported types.
+            ValueError: If the field does not exist or belongs to another
+                content type.
+        """
+        if not isinstance(content_type, ContentType):
+            raise TypeError("content_type must be a ContentType instance")
+
+        if isinstance(field, cls):
+            application_field = field
+        elif isinstance(field, str) and field.strip():
+            field_name = field.strip()
+            try:
+                application_field = cls.objects.get(
+                    content_type=content_type,
+                    field=field_name,
+                )
+            except cls.DoesNotExist as exc:
+                raise ValueError(
+                    f"Unknown field '{field_name}' for '{content_type}'"
+                ) from exc
+        else:
+            raise TypeError("field must be a field name or ApplicationField instance")
+
+        if application_field.content_type_id != content_type.id:
+            raise ValueError(
+                f"Field '{application_field.field}' belongs to a different content type"
+            )
+        return application_field
 
     
     @property

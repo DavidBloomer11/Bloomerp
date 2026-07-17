@@ -1,0 +1,393 @@
+from bloomerp.field_types.lookups import Lookup
+from bloomerp.models.application_field import ApplicationField
+from bloomerp.permissions.definition import BloomerpPermission, RowPolicyRuleCondition, RowPolicyRuleContent
+from bloomerp.permissions.manager import PolicyManager, UserPolicyManager
+from bloomerp.tests.base import BaseBloomerpModelTestCase
+from django.db import models
+
+from bloomerp.tests.utils.names import FIRST_NAMES
+"""
+Superuser, anonymous user, and user with no policies.
+Direct-user and group policies.
+Global versus row-level grants.
+Two policies granting different fields for different rows.
+Multiple permissions with ANY versus ALL.
+Wildcard rules.
+Invalid fields, operators, and content-type combinations.
+Create-candidate versus stored-object evaluation.
+Batch field resolution and query counts.
+Compatibility between the old and new manager APIs.
+"""
+
+class TestUserPermissionManager(BaseBloomerpModelTestCase):
+    """
+    Test cases for UserPermissionManager
+    """
+    auto_create_customers = True
+    auto_create_users = True
+    use_bloomerp_base = True
+    create_foreign_models = True
+
+    def extendedSetup(self):
+        """
+        Extended setup for UserPermissionManager tests
+        """
+    
+    def _validate_queryset_results(self, input_queryset: models.QuerySet, expected_queryset: models.QuerySet):
+        """
+        Validates that the input queryset matches the expected queryset.
+        
+        Args:
+            input_queryset (models.QuerySet): The queryset to validate.
+            expected_queryset (models.QuerySet): The expected queryset to compare against.
+        """
+        self.assertQuerySetEqual(
+            input_queryset.order_by('id'),
+            expected_queryset.order_by('id'),
+            transform=lambda x: x
+        )
+    
+    
+    # --------------------------------
+    # ROW ACCESS TESTS
+    # --------------------------------
+    # --------------------------------
+    # NO POLICIES TESTS
+    # --------------------------------
+    def test_admin_user_has_access_to_all_objects(self):
+        """
+        UC: An admin should always have access to all objects
+        
+        Expected Result: admin has access to all objects
+        """
+        #1. Query objects for admin
+        manager = UserPolicyManager(self.admin_user)
+        
+        #2. Check access to all objects
+        for obj in self.CustomerModel.objects.all():
+            self.assertTrue(manager.has_access_to_object(obj, BloomerpPermission.VIEW), f"Admin should have access to {obj}")
+            
+        #3. Check accessible queryset
+        accessible_queryset = manager.get_accessible_queryset(self.CustomerModel, BloomerpPermission.VIEW)
+        
+        self._validate_queryset_results(accessible_queryset, self.CustomerModel.objects.all())
+    
+    def test_normal_user_with_no_policies_has_no_access(self):
+        """
+        UC: A normal user with no policies should have no access to any objects
+        
+        Expected Result: normal user has no access to any objects
+        """
+        #1. Query objects for normal user
+        manager = UserPolicyManager(self.normal_user)
+        
+        #2. Check access to all objects
+        for obj in self.CustomerModel.objects.all():
+            self.assertFalse(manager.has_access_to_object(obj, BloomerpPermission.VIEW), f"Normal user should not have access to {obj}")
+            
+        #3. Check accessible queryset
+        accessible_queryset = manager.get_accessible_queryset(self.CustomerModel, BloomerpPermission.VIEW)
+        
+        #4. Validate that the accessible queryset is empty
+        self._validate_queryset_results(accessible_queryset, self.CustomerModel.objects.none())
+        
+    def test_normal_user_with_only_global_access_has_no_access_to_objects(self):
+        """
+        UC: A normal user with only global access should have no access to any objects
+        
+        Expected Result: normal user has no access to any objects
+        """
+        PERM = BloomerpPermission.VIEW
+        
+        #1. Create a global policy for the normal user
+        policy = PolicyManager.create_policy(
+            model_or_content_type=self.CustomerModel,
+            field_permissions={},
+            row_permissions=[],
+            global_permissions=[PERM],
+        )
+        PolicyManager.assign(policy, self.normal_user)
+        
+        #2. Query objects for normal user
+        manager = UserPolicyManager(self.normal_user)
+        
+        #3. Check access to all objects
+        self._validate_queryset_results(
+            manager.get_accessible_queryset(self.CustomerModel, PERM),
+            self.CustomerModel.objects.none()
+        )
+        
+    # --------------------------------
+    # ROW ACCESS TESTS
+    # --------------------------------
+    # --------------------------------
+    # HAS POLICIES TESTS
+    # --------------------------------
+    
+    # EQUAL OPERATOR
+    def test_normal_user_with_single_row_policy_has_access_to_objects_operator_EQUALS(self):
+        """
+        UC: A normal user with a single row-level policy should have access to specific objects
+        
+        Expected Result: normal user has access to specific objects defined by the policy
+        """
+        first_name_value = FIRST_NAMES[0]
+        
+        #1. Create the policy
+        policy = PolicyManager.create_policy(
+            model_or_content_type=self.CustomerModel,
+            field_permissions={},
+            row_permissions=[
+                RowPolicyRuleContent(
+                    connector="AND",
+                    conditions=[
+                        RowPolicyRuleCondition(
+                            field="first_name",
+                            operator=Lookup.EQUALS.value.id,
+                            value=first_name_value
+                        )
+                    ]
+                )
+            ],
+            global_permissions=[BloomerpPermission.VIEW],
+        )
+        PolicyManager.assign(policy, self.normal_user)
+        
+        # 2. Query objects for normal user
+        manager = UserPolicyManager(self.normal_user)
+        
+        # 3. Check access to specific objects
+        self._validate_queryset_results(
+            manager.get_accessible_queryset(self.CustomerModel, BloomerpPermission.VIEW),
+            self.CustomerModel.objects.filter(first_name=first_name_value)
+        )
+    
+    # DOES NOT EQUAL OPERATOR
+    def test_normal_user_with_single_row_policy_has_access_to_objects_operator_DOES_NOT_EQUAL(self):
+        """
+        UC: A normal user with a single row-level policy should have access to specific objects
+        
+        Expected Result: normal user has access to specific objects defined by the policy
+        """
+        first_name_value = FIRST_NAMES[0]
+        
+        #1. Create the policy
+        policy = PolicyManager.create_policy(
+            model_or_content_type=self.CustomerModel,
+            field_permissions={},
+            row_permissions=[
+                RowPolicyRuleContent(
+                    connector="AND",
+                    conditions=[
+                        RowPolicyRuleCondition(
+                            field="first_name",
+                            operator=Lookup.NOT_EQUALS.value.id,
+                            value=first_name_value
+                        )
+                    ]
+                )
+            ],
+            global_permissions=[BloomerpPermission.VIEW],
+        )
+        PolicyManager.assign(policy, self.normal_user)
+        
+        # 2. Query objects for normal user
+        manager = UserPolicyManager(self.normal_user)
+        
+        # 3. Check access to specific objects
+        self._validate_queryset_results(
+            manager.get_accessible_queryset(self.CustomerModel, BloomerpPermission.VIEW),
+            self.CustomerModel.objects.exclude(first_name=first_name_value)
+        )
+
+    # D
+    def test_row_rules_from_different_policies_are_combined_with_or(self):
+        """
+        UC: A normal user with multiple row-level policies should have access to objects matching any policy
+        
+        Expected Result: normal user has access to objects matching either row-level policy
+        """
+        first_value, second_value = FIRST_NAMES[:2]
+        
+        #1. Create two policies for different first-name values
+        for value in (first_value, second_value):
+            policy = PolicyManager.create_policy(
+                model_or_content_type=self.CustomerModel,
+                field_permissions={},
+                row_permissions=[
+                    RowPolicyRuleContent(
+                        connector="AND",
+                        conditions=[
+                            RowPolicyRuleCondition(
+                                field="first_name",
+                                operator=Lookup.EQUALS.value.id,
+                                value=value,
+                            )
+                        ],
+                    )
+                ],
+                global_permissions=[BloomerpPermission.VIEW],
+            )
+            PolicyManager.assign(policy, self.normal_user)
+
+        #2. Query objects for normal user
+        manager = UserPolicyManager(self.normal_user)
+
+        #3. Check access to objects matching either policy
+        self._validate_queryset_results(
+            manager.get_accessible_queryset(
+                self.CustomerModel,
+                BloomerpPermission.VIEW,
+            ),
+            self.CustomerModel.objects.filter(
+                first_name__in=[first_value, second_value]
+            ),
+        )
+    
+    
+    # --------------------------------
+    # FIELD ACCESS TESTS
+    # --------------------------------
+    # --------------------------------
+    # NO POLICIES TESTS
+    # --------------------------------
+    def test_admin_user_has_access_to_all_fields(self):
+        """
+        UC: An admin should always have access to all fields
+        
+        Expected Result: admin has access to all fields
+        """
+        #1. Query fields for admin
+        manager = UserPolicyManager(self.admin_user)
+        
+        #2. Check access to all fields
+        fields = manager.get_accessible_fields(self.CustomerModel, BloomerpPermission.VIEW)
+        
+        #3. Validate that the fields match the model's fields
+        self._validate_queryset_results(fields, ApplicationField.get_for_model(self.CustomerModel))
+    
+    def test_normal_user_with_no_policies_has_no_access_to_fields(self):
+        """
+        UC: A normal user with no policies should have no access to any fields
+        
+        Expected Result: normal user has no access to any fields
+        """
+        #1. Query fields for normal user
+        manager = UserPolicyManager(self.normal_user)
+        
+        #2. Check access to all fields
+        fields = manager.get_accessible_fields(self.CustomerModel, BloomerpPermission.VIEW)
+        
+        #3. Validate that the fields queryset is empty
+        self._validate_queryset_results(fields, ApplicationField.objects.none())
+    
+    # --------------------------------
+    # FIELD ACCESS TESTS
+    # --------------------------------
+    # --------------------------------
+    # HAS POLICIES TESTS
+    # --------------------------------
+    def test_normal_user_with_single_field_policy_has_access_to_fields(self):
+        """
+        UC: A normal user with a single field-level policy should have access to specific fields
+        
+        Expected Result: normal user has access to specific fields defined by the policy
+        """
+        #1. Create the policy
+        policy = PolicyManager.create_policy(
+            model_or_content_type=self.CustomerModel,
+            field_permissions={
+                "first_name": [BloomerpPermission.VIEW],
+            },
+            row_permissions=[],
+        )
+        PolicyManager.assign(policy, self.normal_user)
+        
+        # 2. Query fields for normal user
+        manager = UserPolicyManager(self.normal_user)
+        
+        # 3. Check access to specific fields
+        self._validate_queryset_results(
+            manager.get_accessible_fields(self.CustomerModel, BloomerpPermission.VIEW),
+            ApplicationField.get_for_model(self.CustomerModel).filter(field="first_name")
+        )
+
+    def test_field_permissions_are_scoped_to_the_matching_rows(self):
+        """
+        UC: A normal user with different field permissions for different rows should only access the fields granted for each row
+        
+        Expected Result: each object exposes only the fields granted by the row policy matching that object
+        """
+        first_value, second_value = FIRST_NAMES[:2]
+        grants = (
+            (first_value, "first_name"),
+            (second_value, "last_name"),
+        )
+        
+        #1. Create policies granting different fields for different rows
+        for row_value, field_name in grants:
+            policy = PolicyManager.create_policy(
+                model_or_content_type=self.CustomerModel,
+                field_permissions={
+                    field_name: [BloomerpPermission.VIEW],
+                },
+                row_permissions=[
+                    RowPolicyRuleContent(
+                        connector="AND",
+                        conditions=[
+                            RowPolicyRuleCondition(
+                                field="first_name",
+                                operator=Lookup.EQUALS.value.id,
+                                value=row_value,
+                            )
+                        ],
+                    )
+                ],
+            )
+            PolicyManager.assign(policy, self.normal_user)
+
+        #2. Query objects for normal user
+        manager = UserPolicyManager(self.normal_user)
+        first_object = self.CustomerModel.objects.filter(
+            first_name=first_value
+        ).first()
+        second_object = self.CustomerModel.objects.filter(
+            first_name=second_value
+        ).first()
+
+        #3. Check that the first object only exposes the first-name field
+        self._validate_queryset_results(
+            manager.get_accessible_fields_for_object(
+                first_object,
+                BloomerpPermission.VIEW,
+            ),
+            ApplicationField.get_for_model(self.CustomerModel).filter(
+                field="first_name"
+            ),
+        )
+        
+        #4. Check that the second object only exposes the last-name field
+        self._validate_queryset_results(
+            manager.get_accessible_fields_for_object(
+                second_object,
+                BloomerpPermission.VIEW,
+            ),
+            ApplicationField.get_for_model(self.CustomerModel).filter(
+                field="last_name"
+            ),
+        )
+
+    
+    # --------------------------------
+    # SQL
+    # --------------------------------    
+    def test_normal_user_gets_accessible_fields_for_table(self):
+        """
+        UC: Users want to know which fields they are able to access for a specific table
+        
+        Expected Result: The fields the user has access to
+        """
+        
+    
+
+        

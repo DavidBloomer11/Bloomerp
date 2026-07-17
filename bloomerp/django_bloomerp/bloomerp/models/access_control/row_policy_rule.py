@@ -1,6 +1,6 @@
-from django.db import models
 from enum import Enum
-from typing import Any, Literal, Optional
+
+from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import Permission
 from django.core.exceptions import ValidationError
@@ -8,44 +8,13 @@ from django.contrib.contenttypes.models import ContentType
 from bloomerp.models import ApplicationField
 from bloomerp.field_types import FieldType
 from bloomerp.models.mixins.absolute_url_model_mixin import AbsoluteUrlModelMixin
-from pydantic import BaseModel, ValidationError as PydanticValidationError, field_validator, model_validator
+from bloomerp.permissions.definition import RowPolicyRuleCondition, RowPolicyRuleContent
+from pydantic import ValidationError as PydanticValidationError
 
 ROW_POLICY_DISALLOWED_FIELD_TYPE_IDS = {
     FieldType.ONE_TO_MANY_FIELD.id,
     FieldType.PROPERTY.id,
 }
-
-class RowPolicyRuleCondition(BaseModel):
-    application_field_id : Optional[int|str] = None
-    operator : Optional[str] = None
-    value : Optional[Any] = None
-    field : Optional[str] = None
-
-    @model_validator(mode="after")
-    def validate_condition_shape(self):
-        if self.field == "__all__" or self.application_field_id == "__all__":
-            return self
-
-        if self.application_field_id in (None, ""):
-            raise ValueError("Missing application field id in rule")
-        if self.operator in (None, ""):
-            raise ValueError("Missing operator")
-        if self.value is None or self.value == "":
-            raise ValueError("No value given")
-
-        return self
-
-class RowPolicyRuleContent(BaseModel):
-    connector : Literal["AND", "OR"]
-    conditions : list[RowPolicyRuleCondition]
-
-    @field_validator("conditions")
-    @classmethod
-    def validate_conditions(cls, conditions):
-        if not conditions:
-            raise ValueError("At least one condition is required")
-        return conditions
-    
 
 class RowPolicyRule(AbsoluteUrlModelMixin, models.Model):
     """

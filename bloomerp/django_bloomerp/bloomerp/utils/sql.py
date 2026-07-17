@@ -39,7 +39,13 @@ class SqlQueryExecutor:
 
         return result
 
-    def execute_to_dict(self, query: str, safe: bool = True, use_cache: bool = False) -> Dict[str, List]:
+    def execute_to_dict(
+        self,
+        query: str,
+        params: tuple[Any, ...] | list[Any] | None = None,
+        safe: bool = True,
+        use_cache: bool = False,
+    ) -> Dict[str, List]:
         """
         Execute a query and return the result as a dictionary with columns and rows.
         
@@ -59,7 +65,7 @@ class SqlQueryExecutor:
                 return cache_result
 
         with connection.cursor() as cursor:
-            cursor.execute(query)
+            cursor.execute(query, params)
             description = cursor.description or []
             columns = [col[0] for col in description]
             rows = cursor.fetchall()

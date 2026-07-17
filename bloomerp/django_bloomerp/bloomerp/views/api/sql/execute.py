@@ -89,9 +89,13 @@ class ExecuteSqlView(BaseBloomerpApiView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        if not request.user.has_perm("bloomerp.execute_sql_query"):
-            return Response({"error": "Permission denied"}, status=403)
-
+        if not getattr(request.user, "is_staff", False):
+            return Response(
+                {"error": "You do not have permission to execute SQL queries."},
+                status=403,
+            )
+        
+        
         query = serializer.validated_data["query"]
         page = serializer.validated_data["page"]
         page_size = serializer.validated_data["page_size"]

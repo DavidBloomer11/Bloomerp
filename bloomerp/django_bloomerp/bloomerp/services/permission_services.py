@@ -12,7 +12,6 @@ from django.apps import apps
 from django.db import models
 from django.db.models import Model
 from bloomerp.models.base_bloomerp_model import BloomerpModel
-from bloomerp.models.base_bloomerp_model import BLOOMERP_MODEL_DEFAULT_PERMISSIONS
 from bloomerp.models.users.user import AbstractBloomerpUser
 from django.db.models.query import QuerySet
 from bloomerp.models import ApplicationField
@@ -28,6 +27,8 @@ from django.db.models import Q
 from bloomerp.field_types.lookups import Lookup
 from django.core.exceptions import FieldDoesNotExist
 from pydantic import ValidationError as PydanticValidationError
+
+from bloomerp.permissions.definition import BloomerpPermission
 
     
 # --------------------------
@@ -54,7 +55,7 @@ def get_bloomerp_model_default_permissions(model: type[models.Model]) -> tuple[s
     """
     default_permissions = tuple(getattr(model._meta, "default_permissions", ()))
     if issubclass(model, BloomerpModel):
-        return tuple(dict.fromkeys((*default_permissions, *BLOOMERP_MODEL_DEFAULT_PERMISSIONS)))
+        return tuple(dict.fromkeys((*default_permissions, *BloomerpPermission.to_tuple())))
     return default_permissions
 
 

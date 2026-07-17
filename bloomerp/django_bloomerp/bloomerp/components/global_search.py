@@ -40,7 +40,7 @@ from bloomerp.models.base_bloomerp_model import BloomerpModel
 from bloomerp.models.definition import BloomerpModelConfig
 from bloomerp.router import router
 from bloomerp.modules.definition import module_registry
-from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
+from bloomerp.permissions.manager import UserPermissionManager, create_permission_str
 from bloomerp.services.object_services import string_search_on_queryset
 
 from django.contrib.auth.models import Permission
