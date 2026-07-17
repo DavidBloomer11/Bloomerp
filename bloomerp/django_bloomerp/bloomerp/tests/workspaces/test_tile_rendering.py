@@ -8,6 +8,8 @@ from bloomerp.services.workspace_services import render_tile_to_string
 from bloomerp.tests.base import BaseBloomerpModelTestCase
 from bloomerp.workspaces.links_tile.model import Link, LinkTileConfig
 from bloomerp.workspaces.links_tile.render import LinksTileRenderer
+from bloomerp.workspaces.canvas_tile.model import CanvasTileConfig
+from bloomerp.workspaces.canvas_tile.render import CanvasTileRenderer
 from bloomerp.workspaces.text_tile.model import TextTileConfig
 from bloomerp.workspaces.text_tile.render import render_html
 from bloomerp.workspaces.tiles import TileType
@@ -44,6 +46,52 @@ class WorkspaceTileRenderingTests(BaseBloomerpModelTestCase):
         # 3. Verify the template content renders instead of the template file name.
         self.assertIn("Visible workspace tile", html)
         self.assertNotIn("cotton/workspaces/tiles/text.html", html)
+
+    def test_saved_canvas_tile_renders_state_height_and_save_url(self):
+        """
+        Use case: A saved canvas tile is rendered after a user has drawn on it.
+        Expected result: The canvas receives its saved state, configured height, and persistence URL.
+        """
+        # 1. Create a canvas tile with persisted Excalidraw state and a custom height.
+        tile = Tile.objects.create(
+            name="Planning canvas",
+            description="",
+            type=TileType.CANVAS_TILE.name,
+            schema={"content": {"elements": [{"id": "shape-1"}]}, "height": 640},
+            created_by=self.admin_user,
+            updated_by=self.admin_user,
+        )
+        request = self.factory.get("/")
+        request.user = self.admin_user
+
+        # 2. Render the saved tile through the workspace rendering service.
+        html = render_tile_to_string(tile, request)
+        soup = BeautifulSoup(html, "html.parser")
+        canvas = soup.find(attrs={"bloomerp-component": "workspace-tile-canvas"})
+
+        # 3. Verify the persisted state and save context are present.
+        self.assertIsNotNone(canvas)
+        self.assertEqual(canvas["style"], "height: 640px;")
+        self.assertIn('"shape-1"', canvas["data-initial-state"])
+        self.assertEqual(canvas["data-save-url"], f"/api/tiles/{tile.pk}/canvas-state/")
+
+    def test_canvas_preview_does_not_render_save_url(self):
+        """
+        Use case: A canvas is rendered in the tile builder before a Tile exists.
+        Expected result: The preview has no persistence URL and cannot send state updates.
+        """
+        # 1. Render a canvas config directly, matching the builder preview path.
+        request = self.factory.get("/")
+        request.user = self.admin_user
+        html = CanvasTileRenderer.render(CanvasTileConfig(height=512), request)
+        canvas = BeautifulSoup(html, "html.parser").find(
+            attrs={"bloomerp-component": "workspace-tile-canvas"}
+        )
+
+        # 2. Verify height still applies while persistence remains disabled.
+        self.assertIsNotNone(canvas)
+        self.assertEqual(canvas["style"], "height: 512px;")
+        self.assertNotIn("data-save-url", canvas.attrs)
 
     def test_text_tile_renders_sanitized_editor_html(self):
         html = render_html('<h2>Notes</h2><p>Visible content</p><script>alert("xss")</script>')

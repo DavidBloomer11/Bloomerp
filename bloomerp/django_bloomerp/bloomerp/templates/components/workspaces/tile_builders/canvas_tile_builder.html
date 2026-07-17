@@ -1,0 +1,25 @@
+<div class="border-b border-gray-200 p-3">
+    <label for="canvas-tile-height" class="mb-1 block text-sm font-medium text-dark">
+        <c-i18n.blocktrans>Canvas height</c-i18n.blocktrans>
+    </label>
+    <input
+        id="canvas-tile-height"
+        type="number"
+        min="256"
+        max="1600"
+        step="16"
+        value="{{ config.height }}"
+        class="input input-sm w-full"
+        hx-post="{% url 'preview_workspace_tile' %}?include_builder_section=false"
+        hx-vals='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'
+        hx-vars='js:{
+            operation: "set_height",
+            data: JSON.stringify({height: Number(this.value)})
+        }'
+        hx-target="#tile-preview-section"
+        hx-trigger="change delay:250ms"
+    />
+    <p class="mt-1 text-xs text-base">
+        <c-i18n.blocktrans>Height in pixels, between 256 and 1600.</c-i18n.blocktrans>
+    </p>
+</div>
