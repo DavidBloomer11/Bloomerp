@@ -59,6 +59,7 @@ import showMessage from './utils/messages';
 import Breadcrumb from './components/Breadcrumb';
 import ResizableDiv from './components/ResizableDiv';
 import { DataViewDisplayOptions } from './components/data_view_components/DisplayOptions';
+import { GantChart, GantChartItem } from './components/data_view_components/GantChart';
 
 import { openModal } from './utils/modals';
 import { closeModal } from './utils/modals';
@@ -90,6 +91,10 @@ registerComponent('kanban-card', KanbanCard);
 // Card view
 registerComponent('card-view', CardView);
 registerComponent('card-view-card', CardViewCard);
+
+// Gantt chart
+registerComponent('gant-chart', GantChart);
+registerComponent('gant-chart-item', GantChartItem);
 
 // Permissions table
 registerComponent('permissions-table', PermissionsTable)

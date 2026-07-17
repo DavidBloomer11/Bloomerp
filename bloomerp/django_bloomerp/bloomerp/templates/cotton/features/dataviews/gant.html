@@ -1,3 +1,44 @@
-<c-ui.text.muted class="">
-    Coming soon...
-</c-ui.text.muted>
+{% load bloomerp %}
+
+{% if not gant_configured %}
+<div class="rounded-xl border border-warning-light bg-base p-6 text-sm text-dark">
+    <c-i18n.blocktrans>Select a start field and an end field in the display options to configure the Gantt chart.</c-i18n.blocktrans>
+</div>
+{% else %}
+<div
+    bloomerp-component="gant-chart"
+    data-content-type-id="{{ content_type_id }}"
+    class="relative h-full min-h-[400px] w-full min-w-0 overflow-auto rounded-xl border border-gray-200 bg-base focus:outline-none focus:ring-0"
+>
+    <div class="min-w-[64rem]">
+        <div class="sticky top-0 z-20 grid grid-cols-[minmax(16rem,22rem)_minmax(48rem,1fr)] border-b border-gray-200 bg-base shadow-xs">
+            <div class="sticky left-0 z-30 border-r border-gray-200 bg-base px-3 py-2">
+                <div class="font-medium text-dark"><c-i18n.blocktrans>Records</c-i18n.blocktrans></div>
+                <div class="text-xs text-gray-500">
+                    {{ gant_start|date:"M j, Y" }} – {{ gant_end|date:"M j, Y" }}
+                </div>
+            </div>
+            <div class="relative h-14 overflow-hidden" data-gant-timeline-header>
+                {% for tick in gant_ticks %}
+                <div class="absolute inset-y-0 border-l border-gray-200" style="left: {{ tick.left }}%;">
+                    <span class="ml-1 whitespace-nowrap text-xs text-gray-500">{{ tick.date|date:"M j" }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="relative" data-gant-rows>
+            {% include "components/objects/dataview_gant_rows.html" %}
+        </div>
+    </div>
+
+    <svg class="pointer-events-none absolute inset-0 z-10 h-full w-full overflow-visible" data-gant-dependencies aria-hidden="true">
+        <defs>
+            <marker id="gant-arrow-{{ content_type_id }}" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                <path d="M0,0 L6,3 L0,6 z" class="fill-primary"></path>
+            </marker>
+        </defs>
+        <g data-gant-dependency-lines></g>
+    </svg>
+</div>
+{% endif %}

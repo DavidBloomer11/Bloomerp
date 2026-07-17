@@ -1,7 +1,263 @@
 from __future__ import annotations
 
-from .base import BaseDataviewRenderer
+from datetime import date, datetime, timedelta
+from math import ceil
+from typing import Any, Iterable
+
+from django.db.models import Max, Min, QuerySet
+from django.http import HttpRequest, HttpResponse
+from django.shortcuts import render
+
+from bloomerp.models.application_field import ApplicationField
+from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
+
+from .base import BaseDataviewRenderer, DataviewPagination, DataviewRenderState
 
 
 class GantDataviewRenderer(BaseDataviewRenderer):
+    """Render records as rows on a horizontally scaled Gantt timeline."""
+
     template_name = "cotton/features/dataviews/gant.html"
+    reserved_query_params = {"gant_page"}
+
+    @classmethod
+    def paginate_queryset(
+        cls,
+        queryset: QuerySet,
+        preference,
+        request: HttpRequest,
+        options: object | None = None,
+    ) -> DataviewPagination:
+        """Paginate Gantt rows for intersection-triggered incremental loading."""
+        start_field = cls._configured_field(
+            preference,
+            request,
+            getattr(options, "start_field_id", None),
+        )
+        if start_field is not None:
+            queryset = queryset.order_by(start_field.field, "pk")
+
+        page_size = int(getattr(options, "page_size", 25))
+        page_obj = cls.paginate_object_list(
+            queryset,
+            page_size,
+            request.GET.get("gant_page", 1),
+        )
+        return DataviewPagination(queryset=page_obj, page_obj=page_obj)
+
+    def get_context_data(self, pagination: DataviewPagination) -> dict[str, Any]:
+        context = super().get_context_data(pagination)
+        context.update(self._build_gant_context(pagination.queryset))
+        return context
+
+    def _build_gant_context(self, objects: Iterable) -> dict[str, Any]:
+        start_field = self.get_field_from_data_view_fields(
+            self.state.fields,
+            getattr(self.options, "start_field_id", None),
+        )
+        end_field = self.get_field_from_data_view_fields(
+            self.state.fields,
+            getattr(self.options, "end_field_id", None),
+        )
+        dependency_from_field = self._get_self_relation_field(
+            getattr(self.options, "dependency_from_field_id", None),
+        )
+        dependency_for_field = self._get_self_relation_field(
+            getattr(self.options, "dependency_for_field_id", None),
+        )
+
+        context: dict[str, Any] = {
+            "gant_configured": bool(start_field and end_field),
+            "gant_rows": [],
+            "gant_ticks": [],
+            "gant_start": None,
+            "gant_end": None,
+            "gant_page_querystring": self.build_querystring(
+                self.state.request,
+                ("page", "gant_page"),
+            ),
+        }
+        if not start_field or not end_field:
+            return context
+
+        timeline_start, timeline_end = self._get_timeline_range(
+            self.state.queryset,
+            start_field.field,
+            end_field.field,
+        )
+        total_days = max((timeline_end - timeline_start).days + 1, 1)
+
+        context.update({
+            "gant_start": timeline_start,
+            "gant_end": timeline_end,
+            "gant_ticks": self._build_ticks(timeline_start, timeline_end, total_days),
+            "gant_rows": [
+                self._build_row(
+                    obj,
+                    start_field.field,
+                    end_field.field,
+                    timeline_start,
+                    total_days,
+                    dependency_from_field,
+                    dependency_for_field,
+                )
+                for obj in objects
+            ],
+        })
+        return context
+
+    @classmethod
+    def handle_action(cls, action: str, request, state) -> HttpResponse:
+        if action != "page":
+            return super().handle_action(action, request, state)
+
+        pagination = cls.paginate_queryset(
+            state.queryset,
+            state.preference,
+            request,
+            state.dataview_options,
+        )
+        renderer = cls(DataviewRenderState(
+            request=request,
+            content_type_id=state.content_type.id,
+            content_type=state.content_type,
+            model=state.model,
+            preference=state.preference,
+            queryset=state.queryset,
+            fields=state.data_view_fields,
+            render_fields=state.data_view_render_fields,
+            avatar_field=state.avatar_field,
+            options=state.dataview_options,
+        ))
+        context = renderer.get_context_data(pagination)
+        context["page_obj"] = pagination.page_obj
+        return render(request, "components/objects/dataview_gant_rows.html", context)
+
+    def _get_self_relation_field(self, field_id):
+        application_field = self.get_field_from_data_view_fields(self.state.fields, field_id)
+        if application_field is None:
+            return None
+        if application_field.field_type not in {"ForeignKey", "OneToOneField"}:
+            return None
+        if application_field.related_model_id != application_field.content_type_id:
+            return None
+        return application_field
+
+    @staticmethod
+    def _configured_field(preference, request: HttpRequest, field_id):
+        if field_id in (None, ""):
+            return None
+        try:
+            application_field = preference.content_type.applicationfield_set.get(pk=int(field_id))
+        except (TypeError, ValueError, ApplicationField.DoesNotExist):
+            return None
+
+        if application_field.field_type not in {"DateField", "DateTimeField"}:
+            return None
+        permission = create_permission_str(preference.content_type.model_class(), "view")
+        if not UserPermissionManager(request.user).has_field_permission(application_field, permission):
+            return None
+        return application_field
+
+    @classmethod
+    def _get_timeline_range(
+        cls,
+        queryset: QuerySet,
+        start_field_name: str,
+        end_field_name: str,
+    ) -> tuple[date, date]:
+        bounds = queryset.aggregate(
+            gant_start=Min(start_field_name),
+            gant_end=Max(end_field_name),
+        )
+        timeline_start = cls._as_date(bounds["gant_start"])
+        timeline_end = cls._as_date(bounds["gant_end"])
+        today = date.today()
+
+        if timeline_start is None and timeline_end is None:
+            return today, today
+        if timeline_start is None:
+            timeline_start = timeline_end
+        if timeline_end is None:
+            timeline_end = timeline_start
+        if timeline_end < timeline_start:
+            timeline_end = timeline_start
+        return timeline_start, timeline_end
+
+    @classmethod
+    def _build_row(
+        cls,
+        obj,
+        start_field_name: str,
+        end_field_name: str,
+        timeline_start: date,
+        total_days: int,
+        dependency_from_field,
+        dependency_for_field,
+    ) -> dict[str, Any]:
+        item_start = cls._as_date(getattr(obj, start_field_name, None))
+        item_end = cls._as_date(getattr(obj, end_field_name, None))
+        scheduled = item_start is not None and item_end is not None
+
+        if scheduled:
+            if item_end < item_start:
+                item_end = item_start
+            start_offset = max((item_start - timeline_start).days, 0)
+            duration = max((item_end - item_start).days + 1, 1)
+            left = (start_offset / total_days) * 100
+            width = max((duration / total_days) * 100, 0.6)
+            width = min(width, 100 - left)
+        else:
+            left = 0
+            width = 0
+
+        return {
+            "object": obj,
+            "start": item_start,
+            "end": item_end,
+            "scheduled": scheduled,
+            "left": f"{left:.4f}",
+            "width": f"{width:.4f}",
+            "dependency_from_id": cls._related_object_id(obj, dependency_from_field),
+            "dependency_for_id": cls._related_object_id(obj, dependency_for_field),
+        }
+
+    @staticmethod
+    def _related_object_id(obj, application_field) -> str:
+        if application_field is None:
+            return ""
+        try:
+            model_field = obj._meta.get_field(application_field.field)
+        except Exception:
+            return ""
+        value = getattr(obj, model_field.attname, None)
+        return "" if value is None else str(value)
+
+    @staticmethod
+    def _as_date(value) -> date | None:
+        if isinstance(value, datetime):
+            return value.date()
+        if isinstance(value, date):
+            return value
+        return None
+
+    @staticmethod
+    def _build_ticks(
+        timeline_start: date,
+        timeline_end: date,
+        total_days: int,
+    ) -> list[dict[str, Any]]:
+        step_days = max(1, ceil(total_days / 10))
+        ticks = []
+        current = timeline_start
+        while current <= timeline_end:
+            offset = (current - timeline_start).days
+            ticks.append({"date": current, "left": f"{(offset / total_days) * 100:.4f}"})
+            current += timedelta(days=step_days)
+
+        if not ticks or ticks[-1]["date"] != timeline_end:
+            ticks.append({
+                "date": timeline_end,
+                "left": f"{((total_days - 1) / total_days) * 100:.4f}",
+            })
+        return ticks

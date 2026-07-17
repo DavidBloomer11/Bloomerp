@@ -1,3 +1,6 @@
+from datetime import date, timedelta
+
+from django.db import models
 from django.urls import reverse
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import Permission
@@ -7,6 +10,7 @@ from bloomerp.models import Policy, FieldPolicy, RowPolicy, RowPolicyRule
 from bloomerp.models.users.user_list_view_preference import UserListViewPreference
 from bloomerp.services.user_services import get_data_view_fields, get_user_list_view_preference
 from bloomerp.components.objects.dataviews.dataview import _select_related_rendered_relations
+from bloomerp.tests.utils.dynamic_models import create_test_models
 
 
 class TestDataView(BaseBloomerpModelTestCase):
@@ -750,3 +754,155 @@ class TestDataView(BaseBloomerpModelTestCase):
 
         selected.refresh_from_db()
         self.assertEqual(selected.options["table"]["page_size"], 50)
+
+
+class TestGantDataView(BaseBloomerpModelTestCase):
+    auto_create_customers = False
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.GantTaskModel = create_test_models(
+            app_label="bloomerp",
+            model_defs={
+                "GantTask": {
+                    "name": models.CharField(max_length=100),
+                    "starts_on": models.DateField(null=True, blank=True),
+                    "ends_on": models.DateField(null=True, blank=True),
+                    "dependency": models.ForeignKey(
+                        "self",
+                        null=True,
+                        blank=True,
+                        on_delete=models.SET_NULL,
+                        related_name="dependants",
+                    ),
+                    "__str__": lambda self: self.name,
+                },
+            },
+            use_bloomerp_base=True,
+        )["GantTask"]
+        cls._register_dynamic_model_routes([cls.GantTaskModel])
+
+    def _configure_gant(self, *, page_size: int = 10, with_dependency: bool = False):
+        content_type = ContentType.objects.get_for_model(self.GantTaskModel)
+        start_field = ApplicationField.get_by_field(self.GantTaskModel, "starts_on")
+        end_field = ApplicationField.get_by_field(self.GantTaskModel, "ends_on")
+        name_field = ApplicationField.get_by_field(self.GantTaskModel, "name")
+        dependency_field = ApplicationField.get_by_field(self.GantTaskModel, "dependency")
+        preference = get_user_list_view_preference(self.admin_user, content_type)
+        preference.view_type = "gant"
+        preference.options = {
+            "gant": {
+                "start_field_id": start_field.id,
+                "end_field_id": end_field.id,
+                "dependency_from_field_id": dependency_field.id if with_dependency else None,
+                "dependency_for_field_id": None,
+                "page_size": page_size,
+            },
+        }
+        preference.display_fields = {
+            **preference.display_fields,
+            "gant": [name_field.id],
+        }
+        preference.save()
+        return content_type, dependency_field
+
+    def test_gant_dataview_renders_scaled_rows_and_dependencies(self):
+        """
+        Use case: A configured Gantt view contains related, scheduled records.
+        Expected result: Each record renders on the shared timeline with its dependency metadata.
+        """
+        # 1. Configure the Gantt view with its self-referencing dependency field.
+        self.client.force_login(self.admin_user)
+        content_type, _dependency_field = self._configure_gant(with_dependency=True)
+        first = self.GantTaskModel.objects.create(
+            name="Discovery",
+            starts_on=date(2026, 1, 1),
+            ends_on=date(2026, 1, 10),
+        )
+        self.GantTaskModel.objects.create(
+            name="Delivery",
+            starts_on=date(2026, 1, 5),
+            ends_on=date(2026, 1, 20),
+            dependency=first,
+        )
+
+        # 2. Request the permission-filtered data-view component.
+        url = reverse(
+            "components_data_view",
+            kwargs={"content_type_id": content_type.id},
+        )
+        response = self.client.get(url, HTTP_HX_REQUEST="true")
+
+        # 3. Verify the timeline, bars, sidebar values, and dependency endpoint render.
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'bloomerp-component="gant-chart"', html=False)
+        self.assertContains(response, 'bloomerp-component="gant-chart-item"', count=2, html=False)
+        self.assertContains(response, 'style="left: 0.0000%; width: 50.0000%;"', html=False)
+        self.assertContains(response, 'style="left: 20.0000%; width: 80.0000%;"', html=False)
+        self.assertContains(response, f'data-dependency-from-id="{first.pk}"', html=False)
+        self.assertContains(response, "Discovery", html=False)
+        self.assertContains(response, "Delivery", html=False)
+
+    def test_gant_dataview_loads_additional_rows_by_intersection_page(self):
+        """
+        Use case: A Gantt chart contains more records than its configured page size.
+        Expected result: The first page exposes an intersection loader and the action returns the next page.
+        """
+        # 1. Configure a ten-row page and create more than one page of scheduled records.
+        self.client.force_login(self.admin_user)
+        content_type, _dependency_field = self._configure_gant(page_size=10)
+        for index in range(25):
+            start = date(2026, 2, 1) + timedelta(days=index)
+            self.GantTaskModel.objects.create(
+                name=f"Task {index:02d}",
+                starts_on=start,
+                ends_on=start + timedelta(days=2),
+            )
+
+        # 2. Request the initial data view.
+        url = reverse(
+            "components_data_view",
+            kwargs={"content_type_id": content_type.id},
+        )
+        response = self.client.get(url, HTTP_HX_REQUEST="true")
+
+        # 3. Verify it renders ten bars and an incremental page-two request.
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'bloomerp-component="gant-chart-item"', count=10, html=False)
+        self.assertContains(response, "gant_page=2", html=False)
+        self.assertNotContains(response, 'data-testid="data-view-pagination"', html=False)
+
+        # 4. Request page two through the renderer action.
+        page_url = reverse(
+            "components_data_view_action",
+            kwargs={"content_type_id": content_type.id, "action": "page"},
+        )
+        page_response = self.client.get(
+            f"{page_url}?gant_page=2",
+            HTTP_HX_REQUEST="true",
+        )
+
+        # 5. Verify the fragment contains the next ten bars and the final-page loader.
+        self.assertEqual(page_response.status_code, 200)
+        self.assertContains(page_response, 'bloomerp-component="gant-chart-item"', count=10, html=False)
+        self.assertContains(page_response, "gant_page=3", html=False)
+
+    def test_gant_options_only_offer_self_referencing_dependency_fields(self):
+        """
+        Use case: A user configures optional Gantt dependency fields.
+        Expected result: Only relations back to the same model are offered as dependency choices.
+        """
+        # 1. Open the display options for the configured Gantt view.
+        self.client.force_login(self.admin_user)
+        content_type, dependency_field = self._configure_gant()
+        url = reverse(
+            "components_data_view",
+            kwargs={"content_type_id": content_type.id},
+        )
+        response = self.client.get(url, HTTP_HX_REQUEST="true")
+
+        # 2. Verify the self-reference is offered while scalar fields are not dependency choices.
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, f'value="{dependency_field.id}"', html=False)
+        self.assertContains(response, "Dependency from", html=False)

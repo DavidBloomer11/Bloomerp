@@ -1,0 +1,68 @@
+{% load bloomerp %}
+
+{% for row in gant_rows %}
+<div
+    class="grid min-h-16 grid-cols-[minmax(16rem,22rem)_minmax(48rem,1fr)] border-b border-gray-200 last:border-b-0"
+    data-gant-row
+    data-object-id="{{ row.object.pk }}"
+>
+    <div class="sticky left-0 z-10 min-w-0 border-r border-gray-200 bg-base px-3 py-2">
+        <div class="truncate text-sm font-medium text-dark" title="{{ row.object }}">{{ row.object }}</div>
+        <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1">
+            {% for field in fields %}
+            <div class="min-w-0 text-xs text-gray-500">
+                <span class="font-medium">{{ field.title }}:</span>
+                {% render_dataview_value object=row.object application_field=field user=request.user row_index=forloop.parentloop.counter0 column_index=forloop.counter0 url=row.object.get_absolute_url split_view_enabled=preference.split_view_enabled %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="relative min-h-16 bg-base" data-gant-timeline-row>
+        {% for tick in gant_ticks %}
+        <div class="pointer-events-none absolute inset-y-0 border-l border-gray-200" style="left: {{ tick.left }}%;"></div>
+        {% endfor %}
+
+        {% if row.scheduled %}
+        <div
+            class="absolute top-3 flex h-10 min-w-2 cursor-pointer items-center rounded-xl bg-primary px-2 text-xs font-medium text-white shadow-xs hover:brightness-95"
+            style="left: {{ row.left }}%; width: {{ row.width }}%;"
+            title="{{ row.object }} · {{ row.start|date:'M j, Y' }} – {{ row.end|date:'M j, Y' }}"
+            data-detail-url="{{ row.object.get_absolute_url }}"
+            data-object-id="{{ row.object.pk }}"
+            data-object-string="{{ row.object }}"
+            data-dependency-from-id="{{ row.dependency_from_id }}"
+            data-dependency-for-id="{{ row.dependency_for_id }}"
+            data-row-index="{{ forloop.counter0 }}"
+            data-column-index="0"
+            bloomerp-component="gant-chart-item"
+        >
+            <span class="truncate">{{ row.object }}</span>
+        </div>
+        {% else %}
+        <div class="flex h-full items-center px-3 text-xs text-gray-500">
+            <c-i18n.blocktrans>Start or end date is missing.</c-i18n.blocktrans>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% empty %}
+    {% if not page_obj or page_obj.number == 1 %}
+    <div class="p-6 text-center text-sm text-gray-500">
+        <c-i18n.blocktrans>No records found.</c-i18n.blocktrans>
+    </div>
+    {% endif %}
+{% endfor %}
+
+{% if page_obj and page_obj.has_next %}
+<div
+    class="py-3 text-center text-xs text-gray-500"
+    data-gant-page-loader
+    hx-get="{% url 'components_data_view_action' content_type_id=content_type_id action='page' %}{% if gant_page_querystring %}?{{ gant_page_querystring }}&amp;{% else %}?{% endif %}gant_page={{ page_obj.next_page_number }}"
+    hx-trigger="intersect once"
+    hx-target="this"
+    hx-swap="outerHTML"
+>
+    <c-i18n.blocktrans>Loading more…</c-i18n.blocktrans>
+</div>
+{% endif %}
