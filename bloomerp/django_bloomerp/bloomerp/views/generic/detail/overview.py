@@ -13,7 +13,11 @@ from bloomerp.services.object_file_field_services import save_layout_uploaded_fi
 from bloomerp.services.one_to_many_field_services import save_submitted_one_to_many_fields
 from bloomerp.models.users.user_detail_view_preference import UserDetailViewPreference
 from bloomerp.router import router
-from bloomerp.services.create_view_services import AUTO_MANAGED_FIELD_NAMES, get_disallowed_submitted_fields
+from bloomerp.services.create_view_services import (
+    AUTO_MANAGED_FIELD_NAMES,
+    get_disallowed_submitted_fields,
+    get_generic_foreign_key_backing_fields,
+)
 from bloomerp.services.detail_view_services import get_default_layout
 from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
 from bloomerp.utils.models import get_detail_view_url
@@ -78,6 +82,12 @@ class BloomerpDetailOverviewView(BloomerpLayoutFormMixin, BaseBloomerpDetailView
             if application_field.field in AUTO_MANAGED_FIELD_NAMES:
                 continue
             field_type = application_field.get_field_type_enum().value
+            if field_type.id == "GenericForeignKey":
+                allowed_field_names.extend(
+                    backing_field.field
+                    for backing_field in get_generic_foreign_key_backing_fields(application_field)
+                )
+                continue
             if not field_type.allow_in_model:
                 continue
             try:

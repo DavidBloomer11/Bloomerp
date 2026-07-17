@@ -1,12 +1,32 @@
 """
 All rights reserved. 
 """
+from typing import TYPE_CHECKING
+
 from django.db.models import Q
 from django.db.models.query import QuerySet
 from django.db.models import CharField, F, TextField, Value
 from django.db.models.functions import Concat
+from django.urls import reverse
 
-from bloomerp.models import User
+if TYPE_CHECKING:
+    from bloomerp.models import User
+
+
+def get_object_detail_url(obj) -> str:
+    """Return the object's configured detail URL when one is available."""
+    if hasattr(obj, "get_absolute_url"):
+        try:
+            return obj.get_absolute_url()
+        except Exception:
+            pass
+
+    try:
+        from bloomerp.utils.models import get_detail_view_url
+
+        return reverse(get_detail_view_url(obj.__class__), kwargs={"pk": obj.pk})
+    except Exception:
+        return ""
 
 def string_search_on_queryset(queryset: QuerySet, query: str):
     """
@@ -96,7 +116,7 @@ def string_search_on_queryset(queryset: QuerySet, query: str):
 
 
 class UserCrudManager:
-    def __init__(self, user:User):
+    def __init__(self, user: "User"):
         self.user = user
 
     def create_form(self, model_or_content_type):

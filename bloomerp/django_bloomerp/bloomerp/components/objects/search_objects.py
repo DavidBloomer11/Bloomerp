@@ -1,23 +1,10 @@
 import json
 from django.http import HttpResponse, HttpRequest
 from django.contrib.contenttypes.models import ContentType
-from django.urls import reverse
 from bloomerp.models import BloomerpModel
 from bloomerp.router import router
-from bloomerp.services.object_services import string_search_on_queryset
+from bloomerp.services.object_services import get_object_detail_url, string_search_on_queryset
 from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
-
-def _get_detail_url(obj) -> str:
-    """Helper function to get the detail url"""
-    try:
-        return obj.get_absolute_url()
-    except Exception:
-        try:
-            from bloomerp.utils.models import get_detail_view_url
-            return reverse(get_detail_view_url(obj.__class__), kwargs={"pk": obj.pk})
-        except Exception:
-            return ""
-
 
 @router.register(
     path="components/search-objects/<int:content_type_id>/",
@@ -62,7 +49,7 @@ def search_objects(request:HttpRequest, content_type_id:int) -> HttpResponse:
             {
                 'id': str(obj.pk),
                 'string_representation': str(obj),
-                'detail_url': _get_detail_url(obj),
+                'detail_url': get_object_detail_url(obj),
             } for obj in results
         ]
     }

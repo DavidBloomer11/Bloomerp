@@ -26,6 +26,7 @@ import PermissionCheckboxes from './components/inputs/PermissionCheckboxes';
 import DropdownInput from './components/inputs/DropdownInput';
 import SelectableCards from './components/inputs/SelectableCards';
 import ForeignFieldWidget from './components/widgets/ForeignFieldWidget';
+import GenericForeignKeyWidget from './components/widgets/GenericForeignKeyWidget';
 import ListFilterWidget from './components/widgets/ListFilterWidget';
 import OneToManyFieldWidget from './components/widgets/OneToManyFieldWidget';
 import CodeEditorWidget from './components/widgets/CodeEditorWidget';
@@ -114,6 +115,7 @@ registerComponent('selectable-cards', SelectableCards);
 
 // Form widgets
 registerComponent('foreign-field-widget', ForeignFieldWidget);
+registerComponent('generic-foreign-key-widget', GenericForeignKeyWidget);
 registerComponent('list-filter-widget', ListFilterWidget);
 registerComponent('one-to-many-field-widget', OneToManyFieldWidget);
 registerComponent('code-editor-widget', CodeEditorWidget);

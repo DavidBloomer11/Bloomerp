@@ -35,17 +35,11 @@ from django.urls import reverse
 from django.urls import NoReverseMatch
 
 
-from bloomerp.models.application_field import ApplicationField
-from bloomerp.models.base_bloomerp_model import BloomerpModel
-from bloomerp.models.definition import BloomerpModelConfig
 from bloomerp.router import router
 from bloomerp.modules.definition import module_registry
 from bloomerp.permissions.manager import UserPermissionManager, create_permission_str
 from bloomerp.services.object_services import string_search_on_queryset
-
-from django.contrib.auth.models import Permission
-from django.contrib.admin.models import LogEntry
-from django.contrib.sessions.models import Session
+from bloomerp.services.search_services import get_accessible_search_models, is_model_searchable
 
 # -------------------------------
 # Helper functions
@@ -118,25 +112,7 @@ def _resolve_models_by_name(model_key: str) -> list:
 
 def _ignore_model(model) -> bool:
     """Determines whether a model should be ignored in the search results."""
-    internal_models = [
-        ContentType,
-        ApplicationField,
-        Permission,
-        LogEntry,
-        Session
-    ]
-
-    if not model or model in internal_models:
-        return True
-    if getattr(model._meta, "swapped", None):
-        return True
-    
-    if hasattr(model, "bloomerp_config") and isinstance(getattr(model, "bloomerp_config"), BloomerpModelConfig):
-        config : BloomerpModelConfig = getattr(model, "bloomerp_config")
-        if config.is_internal or not config.allow_string_search:
-            return True
-
-    return False
+    return not is_model_searchable(model)
 
 def _collect_object_results(
     request: HttpRequest,
@@ -216,23 +192,7 @@ def _get_accessible_models(
     request: HttpRequest,
     permission_manager: UserPermissionManager,
 ) -> list:
-    content_types = list(request.user.accessible_content_types)
-    row_policy_ct_ids = permission_manager.get_row_policies().values_list(
-        "content_type_id", flat=True
-    ).distinct()
-    if row_policy_ct_ids:
-        content_types.extend(ContentType.objects.filter(id__in=row_policy_ct_ids))
-
-    # De-duplicate while preserving order
-    seen_ids = set()
-    unique_content_types = []
-    for ct in content_types:
-        if ct.id in seen_ids:
-            continue
-        seen_ids.add(ct.id)
-        unique_content_types.append(ct)
-
-    return [content_type.model_class() for content_type in unique_content_types]
+    return get_accessible_search_models(request.user, permission_manager)
 
 
 @router.register(path='components/global_search/', name='components_global_search')
@@ -492,7 +452,5 @@ def global_search(request: HttpRequest) -> HttpResponse:
                     TOTAL_LIMIT,
                 )
                 context["results_truncated"] = context["results_truncated"] or truncated
-                
 
     return render(request, "components/global_search.html", context)
-    

@@ -10,13 +10,14 @@ from django.shortcuts import redirect
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.generic.edit import CreateView
 
-from bloomerp.models import UserCreateViewPreference
+from bloomerp.models import ApplicationField, UserCreateViewPreference
 from bloomerp.models.definition import BloomerpModelConfig
 from bloomerp.models.files import File
 from bloomerp.models.workspaces import SqlQuery, Tile
 from bloomerp.models.workspaces.workspace import Workspace
 from bloomerp.router import router
 from bloomerp.services.create_view_services import (
+    get_generic_foreign_key_backing_fields,
     get_create_access_state,
     get_disallowed_submitted_fields,
 )
@@ -92,11 +93,23 @@ class BloomerpCreateView(
         return self.create_view_preference
 
     def get_layout_editable_field_names(self) -> list[str]:
-        return list(self.create_access_state.addable_fields.values_list("field", flat=True))
+        fields = list(self.create_access_state.addable_fields)
+        field_names = [field.field for field in fields]
+        for application_field in fields:
+            field_names.extend(
+                backing_field.field
+                for backing_field in get_generic_foreign_key_backing_fields(application_field)
+            )
+        return list(dict.fromkeys(field_names))
 
     def get_model_form_field_names(self) -> list[str]:
         field_names: list[str] = []
-        for application_field in self.create_access_state.addable_fields:
+        editable_field_names = self.get_layout_editable_field_names()
+        application_fields = ApplicationField.objects.filter(
+            content_type=self.get_layout_content_type(),
+            field__in=editable_field_names,
+        )
+        for application_field in application_fields:
             field_type = application_field.get_field_type_enum().value
             if field_type.editable_without_form_field and not field_type.allow_in_model:
                 continue

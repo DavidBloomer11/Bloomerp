@@ -121,6 +121,21 @@ class BloomerpLayoutFormMixin(ABC):
 
     def get_submitted_layout_field_value(self, application_field: ApplicationField):
         field_type = application_field.get_field_type_enum().value
+        if field_type.id == "GenericForeignKey":
+            submitted_data = self.get_one_to_many_submitted_data_source()
+            if submitted_data is None:
+                return self.no_submitted_layout_value
+            try:
+                generic_foreign_key = application_field._get_model_field()
+            except Exception:
+                return self.no_submitted_layout_value
+            if generic_foreign_key.ct_field not in submitted_data and generic_foreign_key.fk_field not in submitted_data:
+                return self.no_submitted_layout_value
+            return {
+                "content_type_id": submitted_data.get(generic_foreign_key.ct_field, ""),
+                "object_id": submitted_data.get(generic_foreign_key.fk_field, ""),
+            }
+
         if field_type.id != "OneToManyField":
             return self.no_submitted_layout_value
 

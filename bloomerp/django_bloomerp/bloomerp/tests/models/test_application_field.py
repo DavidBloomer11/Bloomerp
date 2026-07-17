@@ -17,6 +17,7 @@ from bloomerp.models.forms.form import Form as BloomerpForm
 from bloomerp.models.forms.form_submission import FormSubmission
 from bloomerp.services.sectioned_layout_services import build_crud_layout_field_context
 from bloomerp.services.form_services import FormManager
+from bloomerp.services.create_view_services import get_addable_fields
 from bloomerp.services.one_to_many_field_services import (
     save_submitted_one_to_many_fields,
 )
@@ -31,6 +32,7 @@ from bloomerp.tests.base import BaseBloomerpModelTestCase
 from bloomerp.tests.utils.dynamic_models import create_test_models
 from bloomerp.widgets.address_widget import AddressWidget
 from bloomerp.widgets.code_editor_widget import CodeEditorWidget
+from bloomerp.widgets.generic_foreign_key_widget import GenericForeignKeyWidget
 from bloomerp.widgets.object_files_widget import ObjectFilesWidget
 from bloomerp.widgets.one_to_many_field_widget import OneToManyFieldWidget
 from bloomerp.widgets.phone_number_widget import PhoneNumberWidget
@@ -157,6 +159,81 @@ class TestApplicationField(BaseBloomerpModelTestCase):
         self.assertIs(field_type.widget_cls, OneToManyFieldWidget)
         self.assertEqual(field_type.widget_related_model_attr, "related_model")
         self.assertTrue(field_type.editable_without_form_field)
+
+    def test_generic_foreign_key_field_type_owns_widget_behavior(self):
+        """
+        Use case: A model exposes a GenericForeignKey through ApplicationField metadata.
+        Expected result: The field type supplies the cross-model widget as a layout-only editable field.
+        """
+        # 1. Resolve the Todo content-object field created by application-field synchronization.
+        from bloomerp.models.project_management.todo import Todo
+
+        application_field = ApplicationField.objects.get(
+            content_type=ContentType.objects.get_for_model(Todo),
+            field="content_object",
+        )
+
+        # 2. Build its widget and verify the descriptor's backing field names are retained.
+        widget = application_field.get_widget()
+
+        self.assertIsInstance(widget, GenericForeignKeyWidget)
+        self.assertEqual(widget.content_type_field_name, "content_type")
+        self.assertEqual(widget.object_id_field_name, "object_id")
+        self.assertTrue(application_field.get_field_type_enum().value.editable_without_form_field)
+
+    def test_generic_foreign_key_widget_renders_selected_object(self):
+        """
+        Use case: An existing generic relation is rendered in an overview form.
+        Expected result: One visible selector submits both generic relation keys.
+        """
+        # 1. Build the Todo content-object widget and a selected customer.
+        from bloomerp.models.project_management.todo import Todo
+
+        application_field = ApplicationField.objects.get(
+            content_type=ContentType.objects.get_for_model(Todo),
+            field="content_object",
+        )
+        customer = self.CustomerModel.objects.create(
+            first_name="Selected",
+            last_name="Customer",
+            age=30,
+        )
+
+        # 2. Render the widget with that object selected.
+        html = application_field.get_widget().render(
+            name="content_object",
+            value=customer,
+            attrs={"class": "input w-full"},
+        )
+
+        # 3. Verify the selector and its two hidden backing values.
+        customer_content_type = ContentType.objects.get_for_model(self.CustomerModel)
+        self.assertIn('bloomerp-component="generic-foreign-key-widget"', html)
+        self.assertIn('name="content_type"', html)
+        self.assertIn(f'value="{customer_content_type.pk}"', html)
+        self.assertIn('name="object_id"', html)
+        self.assertIn(f'value="{customer.pk}"', html)
+        self.assertIn("Selected Customer", html)
+
+    def test_create_fields_replace_generic_relation_backing_fields(self):
+        """
+        Use case: A create layout is generated for a model with a GenericForeignKey.
+        Expected result: The logical field is offered instead of separate backing fields.
+        """
+        # 1. Resolve the Todo fields available to a superuser create layout.
+        from bloomerp.models.project_management.todo import Todo
+
+        content_type = ContentType.objects.get_for_model(Todo)
+        field_names = set(
+            get_addable_fields(content_type=content_type, user=self.admin_user).values_list(
+                "field", flat=True
+            )
+        )
+
+        # 2. Verify the layout exposes only the logical content-object field.
+        self.assertIn("content_object", field_names)
+        self.assertNotIn("content_type", field_names)
+        self.assertNotIn("object_id", field_names)
 
     def test_files_application_field_uses_files_relation_field_type(self):
         application_field = ApplicationField.objects.get(
