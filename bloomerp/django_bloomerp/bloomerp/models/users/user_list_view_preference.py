@@ -430,7 +430,7 @@ class ViewTypeEnum(Enum):
 
     GANT = ViewTypeDefinition(
         key="gant",
-        label="Gant",
+        label="Gantt",
         icon="fa fa-chart-gantt",
         description="Displays records as a timeline.",
         renderer_cls=GantDataviewRenderer,

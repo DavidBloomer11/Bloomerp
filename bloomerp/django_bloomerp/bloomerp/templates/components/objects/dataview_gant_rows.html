@@ -2,11 +2,12 @@
 
 {% for row in gant_rows %}
 <div
-    class="grid min-h-16 grid-cols-[minmax(16rem,22rem)_minmax(48rem,1fr)] border-b border-gray-200 last:border-b-0"
+    class="grid min-h-16 border-b border-gray-200 last:border-b-0"
+    data-gant-layout
     data-gant-row
     data-object-id="{{ row.object.pk }}"
 >
-    <div class="sticky left-0 z-10 min-w-0 border-r border-gray-200 bg-base px-3 py-2">
+    <div class="sticky left-0 z-20 min-w-0 border-r border-gray-200 bg-base px-3 py-2">
         <div class="truncate text-sm font-medium text-dark" title="{{ row.object }}">{{ row.object }}</div>
         <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1">
             {% for field in fields %}
@@ -19,15 +20,13 @@
     </div>
 
     <div class="relative min-h-16 bg-base" data-gant-timeline-row>
-        {% for tick in gant_ticks %}
-        <div class="pointer-events-none absolute inset-y-0 border-l border-gray-200" style="left: {{ tick.left }}%;"></div>
-        {% endfor %}
-
         {% if row.scheduled %}
         <div
-            class="absolute top-3 flex h-10 min-w-2 cursor-pointer items-center rounded-xl bg-primary px-2 text-xs font-medium text-white shadow-xs hover:brightness-95"
-            style="left: {{ row.left }}%; width: {{ row.width }}%;"
-            title="{{ row.object }} · {{ row.start|date:'M j, Y' }} – {{ row.end|date:'M j, Y' }}"
+            class="absolute top-3 z-10 flex h-10 min-w-1 cursor-pointer items-center rounded-xl bg-primary px-2 text-xs font-medium text-white shadow-xs hover:brightness-95"
+            title="{{ row.object }} · {% if row.shows_time %}{{ row.start|date:'M j, Y H:i' }} – {{ row.end|date:'M j, Y H:i' }}{% else %}{{ row.start|date:'M j, Y' }} – {{ row.end|date:'M j, Y' }}{% endif %}"
+            data-gant-item
+            data-start="{{ row.start_ms }}"
+            data-end="{{ row.end_ms }}"
             data-detail-url="{{ row.object.get_absolute_url }}"
             data-object-id="{{ row.object.pk }}"
             data-object-string="{{ row.object }}"

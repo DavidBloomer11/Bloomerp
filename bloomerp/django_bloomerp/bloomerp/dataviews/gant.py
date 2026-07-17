@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
-from math import ceil
+from datetime import date, datetime, time, timedelta
 from typing import Any, Iterable
 
 from django.db.models import Max, Min, QuerySet
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
+from django.utils import timezone
 
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
@@ -69,9 +69,10 @@ class GantDataviewRenderer(BaseDataviewRenderer):
         context: dict[str, Any] = {
             "gant_configured": bool(start_field and end_field),
             "gant_rows": [],
-            "gant_ticks": [],
             "gant_start": None,
             "gant_end": None,
+            "gant_start_ms": None,
+            "gant_end_ms": None,
             "gant_page_querystring": self.build_querystring(
                 self.state.request,
                 ("page", "gant_page"),
@@ -82,22 +83,20 @@ class GantDataviewRenderer(BaseDataviewRenderer):
 
         timeline_start, timeline_end = self._get_timeline_range(
             self.state.queryset,
-            start_field.field,
-            end_field.field,
+            start_field,
+            end_field,
         )
-        total_days = max((timeline_end - timeline_start).days + 1, 1)
 
         context.update({
             "gant_start": timeline_start,
             "gant_end": timeline_end,
-            "gant_ticks": self._build_ticks(timeline_start, timeline_end, total_days),
+            "gant_start_ms": self._to_milliseconds(timeline_start),
+            "gant_end_ms": self._to_milliseconds(timeline_end),
             "gant_rows": [
                 self._build_row(
                     obj,
-                    start_field.field,
-                    end_field.field,
-                    timeline_start,
-                    total_days,
+                    start_field,
+                    end_field,
                     dependency_from_field,
                     dependency_for_field,
                 )
@@ -163,19 +162,22 @@ class GantDataviewRenderer(BaseDataviewRenderer):
     def _get_timeline_range(
         cls,
         queryset: QuerySet,
-        start_field_name: str,
-        end_field_name: str,
-    ) -> tuple[date, date]:
+        start_field: ApplicationField,
+        end_field: ApplicationField,
+    ) -> tuple[datetime, datetime]:
         bounds = queryset.aggregate(
-            gant_start=Min(start_field_name),
-            gant_end=Max(end_field_name),
+            gant_start=Min(start_field.field),
+            gant_end=Max(end_field.field),
         )
-        timeline_start = cls._as_date(bounds["gant_start"])
-        timeline_end = cls._as_date(bounds["gant_end"])
-        today = date.today()
+        timeline_start = cls._as_datetime(bounds["gant_start"])
+        timeline_end = cls._as_datetime(
+            bounds["gant_end"],
+            end_of_date=end_field.field_type == "DateField",
+        )
+        now = timezone.localtime()
 
         if timeline_start is None and timeline_end is None:
-            return today, today
+            return now, now + timedelta(hours=1)
         if timeline_start is None:
             timeline_start = timeline_end
         if timeline_end is None:
@@ -188,36 +190,35 @@ class GantDataviewRenderer(BaseDataviewRenderer):
     def _build_row(
         cls,
         obj,
-        start_field_name: str,
-        end_field_name: str,
-        timeline_start: date,
-        total_days: int,
+        start_field: ApplicationField,
+        end_field: ApplicationField,
         dependency_from_field,
         dependency_for_field,
     ) -> dict[str, Any]:
-        item_start = cls._as_date(getattr(obj, start_field_name, None))
-        item_end = cls._as_date(getattr(obj, end_field_name, None))
+        start_value = getattr(obj, start_field.field, None)
+        end_value = getattr(obj, end_field.field, None)
+        item_start = cls._as_datetime(start_value)
+        item_end = cls._as_datetime(
+            end_value,
+            end_of_date=end_field.field_type == "DateField",
+        )
         scheduled = item_start is not None and item_end is not None
 
         if scheduled:
             if item_end < item_start:
                 item_end = item_start
-            start_offset = max((item_start - timeline_start).days, 0)
-            duration = max((item_end - item_start).days + 1, 1)
-            left = (start_offset / total_days) * 100
-            width = max((duration / total_days) * 100, 0.6)
-            width = min(width, 100 - left)
-        else:
-            left = 0
-            width = 0
 
         return {
             "object": obj,
-            "start": item_start,
-            "end": item_end,
+            "start": start_value,
+            "end": end_value,
             "scheduled": scheduled,
-            "left": f"{left:.4f}",
-            "width": f"{width:.4f}",
+            "start_ms": cls._to_milliseconds(item_start),
+            "end_ms": cls._to_milliseconds(item_end),
+            "shows_time": (
+                start_field.field_type == "DateTimeField"
+                or end_field.field_type == "DateTimeField"
+            ),
             "dependency_from_id": cls._related_object_id(obj, dependency_from_field),
             "dependency_for_id": cls._related_object_id(obj, dependency_for_field),
         }
@@ -234,30 +235,24 @@ class GantDataviewRenderer(BaseDataviewRenderer):
         return "" if value is None else str(value)
 
     @staticmethod
-    def _as_date(value) -> date | None:
+    def _as_datetime(value, *, end_of_date: bool = False) -> datetime | None:
+        """Normalize date values without discarding DateTimeField precision."""
         if isinstance(value, datetime):
-            return value.date()
-        if isinstance(value, date):
-            return value
-        return None
+            result = value
+        elif isinstance(value, date):
+            result = datetime.combine(value, time.min)
+            if end_of_date:
+                result += timedelta(days=1)
+        else:
+            return None
+
+        if timezone.is_naive(result):
+            result = timezone.make_aware(result, timezone.get_current_timezone())
+        return result
 
     @staticmethod
-    def _build_ticks(
-        timeline_start: date,
-        timeline_end: date,
-        total_days: int,
-    ) -> list[dict[str, Any]]:
-        step_days = max(1, ceil(total_days / 10))
-        ticks = []
-        current = timeline_start
-        while current <= timeline_end:
-            offset = (current - timeline_start).days
-            ticks.append({"date": current, "left": f"{(offset / total_days) * 100:.4f}"})
-            current += timedelta(days=step_days)
-
-        if not ticks or ticks[-1]["date"] != timeline_end:
-            ticks.append({
-                "date": timeline_end,
-                "left": f"{((total_days - 1) / total_days) * 100:.4f}",
-            })
-        return ticks
+    def _to_milliseconds(value: datetime | None) -> int | None:
+        """Return a browser-friendly Unix timestamp in milliseconds."""
+        if value is None:
+            return None
+        return round(value.timestamp() * 1000)

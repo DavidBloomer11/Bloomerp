@@ -1,7 +1,8 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import Permission
 from bloomerp.tests.base import BaseBloomerpModelTestCase
@@ -769,6 +770,8 @@ class TestGantDataView(BaseBloomerpModelTestCase):
                     "name": models.CharField(max_length=100),
                     "starts_on": models.DateField(null=True, blank=True),
                     "ends_on": models.DateField(null=True, blank=True),
+                    "starts_at": models.DateTimeField(null=True, blank=True),
+                    "ends_at": models.DateTimeField(null=True, blank=True),
                     "dependency": models.ForeignKey(
                         "self",
                         null=True,
@@ -783,10 +786,22 @@ class TestGantDataView(BaseBloomerpModelTestCase):
         )["GantTask"]
         cls._register_dynamic_model_routes([cls.GantTaskModel])
 
-    def _configure_gant(self, *, page_size: int = 10, with_dependency: bool = False):
+    def _configure_gant(
+        self,
+        *,
+        page_size: int = 10,
+        with_dependency: bool = False,
+        with_times: bool = False,
+    ):
         content_type = ContentType.objects.get_for_model(self.GantTaskModel)
-        start_field = ApplicationField.get_by_field(self.GantTaskModel, "starts_on")
-        end_field = ApplicationField.get_by_field(self.GantTaskModel, "ends_on")
+        start_field = ApplicationField.get_by_field(
+            self.GantTaskModel,
+            "starts_at" if with_times else "starts_on",
+        )
+        end_field = ApplicationField.get_by_field(
+            self.GantTaskModel,
+            "ends_at" if with_times else "ends_on",
+        )
         name_field = ApplicationField.get_by_field(self.GantTaskModel, "name")
         dependency_field = ApplicationField.get_by_field(self.GantTaskModel, "dependency")
         preference = get_user_list_view_preference(self.admin_user, content_type)
@@ -807,7 +822,7 @@ class TestGantDataView(BaseBloomerpModelTestCase):
         preference.save()
         return content_type, dependency_field
 
-    def test_gant_dataview_renders_scaled_rows_and_dependencies(self):
+    def test_gant_dataview_renders_continuous_rows_and_dependencies(self):
         """
         Use case: A configured Gantt view contains related, scheduled records.
         Expected result: Each record renders on the shared timeline with its dependency metadata.
@@ -834,15 +849,51 @@ class TestGantDataView(BaseBloomerpModelTestCase):
         )
         response = self.client.get(url, HTTP_HX_REQUEST="true")
 
-        # 3. Verify the timeline, bars, sidebar values, and dependency endpoint render.
+        # 3. Verify the continuous timeline, zoom controls, rows, and dependency endpoint render.
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'bloomerp-component="gant-chart"', html=False)
         self.assertContains(response, 'bloomerp-component="gant-chart-item"', count=2, html=False)
-        self.assertContains(response, 'style="left: 0.0000%; width: 50.0000%;"', html=False)
-        self.assertContains(response, 'style="left: 20.0000%; width: 80.0000%;"', html=False)
+        self.assertContains(response, "data-gant-zoom", html=False)
+        self.assertContains(response, "data-gant-today", html=False)
+        self.assertContains(response, "data-start=", count=2, html=False)
+        self.assertContains(response, "data-end=", count=2, html=False)
+        discovery_start = timezone.make_aware(datetime(2026, 1, 1)).timestamp() * 1000
+        discovery_end = timezone.make_aware(datetime(2026, 1, 11)).timestamp() * 1000
+        self.assertContains(response, f'data-start="{round(discovery_start)}"', html=False)
+        self.assertContains(response, f'data-end="{round(discovery_end)}"', html=False)
         self.assertContains(response, f'data-dependency-from-id="{first.pk}"', html=False)
         self.assertContains(response, "Discovery", html=False)
         self.assertContains(response, "Delivery", html=False)
+
+    def test_gant_dataview_preserves_datetime_precision_for_hour_zoom(self):
+        """
+        Use case: An event plan uses DateTimeFields within a single day.
+        Expected result: Gantt data preserves exact times for hour-level positioning.
+        """
+        # 1. Configure DateTimeFields and create a ninety-minute event task.
+        self.client.force_login(self.admin_user)
+        content_type, _dependency_field = self._configure_gant(with_times=True)
+        start = timezone.make_aware(datetime(2026, 7, 17, 13, 15))
+        end = timezone.make_aware(datetime(2026, 7, 17, 14, 45))
+        self.GantTaskModel.objects.create(
+            name="Stage setup",
+            starts_at=start,
+            ends_at=end,
+        )
+
+        # 2. Request the Gantt component.
+        url = reverse(
+            "components_data_view",
+            kwargs={"content_type_id": content_type.id},
+        )
+        response = self.client.get(url, HTTP_HX_REQUEST="true")
+
+        # 3. Verify timestamps retain the minutes instead of being reduced to dates.
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, f'data-start="{round(start.timestamp() * 1000)}"', html=False)
+        self.assertContains(response, f'data-end="{round(end.timestamp() * 1000)}"', html=False)
+        self.assertContains(response, "Jul 17, 2026 13:15", html=False)
+        self.assertContains(response, "Jul 17, 2026 14:45", html=False)
 
     def test_gant_dataview_loads_additional_rows_by_intersection_page(self):
         """
