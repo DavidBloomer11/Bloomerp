@@ -18,8 +18,8 @@ from bloomerp.models import ApplicationField, File, FileFolder
 from bloomerp.models.users.user_list_view_preference import UserListViewPreference
 from bloomerp.router import router
 from bloomerp.services.file_services import ensure_folder_hierarchy_for_object
-from bloomerp.services.permission_services import UserPermissionManager
-from bloomerp.services.permission_services import create_permission_str
+from bloomerp.permissions.manager import UserPermissionManager
+from bloomerp.permissions.manager import create_permission_str
 from bloomerp.utils.filters import filter_model
 
 

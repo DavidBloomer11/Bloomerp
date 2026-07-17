@@ -12,6 +12,8 @@ from django.db.models import QuerySet
 from bloomerp.models.mixins.user_stamp_model_mixin import UserStampModelMixin
 from bloomerp.models.users.user import AbstractBloomerpUser
 from bloomerp.models.mixins import absolute_url_model_mixin
+from bloomerp.models.application_field import ApplicationField
+from bloomerp.permissions.definition import AccessRule, RowPolicyRuleContent
 
 class Policy(
     TimestampModelMixin,
@@ -146,4 +148,44 @@ class Policy(
         group_qs = self.groups.all()
         return User.objects.filter(models.Q(pk__in=direct_user_ids) | models.Q(groups__in=group_qs)).distinct()
     
-    
+    def to_access_rule(self) -> AccessRule:
+        """Creates an access rule out of the policy
+
+        Returns:
+            AccessRule: the access rule that exists from the policy
+        """
+        row_permissions = []
+        if self.row_policy_id:
+            for rule in self.row_policy.rules.all():
+                try:
+                    row_permissions.append(
+                        RowPolicyRuleContent.model_validate(rule.rule)
+                    )
+                except Exception:
+                    continue
+
+        field_permissions = {}
+        if self.field_policy_id and isinstance(self.field_policy.rule, dict):
+            for field_id, permissions in self.field_policy.rule.items():
+                if field_id == "__all__":
+                    for application_field_id in ApplicationField.objects.filter(
+                        content_type=self.field_policy.content_type
+                    ).values_list("pk", flat=True):
+                        key = str(application_field_id)
+                        field_permissions[key] = list(
+                            dict.fromkeys(
+                                [*field_permissions.get(key, []), *(permissions or [])]
+                            )
+                        )
+                else:
+                    key = str(field_id)
+                    field_permissions[key] = list(
+                        dict.fromkeys(
+                            [*field_permissions.get(key, []), *(permissions or [])]
+                        )
+                    )
+
+        return AccessRule(
+            row_permissions=row_permissions,
+            field_permissions=field_permissions,
+        )

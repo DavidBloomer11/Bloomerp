@@ -6,6 +6,8 @@ import pandas as pd
 
 from bloomerp.models import ApplicationField
 from bloomerp.models.users.user import AbstractBloomerpUser
+from bloomerp.permissions.definition import BloomerpPermission
+from bloomerp.permissions.manager import UserPolicyManager
 from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
 from bloomerp.utils.sql import SqlQueryExecutor
 from bloomerp.workspaces.analytics_tile.utils import TileFieldType, get_primitive_field_icon, to_primitive_field_type
@@ -66,11 +68,12 @@ class SqlExecutor:
     """
     Class for executing SQL query within the app.
     """
+    REQUIRED_PERMISSION = BloomerpPermission.VIEW
+
     def __init__(self, user: AbstractBloomerpUser | None = None):
         self.user = user
         self.permission_manager = UserPermissionManager(user) if user is not None else None
-        
-     
+
     def get_accessible_tables_and_fields(self) -> list[DatabaseTable]:
         """Returns the accessible tables and fields for 
         the user.
@@ -78,59 +81,29 @@ class SqlExecutor:
         Returns:
             list[DatabaseTable]: list of database tables with fields
         """
-        if self.user is None or self.permission_manager is None:
-            return []
+        policy_manager = UserPolicyManager(self.user)
+        models_and_fields = policy_manager.get_accessible_models_and_fields(self.REQUIRED_PERMISSION)
 
-        content_types = self.user.get_content_types_for_user(permission_types=["view"])
-        if not content_types.exists():
-            return []
-
-        tables: dict[str, DatabaseTable] = {}
-
-        for content_type in content_types:
-            model_cls = content_type.model_class()
-            if not model_cls:
-                continue
-
-            permission_str = create_permission_str(model_cls, "view")
-            accessible_fields_qs = self.permission_manager.get_accessible_fields(content_type, permission_str)
-            accessible_field_ids = set(accessible_fields_qs.values_list("id", flat=True))
-
-            app_fields = ApplicationField.objects.filter(
-                content_type=content_type,
-                db_table__isnull=False,
-                db_column__isnull=False,
-            ).exclude(db_table="").exclude(db_column="")
-
-            if not self.user.is_superuser:
-                app_fields = app_fields.filter(id__in=accessible_field_ids)
-
-            if not app_fields.exists():
-                continue
-
-            for app_field in app_fields:
-                table_name = app_field.db_table
-                if table_name not in tables:
-                    tables[table_name] = DatabaseTable(
-                        name=table_name,
-                        content_type_id=content_type.id,
-                        fields=[],
-                    )
-
-                tables[table_name].fields.append(
+        tables: list[DatabaseTable] = []
+        for model, fields in models_and_fields.items():
+            table_name = model._meta.db_table
+            field_list: list[Field] = []
+            for field in fields:
+                field_list.append(
                     Field(
-                        name=app_field.db_column,
-                        field_type=app_field.db_field_type or app_field.field_type,
-                        icon=self._field_icon(app_field.field_type),
-                        permissions=[permission_str],
+                        name=field.field,
+                        field_type=field.field_type,
+                        icon=get_primitive_field_icon(field.field_type),
                     )
                 )
+            tables.append(
+                DatabaseTable(
+                    name=table_name,
+                    fields=field_list,
+                )
+            )
 
-        for table in tables.values():
-            table.fields = sorted(table.fields, key=lambda field: field.name.lower())
-
-        return sorted(tables.values(), key=lambda table: table.name.lower())
-    
+        return tables
 
     def execute_query(self, query:str, page:int = 1, page_size:int = 25, paginate: bool = True) -> SqlQueryResponse:
         """Executes the sql query, with included
@@ -147,19 +120,15 @@ class SqlExecutor:
         if not self.is_safe(normalized_query):
             raise ValueError("Only safe read-only SELECT/WITH queries are allowed")
 
+        query_params: tuple[Any, ...] = ()
         if self.user is not None:
-            allowed_tables = {table.name for table in self.get_accessible_tables_and_fields()}
-            referenced_tables = self._extract_referenced_tables(normalized_query)
-            blocked_tables = [
-                table_name
-                for table_name in referenced_tables
-                if table_name not in allowed_tables and table_name.split(".")[-1] not in allowed_tables
-            ]
+            policy_manager = UserPolicyManager(self.user)
+            compiled_query = policy_manager.get_accessible_sql_query(normalized_query)
+            normalized_query = compiled_query.query
+            query_params = compiled_query.params
 
-            if blocked_tables:
-                blocked_list = ", ".join(sorted(set(blocked_tables)))
-                raise PermissionError(f"You do not have access to table(s): {blocked_list}")
-
+            print(normalized_query)
+        
         executor = SqlQueryExecutor()
         query_without_semicolon = normalized_query.rstrip(";")
         started_at = time.perf_counter()
@@ -173,7 +142,12 @@ class SqlExecutor:
                 "SELECT COUNT(*) AS total_count "
                 f"FROM ({query_without_semicolon}) AS bloomerp_sql_count_subquery"
             )
-            count_result = executor.execute_to_dict(count_query, safe=True, use_cache=False)
+            count_result = executor.execute_to_dict(
+                count_query,
+                params=query_params,
+                safe=True,
+                use_cache=False,
+            )
             count_rows = count_result.get("rows", [])
             total_row_count = int(count_rows[0][0] or 0) if count_rows else 0
 
@@ -193,7 +167,12 @@ class SqlExecutor:
             total_row_count = 0
             execution_query = query_without_semicolon
 
-        result = executor.execute_to_dict(execution_query, safe=True, use_cache=False)
+        result = executor.execute_to_dict(
+            execution_query,
+            params=query_params,
+            safe=True,
+            use_cache=False,
+        )
         elapsed_ms = int((time.perf_counter() - started_at) * 1000)
 
         columns = result.get("columns", [])
@@ -209,8 +188,7 @@ class SqlExecutor:
         policy_message = None
         if self.user is not None and not self.user.is_superuser:
             policy_message = (
-                "Results are limited to accessible tables and fields for your user. "
-                "Row policies are enforced in ORM views and may further restrict accessible records."
+                "Results are limited by table, row, and field policies for your user."
             )
 
         return SqlQueryResponse(
@@ -233,7 +211,6 @@ class SqlExecutor:
                 ],
             ),
         )
-        
         
     def is_safe(self, query:str) -> bool:
         """Checks whether a query is deemed to be safe.
@@ -264,21 +241,6 @@ class SqlExecutor:
         )
 
         return disallowed is None
-
-    
-    def _extract_referenced_tables(self, query: str) -> set[str]:
-        matches = re.findall(r"\b(?:from|join)\s+([\w\.\"]+)", query, flags=re.IGNORECASE)
-        cte_matches = re.findall(r"(?:\bwith|,)\s+([\w\"]+)\s+as\s*\(", query, flags=re.IGNORECASE)
-        cte_names = {match.strip().strip('"') for match in cte_matches}
-        normalized_tables: set[str] = set()
-
-        for match in matches:
-            table_name = match.strip().strip('"')
-            if table_name and table_name not in cte_names:
-                normalized_tables.add(table_name)
-
-        return normalized_tables
-
 
     def _field_icon(self, field_type: str | None) -> str:
         """Returns the icon that corresponds to the primitive analytics field type."""

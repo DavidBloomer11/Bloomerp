@@ -101,6 +101,34 @@ class TestApplicationField(BaseBloomerpModelTestCase):
 
         self.assertIsNotNone(widget)
 
+    def test_resolve_for_content_type_accepts_name_and_application_field(self):
+        content_type = ContentType.objects.get_for_model(self.CustomerModel)
+        application_field = ApplicationField.objects.get(
+            content_type=content_type,
+            field="first_name",
+        )
+
+        self.assertEqual(
+            ApplicationField.resolve_for_content_type(content_type, "first_name"),
+            application_field,
+        )
+        self.assertEqual(
+            ApplicationField.resolve_for_content_type(content_type, application_field),
+            application_field,
+        )
+
+    def test_resolve_for_content_type_rejects_field_from_another_model(self):
+        customer_content_type = ContentType.objects.get_for_model(self.CustomerModel)
+        policy_field = ApplicationField.objects.filter(
+            content_type=ContentType.objects.get_for_model(Policy),
+        ).first()
+
+        with self.assertRaisesMessage(ValueError, "belongs to a different content type"):
+            ApplicationField.resolve_for_content_type(
+                customer_content_type,
+                policy_field,
+            )
+
     def test_pk_application_field_returns_form_field(self):
         content_type = ContentType.objects.get_for_model(Policy)
         application_field = ApplicationField.objects.get(
