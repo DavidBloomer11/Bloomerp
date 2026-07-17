@@ -6,6 +6,7 @@
     hx-vals='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'
     hx-vars='js:{operation: "set_form"}'
     hx-trigger="change delay:200ms"
+    hx-target="#tile-preview-section"
     >
     
     {% csrf_token %}

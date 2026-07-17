@@ -1,41 +1,35 @@
 from django.http import HttpRequest
-from django.contrib.contenttypes.models import ContentType
 
 from bloomerp.components.objects.dataviews.dataview import data_view
-from bloomerp.models.users.user import User
+from bloomerp.models.users.user_list_view_preference import UserListViewPreference
+from bloomerp.services.preference_services import PreferenceManager
 from bloomerp.workspaces.base import BaseTileRenderer
-from bloomerp.workspaces.dataview_tile.model import DataViewTileConfig, build_preview_preference
+from bloomerp.workspaces.dataview_tile.model import DataViewTileConfig
+
 
 class DataViewTileRenderer(BaseTileRenderer):
-
     @classmethod
-    def render(cls, config: DataViewTileConfig, user:User, query_params) -> str:
-        """
-        Render the data view tile based on the provided configuration.
+    def render(cls, config: DataViewTileConfig, request: HttpRequest) -> str:
+        """Render a permission-aware data view from the tile configuration."""
+        if config.content_type_id is None:
+            return ""
 
-        Args:
-            config (DataViewTileConfig): The configuration for the data view tile.
-
-        Returns:
-            str: The rendered HTML for the data view tile.
-        """
-        content_type = ContentType.objects.filter(id=config.content_type_id).first()
-        
-
-        request = HttpRequest()
-        request.user = user
-        request.method = "GET"
-        if query_params is not None:
-            request.GET = query_params.copy()
-
+        preference = None
+        if config.list_view_preference_id is not None:
+            preference = (
+                PreferenceManager(request.user)
+                .get_available(
+                    UserListViewPreference,
+                    {"content_type_id": config.content_type_id},
+                )
+                .filter(pk=config.list_view_preference_id)
+                .first()
+            )
+            if preference is not None:
+                preference = preference.effective_preference
 
         return data_view(
-            request, 
+            request,
             content_type_id=config.content_type_id,
+            preference=preference,
         ).content.decode("utf-8")
-
-        
-
-
-
-        

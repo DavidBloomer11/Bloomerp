@@ -58,12 +58,17 @@ class DataViewQueryState:
     count: int = 0
 
 
-def _build_data_view_query_state(request: HttpRequest, content_type_id: int) -> DataViewQueryState | HttpResponse:
+def _build_data_view_query_state(
+    request: HttpRequest,
+    content_type_id: int,
+    preference: UserListViewPreference | None = None,
+) -> DataViewQueryState | HttpResponse:
     """Builds the dataview query state
 
     Args:
         request (HttpRequest): the request object
         content_type_id (int): the content type id
+        preference: An explicit available preference, or the user's selected preference.
 
     Returns:
         DataViewQueryState | HttpResponse: _description_
@@ -79,9 +84,13 @@ def _build_data_view_query_state(request: HttpRequest, content_type_id: int) -> 
     queryset = permission_manager.get_queryset(Model, create_permission_str(Model, "view"))
     
     # Get preference and options
-    preference = PreferenceManager(request.user).get_or_create_selected(UserListViewPreference, {
-        "content_type_id": content_type.id,
-    })
+    if preference is None:
+        preference = PreferenceManager(request.user).get_or_create_selected(
+            UserListViewPreference,
+            {"content_type_id": content_type.id},
+        )
+    elif preference.content_type_id != content_type.id:
+        return HttpResponse("Invalid list view preference", status=400)
     dataview_options = _get_data_view_options(preference)
     data_view_fields = get_data_view_fields(preference)
     avatar_field, data_view_render_fields = _split_avatar_field(data_view_fields)
@@ -446,7 +455,11 @@ def _render_data_view_body(
     path="components/data_view/<int:content_type_id>/",
     name="components_data_view",
 )
-def data_view(request: HttpRequest, content_type_id: int) -> HttpResponse:
+def data_view(
+    request: HttpRequest,
+    content_type_id: int,
+    preference: UserListViewPreference | None = None,
+) -> HttpResponse:
     """
     Renders the data table component. A data table is a table that takes in a content type 
     id and renders a table of the corresponding model's data.
@@ -455,7 +468,7 @@ def data_view(request: HttpRequest, content_type_id: int) -> HttpResponse:
     - permissions management
     - string searching
     """
-    state = _build_data_view_query_state(request, content_type_id)
+    state = _build_data_view_query_state(request, content_type_id, preference)
     if isinstance(state, HttpResponse):
         return state
     
