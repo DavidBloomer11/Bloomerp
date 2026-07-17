@@ -7,6 +7,7 @@
     data-preference-url="{% url 'components_change_data_view_preference' content_type_id=content_type_id %}"
     data-view-type="{{ preference.view_type }}"
     data-split-view-enabled="{{ preference.split_view_enabled }}"
+    class="max-h-[60vh] overflow-y-auto"
 >
     <!-- View Switcher -->
     <div class="bg-base p-2 rounded-xl flex mb-4 overflow-x-scroll no-scrollbar gap-2">
@@ -78,6 +79,7 @@
         </div>
     </div>
 
+    {% if preference.should_display_field_options %}
     <!-- Field Visibility Options -->
     <div class="mb-4">
         <h3 class="text-sm font-medium text-gray-900 mb-2">Visible fields</h3>
@@ -103,5 +105,7 @@
             {% endfor %}
         </div>
     </div>
+    
+    {% endif %}
 
 </div>

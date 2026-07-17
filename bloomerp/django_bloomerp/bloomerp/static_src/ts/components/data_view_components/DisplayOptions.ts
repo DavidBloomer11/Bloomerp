@@ -141,4 +141,6 @@ export class DataViewDisplayOptions extends BaseComponent {
             window.clearTimeout(this.changeTimer);
         }
     }
+
+    
 }

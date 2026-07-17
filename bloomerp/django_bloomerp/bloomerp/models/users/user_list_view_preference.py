@@ -648,6 +648,14 @@ class UserListViewPreference(BaseViewPreference):
         self.display_fields[view_type] = current_fields
         return is_visible
     
-    
+    @property
+    def should_display_field_options(self) -> bool:
+        """Determines if field visibility options should be displayed for the current view type.
+
+        Returns:
+            bool: True if field visibility options should be shown, False otherwise.
+        """
+        view_type_def = ViewTypeEnum.from_key(self.view_type)
+        return view_type_def.requires_display_fields
     
     
