@@ -14,7 +14,7 @@ from bloomerp.dataviews.gant import GantDataviewRenderer
 from bloomerp.dataviews.kanban import KanbanDataviewRenderer
 from bloomerp.dataviews.pivot_table import PivotTableDataviewRenderer
 from bloomerp.dataviews.table import TableDataviewRenderer
-from pydantic import BaseModel, create_model
+from pydantic import BaseModel, create_model, model_validator
 from dataclasses import dataclass, field
 from django import forms
 from pydantic import Field as PydanticField
@@ -239,13 +239,29 @@ class PivotTableDataviewOptions(BaseModel):
 
     row_field_ids: list[int] = PydanticField(default_factory=list)
     column_field_ids: list[int] = PydanticField(default_factory=list)
-    value_field_id: int | None = None
+    value_field_ids: list[int] = PydanticField(default_factory=list)
     aggregation: str = "count"
     show_row_totals: bool = True
     show_column_totals: bool = True
     totals_scope: str = "page"
     page_size: int = PageSize.SIZE_25
-    
+
+    @model_validator(mode="before")
+    @classmethod
+    def migrate_single_value_field(cls, data: Any) -> Any:
+        """Preserve pivot preferences saved before values became multi-select."""
+        if not isinstance(data, dict) or data.get("value_field_ids"):
+            return data
+
+        value_field_id = data.get("value_field_id")
+        if value_field_id in (None, ""):
+            return data
+
+        migrated = dict(data)
+        migrated["value_field_ids"] = [value_field_id]
+        return migrated
+
+
 class ViewTypeEnum(Enum):
     TABLE = ViewTypeDefinition(
         key="table",
@@ -460,13 +476,13 @@ class ViewTypeEnum(Enum):
                 default_value=[],
             ),
             PreferenceOption(
-                key="value_field_id",
+                key="value_field_ids",
                 label="Values",
-                field_cls=forms.TypedChoiceField,
-                field_attrs_func=_group_by_field_choices,
-                description="The field used for pivot values.",
-                data_type=int | None,
-                default_value=None,
+                field_cls=forms.MultipleChoiceField,
+                field_attrs_func=_application_field_multiple_choices,
+                description="Fields aggregated into the leaf columns of the pivot table.",
+                data_type=list[int],
+                default_value=[],
             ),
             PreferenceOption(
                 key="aggregation",

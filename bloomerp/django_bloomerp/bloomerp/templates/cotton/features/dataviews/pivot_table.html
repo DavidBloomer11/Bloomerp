@@ -29,12 +29,14 @@
                 </th>
                 {% endfor %}
                 {% if forloop.first and pivot_show_row_totals %}
-                <th
-                    rowspan="{{ pivot_result.header_rows|length }}"
-                    class="min-w-32 border-l border-gray-200 px-3 py-2 text-right font-semibold text-dark"
-                >
-                    <c-i18n.blocktrans>Total</c-i18n.blocktrans>
-                </th>
+                    {% for value_header in pivot_result.value_headers %}
+                    <th
+                        rowspan="{{ pivot_result.header_rows|length }}"
+                        class="min-w-32 border-l border-gray-200 px-3 py-2 text-right font-semibold text-dark"
+                    >
+                        <c-i18n.blocktrans>Total {{ value_header }}</c-i18n.blocktrans>
+                    </th>
+                    {% endfor %}
                 {% endif %}
             </tr>
             {% endfor %}
@@ -75,9 +77,11 @@
                 </td>
                 {% endfor %}
                 {% if pivot_show_row_totals %}
-                <td class="border-l border-gray-200 px-3 py-2 text-right font-semibold tabular-nums text-dark">
-                    {{ row.total|default_if_none:"—" }}
-                </td>
+                    {% for value in row.totals %}
+                    <td class="border-l border-gray-200 px-3 py-2 text-right font-semibold tabular-nums text-dark">
+                        {{ value|default_if_none:"—" }}
+                    </td>
+                    {% endfor %}
                 {% endif %}
             </tr>
             {% empty %}
@@ -100,9 +104,11 @@
                 </td>
                 {% endfor %}
                 {% if pivot_show_row_totals %}
-                <td class="border-l border-gray-200 px-3 py-2 text-right tabular-nums text-dark">
-                    {{ pivot_result.grand_total|default_if_none:"—" }}
-                </td>
+                    {% for value in pivot_result.grand_totals %}
+                    <td class="border-l border-gray-200 px-3 py-2 text-right tabular-nums text-dark">
+                        {{ value|default_if_none:"—" }}
+                    </td>
+                    {% endfor %}
                 {% endif %}
             </tr>
         </tfoot>

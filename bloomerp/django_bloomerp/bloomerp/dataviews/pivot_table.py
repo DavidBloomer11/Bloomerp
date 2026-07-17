@@ -46,6 +46,13 @@ class PivotField:
 
 
 @dataclass(frozen=True)
+class PivotValueField(PivotField):
+    """A pivot value field paired with its requested aggregation."""
+
+    aggregation: str = "count"
+
+
+@dataclass(frozen=True)
 class PivotHeaderCell:
     label: str
     colspan: int
@@ -60,7 +67,7 @@ class PivotRow:
     label: str
     depth: int
     values_by_column: dict[tuple[Any, ...], Any] = field(default_factory=dict)
-    total: Any = None
+    totals: list[Any] = field(default_factory=list)
     children: list["PivotRow"] = field(default_factory=list)
     row_id: str = ""
     parent_id: str = ""
@@ -76,10 +83,11 @@ class PivotTableResult:
     """Template-ready result produced from database aggregate queries."""
 
     header_rows: list[list[PivotHeaderCell]]
+    value_headers: list[str]
     rows: list[PivotRow]
     column_totals: list[Any]
-    grand_total: Any
-    effective_aggregation: str
+    grand_totals: list[Any]
+    effective_aggregations: list[str]
 
 
 @dataclass
@@ -93,8 +101,7 @@ class PivotTable:
     queryset: QuerySet
     row_fields: list[PivotField]
     column_fields: list[PivotField]
-    value_field: PivotField
-    aggregation: str = "count"
+    value_fields: list[PivotValueField]
     show_row_totals: bool = True
     show_column_totals: bool = True
     totals_scope: str = "page"
@@ -102,9 +109,22 @@ class PivotTable:
 
     def build(self, top_level_values: Iterable[Any]) -> PivotTableResult:
         self._prepare_related_labels()
-        effective_aggregation = self._effective_aggregation()
+        effective_aggregations = [
+            self._effective_aggregation(value_field)
+            for value_field in self.value_fields
+        ]
+        value_headers = [
+            self._value_header(value_field, effective_aggregations[value_index])
+            for value_index, value_field in enumerate(self.value_fields)
+        ]
+        aggregate_expressions = self._aggregate_expressions(effective_aggregations)
         page_queryset = self._filter_top_level_rows(top_level_values)
         column_paths, raw_column_paths = self._column_paths()
+        leaf_column_paths = [
+            (*column_path, value_index)
+            for column_path in column_paths
+            for value_index in range(len(self.value_fields))
+        ]
         nodes_by_path: dict[tuple[Any, ...], PivotRow] = {}
         root_rows: list[PivotRow] = []
 
@@ -113,7 +133,7 @@ class PivotTable:
             group_names = [item.name for item in row_fields + self.column_fields]
             grouped = (
                 page_queryset.values(*group_names)
-                .annotate(pivot_value=self._aggregate_expression(effective_aggregation))
+                .annotate(**aggregate_expressions)
                 .order_by(*group_names)
             )
 
@@ -139,14 +159,16 @@ class PivotTable:
                 raw_column_path = tuple(
                     item[pivot_field.name] for pivot_field in self.column_fields
                 )
-                node.values_by_column[
-                    tuple(_hashable(value) for value in raw_column_path)
-                ] = item["pivot_value"]
+                column_path = tuple(_hashable(value) for value in raw_column_path)
+                for value_index in range(len(self.value_fields)):
+                    node.values_by_column[(*column_path, value_index)] = item[
+                        f"pivot_value_{value_index}"
+                    ]
 
             if self.show_row_totals:
                 totals = (
                     page_queryset.values(*(item.name for item in row_fields))
-                    .annotate(pivot_value=self._aggregate_expression(effective_aggregation))
+                    .annotate(**aggregate_expressions)
                     .order_by()
                 )
                 for item in totals:
@@ -154,7 +176,10 @@ class PivotTable:
                         _hashable(item[pivot_field.name]) for pivot_field in row_fields
                     )
                     if row_path in nodes_by_path:
-                        nodes_by_path[row_path].total = item["pivot_value"]
+                        nodes_by_path[row_path].totals = [
+                            item[f"pivot_value_{value_index}"]
+                            for value_index in range(len(self.value_fields))
+                        ]
 
         flattened_rows: list[PivotRow] = []
 
@@ -162,7 +187,7 @@ class PivotTable:
             for index, row in enumerate(rows):
                 row.row_id = f"{parent_id}.{index}" if parent_id else str(index)
                 row.parent_id = parent_id
-                row.cells = [row.values_by_column.get(path) for path in column_paths]
+                row.cells = [row.values_by_column.get(path) for path in leaf_column_paths]
                 flattened_rows.append(row)
                 flatten(row.children, row.row_id)
 
@@ -170,23 +195,30 @@ class PivotTable:
 
         totals_queryset = self.queryset if self.totals_scope == "dataset" else page_queryset
         column_totals: list[Any] = []
-        grand_total = None
+        grand_totals: list[Any] = []
         if self.show_column_totals:
             column_totals = self._column_totals(
                 totals_queryset,
                 column_paths,
-                effective_aggregation,
+                aggregate_expressions,
             )
-            grand_total = totals_queryset.aggregate(
-                pivot_value=self._aggregate_expression(effective_aggregation)
-            )["pivot_value"]
+            aggregate_totals = totals_queryset.aggregate(**aggregate_expressions)
+            grand_totals = [
+                aggregate_totals[f"pivot_value_{value_index}"]
+                for value_index in range(len(self.value_fields))
+            ]
 
         return PivotTableResult(
-            header_rows=self._header_rows(column_paths, raw_column_paths),
+            header_rows=self._header_rows(
+                column_paths,
+                raw_column_paths,
+                value_headers,
+            ),
+            value_headers=value_headers,
             rows=flattened_rows,
             column_totals=column_totals,
-            grand_total=grand_total,
-            effective_aggregation=effective_aggregation,
+            grand_totals=grand_totals,
+            effective_aggregations=effective_aggregations,
         )
 
     def _filter_top_level_rows(self, values: Iterable[Any]) -> QuerySet:
@@ -223,64 +255,101 @@ class PivotTable:
         self,
         queryset: QuerySet,
         column_paths: list[tuple[Any, ...]],
-        aggregation: str,
+        aggregate_expressions: dict[str, Any],
     ) -> list[Any]:
         if not self.column_fields:
-            value = queryset.aggregate(
-                pivot_value=self._aggregate_expression(aggregation)
-            )["pivot_value"]
-            return [value]
+            totals = queryset.aggregate(**aggregate_expressions)
+            return [
+                totals[f"pivot_value_{value_index}"]
+                for value_index in range(len(self.value_fields))
+            ]
 
         names = [item.name for item in self.column_fields]
         grouped = (
             queryset.values(*names)
-            .annotate(pivot_value=self._aggregate_expression(aggregation))
+            .annotate(**aggregate_expressions)
             .order_by()
         )
         totals = {
-            tuple(_hashable(item[name]) for name in names): item["pivot_value"]
+            tuple(_hashable(item[name]) for name in names): [
+                item[f"pivot_value_{value_index}"]
+                for value_index in range(len(self.value_fields))
+            ]
             for item in grouped
         }
-        return [totals.get(path) for path in column_paths]
+        return [
+            value
+            for path in column_paths
+            for value in totals.get(path, [None] * len(self.value_fields))
+        ]
 
     def _header_rows(
         self,
         column_paths: list[tuple[Any, ...]],
         raw_by_path: dict[tuple[Any, ...], tuple[Any, ...]],
+        value_headers: list[str],
     ) -> list[list[PivotHeaderCell]]:
         if not self.column_fields:
-            return [[PivotHeaderCell(self.value_field.title, 1)]]
+            return [[PivotHeaderCell(value_header, 1) for value_header in value_headers]]
 
         rows: list[list[PivotHeaderCell]] = []
+        value_count = len(self.value_fields)
         for depth, pivot_field in enumerate(self.column_fields):
             cells: list[PivotHeaderCell] = []
             previous_prefix: tuple[Any, ...] | None = None
             for path in column_paths:
                 prefix = path[: depth + 1]
                 if prefix == previous_prefix:
-                    cells[-1] = PivotHeaderCell(cells[-1].label, cells[-1].colspan + 1)
+                    cells[-1] = PivotHeaderCell(
+                        cells[-1].label,
+                        cells[-1].colspan + value_count,
+                    )
                     continue
                 raw_value = raw_by_path[path][depth]
                 cells.append(PivotHeaderCell(
                     self._format_dimension_value(pivot_field, raw_value),
-                    1,
+                    value_count,
                 ))
                 previous_prefix = prefix
             rows.append(cells)
+        if value_count > 1:
+            rows.append([
+                PivotHeaderCell(value_header, 1)
+                for _column_path in column_paths
+                for value_header in value_headers
+            ])
         return rows
 
-    def _effective_aggregation(self) -> str:
-        aggregation = self.aggregation if self.aggregation in NUMERIC_AGGREGATIONS else "count"
-        model_field = self.value_field.model_field
+    @staticmethod
+    def _value_header(value_field: PivotValueField, effective_aggregation: str) -> str:
+        return f"{value_field.title} ({effective_aggregation.title()})"
+
+    def _effective_aggregation(self, value_field: PivotValueField) -> str:
+        aggregation = (
+            value_field.aggregation
+            if value_field.aggregation in NUMERIC_AGGREGATIONS
+            else "count"
+        )
+        model_field = value_field.model_field
         if isinstance(model_field, models.BooleanField):
             return aggregation if aggregation in BOOLEAN_AGGREGATIONS else "count"
         if isinstance(model_field, NUMERIC_FIELD_TYPES):
             return aggregation
         return "count"
 
-    def _aggregate_expression(self, aggregation: str):
-        field_name = self.value_field.name
-        if aggregation == "sum" and isinstance(self.value_field.model_field, models.BooleanField):
+    def _aggregate_expressions(self, effective_aggregations: list[str]) -> dict[str, Any]:
+        return {
+            f"pivot_value_{value_index}": self._aggregate_expression(
+                value_field,
+                effective_aggregations[value_index],
+            )
+            for value_index, value_field in enumerate(self.value_fields)
+        }
+
+    @staticmethod
+    def _aggregate_expression(value_field: PivotValueField, aggregation: str):
+        field_name = value_field.name
+        if aggregation == "sum" and isinstance(value_field.model_field, models.BooleanField):
             return Sum(Cast(field_name, output_field=models.IntegerField()))
         return {
             "count": Count(field_name),
@@ -366,24 +435,34 @@ class PivotTableDataviewRenderer(BaseDataviewRenderer):
         context = super().get_context_data(pagination)
         row_fields = self._resolve_fields(getattr(self.options, "row_field_ids", []))
         column_fields = self._resolve_fields(getattr(self.options, "column_field_ids", []))
-        value_fields = self._resolve_fields([getattr(self.options, "value_field_id", None)])
-        value_field = value_fields[0] if value_fields else None
+        resolved_value_fields = self._resolve_fields(
+            getattr(self.options, "value_field_ids", [])
+        )
+        aggregation = getattr(self.options, "aggregation", "count")
+        value_fields = [
+            PivotValueField(
+                name=value_field.name,
+                title=value_field.title,
+                model_field=value_field.model_field,
+                aggregation=aggregation,
+            )
+            for value_field in resolved_value_fields
+        ]
 
         context.update({
-            "pivot_configured": bool(row_fields and value_field),
+            "pivot_configured": bool(row_fields and value_fields),
             "pivot_result": None,
             "pivot_show_row_totals": bool(getattr(self.options, "show_row_totals", True)),
             "pivot_show_column_totals": bool(getattr(self.options, "show_column_totals", True)),
         })
-        if not row_fields or value_field is None or pagination.page_obj is None:
+        if not row_fields or not value_fields or pagination.page_obj is None:
             return context
 
         pivot_table = PivotTable(
             queryset=self.state.queryset,
             row_fields=row_fields,
             column_fields=column_fields,
-            value_field=value_field,
-            aggregation=getattr(self.options, "aggregation", "count"),
+            value_fields=value_fields,
             show_row_totals=getattr(self.options, "show_row_totals", True),
             show_column_totals=getattr(self.options, "show_column_totals", True),
             totals_scope=getattr(self.options, "totals_scope", "page"),
