@@ -19,9 +19,6 @@ from dataclasses import dataclass, field
 from django import forms
 from pydantic import Field as PydanticField
 
-from bloomerp.widgets.foreign_field_widget import ForeignFieldWidget
-
-
 class PageSize(models.IntegerChoices):
     SIZE_10 = 10, '10'
     SIZE_25 = 25, '25'
@@ -126,17 +123,9 @@ def _group_by_field_choices(application_fields: QuerySet[ApplicationField]) -> d
 def _application_field_multiple_choices(
     application_fields: QuerySet[ApplicationField],
 ) -> dict[str, Any]:
-    """Build an accessible ApplicationField multi-select for pivot dimensions."""
-    choices = _application_field_choices(application_fields)
+    """Build native multiple-choice options for accessible pivot dimensions."""
     return {
-        "choices": choices,
-        "widget": ForeignFieldWidget(
-            model=ApplicationField,
-            attrs={
-                "is_m2m": True,
-                "class": "input input-sm w-40 bg-base border-0",
-            },
-        ),
+        "choices": _application_field_choices(application_fields),
     }
 
 

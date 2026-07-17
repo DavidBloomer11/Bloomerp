@@ -8,6 +8,7 @@ from django.urls import reverse
 from playwright.sync_api import Locator, Page, expect
 
 from bloomerp.management.commands import save_application_fields
+from bloomerp.models import ApplicationField
 from bloomerp.models.users.user_list_view_preference import UserListViewPreference, ViewTypeEnum
 from bloomerp.tests.base import BaseBloomerpModelTestCase
 from bloomerp.tests.utils.dynamic_models import create_test_models
@@ -302,6 +303,44 @@ class TestDataViewE2E:
     # ------------------------------------
     # Display Options Tests
     # ------------------------------------
+    def test_pivot_row_selector_persists_multiple_fields(
+        self,
+        authenticated_dataview_page: Page,
+        dataview_admin,
+        dataview_model,
+    ):
+        """
+        Use case: A user selects multiple row dimensions for a pivot table.
+        Expected result: Every selected field is submitted and persisted in selection order.
+        """
+        page = authenticated_dataview_page
+
+        # 1. Switch to the pivot view and locate its native row-field selector.
+        change_view_type(ViewTypeEnum.PIVOT_TABLE, page)
+        display_menu = page.locator("div[role='menu']:visible").filter(
+            has=page.locator("select[name='row_field_ids']")
+        )
+
+        # 2. Select both row dimensions in one native multiple-select change.
+        row_selector = display_menu.locator("select[name='row_field_ids']")
+        with page.expect_response(
+            lambda response: "change_data_view_preference" in response.url,
+            timeout=5000,
+        ):
+            row_selector.select_option(label=["First Name", "Last Name"])
+
+        # 3. Verify both field IDs were persisted in selector order.
+        content_type = ContentType.objects.get_for_model(dataview_model)
+        preference = UserListViewPreference.objects.get(
+            user=dataview_admin,
+            content_type=content_type,
+            selected=True,
+        )
+        assert preference.options["pivot_table"]["row_field_ids"] == [
+            ApplicationField.get_by_field(dataview_model, "first_name").id,
+            ApplicationField.get_by_field(dataview_model, "last_name").id,
+        ]
+
     def test_change_visible_fields(self, authenticated_dataview_page: Page):
         """
         Tests whether the dataview correctly changes the visible fields based on the user input.

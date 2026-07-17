@@ -163,10 +163,10 @@ class TestPivotDataView(BaseBloomerpModelTestCase):
         self.assertEqual(result.rows[0].cells, [2])
         self.assertEqual(result.rows[0].total, 2)
 
-    def test_pivot_options_use_application_field_multi_select_widgets(self):
+    def test_pivot_options_use_native_application_field_multi_selects(self):
         """
         Use case: A user opens the pivot display configuration.
-        Expected result: Rows and columns use the reusable many-to-many foreign-field widget.
+        Expected result: Rows and columns use native multiple-choice selectors.
         """
         # 1. Configure the pivot view and sign in.
         self._configure_pivot(row_fields=["region"])
@@ -174,9 +174,11 @@ class TestPivotDataView(BaseBloomerpModelTestCase):
         # 2. Request the data view, which contains its display options component.
         response = self.client.get(self._component_url(), HTTP_HX_REQUEST="true")
 
-        # 3. Verify both dimension selectors render in M2M mode.
+        # 3. Verify both dimension selectors render as native multiple selects.
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'data-is-m2m="true"', count=2, html=False)
+        self.assertContains(response, 'name="row_field_ids"', html=False)
+        self.assertContains(response, 'name="column_field_ids"', html=False)
+        self.assertContains(response, "multiple", count=2, html=False)
         self.assertContains(response, "Aggregation", html=False)
 
         # 4. Submit ordered row and column selections through the preference endpoint.
