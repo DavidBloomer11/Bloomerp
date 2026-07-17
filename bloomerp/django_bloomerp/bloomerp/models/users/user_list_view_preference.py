@@ -14,10 +14,10 @@ from bloomerp.dataviews.gant import GantDataviewRenderer
 from bloomerp.dataviews.kanban import KanbanDataviewRenderer
 from bloomerp.dataviews.pivot_table import PivotTableDataviewRenderer
 from bloomerp.dataviews.table import TableDataviewRenderer
-from pydantic import BaseModel, create_model
+from pydantic import BaseModel, create_model, model_validator
 from dataclasses import dataclass, field
 from django import forms
-
+from pydantic import Field as PydanticField
 
 class PageSize(models.IntegerChoices):
     SIZE_10 = 10, '10'
@@ -120,6 +120,40 @@ def _group_by_field_choices(application_fields: QuerySet[ApplicationField]) -> d
     }
 
 
+def _application_field_multiple_choices(
+    application_fields: QuerySet[ApplicationField],
+) -> dict[str, Any]:
+    """Build native multiple-choice options for accessible pivot dimensions."""
+    return {
+        "choices": _application_field_choices(application_fields),
+    }
+
+
+def _pivot_aggregation_choices(
+    _application_fields: QuerySet[ApplicationField],
+) -> dict[str, Any]:
+    return {
+        "choices": [
+            ("count", "Count"),
+            ("sum", "Sum"),
+            ("min", "Minimum"),
+            ("max", "Maximum"),
+            ("avg", "Average"),
+        ],
+    }
+
+
+def _pivot_totals_scope_choices(
+    _application_fields: QuerySet[ApplicationField],
+) -> dict[str, Any]:
+    return {
+        "choices": [
+            ("page", "Current page"),
+            ("dataset", "Entire dataset"),
+        ],
+    }
+
+
 def _date_field_choices(application_fields: QuerySet[ApplicationField]) -> dict[str, Any]:
     return {
         "choices": _application_field_choices(
@@ -215,7 +249,36 @@ class ViewTypeDefinition:
     
     def get_options_model(self) -> type[BaseModel]:
         return self.model or self.create_model_from_opts()
-    
+
+
+class PivotTableDataviewOptions(BaseModel):
+    """Validated persisted options for the pivot-table renderer."""
+
+    row_field_ids: list[int] = PydanticField(default_factory=list)
+    column_field_ids: list[int] = PydanticField(default_factory=list)
+    value_field_ids: list[int] = PydanticField(default_factory=list)
+    aggregation: str = "count"
+    show_row_totals: bool = True
+    show_column_totals: bool = True
+    totals_scope: str = "page"
+    page_size: int = PageSize.SIZE_25
+
+    @model_validator(mode="before")
+    @classmethod
+    def migrate_single_value_field(cls, data: Any) -> Any:
+        """Preserve pivot preferences saved before values became multi-select."""
+        if not isinstance(data, dict) or data.get("value_field_ids"):
+            return data
+
+        value_field_id = data.get("value_field_id")
+        if value_field_id in (None, ""):
+            return data
+
+        migrated = dict(data)
+        migrated["value_field_ids"] = [value_field_id]
+        return migrated
+
+
 class ViewTypeEnum(Enum):
     TABLE = ViewTypeDefinition(
         key="table",
@@ -428,33 +491,78 @@ class ViewTypeEnum(Enum):
         icon="fa fa-table-cells",
         description="Summarizes records across selected row, column, and value fields.",
         renderer_cls=PivotTableDataviewRenderer,
+        requires_display_fields=False,
+        model=PivotTableDataviewOptions,
         opts=[
             PreferenceOption(
-                key="row_field_id",
+                key="row_field_ids",
                 label="Rows",
-                field_cls=forms.TypedChoiceField,
-                field_attrs_func=_group_by_field_choices,
-                description="The field used for pivot rows.",
-                data_type=int | None,
-                default_value=None,
+                field_cls=forms.MultipleChoiceField,
+                field_attrs_func=_application_field_multiple_choices,
+                description="Fields used to build the expandable row hierarchy.",
+                data_type=list[int],
+                default_value=[],
             ),
             PreferenceOption(
-                key="column_field_id",
+                key="column_field_ids",
                 label="Columns",
-                field_cls=forms.TypedChoiceField,
-                field_attrs_func=_group_by_field_choices,
-                description="The field used for pivot columns.",
-                data_type=int | None,
-                default_value=None,
+                field_cls=forms.MultipleChoiceField,
+                field_attrs_func=_application_field_multiple_choices,
+                description="Fields used to build nested column headers.",
+                data_type=list[int],
+                default_value=[],
             ),
             PreferenceOption(
-                key="value_field_id",
+                key="value_field_ids",
                 label="Values",
+                field_cls=forms.MultipleChoiceField,
+                field_attrs_func=_application_field_multiple_choices,
+                description="Fields aggregated into the leaf columns of the pivot table.",
+                data_type=list[int],
+                default_value=[],
+            ),
+            PreferenceOption(
+                key="aggregation",
+                label="Aggregation",
+                field_cls=forms.ChoiceField,
+                field_attrs_func=_pivot_aggregation_choices,
+                description="Numeric fields support all aggregations; booleans support sum and count; other fields use count.",
+                data_type=str,
+                default_value="count",
+            ),
+            PreferenceOption(
+                key="show_row_totals",
+                label="Show row totals",
+                field_cls=forms.BooleanField,
+                description="Add a total column for each row.",
+                data_type=bool,
+                default_value=True,
+            ),
+            PreferenceOption(
+                key="show_column_totals",
+                label="Show column totals",
+                field_cls=forms.BooleanField,
+                description="Add a totals row beneath the pivot table.",
+                data_type=bool,
+                default_value=True,
+            ),
+            PreferenceOption(
+                key="totals_scope",
+                label="Totals scope",
+                field_cls=forms.ChoiceField,
+                field_attrs_func=_pivot_totals_scope_choices,
+                description="Calculate the totals row from this page or the entire filtered dataset.",
+                data_type=str,
+                default_value="page",
+            ),
+            PreferenceOption(
+                key="page_size",
+                label="Rows per page",
                 field_cls=forms.TypedChoiceField,
-                field_attrs_func=_group_by_field_choices,
-                description="The field used for pivot values.",
-                data_type=int | None,
-                default_value=None,
+                field_attrs_func=_page_size_choices,
+                description="The number of top-level pivot rows shown per page.",
+                data_type=int,
+                default_value=PageSize.SIZE_25,
             ),
         ],
     )
@@ -577,6 +685,14 @@ class UserListViewPreference(BaseViewPreference):
         self.display_fields[view_type] = current_fields
         return is_visible
     
-    
+    @property
+    def should_display_field_options(self) -> bool:
+        """Determines if field visibility options should be displayed for the current view type.
+
+        Returns:
+            bool: True if field visibility options should be shown, False otherwise.
+        """
+        view_type_def = ViewTypeEnum.from_key(self.view_type)
+        return view_type_def.requires_display_fields
     
     

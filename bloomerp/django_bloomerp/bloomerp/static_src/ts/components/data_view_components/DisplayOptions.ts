@@ -1,6 +1,8 @@
 import BaseComponent, { getComponent, initComponents } from "../BaseComponent";
 import { getCsrfToken } from "@/utils/cookies";
 
+type DisplayOptionValue = string | string[];
+
 export class DataViewDisplayOptions extends BaseComponent {
     public optionChangedCallback: (() => void) | null = null;
     private clickHandler: ((event: Event) => void) | null = null;
@@ -43,13 +45,22 @@ export class DataViewDisplayOptions extends BaseComponent {
             const values = this.parseValues(form.dataset.displayOptionsValues);
             const formData = new FormData(form);
             formData.forEach((value, key) => {
-                values[key] = String(value);
+                const stringValue = String(value);
+                const existingValue = values[key];
+
+                if (existingValue === undefined) {
+                    values[key] = stringValue;
+                } else if (Array.isArray(existingValue)) {
+                    existingValue.push(stringValue);
+                } else {
+                    values[key] = [existingValue, stringValue];
+                }
             });
             this.submitValues(values);
         }, 200);
     }
 
-    private parseValues(rawValues: string | undefined): Record<string, string> {
+    private parseValues(rawValues: string | undefined): Record<string, DisplayOptionValue> {
         if (!rawValues) return {};
 
         try {
@@ -64,7 +75,7 @@ export class DataViewDisplayOptions extends BaseComponent {
         }
     }
 
-    private async submitValues(values: Record<string, string>): Promise<void> {
+    private async submitValues(values: Record<string, DisplayOptionValue>): Promise<void> {
         if (!this.element) return;
 
         const url = this.element.dataset.preferenceUrl;
@@ -74,7 +85,11 @@ export class DataViewDisplayOptions extends BaseComponent {
         const formData = new FormData();
 
         Object.entries(values).forEach(([key, value]) => {
-            formData.set(key, value);
+            if (Array.isArray(value)) {
+                value.forEach((item) => formData.append(key, item));
+            } else {
+                formData.set(key, value);
+            }
         });
 
         if (csrfToken) {
@@ -126,4 +141,6 @@ export class DataViewDisplayOptions extends BaseComponent {
             window.clearTimeout(this.changeTimer);
         }
     }
+
+    
 }
