@@ -2,6 +2,7 @@ import json
 from typing import Any
 
 from django.http import HttpRequest
+from django.urls import NoReverseMatch, reverse
 from django.utils.translation import gettext_lazy as _
 
 from bloomerp.forms.workspaces import DEFAULT_TILE_ICON, TileMetadataForm
@@ -28,11 +29,66 @@ from bloomerp.workspaces.analytics_tile.model import (
 from bloomerp.workspaces.analytics_tile.utils import get_primitive_field_icon
 from bloomerp.workspaces.base import BaseTileConfig
 from bloomerp.workspaces.dataview_tile.model import DataViewTileConfig
-from bloomerp.workspaces.links_tile.model import LinkTileConfig
+from bloomerp.workspaces.links_tile.model import Link, LinkTileConfig
 from bloomerp.workspaces.text_tile.model import TextTileConfig
 from bloomerp.workspaces.tiles import TileType
 from django.views.generic import TemplateView
 from django import forms
+
+
+def _build_link_builder_items(links: list[Link], parent_path: list[int] | None = None) -> list[dict[str, Any]]:
+    """Build recursive template data with stable index paths for link operations."""
+    parent_path = parent_path or []
+    return [
+        {
+            "link": link,
+            "path": [*parent_path, index],
+            "children": _build_link_builder_items(link.children, [*parent_path, index]),
+        }
+        for index, link in enumerate(links)
+    ]
+
+
+def _build_link_folder_options(
+    links: list[Link],
+    parent_path: list[int] | None = None,
+    depth: int = 0,
+) -> list[dict[str, Any]]:
+    """Flatten folders into choices while preserving their hierarchy labels."""
+    parent_path = parent_path or []
+    options: list[dict[str, Any]] = []
+    for index, link in enumerate(links):
+        if not link.is_folder:
+            continue
+        path = [*parent_path, index]
+        options.append({"name": f"{'— ' * depth}{link.name}", "path": path})
+        options.extend(_build_link_folder_options(link.children, path, depth + 1))
+    return options
+
+
+def _get_link_route_suggestions() -> list[dict[str, str]]:
+    """Return navigable application routes for the editable URL datalist."""
+    suggestions: list[dict[str, str]] = []
+    seen_urls: set[str] = set()
+    for route in router.get_routes():
+        path = route.path or ""
+        if path.lstrip("/").startswith(("api/", "components/")) or route.nr_of_args() > 0:
+            continue
+        try:
+            url = reverse(route.url_name)
+        except NoReverseMatch:
+            continue
+        if url in seen_urls:
+            continue
+        seen_urls.add(url)
+        suggestions.append(
+            {
+                "url": url,
+                "name": route.name or url,
+                "description": " ".join((route.description or "").split()),
+            }
+        )
+    return sorted(suggestions, key=lambda suggestion: (suggestion["name"].lower(), suggestion["url"]))
 
 @router.register(
     path="components/preview_workspace_tile/",
@@ -237,7 +293,9 @@ class PreviewWorkspaceTile(TemplateView):
                 extra_context["filter_variables"] = get_filters_from_query(output_table, config.query)
                 
             case TileType.LINKS_TILE:
-                pass
+                extra_context["link_builder_items"] = _build_link_builder_items(config.links)
+                extra_context["link_folder_options"] = _build_link_folder_options(config.links)
+                extra_context["link_route_suggestions"] = _get_link_route_suggestions()
             
             # case TileType.DATAVIEW_TILE:
             #     manager = UserPermissionManager(self.request.user)

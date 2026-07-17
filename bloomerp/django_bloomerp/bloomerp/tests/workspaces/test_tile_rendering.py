@@ -79,6 +79,11 @@ class WorkspaceTileRenderingTests(BaseBloomerpModelTestCase):
         self.assertEqual(rendered, f"/employees/?user={self.normal_user.pk}")
 
     def test_link_tile_resolves_current_user_parameters(self):
+        """
+        Use case: A link tile URL contains a current-user parameter.
+        Expected result: Rendering resolves the URL without mutating the saved configuration.
+        """
+        # 1. Create a link with a current-user parameter.
         config = LinkTileConfig(
             links=[
                 Link(
@@ -91,10 +96,45 @@ class WorkspaceTileRenderingTests(BaseBloomerpModelTestCase):
         request = self.factory.get("/")
         request.user = self.admin_user
 
+        # 2. Render the tile.
         html = LinksTileRenderer.render(config, request)
 
+        # 3. Verify the resolved output and unchanged source configuration.
         self.assertIn(f'href="/employees/?user={self.admin_user.id}"', html)
         self.assertEqual(config.links[0].url, "/employees/?user={{ current_user.id }}")
+
+    def test_link_tile_renders_nested_folders(self):
+        """
+        Use case: A link tile contains nested folders.
+        Expected result: Folders render as collapsible levels and the nested link remains navigable.
+        """
+        # 1. Create two nested folders containing a link.
+        config = LinkTileConfig(
+            links=[
+                Link(
+                    name="Sales",
+                    is_folder=True,
+                    children=[
+                        Link(
+                            name="Reports",
+                            is_folder=True,
+                            children=[Link(url="/sales/report/", name="Monthly report", is_internal=True)],
+                        )
+                    ],
+                )
+            ]
+        )
+        request = self.factory.get("/")
+        request.user = self.admin_user
+
+        # 2. Render the tile.
+        html = LinksTileRenderer.render(config, request)
+
+        # 3. Verify collapsible hierarchy, progressive indentation, and the nested link.
+        self.assertEqual(html.count("<details"), 2)
+        self.assertGreaterEqual(html.count("ml-4"), 2)
+        self.assertIn('href="/sales/report/"', html)
+        self.assertIn("Monthly report", html)
 
     def test_user_parameter_resolver_hides_model_object_without_view_permission(self):
         customer = self.CustomerModel.objects.create(

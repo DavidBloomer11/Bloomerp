@@ -1,0 +1,76 @@
+{% load i18n %}
+{% for item in items %}
+    <div class="rounded-xl border border-gray-200 bg-base p-2 shadow-xs">
+        <div class="flex flex-wrap items-center gap-2">
+            <i class="fa {% if item.link.is_folder %}fa-folder text-warning-dark{% else %}fa-link text-primary{% endif %} w-4 text-center" aria-hidden="true"></i>
+            <div class="min-w-0 flex-1">
+                <p class="truncate text-sm font-medium">{{ item.link.name }}</p>
+                {% if not item.link.is_folder %}<p class="truncate text-xs text-gray-500">{{ item.link.url }}</p>{% endif %}
+            </div>
+            <div class="flex flex-wrap items-center gap-1">
+                <button
+                    class="btn btn-secondary btn-sm"
+                    type="button"
+                    title="{% translate 'Move up' %}"
+                    hx-post="{% url 'preview_workspace_tile' %}"
+                    hx-vals='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'
+                    hx-vars='js:{operation: "move_link", data: {path: {{ item.path }}, direction: "up"}}'
+                    hx-target="#tile-preview-section"
+                ><i class="fa fa-arrow-up" aria-hidden="true"></i></button>
+                <button
+                    class="btn btn-secondary btn-sm"
+                    type="button"
+                    title="{% translate 'Move down' %}"
+                    hx-post="{% url 'preview_workspace_tile' %}"
+                    hx-vals='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'
+                    hx-vars='js:{operation: "move_link", data: {path: {{ item.path }}, direction: "down"}}'
+                    hx-target="#tile-preview-section"
+                ><i class="fa fa-arrow-down" aria-hidden="true"></i></button>
+                <details class="relative">
+                    <summary class="btn btn-secondary btn-sm cursor-pointer list-none">
+                        <i class="fa fa-pen" aria-hidden="true"></i>
+                        <span><c-i18n.blocktrans>Edit</c-i18n.blocktrans></span>
+                    </summary>
+                    <div class="mt-2 min-w-64 space-y-2 rounded-xl border border-gray-200 bg-white p-3 shadow-xs" data-edit-link-form>
+                        {% if not item.link.is_folder %}
+                            <input type="text" class="input input-sm w-full" value="{{ item.link.url }}" list="workspace-link-route-suggestions" data-edit-link-url aria-label="{% translate 'URL' %}">
+                        {% endif %}
+                        <input type="text" class="input input-sm w-full" value="{{ item.link.name }}" data-edit-link-name aria-label="{% translate 'Name' %}">
+                        <button
+                            class="btn btn-primary btn-sm w-full"
+                            type="button"
+                            hx-post="{% url 'preview_workspace_tile' %}"
+                            hx-vals='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'
+                            hx-vars='js:{
+                                operation: "update_link",
+                                data: {
+                                    path: {{ item.path }},
+                                    url: this.closest("[data-edit-link-form]").querySelector("[data-edit-link-url]")?.value || "",
+                                    name: this.closest("[data-edit-link-form]").querySelector("[data-edit-link-name]").value
+                                }
+                            }'
+                            hx-target="#tile-preview-section"
+                        ><c-i18n.blocktrans>Save</c-i18n.blocktrans></button>
+                    </div>
+                </details>
+                <button
+                    class="btn btn-danger btn-sm"
+                    type="button"
+                    title="{% translate 'Remove' %}"
+                    hx-post="{% url 'preview_workspace_tile' %}"
+                    hx-vals='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'
+                    hx-vars='js:{operation: "remove_link", data: {path: {{ item.path }}}}'
+                    hx-target="#tile-preview-section"
+                >
+                    <i class="fa fa-minus" aria-hidden="true"></i>
+                    <span><c-i18n.blocktrans>Remove</c-i18n.blocktrans></span>
+                </button>
+            </div>
+        </div>
+        {% if item.children %}
+            <div class="mt-2 ml-4 space-y-2 border-l border-gray-200 pl-3">
+                {% include "components/workspaces/tile_builders/links_tile_builder_items.html" with items=item.children %}
+            </div>
+        {% endif %}
+    </div>
+{% endfor %}
