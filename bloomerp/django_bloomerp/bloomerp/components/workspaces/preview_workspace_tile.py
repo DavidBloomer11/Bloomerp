@@ -17,6 +17,7 @@ from bloomerp.views.workspaces.create_tile import (
     TILE_ICON_SESSION_KEY,
     TILE_NAME_SESSION_KEY,
 )
+from bloomerp.widgets.icon_picker_widget import IconPickerWidget
 from bloomerp.workspaces import orchestrator
 from bloomerp.workspaces.analytics_tile.model import (
     AnalyticsTileConfig,
@@ -36,6 +37,11 @@ from django.views.generic import TemplateView
 from django import forms
 
 
+def _render_link_icon_picker(name: str, value: str = "") -> str:
+    """Render the shared optional icon picker for a link-tile item."""
+    return IconPickerWidget(attrs={"class": "input input-sm w-full"}).render(name, value)
+
+
 def _build_link_builder_items(links: list[Link], parent_path: list[int] | None = None) -> list[dict[str, Any]]:
     """Build recursive template data with stable index paths for link operations."""
     parent_path = parent_path or []
@@ -43,6 +49,10 @@ def _build_link_builder_items(links: list[Link], parent_path: list[int] | None =
         {
             "link": link,
             "path": [*parent_path, index],
+            "icon_picker": _render_link_icon_picker(
+                f"edit_link_icon_{'_'.join(map(str, [*parent_path, index]))}",
+                link.icon,
+            ),
             "children": _build_link_builder_items(link.children, [*parent_path, index]),
         }
         for index, link in enumerate(links)
@@ -296,6 +306,8 @@ class PreviewWorkspaceTile(TemplateView):
                 extra_context["link_builder_items"] = _build_link_builder_items(config.links)
                 extra_context["link_folder_options"] = _build_link_folder_options(config.links)
                 extra_context["link_route_suggestions"] = _get_link_route_suggestions()
+                extra_context["add_link_icon_picker"] = _render_link_icon_picker("add_link_icon")
+                extra_context["add_folder_icon_picker"] = _render_link_icon_picker("add_folder_icon")
             
             # case TileType.DATAVIEW_TILE:
             #     manager = UserPermissionManager(self.request.user)

@@ -1,7 +1,16 @@
-<div >
+<div
+    oninput="
+        if (event.target.matches('[data-link-url], [data-edit-link-url]')) {
+            const option = Array.from(event.target.list?.options || []).find((candidate) => candidate.value === event.target.value);
+            const form = event.target.closest('[data-add-link-form], [data-edit-link-form]');
+            const nameInput = form?.querySelector('[data-link-name], [data-edit-link-name]');
+            if (option && nameInput && !nameInput.value.trim()) nameInput.value = option.dataset.name || '';
+        }
+    "
+>
     <datalist id="workspace-link-route-suggestions">
         {% for route in link_route_suggestions %}
-            <option value="{{ route.url }}">{{ route.name }}{% if route.description %} — {{ route.description }}{% endif %}</option>
+            <option value="{{ route.url }}" data-name="{{ route.name }}">{{ route.name }}{% if route.description %} — {{ route.description }}{% endif %}</option>
         {% endfor %}
     </datalist>
 
@@ -32,6 +41,10 @@
                     <span class="mb-1 block text-sm"><c-i18n.blocktrans>Name</c-i18n.blocktrans></span>
                     <input type="text" class="input input-sm w-full" data-link-name>
                 </label>
+                <div class="block">
+                    <span class="mb-1 block text-sm"><c-i18n.blocktrans>Icon (optional)</c-i18n.blocktrans></span>
+                    {{ add_link_icon_picker }}
+                </div>
                 <label class="block">
                     <span class="mb-1 block text-sm"><c-i18n.blocktrans>Folder</c-i18n.blocktrans></span>
                     <select class="input input-sm w-full" data-link-parent>
@@ -51,6 +64,7 @@
                         data: {
                             url: this.closest("[data-add-link-form]").querySelector("[data-link-url]").value,
                             name: this.closest("[data-add-link-form]").querySelector("[data-link-name]").value,
+                            icon: this.closest("[data-add-link-form]").querySelector('[name="add_link_icon"]').value,
                             parent_path: JSON.parse(this.closest("[data-add-link-form]").querySelector("[data-link-parent]").value)
                         }
                     }'
@@ -69,6 +83,10 @@
                     <span class="mb-1 block text-sm"><c-i18n.blocktrans>Name</c-i18n.blocktrans></span>
                     <input type="text" class="input input-sm w-full" data-folder-name>
                 </label>
+                <div class="block">
+                    <span class="mb-1 block text-sm"><c-i18n.blocktrans>Icon (optional)</c-i18n.blocktrans></span>
+                    {{ add_folder_icon_picker }}
+                </div>
                 <label class="block">
                     <span class="mb-1 block text-sm"><c-i18n.blocktrans>Parent folder</c-i18n.blocktrans></span>
                     <select class="input input-sm w-full" data-folder-parent>
@@ -87,6 +105,7 @@
                         operation: "add_folder",
                         data: {
                             name: this.closest("[data-add-folder-form]").querySelector("[data-folder-name]").value,
+                            icon: this.closest("[data-add-folder-form]").querySelector('[name="add_folder_icon"]').value,
                             parent_path: JSON.parse(this.closest("[data-add-folder-form]").querySelector("[data-folder-parent]").value)
                         }
                     }'

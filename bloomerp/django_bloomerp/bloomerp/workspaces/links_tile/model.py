@@ -16,6 +16,7 @@ from bloomerp.workspaces.base import (
 class Link(BaseModel):
     url: str = ""
     name: str
+    icon: str = ""
     is_internal: bool = False
     is_folder: bool = False
     children: list["Link"] = Field(default_factory=list)
@@ -81,6 +82,7 @@ def _iter_links(items: list[Link]) -> Iterator[Link]:
 class AddLinkOperation(BaseModel):
     url: str
     name: Optional[str] = None
+    icon: str = ""
     parent_path: list[int] = Field(default_factory=list)
 
 
@@ -98,12 +100,20 @@ class AddLinkHandler(TileOperationHandler):
             return TileOperationHandlerRespone(config, _("Link already existed"), "warning")
 
         items = _get_items_at_path(config, data.parent_path)
-        items.append(Link(url=url, name=name, is_internal=is_internal_sidebar_url(url)))
+        items.append(
+            Link(
+                url=url,
+                name=name,
+                icon=data.icon.strip(),
+                is_internal=is_internal_sidebar_url(url),
+            )
+        )
         return TileOperationHandlerRespone(config, _("Link added"))
 
 
 class AddFolderOperation(BaseModel):
     name: str
+    icon: str = ""
     parent_path: list[int] = Field(default_factory=list)
 
 
@@ -116,7 +126,7 @@ class AddFolderHandler(TileOperationHandler):
             return TileOperationHandlerRespone(config, _("Please add a name to the folder"), "warning")
 
         items = _get_items_at_path(config, data.parent_path)
-        items.append(Link(name=name, is_folder=True))
+        items.append(Link(name=name, icon=data.icon.strip(), is_folder=True))
         return TileOperationHandlerRespone(config, _("Folder added"))
 
 
@@ -142,6 +152,8 @@ class UpdateLinkOperation(BaseModel):
     path: list[int]
     url: str = ""
     name: str
+    icon: str = ""
+    parent_path: list[int] | None = None
 
 
 class UpdateLinkHandler(TileOperationHandler):
@@ -156,10 +168,20 @@ class UpdateLinkHandler(TileOperationHandler):
         if not item.is_folder and not url:
             return TileOperationHandlerRespone(config, _("Please add a URL to the link"), "warning")
 
+        source_items = None
+        destination_items = None
+        if not item.is_folder and data.parent_path is not None:
+            source_items = _get_items_at_path(config, data.path[:-1])
+            destination_items = _get_items_at_path(config, data.parent_path)
+
         item.name = name
+        item.icon = data.icon.strip()
         if not item.is_folder:
             item.url = url
             item.is_internal = is_internal_sidebar_url(url)
+            if source_items is not None and destination_items is not None and source_items is not destination_items:
+                source_items.pop(data.path[-1])
+                destination_items.append(item)
         return TileOperationHandlerRespone(config, _("Item updated"))
 
 

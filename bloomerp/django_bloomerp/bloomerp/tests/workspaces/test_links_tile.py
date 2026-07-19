@@ -7,6 +7,7 @@ from bloomerp.components.workspaces.preview_workspace_tile import (
     _build_link_builder_items,
     _build_link_folder_options,
     _get_link_route_suggestions,
+    _render_link_icon_picker,
 )
 from bloomerp.router import BloomerpRoute, RouteType, ViewType
 from bloomerp.workspaces.links_tile.model import (
@@ -37,6 +38,7 @@ class LinksTileOperationTests(SimpleTestCase):
         # 2. Verify backward-compatible defaults were applied.
         self.assertFalse(config.links[0].is_folder)
         self.assertEqual(config.links[0].children, [])
+        self.assertEqual(config.links[0].icon, "")
 
     def test_add_link_inside_nested_folder(self):
         """
@@ -59,6 +61,31 @@ class LinksTileOperationTests(SimpleTestCase):
         self.assertEqual(link.name, "Employees")
         self.assertEqual(link.url, "/employees/")
         self.assertTrue(link.is_internal)
+
+    def test_icons_can_be_added_to_links_and_folders(self):
+        """
+        Use case: A user chooses optional icons while adding a folder and link.
+        Expected result: Both icon values are stored in the tile configuration.
+        """
+        # 1. Add an icon-bearing folder and link.
+        config = LinkTileConfig(links=[])
+        AddFolderHandler.handle(
+            config,
+            AddFolderOperation(name="Sales", icon="fa-solid fa-briefcase"),
+        )
+        AddLinkHandler.handle(
+            config,
+            AddLinkOperation(
+                url="/leads/",
+                name="Leads",
+                icon="fa-solid fa-user",
+                parent_path=[0],
+            ),
+        )
+
+        # 2. Verify both optional icons were persisted.
+        self.assertEqual(config.links[0].icon, "fa-solid fa-briefcase")
+        self.assertEqual(config.links[0].children[0].icon, "fa-solid fa-user")
 
     def test_folder_can_be_added_and_removed_with_its_children(self):
         """
@@ -128,6 +155,37 @@ class LinksTileOperationTests(SimpleTestCase):
         # 3. Verify the new sibling order.
         self.assertEqual([link.name for link in config.links[0].children], ["Second", "First"])
 
+    def test_update_link_can_change_its_folder_and_icon(self):
+        """
+        Use case: A user edits an existing link and selects a different folder and icon.
+        Expected result: The updated link moves to that folder with its new icon.
+        """
+        # 1. Put a link before its destination folder to exercise shifting indexes.
+        config = LinkTileConfig(
+            links=[
+                Link(url="/report/", name="Report"),
+                Link(name="Sales", is_folder=True),
+            ]
+        )
+
+        # 2. Update and move the link to the following folder.
+        UpdateLinkHandler.handle(
+            config,
+            UpdateLinkOperation(
+                path=[0],
+                url="/reports/",
+                name="Reports",
+                icon="fa-solid fa-chart-bar",
+                parent_path=[1],
+            ),
+        )
+
+        # 3. Verify the destination object received the link despite the root index shift.
+        self.assertEqual(len(config.links), 1)
+        moved_link = config.links[0].children[0]
+        self.assertEqual(moved_link.name, "Reports")
+        self.assertEqual(moved_link.icon, "fa-solid fa-chart-bar")
+
 
 class LinksTileBuilderHelperTests(SimpleTestCase):
     def test_builder_template_renders_nested_controls_and_route_suggestions(self):
@@ -143,6 +201,8 @@ class LinksTileBuilderHelperTests(SimpleTestCase):
             "link_route_suggestions": [
                 {"url": "/customers/", "name": "Customers", "description": "Customer list"}
             ],
+            "add_link_icon_picker": _render_link_icon_picker("add_link_icon"),
+            "add_folder_icon_picker": _render_link_icon_picker("add_folder_icon"),
         }
 
         # 2. Render the complete builder template.
@@ -153,6 +213,9 @@ class LinksTileBuilderHelperTests(SimpleTestCase):
         self.assertIn("move_link", html)
         self.assertIn("parent_path", html)
         self.assertIn("Edit", html)
+        self.assertIn('data-name="Customers"', html)
+        self.assertIn('name="add_link_icon"', html)
+        self.assertIn("data-edit-link-parent", html)
 
     def test_builder_helpers_preserve_nested_paths(self):
         """

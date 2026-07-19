@@ -136,6 +136,37 @@ class WorkspaceTileRenderingTests(BaseBloomerpModelTestCase):
         self.assertIn('href="/sales/report/"', html)
         self.assertIn("Monthly report", html)
 
+    def test_link_tile_renders_optional_item_icons(self):
+        """
+        Use case: A link tile folder and link have custom icons.
+        Expected result: Both configured icons appear in the rendered tile.
+        """
+        # 1. Create a folder and nested link with custom icons.
+        config = LinkTileConfig(
+            links=[
+                Link(
+                    name="Sales",
+                    icon="fa-solid fa-briefcase",
+                    is_folder=True,
+                    children=[
+                        Link(
+                            url="/sales/",
+                            name="Customers",
+                            icon="fa-solid fa-user",
+                            is_internal=True,
+                        )
+                    ],
+                )
+            ]
+        )
+        request = self.factory.get("/")
+        request.user = self.admin_user
+
+        # 2. Render the tile and verify both icons.
+        html = LinksTileRenderer.render(config, request)
+        self.assertIn("fa-solid fa-briefcase", html)
+        self.assertIn("fa-solid fa-user", html)
+
     def test_user_parameter_resolver_hides_model_object_without_view_permission(self):
         customer = self.CustomerModel.objects.create(
             first_name="Blocked",
