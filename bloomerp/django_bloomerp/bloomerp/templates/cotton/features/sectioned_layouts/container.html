@@ -51,21 +51,23 @@
 >
     <!--Header Section-->    
     <div 
-        class="flex flex-wrap items-center justify-between mb-4 gap-4"
+        class="flex flex-wrap items-center justify-between mb-4 sm:gap-4 gap-2"
         data-layout-header-section
     >   
         <!--Right Section-->
         <div class="flex w-full flex-wrap gap-2 sm:w-auto" data-layout-action-group>
-            <c-ui.shortcut_tooltip 
-                shortcut="mod+/" 
-                action="click" 
-                position="bottom" 
-                >
-                <button class="btn btn-sm btn-secondary" type="button" data-search-button aria-pressed="false">
-                    <i class="fa fa-search"></i>
-                    <c-i18n.blocktrans>Search</c-i18n.blocktrans>
-                </button>
-            </c-ui.shortcut_tooltip>
+            <div class="sm:w-auto w-full">
+                <c-ui.shortcut_tooltip 
+                    shortcut="mod+/" 
+                    action="click" 
+                    position="bottom" 
+                    >
+                    <button class="btn btn-sm btn-secondary sm:w-auto w-full" type="button" data-search-button aria-pressed="false">
+                        <i class="fa fa-search"></i>
+                        <c-i18n.blocktrans>Search</c-i18n.blocktrans>
+                    </button>
+                </c-ui.shortcut_tooltip>
+            </div>
 
             {{ buttons_left }}
         </div>
@@ -78,23 +80,26 @@
             {% can_manage_preference_object request.user preference_object as can_manage %}
             
             {% if can_manage or force_edit %}
-            <c-ui.shortcut_tooltip 
-                shortcut="mod+e" 
-                action="click" 
-                position="bottom">
-                <button class="btn btn-sm btn-secondary" type="button" data-layout-edit-toggle>
-                    <i class="fa fa-gear"></i>
-                    <c-i18n.blocktrans>Edit</c-i18n.blocktrans>
-                </button>
-            </c-ui.shortcut_tooltip>
+            <div class="sm:w-auto w-full">
+                <c-ui.shortcut_tooltip 
+                    shortcut="mod+e" 
+                    action="click" 
+                    position="bottom">
+                    <button class="btn btn-sm btn-secondary sm:w-auto w-full" type="button" data-layout-edit-toggle>
+                        <i class="fa fa-gear"></i>
+                        <c-i18n.blocktrans>Edit</c-i18n.blocktrans>
+                    </button>
+                </c-ui.shortcut_tooltip>
+            </div>
 
-            <div class="hidden flex-wrap gap-2" data-layout-open-sidebar data-layout-action-group>
+            
+            <div class="hidden  gap-2 sm:w-auto w-full" data-layout-open-sidebar data-layout-action-group>
                 <c-ui.shortcut_tooltip 
                     shortcut="mod+m" 
                     action="click" 
                     position="bottom">
                     <button 
-                        class="btn btn-sm btn-secondary" 
+                        class="btn btn-sm btn-secondary sm:w-auto w-full" 
                         bloomerp-open-drawer="layout-drawer-items"
                         type="button"
                         >
@@ -103,6 +108,7 @@
                     </button>
                 </c-ui.shortcut_tooltip>
             </div>
+            
             {% endif %}
         </div>
         <!--End Left section-->
