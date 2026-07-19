@@ -792,9 +792,6 @@
   .max-h-96 {
     max-height: calc(var(--spacing) * 96);
   }
-  .max-h-\[50vh\] {
-    max-height: 50vh;
-  }
   .max-h-\[52vh\] {
     max-height: 52vh;
   }
@@ -807,8 +804,8 @@
   .max-h-\[calc\(100vh-2rem\)\] {
     max-height: calc(100vh - 2rem);
   }
-  .max-h-\[vh50\] {
-    max-height: vh50;
+  .max-h-\[calc\(100vh-6rem\)\] {
+    max-height: calc(100vh - 6rem);
   }
   .max-h-full {
     max-height: 100%;
@@ -996,6 +993,9 @@
   .max-w-\[calc\(100\%-260px\)\] {
     max-width: calc(100% - 260px);
   }
+  .max-w-\[calc\(100vw-1rem\)\] {
+    max-width: calc(100vw - 1rem);
+  }
   .max-w-\[min\(28rem\,calc\(100vw-2rem\)\)\] {
     max-width: min(28rem, calc(100vw - 2rem));
   }
@@ -1052,9 +1052,6 @@
   }
   .min-w-\[12rem\] {
     min-width: 12rem;
-  }
-  .min-w-\[64rem\] {
-    min-width: 64rem;
   }
   .min-w-\[140px\] {
     min-width: 140px;
@@ -1280,9 +1277,6 @@
   }
   .grid-cols-\[minmax\(0\,1fr\)_minmax\(0\,1\.4fr\)_220px\] {
     grid-template-columns: minmax(0,1fr) minmax(0,1.4fr) 220px;
-  }
-  .grid-cols-\[minmax\(16rem\,22rem\)_minmax\(48rem\,1fr\)\] {
-    grid-template-columns: minmax(16rem,22rem) minmax(48rem,1fr);
   }
   .flex-col {
     flex-direction: column;
@@ -2392,6 +2386,9 @@
   .text-blue-800 {
     color: var(--color-blue-800);
   }
+  .text-danger-dark {
+    color: var(--color-danger-dark);
+  }
   .text-dark {
     color: var(--color-dark);
   }
@@ -3270,6 +3267,11 @@
       opacity: 50%;
     }
   }
+  .sm\:mb-4 {
+    @media (width >= 40rem) {
+      margin-bottom: calc(var(--spacing) * 4);
+    }
+  }
   .sm\:inline {
     @media (width >= 40rem) {
       display: inline;
@@ -3343,6 +3345,11 @@
   .sm\:gap-3 {
     @media (width >= 40rem) {
       gap: calc(var(--spacing) * 3);
+    }
+  }
+  .sm\:gap-4 {
+    @media (width >= 40rem) {
+      gap: calc(var(--spacing) * 4);
     }
   }
   .md\:col-span-2 {
@@ -3463,6 +3470,11 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
+  .lg\:grid-cols-3 {
+    @media (width >= 64rem) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
   .lg\:grid-cols-4 {
     @media (width >= 64rem) {
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -3546,6 +3558,11 @@
   .xl\:grid-cols-3 {
     @media (width >= 80rem) {
       grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .xl\:grid-cols-4 {
+    @media (width >= 80rem) {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
     }
   }
   .xl\:grid-cols-\[minmax\(0\,1fr\)_340px\] {

@@ -40,7 +40,7 @@ def get_default_display_fields() -> dict:
               Structure: {"table": [], "kanban": [], "calendar": []}
               Each list contains ApplicationField IDs in display order.
     """
-    return {view_type.value.key: [] for view_type in ViewTypeEnum}
+    return {view_type.value.key: [] for view_type in DataviewType}
 
 
 DEFAULT_OPTION_UNSET = object()
@@ -279,7 +279,7 @@ class PivotTableDataviewOptions(BaseModel):
         return migrated
 
 
-class ViewTypeEnum(Enum):
+class DataviewType(Enum):
     TABLE = ViewTypeDefinition(
         key="table",
         label="Table",
@@ -617,8 +617,8 @@ class UserListViewPreference(BaseViewPreference):
 
     view_type = models.CharField(
         max_length=50,
-        choices=ViewTypeEnum.choices(),
-        default=ViewTypeEnum.TABLE.value.key,
+        choices=DataviewType.choices(),
+        default=DataviewType.TABLE.value.key,
     )
     split_view_enabled = models.BooleanField(default=False)
     
@@ -692,7 +692,7 @@ class UserListViewPreference(BaseViewPreference):
         Returns:
             bool: True if field visibility options should be shown, False otherwise.
         """
-        view_type_def = ViewTypeEnum.from_key(self.view_type)
+        view_type_def = DataviewType.from_key(self.view_type)
         return view_type_def.requires_display_fields
     
     

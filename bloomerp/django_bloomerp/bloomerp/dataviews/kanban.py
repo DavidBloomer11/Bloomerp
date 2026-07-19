@@ -50,9 +50,9 @@ class KanbanDataviewRenderer(BaseDataviewRenderer):
         return cls.build_querystring(request, ("page", "kanban_page", "kanban_column"))
 
     @classmethod
-    def get_group_by_field(cls, data_view_fields, options):
+    def get_group_by_field(cls, dataview_fields, options):
         return cls.get_field_from_data_view_fields(
-            data_view_fields,
+            dataview_fields,
             getattr(options, "group_by_field_id", None),
         )
 
@@ -62,7 +62,7 @@ class KanbanDataviewRenderer(BaseDataviewRenderer):
             return super().handle_action(action, request, state)
 
         group_by_field = cls.get_group_by_field(
-            state.data_view_fields,
+            state.dataview_fields,
             state.dataview_options,
         )
         if not group_by_field:
@@ -88,7 +88,7 @@ class KanbanDataviewRenderer(BaseDataviewRenderer):
             "components/objects/dataview_kanban_cards.html",
             {
                 "content_type_id": state.content_type.id,
-                "fields": state.data_view_render_fields,
+                "fields": state.dataview_render_fields,
                 "avatar_field": state.avatar_field,
                 "group": group,
                 "kanban_page_querystring": cls.build_page_querystring(request),

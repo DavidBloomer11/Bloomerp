@@ -1,5 +1,42 @@
 {% load bloomerp %}
 
+<style>
+    @media (max-width: 640px) {
+        [bloomerp-component="{{ component_name }}"] [data-layout-grid] {
+            grid-template-columns: minmax(0, 1fr) !important;
+        }
+
+        [bloomerp-component="{{ component_name }}"] [data-layout-grid] > [data-layout-item-id] {
+            grid-column: span 1 / span 1 !important;
+        }
+
+        [bloomerp-component="{{ component_name }}"] [data-layout-action-group] > *,
+        [bloomerp-component="{{ component_name }}"] [data-layout-action-group] button {
+            min-width: 0;
+        }
+
+        [bloomerp-component="{{ component_name }}"] .workspace-row__header,
+        [bloomerp-component="{{ component_name }}"] .workspace-row__controls {
+            flex-wrap: wrap;
+        }
+
+        [bloomerp-component="{{ component_name }}"] .workspace-row__controls {
+            width: 100%;
+        }
+
+        [bloomerp-component="{{ component_name }}"] .workspace-row__controls [data-row-title-input] {
+            min-width: 0;
+            flex: 1 1 10rem;
+        }
+
+        [bloomerp-component="{{ component_name }}"] .bloomerp-dropdown-menu {
+            max-width: calc(100vw - 1rem);
+            max-height: calc(100vh - 6rem);
+            overflow: auto;
+        }
+    }
+</style>
+
 <div
     bloomerp-component="{{ component_name }}"
     data-layout="{{ layout | dump_layout_json }}"

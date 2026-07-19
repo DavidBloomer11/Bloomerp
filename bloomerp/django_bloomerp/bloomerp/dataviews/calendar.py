@@ -112,16 +112,16 @@ class CalendarDataviewRenderer(BaseDataviewRenderer):
         return context
 
     @classmethod
-    def get_start_field(cls, data_view_fields, options):
+    def get_start_field(cls, dataview_fields, options):
         return cls.get_field_from_data_view_fields(
-            data_view_fields,
+            dataview_fields,
             getattr(options, "start_field_id", None),
         )
 
     @classmethod
-    def get_end_field(cls, data_view_fields, options):
+    def get_end_field(cls, dataview_fields, options):
         return cls.get_field_from_data_view_fields(
-            data_view_fields,
+            dataview_fields,
             getattr(options, "end_field_id", None),
         )
 

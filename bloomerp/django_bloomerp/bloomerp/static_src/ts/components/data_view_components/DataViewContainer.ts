@@ -14,7 +14,7 @@ import { insertSkeleton } from "@/utils/animations";
 
 export class DataViewContainer extends BaseComponent {
 
-    private target:string = '#data-view-data-section'
+    private target:HTMLElement|null = null;
     private baseUrl:string|null;
     private fullPath:string|null; // Includes query parameters
     private searchInput:HTMLInputElement|null = null;
@@ -51,9 +51,13 @@ export class DataViewContainer extends BaseComponent {
         this.splitViewEnabled = this.element?.dataset.splitViewEnabled === 'True';
         this.syncUrl = this.element?.dataset.syncUrl === 'true';
 
-        this.focusSearchInput();
+        // Setup target
+        this.setDataviewTarget();
 
         // Focus on search input
+        this.focusSearchInput();
+
+        
         this.setupKeydownListeners();
 
         this.setupSplitViewFocusTargets();
@@ -171,7 +175,7 @@ export class DataViewContainer extends BaseComponent {
             this.pendingHistoryMode = pushHistory ? "push" : "replace";
         }
 
-        insertSkeleton(document.querySelector(this.target) as HTMLElement);
+        insertSkeleton(this.target);
 
         htmx.ajax('get', this.fullPath, {
             target: this.target,
@@ -644,7 +648,7 @@ export class DataViewContainer extends BaseComponent {
         if (!this.contentTypeId) return null;
 
         const currentUrl = this.getCurrentUrl();
-        const url = new URL(`/components/data_view/${this.contentTypeId}/bulk_actions/`, window.location.origin);
+        const url = new URL(`/components/dataview/${this.contentTypeId}/bulk_actions/`, window.location.origin);
         url.searchParams.set('selection', useSelection ? 'selected' : 'filtered');
         currentUrl?.searchParams.forEach((value, key) => {
             if (key === 'page') return;
@@ -870,6 +874,13 @@ export class DataViewContainer extends BaseComponent {
     public onAfterSwap(): void {
         this.bindDisplayOptionsCallback();
         this.renderDefaultFilters();
+    }
+
+    /**
+     * Sets the target element for the data view container. The target is the element where the data view content will be swapped in after an HTMX request. It looks for an element with the attribute `data-dataview-target` within the container's root element. If found, it sets `this.target` to that element; otherwise, it sets it to `null`.
+     */
+    private setDataviewTarget(): void {
+        this.target = this.element?.querySelector<HTMLElement>('#data-view-data-section') ?? null;
     }
 
     public destroy(): void {
