@@ -16,6 +16,7 @@ maintain the same value on a page refresh.
 | `id` | str | The id of the resizable div. This will be used to store the value in the cookies. |
 | `start_width` | str | The initial width of the resizable div. Is a string with the unit, e.g. "200px" or "50%". |
 | `fit_to_main_bottom` | bool, optional | If true, keep the div height aligned with the bottom of the main panel. |
+| `resize_from` | str, optional | Edge used as the resize handle: `left` (default) or `right`. |
 | `class` | str, optional | Additional classes to add to the resizable div. Default is "". |
 
 ## Slots

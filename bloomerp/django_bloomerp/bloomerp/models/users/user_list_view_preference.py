@@ -167,6 +167,22 @@ def _date_field_choices(application_fields: QuerySet[ApplicationField]) -> dict[
     }
 
 
+def _self_relation_field_choices(application_fields: QuerySet[ApplicationField]) -> dict[str, Any]:
+    choices = [("", "No dependency")]
+    for application_field in application_fields:
+        if application_field.field_type not in {"ForeignKey", "OneToOneField"}:
+            continue
+        if application_field.related_model_id != application_field.content_type_id:
+            continue
+        choices.append((str(application_field.id), application_field.title))
+
+    return {
+        "choices": choices,
+        "coerce": int,
+        "empty_value": None,
+    }
+
+
 def _view_mode_choices(_application_fields: QuerySet[ApplicationField]) -> dict[str, Any]:
     return {"choices": CalendarViewMode.choices}
 
@@ -180,6 +196,7 @@ class PreferenceOption:
     description:Optional[str] = None
     data_type:type=str
     default_value:Any=DEFAULT_OPTION_UNSET
+    required:bool=False
 
 @dataclass
 class ViewTypeDefinition:
@@ -209,7 +226,7 @@ class ViewTypeDefinition:
             attrs[option.key] = option.field_cls(
                 label=option.label,
                 help_text=option.description,
-                required=False,
+                required=option.required,
                 **extra_opts
             )
             attrs[option.key].widget.attrs.setdefault("class", "select select-sm w-40 bg-base border-0")
@@ -413,7 +430,7 @@ class DataviewType(Enum):
 
     GANT = ViewTypeDefinition(
         key="gant",
-        label="Gant",
+        label="Gantt",
         icon="fa fa-chart-gantt",
         description="Displays records as a timeline.",
         renderer_cls=GantDataviewRenderer,
@@ -426,6 +443,7 @@ class DataviewType(Enum):
                 description="The date field used as the start of the timeline item.",
                 data_type=int | None,
                 default_value=None,
+                required=True,
             ),
             PreferenceOption(
                 key="end_field_id",
@@ -435,15 +453,34 @@ class DataviewType(Enum):
                 description="The date field used as the end of the timeline item.",
                 data_type=int | None,
                 default_value=None,
+                required=True,
             ),
             PreferenceOption(
-                key="group_by_field_id",
-                label="Group by",
+                key="dependency_from_field_id",
+                label="Dependency from",
                 field_cls=forms.TypedChoiceField,
-                field_attrs_func=_group_by_field_choices,
-                description="Optional field used to group timeline rows.",
+                field_attrs_func=_self_relation_field_choices,
+                description="Optional self-referencing field whose related record precedes this record.",
                 data_type=int | None,
                 default_value=None,
+            ),
+            PreferenceOption(
+                key="dependency_for_field_id",
+                label="Dependency for",
+                field_cls=forms.TypedChoiceField,
+                field_attrs_func=_self_relation_field_choices,
+                description="Optional self-referencing field whose related record follows this record.",
+                data_type=int | None,
+                default_value=None,
+            ),
+            PreferenceOption(
+                key="page_size",
+                label="Rows per page",
+                field_cls=forms.TypedChoiceField,
+                field_attrs_func=_page_size_choices,
+                description="The number of timeline rows loaded at a time.",
+                data_type=int,
+                default_value=PageSize.SIZE_25,
             ),
         ],
     )

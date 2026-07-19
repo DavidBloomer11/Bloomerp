@@ -825,6 +825,12 @@
   .min-h-20 {
     min-height: calc(var(--spacing) * 20);
   }
+  .min-h-28 {
+    min-height: calc(var(--spacing) * 28);
+  }
+  .min-h-32 {
+    min-height: calc(var(--spacing) * 32);
+  }
   .min-h-64 {
     min-height: calc(var(--spacing) * 64);
   }
@@ -1034,6 +1040,9 @@
   }
   .min-w-32 {
     min-width: calc(var(--spacing) * 32);
+  }
+  .min-w-40 {
+    min-width: calc(var(--spacing) * 40);
   }
   .min-w-48 {
     min-width: calc(var(--spacing) * 48);
