@@ -8,6 +8,8 @@ from django.urls import reverse
 from playwright.sync_api import Locator, Page, expect
 
 from bloomerp.management.commands import save_application_fields
+from bloomerp.models import ApplicationField
+from bloomerp.models.users.user_list_view_preference import UserListViewPreference, DataviewType
 from bloomerp.models import ApplicationField, Sidebar, SidebarItem
 from bloomerp.models.users.user_list_view_preference import UserListViewPreference, ViewTypeEnum
 from bloomerp.tests.base import BaseBloomerpModelTestCase
@@ -105,7 +107,7 @@ def _apply_first_name_filter(page: Page, value: str, response_timeout: int = 300
     value_input.fill(value)
 
     with page.expect_response(
-        lambda response: "components/data_view" in response.url,
+        lambda response: "components/dataview" in response.url,
         timeout=response_timeout,
     ):
         page.locator("#apply-filters-button").click()
@@ -127,7 +129,7 @@ def apply_filter(page: Page, filter_key: str, filter_value: str, response_timeou
     value_input.fill(filter_value)
 
     with page.expect_response(
-        lambda response: "components/data_view" in response.url,
+        lambda response: "components/dataview" in response.url,
         timeout=response_timeout,
     ):
         page.locator("#apply-filters-button").click()
@@ -165,7 +167,7 @@ def search(
     search_input.click()
 
     with page.expect_response(
-        lambda response: "components/data_view" in response.url and f"q={query}" in response.url,
+        lambda response: "components/dataview" in response.url and f"q={query}" in response.url,
         timeout=response_timeout,
     ):
         page.keyboard.type(query, delay=20)
@@ -177,7 +179,7 @@ def search(
     )
 
 
-def change_view_type(view_type:ViewTypeEnum, page: Page) -> None:
+def change_view_type(view_type:DataviewType, page: Page) -> None:
     page.get_by_role("button", name="Display").click()
     display_menu = page.locator("div[role='menu']:visible").filter(
         has=page.locator(f"button[data-display-options-values*='\"view_type\": \"{view_type.value.key}\"']")
@@ -316,7 +318,7 @@ class TestDataViewE2E:
         page = authenticated_dataview_page
 
         # 1. Switch to the pivot view and locate its native row-field selector.
-        change_view_type(ViewTypeEnum.PIVOT_TABLE, page)
+        change_view_type(DataviewType.PIVOT_TABLE, page)
         display_menu = page.locator("div[role='menu']:visible").filter(
             has=page.locator("select[name='row_field_ids']")
         )

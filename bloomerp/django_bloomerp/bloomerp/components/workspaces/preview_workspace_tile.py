@@ -140,7 +140,10 @@ class PreviewWorkspaceTile(TemplateView):
             True
         )
         if self.get_tile_type().value.form_cls:
-            ctx["form"] = self.get_tile_type().value.form_cls()
+            form_kwargs = {"initial": config.model_dump()}
+            if self.get_tile_type() == TileType.DATAVIEW_TILE:
+                form_kwargs["user"] = self.request.user
+            ctx["form"] = self.get_tile_type().value.form_cls(**form_kwargs)
         
         return ctx
     
@@ -155,8 +158,6 @@ class PreviewWorkspaceTile(TemplateView):
                 return "components/workspaces/tile_builders/text_tile_builder.html"
             case TileType.CANVAS_TILE:
                 return "components/workspaces/tile_builders/canvas_tile_builder.html"
-            # case TileType.DATAVIEW_TILE:
-            #     return "components/workspaces/tile_builders/dataview_tile_builder.html"
             # case TileType.FORM_TILE:
             #     return "components/workspaces/tile_builders/form_tile_builder.html"
             case _:
@@ -279,8 +280,11 @@ class PreviewWorkspaceTile(TemplateView):
         try:
             # Get the new configuration based on the handler
             
-            if isinstance(operation_def.validation_model, forms.Form):
-                data = operation_def.validation_model(data=request.POST, files=request.FILES)
+            if issubclass(operation_def.validation_model, forms.Form):
+                form_kwargs = {"data": request.POST, "files": request.FILES}
+                if tile_type == TileType.DATAVIEW_TILE:
+                    form_kwargs["user"] = request.user
+                data = operation_def.validation_model(**form_kwargs)
             else:
                 data = operation_def.validation_model(**data)
             

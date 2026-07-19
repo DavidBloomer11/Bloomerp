@@ -76,7 +76,7 @@ class TestDataView(BaseBloomerpModelTestCase):
         # 4. Make sure the initial dataview load preserves the current query string
         content_type_id = ContentType.objects.get_for_model(self.CustomerModel).id
         dataview_url = reverse(
-            viewname="components_data_view",
+            viewname="components_dataview",
             kwargs={"content_type_id": content_type_id},
         )
 
@@ -87,7 +87,7 @@ class TestDataView(BaseBloomerpModelTestCase):
 
         content_type_id = ContentType.objects.get_for_model(self.CustomerModel).id
         url = reverse(
-            viewname="components_data_view",
+            viewname="components_dataview",
             kwargs={"content_type_id": content_type_id},
         ) + "?first_name=xyz&q=alice&page=3"
 
@@ -133,7 +133,7 @@ class TestDataView(BaseBloomerpModelTestCase):
         # 4. Make sure the page bootstraps the dataview with the filter query string
         content_type_id = ContentType.objects.get_for_model(self.CustomerModel).id
         dataview_url = reverse(
-            viewname="components_data_view",
+            viewname="components_dataview",
             kwargs={"content_type_id": content_type_id},
         )
 
@@ -224,7 +224,7 @@ class TestDataView(BaseBloomerpModelTestCase):
         self.client.force_login(self.normal_user)
         
         url = reverse(
-            viewname="components_data_view",
+            viewname="components_dataview",
             kwargs={"content_type_id": content_type.id},
         )
         response = self.client.get(url, HTTP_HX_REQUEST="true")
@@ -233,8 +233,8 @@ class TestDataView(BaseBloomerpModelTestCase):
         self.assertContains(response, "First Name", html=False)
         self.assertNotContains(response, "<th >Last Name</th>", html=False)
 
-        data_view_fields = get_data_view_fields(preference, "table")
-        self.assertEqual([field.id for field in data_view_fields.visible_fields], [first_name_field.id])
+        dataview_fields = get_data_view_fields(preference, "table")
+        self.assertEqual([field.id for field in dataview_fields.visible_fields], [first_name_field.id])
 
         preference.refresh_from_db()
         self.assertEqual(preference.get_visible_field_ids("table"), [first_name_field.id])
@@ -277,7 +277,7 @@ class TestDataView(BaseBloomerpModelTestCase):
         # Create url with filter for first_name
         content_type_id = ContentType.objects.get_for_model(self.CustomerModel).id
         url = reverse(
-            viewname="components_data_view",
+            viewname="components_dataview",
             kwargs={"content_type_id": content_type_id},
         ) + "?first_name=Alice"
         
@@ -298,7 +298,7 @@ class TestDataView(BaseBloomerpModelTestCase):
 
         content_type_id = ContentType.objects.get_for_model(self.CustomerModel).id
         url = reverse(
-            viewname="components_data_view",
+            viewname="components_dataview",
             kwargs={"content_type_id": content_type_id},
         ) + "?sort=first_name&direction=asc"
 
@@ -315,7 +315,7 @@ class TestDataView(BaseBloomerpModelTestCase):
 
         content_type_id = ContentType.objects.get_for_model(self.CustomerModel).id
         url = reverse(
-            viewname="components_data_view",
+            viewname="components_dataview",
             kwargs={"content_type_id": content_type_id},
         ) + "?first_name__icontains=a&q=a&page=3&sort=first_name&direction=asc"
 
@@ -323,7 +323,7 @@ class TestDataView(BaseBloomerpModelTestCase):
         self.assertEqual(response.status_code, 200)
 
         dataview_url = reverse(
-            viewname="components_data_view",
+            viewname="components_dataview",
             kwargs={"content_type_id": content_type_id},
         )
         content = response.content.decode()
@@ -364,7 +364,7 @@ class TestDataView(BaseBloomerpModelTestCase):
             self.create_customer(f"Batch-{index}", "Kanban", 123)
 
         dataview_url = reverse(
-            viewname="components_data_view",
+            viewname="components_dataview",
             kwargs={"content_type_id": content_type.id},
         )
 
@@ -377,7 +377,7 @@ class TestDataView(BaseBloomerpModelTestCase):
         self.assertNotContains(response, 'data-testid="data-view-pagination"', html=False)
 
         column_url = reverse(
-            viewname="components_data_view_action",
+            viewname="components_dataview_action",
             kwargs={"content_type_id": content_type.id, "action": "column"},
         )
         page_response = self.client.get(
@@ -419,7 +419,7 @@ class TestDataView(BaseBloomerpModelTestCase):
 
         # 2. Request the dataview component.
         url = reverse(
-            viewname="components_data_view",
+            viewname="components_dataview",
             kwargs={"content_type_id": content_type.id},
         )
         response = self.client.get(url, HTTP_HX_REQUEST="true")
@@ -465,7 +465,7 @@ class TestDataView(BaseBloomerpModelTestCase):
         for lookup in ["", "__exact"]:
             content_type_id = ContentType.objects.get_for_model(self.CustomerModel).id
             url = reverse(
-                viewname="components_data_view",
+                viewname="components_dataview",
                 kwargs={"content_type_id": content_type_id},
             ) + "?country" + lookup + "=" + str(country.id)
 
@@ -501,7 +501,7 @@ class TestDataView(BaseBloomerpModelTestCase):
         for lookup in ["__name", "__name__exact"]:
             content_type_id = ContentType.objects.get_for_model(self.CustomerModel).id
             url = reverse(
-                viewname="components_data_view",
+                viewname="components_dataview",
                 kwargs={"content_type_id": content_type_id},
             ) + "?country" + lookup + "=" + country.name
 
@@ -534,7 +534,7 @@ class TestDataView(BaseBloomerpModelTestCase):
         # Create url with filter for first_name and last_name
         content_type_id = ContentType.objects.get_for_model(self.CustomerModel).id
         url = reverse(
-            viewname="components_data_view",
+            viewname="components_dataview",
             kwargs={"content_type_id": content_type_id},
         ) + "?q=Alice Johnson"
         
@@ -733,7 +733,7 @@ class TestDataView(BaseBloomerpModelTestCase):
         )
 
         url = reverse(
-            viewname="components_change_data_view_preference",
+            viewname="components_update_dataview_preference",
             kwargs={"content_type_id": content_type.id},
         )
 

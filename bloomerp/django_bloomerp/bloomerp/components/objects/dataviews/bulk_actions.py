@@ -22,7 +22,7 @@ from bloomerp.utils.filters import filter_model
 from bloomerp.utils.models import get_model_and_content_type_or_404
 from bloomerp.components.objects.dataviews.dataview import (
     _apply_default_filters_to_querydict,
-    _get_data_view_type_definition,
+    _get_dataview_type_definition,
     _normalize_default_filters,
 )
 from bloomerp.utils.requests import render_message
@@ -86,10 +86,10 @@ def _bulk_permission(model: type[models.Model]) -> str:
 
 def _editable_fields(request: HttpRequest, model: type[models.Model], content_type: ContentType) -> list[ApplicationField]:
     permission_manager = UserPermissionManager(request.user)
-    data_view_fields = get_data_view_fields(
+    dataview_fields = get_data_view_fields(
         UserListViewPreference.get_or_create_for_user(request.user, content_type)
     )
-    accessible_fields = [field for field, _is_visible in data_view_fields.accessible_fields]
+    accessible_fields = [field for field, _is_visible in dataview_fields.accessible_fields]
     change_permission = create_permission_str(model, "change")
     editable_fields: list[ApplicationField] = []
 
@@ -112,7 +112,7 @@ def _editable_fields(request: HttpRequest, model: type[models.Model], content_ty
 def _filter_querydict(request: HttpRequest, preference: UserListViewPreference):
     querydict = request.GET.copy()
     reserved_keys = set(RESERVED_BULK_QUERY_KEYS)
-    definition = _get_data_view_type_definition(preference.view_type)
+    definition = _get_dataview_type_definition(preference.view_type)
     if definition is not None:
         reserved_keys |= definition.renderer_cls.get_reserved_query_params()
 
@@ -260,7 +260,7 @@ def _run_bulk_update(
 
 
 @router.register(
-    path="components/data_view/<int:content_type_id>/bulk_actions/",
+    path="components/dataview/<int:content_type_id>/bulk_actions/",
     url_name="components_bulk_actions",
 )
 def bulk_actions(request: HttpRequest, content_type_id: int) -> HttpResponse:
@@ -328,7 +328,7 @@ def bulk_actions(request: HttpRequest, content_type_id: int) -> HttpResponse:
 
 
 @router.register(
-    path="components/data_view/<int:content_type_id>/bulk_actions/field_selector/",
+    path="components/dataview/<int:content_type_id>/bulk_actions/field_selector/",
     url_name="components_bulk_actions_field_selector",
 )
 def field_selector(request: HttpRequest, content_type_id: int) -> HttpResponse:
