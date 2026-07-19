@@ -138,6 +138,7 @@ export class GantChart extends BaseDataViewComponent {
         }
         this.applyZoom(false);
         window.requestAnimationFrame(() => {
+            this.syncSidebarChrome();
             const initialTarget = Date.now() >= this.rangeStart && Date.now() <= this.rangeEnd
                 ? Date.now()
                 : this.dataStart;
@@ -293,7 +294,34 @@ export class GantChart extends BaseDataViewComponent {
 
         this.renderAxis();
         this.updateVisibleRange();
+        this.syncSidebarChrome();
         this.scheduleDependencyDraw();
+    }
+
+    private syncSidebarChrome(): void {
+        if (!this.element) return;
+
+        const collapsed = this.sidebarWidth <= 1;
+        const sidebarCells = this.element.querySelectorAll<HTMLElement>(
+            '[data-gant-sidebar], [bloomerp-component="gant-chart-sidebar-item"]',
+        );
+        for (const cell of sidebarCells) {
+            cell.style.visibility = collapsed ? 'hidden' : '';
+            cell.style.paddingInline = collapsed ? '0' : '';
+            cell.style.borderInlineEndWidth = collapsed ? '0' : '';
+            cell.style.pointerEvents = collapsed ? 'none' : '';
+            if (collapsed) cell.setAttribute('aria-hidden', 'true');
+            else cell.removeAttribute('aria-hidden');
+        }
+
+        const handle = this.element.querySelector<HTMLElement>('[data-resizable-div-handle]');
+        const rows = this.element.querySelector<HTMLElement>('[data-gant-rows]');
+        if (!handle || !rows) return;
+
+        const handleTop = handle.getBoundingClientRect().top;
+        const rowsBottom = rows.getBoundingClientRect().bottom;
+        const minimumHeight = handle.parentElement?.getBoundingClientRect().height ?? 0;
+        handle.style.height = `${Math.max(minimumHeight, rowsBottom - handleTop)}px`;
     }
 
     private renderAxis(): void {
@@ -481,6 +509,7 @@ export class GantChart extends BaseDataViewComponent {
     private handleScroll = (): void => {
         this.updateVisibleRange();
         this.extendTimelineNearEdge();
+        this.syncSidebarChrome();
     };
 
     private extendTimelineNearEdge(): void {

@@ -237,15 +237,29 @@ export default class ResizableDiv extends BaseComponent {
             "top-0",
             "z-50",
             "h-full",
-            "w-3",
+            "group",
+            "w-2",
             this.resizeFrom === "right" ? "translate-x-1/2" : "-translate-x-1/2",
             "cursor-col-resize",
-            "transition-colors",
-            "hover:bg-primary-500/25",
         ].join(" ");
         handle.setAttribute("aria-label", "Resize panel");
         handle.setAttribute("role", "separator");
         handle.setAttribute("data-resizable-div-handle", "true");
+
+        const handleLine = document.createElement("div");
+        handleLine.className = [
+            "pointer-events-none",
+            "absolute",
+            "inset-y-0",
+            "left-1/2",
+            "w-px",
+            "-translate-x-1/2",
+            "bg-gray-200",
+            "transition-colors",
+            "group-hover:bg-primary",
+        ].join(" ");
+        handleLine.setAttribute("aria-hidden", "true");
+        handle.appendChild(handleLine);
 
         this.handleDoubleClickHandler = (event: MouseEvent) => {
             event.preventDefault();
