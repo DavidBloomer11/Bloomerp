@@ -152,7 +152,7 @@ class WorkspaceTileRenderingTests(BaseBloomerpModelTestCase):
         self.assertEqual(config["content_type_id"], content_type.pk)
         self.assertIsNone(config["list_view_preference_id"])
 
-    @patch("bloomerp.workspaces.dataview_tile.render.data_view")
+    @patch("bloomerp.workspaces.dataview_tile.render.dataview")
     def test_data_view_tile_renderer_uses_configured_available_preference(self, data_view_mock):
         """
         Use case: A tile is configured with a saved list-view preference.

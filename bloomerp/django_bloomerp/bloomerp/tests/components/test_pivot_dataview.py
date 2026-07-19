@@ -70,7 +70,7 @@ class TestPivotDataView(BaseBloomerpModelTestCase):
 
     def _component_url(self) -> str:
         return reverse(
-            "components_data_view",
+            "components_dataview",
             kwargs={"content_type_id": self._field("region").content_type_id},
         )
 

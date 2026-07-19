@@ -1,9 +1,9 @@
 from django.middleware.csrf import get_token
 from pydantic import ValidationError as PydanticValidationError
 
-from bloomerp.components.objects.dataviews.dataview import _get_accessible_application_fields, _get_data_view_options_form, _get_data_view_type_definition, _normalize_default_filters
+from bloomerp.components.objects.dataviews.dataview import _get_accessible_application_fields, _get_dataview_options_form, _get_dataview_type_definition, _normalize_default_filters
 from bloomerp.models import ApplicationField
-from bloomerp.models.users.user_list_view_preference import UserListViewPreference, ViewTypeEnum
+from bloomerp.models.users.user_list_view_preference import UserListViewPreference, DataviewType
 from bloomerp.router import router
 from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
 from bloomerp.services.preference_services import PreferenceManager
@@ -22,7 +22,7 @@ def _change_data_view_field_visibility(
     try:
         field_id = int(post_data["toggle_field_id"])
         view_type = post_data.get("toggle_view_type", preference.view_type)
-        if _get_data_view_type_definition(view_type) is None:
+        if _get_dataview_type_definition(view_type) is None:
             return HttpResponse("Invalid view type", status=400)
 
         permission_manager = UserPermissionManager(request.user)
@@ -43,18 +43,18 @@ def _change_data_view_field_visibility(
 
 def _change_data_view_options(
     preference: UserListViewPreference,
-    data_view_fields,
+    dataview_fields,
     post_data,
 ) -> HttpResponse | None:
     view_type = post_data["dataview_options_view_type"]
     if view_type != preference.view_type:
         return HttpResponse("Invalid options view type", status=400)
 
-    definition = _get_data_view_type_definition(view_type)
+    definition = _get_dataview_type_definition(view_type)
     if definition is None:
         return HttpResponse("Invalid view type", status=400)
 
-    form_cls = definition.create_opts_form(data_view_fields)
+    form_cls = definition.create_opts_form(dataview_fields)
     form = form_cls(post_data)
     if not form.is_valid():
         return HttpResponse("Invalid options", status=400)
@@ -79,7 +79,7 @@ def _change_split_view(preference: UserListViewPreference, post_data) -> HttpRes
 
 def _change_data_view_type(preference: UserListViewPreference, post_data) -> HttpResponse | None:
     view_type = post_data["view_type"]
-    if _get_data_view_type_definition(view_type) is None:
+    if _get_dataview_type_definition(view_type) is None:
         return HttpResponse("Invalid view type", status=400)
 
     preference.view_type = view_type
@@ -92,19 +92,19 @@ def _render_display_options(
     content_type_id: int,
     preference: UserListViewPreference,
 ) -> HttpResponse:
-    data_view_fields = get_data_view_fields(preference)
+    dataview_fields = get_data_view_fields(preference)
     return render(
         request,
         "cotton/features/dataviews/display_options.html",
         {
             "content_type_id": content_type_id,
-            "view_types": [vt.value for vt in ViewTypeEnum],
+            "view_types": [vt.value for vt in DataviewType],
             "preference": preference,
-            "fields": data_view_fields,
-            "accessible_fields": _get_accessible_application_fields(data_view_fields),
-            "dataview_options_form": _get_data_view_options_form(
+            "fields": dataview_fields,
+            "accessible_fields": _get_accessible_application_fields(dataview_fields),
+            "dataview_options_form": _get_dataview_options_form(
                 preference,
-                _get_accessible_application_fields(data_view_fields),
+                _get_accessible_application_fields(dataview_fields),
                 request,
             ),
             "csrf_token": get_token(request),
@@ -172,10 +172,10 @@ def update_dataview_preference(request: HttpRequest, content_type_id: int) -> Ht
         case "split_view":
             error_response = _change_split_view(preference, request.POST)
         case "opt":
-            data_view_fields = get_data_view_fields(preference)
+            dataview_fields = get_data_view_fields(preference)
             error_response = _change_data_view_options(
                 preference,
-                _get_accessible_application_fields(data_view_fields),
+                _get_accessible_application_fields(dataview_fields),
                 request.POST,
             )
         case "field":

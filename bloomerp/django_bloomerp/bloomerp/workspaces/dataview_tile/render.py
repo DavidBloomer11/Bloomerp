@@ -1,6 +1,6 @@
 from django.http import HttpRequest
 
-from bloomerp.components.objects.dataviews.dataview import data_view
+from bloomerp.components.objects.dataviews.dataview import dataview
 from bloomerp.models.users.user_list_view_preference import UserListViewPreference
 from bloomerp.services.preference_services import PreferenceManager
 from bloomerp.workspaces.base import BaseTileRenderer
@@ -28,7 +28,15 @@ class DataViewTileRenderer(BaseTileRenderer):
             if preference is not None:
                 preference = preference.effective_preference
 
-        return data_view(
+        get_params = request.GET.copy()
+        get_params.pop("tile_id")
+        get_params.pop("colspan")
+        get_params.pop("max_cols")
+        
+        request.GET = get_params
+        
+        
+        return dataview(
             request,
             content_type_id=config.content_type_id,
             preference=preference,
