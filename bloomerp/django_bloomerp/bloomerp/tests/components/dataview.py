@@ -758,6 +758,145 @@ class TestDataView(BaseBloomerpModelTestCase):
         self.assertEqual(selected.options["table"]["page_size"], 50)
 
 
+class TestCalendarDataView(BaseBloomerpModelTestCase):
+    auto_create_customers = False
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.CalendarEventModel = create_test_models(
+            app_label="bloomerp",
+            model_defs={
+                "CalendarEvent": {
+                    "name": models.CharField(max_length=100),
+                    "starts_on": models.DateField(null=True, blank=True),
+                    "ends_on": models.DateField(null=True, blank=True),
+                    "starts_at": models.DateTimeField(null=True, blank=True),
+                    "ends_at": models.DateTimeField(null=True, blank=True),
+                    "category": models.CharField(
+                        max_length=20,
+                        choices=[("alpha", "Alpha"), ("beta", "Beta")],
+                        blank=True,
+                    ),
+                    "__str__": lambda self: self.name,
+                },
+            },
+            use_bloomerp_base=True,
+        )["CalendarEvent"]
+        cls._register_dynamic_model_routes([cls.CalendarEventModel])
+
+    def _configure_calendar(self, *, with_times=False, view_mode="month"):
+        content_type = ContentType.objects.get_for_model(self.CalendarEventModel)
+        start_field = ApplicationField.get_by_field(
+            self.CalendarEventModel,
+            "starts_at" if with_times else "starts_on",
+        )
+        end_field = ApplicationField.get_by_field(
+            self.CalendarEventModel,
+            "ends_at" if with_times else "ends_on",
+        )
+        category_field = ApplicationField.get_by_field(self.CalendarEventModel, "category")
+        preference = get_user_list_view_preference(self.admin_user, content_type)
+        preference.view_type = "calendar"
+        preference.options = {
+            "calendar": {
+                "start_field_id": start_field.id,
+                "end_field_id": end_field.id,
+                "view_mode": view_mode,
+                "color_grouping_field_id": category_field.id,
+            },
+        }
+        preference.display_fields = {**preference.display_fields, "calendar": []}
+        preference.save()
+        return content_type
+
+    def test_calendar_renders_ranges_year_list_and_color_legend(self):
+        """
+        Use case: A color-grouped event spans several days and users switch calendar modes.
+        Expected result: The range fills each day, the legend renders, and year/list modes are available.
+        """
+        # 1. Configure a month calendar and create a three-day event.
+        self.client.force_login(self.admin_user)
+        content_type = self._configure_calendar()
+        today = timezone.localdate()
+        event_day = today.replace(day=10)
+        self.CalendarEventModel.objects.create(
+            name="Conference",
+            starts_on=event_day,
+            ends_on=event_day + timedelta(days=2),
+            category="alpha",
+        )
+        url = reverse("components_dataview", kwargs={"content_type_id": content_type.id})
+
+        # 2. Render the month containing the event.
+        response = self.client.get(url, HTTP_HX_REQUEST="true")
+
+        # 3. Verify the range, configured legend, and all five mode choices render.
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'bloomerp-component="calendar"', html=False)
+        self.assertContains(response, 'class="calendar-event', count=3, html=False)
+        self.assertContains(response, "Conference", html=False)
+        self.assertContains(response, "Alpha", html=False)
+        for mode in ("day", "week", "month", "year", "list"):
+            self.assertContains(response, f'value="{mode}"', html=False)
+
+        # 4. Switch to year and list through the calendar query control.
+        year_response = self.client.get(
+            f"{url}?calendar_view_mode=year",
+            HTTP_HX_REQUEST="true",
+        )
+        list_response = self.client.get(
+            f"{url}?calendar_view_mode=list",
+            HTTP_HX_REQUEST="true",
+        )
+        self.assertContains(year_response, today.strftime("%Y"), html=False)
+        self.assertContains(list_response, "Conference", html=False)
+
+    def test_calendar_unit_loads_five_events_at_a_time(self):
+        """
+        Use case: More than five timed events start in the same calendar hour.
+        Expected result: The unit renders five events and loads the next page on demand.
+        """
+        # 1. Configure a day calendar and create seven events in one hour.
+        self.client.force_login(self.admin_user)
+        content_type = self._configure_calendar(with_times=True, view_mode="day")
+        local_timezone = timezone.get_current_timezone()
+        today = timezone.localdate()
+        start = timezone.make_aware(datetime.combine(today, datetime.min.time()).replace(hour=10, minute=15), local_timezone)
+        for index in range(7):
+            self.CalendarEventModel.objects.create(
+                name=f"Session {index}",
+                starts_at=start + timedelta(minutes=index),
+                ends_at=start + timedelta(minutes=index + 1),
+                category="beta",
+            )
+        url = reverse("components_dataview", kwargs={"content_type_id": content_type.id})
+
+        # 2. Render the current day and verify only the first five unit records are present.
+        response = self.client.get(url, HTTP_HX_REQUEST="true")
+        self.assertEqual(response.status_code, 200)
+        for index in range(5):
+            self.assertContains(response, f"Session {index}", html=False)
+        self.assertNotContains(response, "Session 5", html=False)
+        self.assertContains(response, "calendar_unit_offset=5", html=False)
+
+        # 3. Request the next page through the permission-filtered renderer action.
+        page_url = reverse(
+            "components_dataview_action",
+            kwargs={"content_type_id": content_type.id, "action": "unit"},
+        )
+        page_response = self.client.get(
+            f"{page_url}?calendar_view_mode=day&calendar_unit={today.isoformat()}T10&calendar_unit_offset=5",
+            HTTP_HX_REQUEST="true",
+        )
+
+        # 4. Verify the remaining two events render and no third page is offered.
+        self.assertEqual(page_response.status_code, 200)
+        self.assertContains(page_response, "Session 5", html=False)
+        self.assertContains(page_response, "Session 6", html=False)
+        self.assertNotContains(page_response, "Load more", html=False)
+
+
 class TestGantDataView(BaseBloomerpModelTestCase):
     auto_create_customers = False
 

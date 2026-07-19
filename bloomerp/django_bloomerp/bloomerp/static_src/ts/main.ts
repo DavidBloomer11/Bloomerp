@@ -61,6 +61,7 @@ import ResizableDiv from './components/ResizableDiv';
 import { DataViewDisplayOptions } from './components/data_view_components/DisplayOptions';
 import { GantChart, GantChartItem, GantChartSidebarItem } from './components/data_view_components/GantChart';
 import { PivotTable } from './components/data_view_components/PivotTable';
+import { Calendar, CalendarCell } from './components/data_view_components/Calendar';
 
 import { openModal } from './utils/modals';
 import { closeModal } from './utils/modals';
@@ -80,6 +81,8 @@ registerComponent('dataview-container', DataViewContainer);
 registerComponent('document-templates-dataview', DocumentTemplateDataViewContainer);
 registerComponent('dataview-display-options', DataViewDisplayOptions);
 registerComponent('pivot-table', PivotTable);
+registerComponent('calendar', Calendar);
+registerComponent('calendar-cell', CalendarCell);
 
 // Datatable
 registerComponent('datatable', DataTable);

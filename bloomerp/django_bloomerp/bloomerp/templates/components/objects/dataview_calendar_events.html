@@ -1,0 +1,42 @@
+{% load bloomerp %}
+
+{% for event in events %}
+<a
+    href="{{ event.object.get_absolute_url }}"
+    class="calendar-event block rounded-xl border px-2 py-1 text-xs shadow-xs transition-opacity hover:opacity-80 {{ event.color_classes }}"
+    title="{{ event.object }}"
+    data-calendar-unit="{{ calendar_unit }}"
+    data-calendar-event
+    data-detail-url="{{ event.object.get_absolute_url }}"
+    data-object-id="{{ event.object.pk }}"
+    data-object-string="{{ event.object }}"
+    bloomerp-component="calendar-cell"
+>
+    <span class="flex min-w-0 items-center gap-1">
+        {% if event.start_time %}<span class="shrink-0 font-medium">{{ event.start_time|time:"H:i" }}</span>{% endif %}
+        <span class="truncate font-medium">{{ event.object }}</span>
+    </span>
+    {% if fields %}
+    <span class="mt-0.5 block truncate opacity-75">
+        {% for field in fields %}
+            {% render_dataview_value object=event.object application_field=field user=request.user row_index=forloop.parentloop.counter0 column_index=forloop.counter0 url=event.object.get_absolute_url split_view_enabled=preference.split_view_enabled %}{% if not forloop.last %} · {% endif %}
+        {% endfor %}
+    </span>
+    {% endif %}
+</a>
+{% endfor %}
+
+{% if calendar_has_more %}
+<button
+    type="button"
+    class="btn btn-sm mt-1 w-full border-gray-200 bg-base text-dark"
+    data-calendar-unit="{{ calendar_unit }}"
+    data-calendar-load-more
+    bloomerp-component="calendar-cell"
+    hx-get="{% url 'components_dataview_action' content_type_id=content_type_id action='unit' %}{% if calendar_page_querystring %}?{{ calendar_page_querystring }}&{% else %}?{% endif %}calendar_view_mode={{ calendar_view_mode }}&calendar_unit={{ calendar_unit|urlencode }}&calendar_unit_offset={{ calendar_next_unit_offset }}"
+    hx-target="this"
+    hx-swap="outerHTML"
+>
+    <c-i18n.blocktrans>Load more</c-i18n.blocktrans>
+</button>
+{% endif %}
