@@ -733,7 +733,7 @@ class TestDataView(BaseBloomerpModelTestCase):
         )
 
         url = reverse(
-            viewname="components_change_data_view_preference",
+            viewname="components_update_dataview_preference",
             kwargs={"content_type_id": content_type.id},
         )
 

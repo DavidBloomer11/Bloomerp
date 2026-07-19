@@ -254,7 +254,7 @@ class TestPivotDataView(BaseBloomerpModelTestCase):
 
         # 4. Submit ordered row and column selections through the preference endpoint.
         preference_url = reverse(
-            "components_change_data_view_preference",
+            "components_update_dataview_preference",
             kwargs={"content_type_id": self._field("region").content_type_id},
         )
         post_response = self.client.post(

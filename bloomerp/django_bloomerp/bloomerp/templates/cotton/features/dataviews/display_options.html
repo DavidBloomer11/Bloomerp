@@ -4,7 +4,7 @@
     bloomerp-component="dataview-display-options"
     data-content-type-id="{{ content_type_id }}"
     data-preference-id="{{ preference.id }}"
-    data-preference-url="{% url 'components_change_data_view_preference' content_type_id=content_type_id %}"
+    data-preference-url="{% url 'components_update_dataview_preference' content_type_id=content_type_id %}"
     data-view-type="{{ preference.view_type }}"
     data-split-view-enabled="{{ preference.split_view_enabled }}"
     class="max-h-[60vh] overflow-y-auto"
