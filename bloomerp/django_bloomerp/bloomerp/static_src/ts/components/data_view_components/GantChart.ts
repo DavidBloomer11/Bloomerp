@@ -1,4 +1,7 @@
 import { componentIdentifier, getComponent } from "../BaseComponent";
+import { MessageType } from "../UiMessage";
+import { getCsrfToken } from "../../utils/cookies";
+import showMessage from "../../utils/messages";
 import { BaseDataViewCell } from "./BaseDataViewCell";
 import { BaseDataViewComponent } from "./BaseDataViewComponent";
 
@@ -9,6 +12,20 @@ const MONTH = 30.4375 * DAY;
 const DEFAULT_SIDEBAR_WIDTH = 320;
 
 type TickUnit = 'month' | 'week' | 'day' | 'hour';
+type GantFieldType = 'DateField' | 'DateTimeField';
+type BarDragMode = 'move' | 'start' | 'end';
+
+interface GantDateUpdate {
+    object_id: string;
+    start_ms?: number;
+    end_ms?: number;
+}
+
+interface GantDateUpdateResponse {
+    object_id: string;
+    start_ms: number;
+    end_ms: number;
+}
 
 interface ZoomLevel {
     pixelsPerMs: number;
@@ -49,6 +66,8 @@ export class GantChart extends BaseDataViewComponent {
     private dataEnd = 0;
     private sidebarWidth = DEFAULT_SIDEBAR_WIDTH;
     private extendingTimeline = false;
+    private mutationInFlight = false;
+    private activeGestureController: AbortController | null = null;
 
     public initialize(): void {
         if (!this.element) return;
@@ -91,6 +110,24 @@ export class GantChart extends BaseDataViewComponent {
         this.element.addEventListener('htmx:afterSwap', this.handleHtmxSwap, {
             signal: abortController.signal,
         });
+        this.element.addEventListener('pointerdown', this.onBarPointerDown, {
+            signal: abortController.signal,
+        });
+        this.element.addEventListener('dragstart', this.onUnscheduledDragStart, {
+            signal: abortController.signal,
+        });
+        this.element.addEventListener('dragend', this.clearDropHighlights, {
+            signal: abortController.signal,
+        });
+        this.element.addEventListener('dragover', this.onTimelineDragOver, {
+            signal: abortController.signal,
+        });
+        this.element.addEventListener('dragleave', this.onTimelineDragLeave, {
+            signal: abortController.signal,
+        });
+        this.element.addEventListener('drop', this.onTimelineDrop, {
+            signal: abortController.signal,
+        });
         window.addEventListener('resize', this.onResize, { signal: abortController.signal });
 
         this.resizeObserver = new ResizeObserver(this.onResize);
@@ -109,6 +146,8 @@ export class GantChart extends BaseDataViewComponent {
     }
 
     public override destroy(): void {
+        this.activeGestureController?.abort();
+        this.activeGestureController = null;
         if (this.drawFrame !== null) {
             window.cancelAnimationFrame(this.drawFrame);
             this.drawFrame = null;
@@ -134,6 +173,34 @@ export class GantChart extends BaseDataViewComponent {
 
     public moveCellLeft(): BaseDataViewCell {
         return this.currentCell!;
+    }
+
+    protected override handleAltArrow(event: KeyboardEvent): boolean {
+        if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return false;
+        event.preventDefault();
+        if (!this.currentCell) this.initFocus();
+
+        const selected = this.getSelectedCells().filter(
+            (cell): cell is GantChartItem => cell instanceof GantChartItem,
+        );
+        const cells = selected.length > 0
+            ? selected
+            : (this.currentCell instanceof GantChartItem ? [this.currentCell] : []);
+        const items = cells
+            .map((cell) => cell.element)
+            .filter((element): element is HTMLElement => Boolean(element));
+        if (items.length === 0) return true;
+        if (!items.every((item) => this.canMoveItem(item))) {
+            showMessage('You do not have permission to move every selected record.', MessageType.ERROR);
+            return true;
+        }
+        if (!this.canUseCurrentGranularity()) {
+            showMessage('Hour-level movement requires DateTime fields.', MessageType.INFO);
+            return true;
+        }
+
+        void this.moveItemsByUnits(items, event.key === 'ArrowLeft' ? -1 : 1);
+        return true;
     }
 
     private getAutomaticZoom(): number {
@@ -217,14 +284,11 @@ export class GantChart extends BaseDataViewComponent {
             grid.style.width = `${this.canvasWidth}px`;
         }
 
+        const unscheduledTray = this.element.querySelector<HTMLElement>('[data-gant-unscheduled-tray]');
+        if (unscheduledTray) unscheduledTray.style.width = `${this.element.clientWidth}px`;
+
         for (const item of this.element.querySelectorAll<HTMLElement>('[data-gant-item]')) {
-            const start = Number(item.dataset.start);
-            const end = Number(item.dataset.end);
-            if (!Number.isFinite(start) || !Number.isFinite(end)) continue;
-            const left = this.positionForTimestamp(start);
-            const width = Math.max(this.positionForTimestamp(end) - left, 4);
-            item.style.left = `${left}px`;
-            item.style.width = `${width}px`;
+            this.positionItem(item);
         }
 
         this.renderAxis();
@@ -339,6 +403,12 @@ export class GantChart extends BaseDataViewComponent {
                 minor: new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' }).format(value),
             };
         }
+        if (unit === 'day' && this.zoomIndex === 3) {
+            return {
+                major: new Intl.DateTimeFormat(undefined, { month: 'short', year: 'numeric' }).format(value),
+                minor: new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric' }).format(value),
+            };
+        }
         return {
             major: new Intl.DateTimeFormat(undefined, { month: 'short', year: 'numeric' }).format(value),
             minor: new Intl.DateTimeFormat(undefined, { day: 'numeric' }).format(value),
@@ -347,6 +417,16 @@ export class GantChart extends BaseDataViewComponent {
 
     private positionForTimestamp(timestamp: number): number {
         return ((timestamp - this.rangeStart) / (this.rangeEnd - this.rangeStart)) * this.canvasWidth;
+    }
+
+    private positionItem(item: HTMLElement): void {
+        const start = Number(item.dataset.start);
+        const end = Number(item.dataset.end);
+        if (!Number.isFinite(start) || !Number.isFinite(end)) return;
+        const left = this.positionForTimestamp(start);
+        const width = Math.max(this.positionForTimestamp(end) - left, 4);
+        item.style.left = `${left}px`;
+        item.style.width = `${width}px`;
     }
 
     private scrollToTimestamp(timestamp: number): void {
@@ -463,6 +543,344 @@ export class GantChart extends BaseDataViewComponent {
         const nextIndex = Math.max(0, Math.min(itemElements.length - 1, currentIndex + delta));
         return getComponent(itemElements[nextIndex]) as GantChartItem | null;
     }
+
+    private get startFieldType(): GantFieldType {
+        return this.element?.dataset.gantStartFieldType === 'DateTimeField'
+            ? 'DateTimeField'
+            : 'DateField';
+    }
+
+    private get endFieldType(): GantFieldType {
+        return this.element?.dataset.gantEndFieldType === 'DateTimeField'
+            ? 'DateTimeField'
+            : 'DateField';
+    }
+
+    private canUseCurrentGranularity(fieldType?: GantFieldType): boolean {
+        if (this.zoomIndex !== ZOOM_LEVELS.length - 1) return true;
+        if (fieldType) return fieldType === 'DateTimeField';
+        return this.startFieldType === 'DateTimeField' && this.endFieldType === 'DateTimeField';
+    }
+
+    private canMoveItem(item: HTMLElement): boolean {
+        return item.dataset.gantCanEditStart === 'true'
+            && item.dataset.gantCanEditEnd === 'true';
+    }
+
+    private shiftTimestamp(timestamp: number, units: number): number {
+        const shifted = new Date(timestamp);
+        if (this.zoomIndex === ZOOM_LEVELS.length - 1) {
+            shifted.setMinutes(shifted.getMinutes() + units * 15);
+        } else if (this.zoomIndex <= 1) {
+            shifted.setDate(shifted.getDate() + units * 7);
+        } else {
+            shifted.setDate(shifted.getDate() + units);
+        }
+        return shifted.getTime();
+    }
+
+    private stepPixelWidth(timestamp: number): number {
+        return Math.max(
+            Math.abs(this.positionForTimestamp(this.shiftTimestamp(timestamp, 1)) - this.positionForTimestamp(timestamp)),
+            1,
+        );
+    }
+
+    private buildMovedUpdate(item: HTMLElement, units: number): GantDateUpdate | null {
+        const objectId = item.dataset.objectId;
+        const start = Number(item.dataset.start);
+        const end = Number(item.dataset.end);
+        if (!objectId || !Number.isFinite(start) || !Number.isFinite(end)) return null;
+        return {
+            object_id: objectId,
+            start_ms: this.shiftTimestamp(start, units),
+            end_ms: this.shiftTimestamp(end, units),
+        };
+    }
+
+    private async moveItemsByUnits(items: HTMLElement[], units: number): Promise<void> {
+        if (this.mutationInFlight || units === 0) return;
+        const updates = items
+            .map((item) => this.buildMovedUpdate(item, units))
+            .filter((update): update is GantDateUpdate => update !== null);
+        if (updates.length === 0) return;
+
+        const originals = this.captureDates(items);
+        this.previewUpdates(updates);
+        const response = await this.persistDateUpdates(updates);
+        if (response) this.applyResponseUpdates(response);
+        else this.restoreDates(originals);
+    }
+
+    private captureDates(items: HTMLElement[]): Map<HTMLElement, { start: number; end: number }> {
+        const originals = new Map<HTMLElement, { start: number; end: number }>();
+        for (const item of items) {
+            originals.set(item, {
+                start: Number(item.dataset.start),
+                end: Number(item.dataset.end),
+            });
+        }
+        return originals;
+    }
+
+    private previewUpdates(updates: GantDateUpdate[]): void {
+        if (!this.element) return;
+        for (const update of updates) {
+            const item = this.element.querySelector<HTMLElement>(
+                `[data-gant-item][data-object-id="${CSS.escape(update.object_id)}"]`,
+            );
+            if (!item) continue;
+            if (update.start_ms !== undefined) item.dataset.start = String(update.start_ms);
+            if (update.end_ms !== undefined) item.dataset.end = String(update.end_ms);
+            this.positionItem(item);
+        }
+        this.scheduleDependencyDraw();
+    }
+
+    private restoreDates(originals: Map<HTMLElement, { start: number; end: number }>): void {
+        for (const [item, dates] of originals) {
+            item.dataset.start = String(dates.start);
+            item.dataset.end = String(dates.end);
+            this.positionItem(item);
+        }
+        this.scheduleDependencyDraw();
+    }
+
+    private async persistDateUpdates(updates: GantDateUpdate[]): Promise<GantDateUpdateResponse[] | null> {
+        if (!this.element || this.mutationInFlight) return null;
+        const url = this.element.dataset.gantUpdateUrl;
+        if (!url) return null;
+
+        this.mutationInFlight = true;
+        const csrfToken = getCsrfToken();
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
+                },
+                body: JSON.stringify({ updates }),
+            });
+            if (!response.ok) {
+                const message = response.status === 403
+                    ? 'You do not have permission to change these dates.'
+                    : 'Unable to update the Gantt dates.';
+                showMessage(message, MessageType.ERROR);
+                console.error('Failed to update Gantt dates', await response.text());
+                return null;
+            }
+            const payload = await response.json() as { updates?: GantDateUpdateResponse[] };
+            return Array.isArray(payload.updates) ? payload.updates : [];
+        } catch (error) {
+            showMessage('Unable to update the Gantt dates.', MessageType.ERROR);
+            console.error('Failed to update Gantt dates', error);
+            return null;
+        } finally {
+            this.mutationInFlight = false;
+        }
+    }
+
+    private applyResponseUpdates(updates: GantDateUpdateResponse[]): void {
+        if (!this.element) return;
+        for (const update of updates) {
+            const item = this.element.querySelector<HTMLElement>(
+                `[data-gant-item][data-object-id="${CSS.escape(update.object_id)}"]`,
+            );
+            if (!item) continue;
+            item.dataset.start = String(update.start_ms);
+            item.dataset.end = String(update.end_ms);
+            this.dataStart = Math.min(this.dataStart, update.start_ms);
+            this.dataEnd = Math.max(this.dataEnd, update.end_ms);
+            if (update.start_ms < this.rangeStart) this.rangeStart = update.start_ms - ZOOM_LEVELS[this.zoomIndex].paddingMs;
+            if (update.end_ms > this.rangeEnd) this.rangeEnd = update.end_ms + ZOOM_LEVELS[this.zoomIndex].paddingMs;
+        }
+        this.updateTimelineGeometry();
+    }
+
+    private onBarPointerDown = (event: PointerEvent): void => {
+        if (!this.element || event.button !== 0 || this.mutationInFlight) return;
+        const target = event.target as HTMLElement | null;
+        const item = target?.closest<HTMLElement>('[data-gant-item]');
+        if (!item || !this.element.contains(item)) return;
+
+        const mode: BarDragMode = target?.closest('[data-gant-resize-start]')
+            ? 'start'
+            : (target?.closest('[data-gant-resize-end]') ? 'end' : 'move');
+        if (mode === 'move' && !this.canMoveItem(item)) return;
+        if (mode === 'start' && item.dataset.gantCanEditStart !== 'true') return;
+        if (mode === 'end' && item.dataset.gantCanEditEnd !== 'true') return;
+        const fieldType = mode === 'start' ? this.startFieldType : this.endFieldType;
+        if (!this.canUseCurrentGranularity(mode === 'move' ? undefined : fieldType)) {
+            showMessage('Hour-level dragging requires a DateTime field.', MessageType.INFO);
+            return;
+        }
+
+        const component = getComponent(item);
+        if (!(component instanceof GantChartItem)) return;
+        this.element.focus({ preventScroll: true });
+        const selected = this.getSelectedCells();
+        if (mode !== 'move' || !selected.includes(component)) {
+            this.focus(component);
+            this.collapseSelectionToActive();
+        }
+        const dragItems = mode === 'move'
+            ? this.getSelectedCells()
+                .filter((cell): cell is GantChartItem => cell instanceof GantChartItem)
+                .map((cell) => cell.element)
+                .filter((element): element is HTMLElement => Boolean(element))
+            : [item];
+        if (mode === 'move' && !dragItems.every((dragItem) => this.canMoveItem(dragItem))) {
+            showMessage('You do not have permission to move every selected record.', MessageType.ERROR);
+            return;
+        }
+        const originals = this.captureDates(dragItems);
+        const anchor = originals.get(item);
+        if (!anchor) return;
+
+        const startX = event.clientX;
+        const stepWidth = this.stepPixelWidth(mode === 'end' ? anchor.end : anchor.start);
+        let units = 0;
+        this.activeGestureController?.abort();
+        const gestureController = new AbortController();
+        this.activeGestureController = gestureController;
+
+        window.addEventListener('pointermove', (moveEvent: PointerEvent) => {
+            const nextUnits = Math.round((moveEvent.clientX - startX) / stepWidth);
+            if (nextUnits === units) return;
+            moveEvent.preventDefault();
+            units = nextUnits;
+            const updates = this.buildDragUpdates(dragItems, originals, mode, units);
+            this.restoreDates(originals);
+            this.previewUpdates(updates);
+        }, { signal: gestureController.signal });
+
+        window.addEventListener('pointerup', () => {
+            gestureController.abort();
+            if (this.activeGestureController === gestureController) this.activeGestureController = null;
+            if (units === 0) return;
+            const updates = this.buildDragUpdates(dragItems, originals, mode, units);
+            if (updates.length === 0) {
+                this.restoreDates(originals);
+                return;
+            }
+            void this.persistDateUpdates(updates).then((response) => {
+                if (response) this.applyResponseUpdates(response);
+                else this.restoreDates(originals);
+            });
+        }, { signal: gestureController.signal, once: true });
+
+        window.addEventListener('pointercancel', () => {
+            gestureController.abort();
+            if (this.activeGestureController === gestureController) this.activeGestureController = null;
+            this.restoreDates(originals);
+        }, { signal: gestureController.signal, once: true });
+    };
+
+    private buildDragUpdates(
+        items: HTMLElement[],
+        originals: Map<HTMLElement, { start: number; end: number }>,
+        mode: BarDragMode,
+        units: number,
+    ): GantDateUpdate[] {
+        const updates: GantDateUpdate[] = [];
+        for (const item of items) {
+            const original = originals.get(item);
+            const objectId = item.dataset.objectId;
+            if (!original || !objectId) continue;
+            if (mode === 'move') {
+                updates.push({
+                    object_id: objectId,
+                    start_ms: this.shiftTimestamp(original.start, units),
+                    end_ms: this.shiftTimestamp(original.end, units),
+                });
+                continue;
+            }
+            if (mode === 'start') {
+                const start = this.shiftTimestamp(original.start, units);
+                if (start < original.end) updates.push({ object_id: objectId, start_ms: start });
+                continue;
+            }
+            const end = this.shiftTimestamp(original.end, units);
+            if (end > original.start) updates.push({ object_id: objectId, end_ms: end });
+        }
+        return updates;
+    }
+
+    private onUnscheduledDragStart = (event: DragEvent): void => {
+        const item = (event.target as HTMLElement | null)?.closest<HTMLElement>('[data-gant-unscheduled-item]');
+        if (!item || !event.dataTransfer || !this.canMoveItem(item)) {
+            event.preventDefault();
+            return;
+        }
+        const objectId = item.dataset.objectId;
+        if (!objectId) return;
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('application/x-bloomerp-gant-object', objectId);
+        event.dataTransfer.setData('text/plain', objectId);
+    };
+
+    private onTimelineDragOver = (event: DragEvent): void => {
+        const dropzone = (event.target as HTMLElement | null)?.closest<HTMLElement>('[data-gant-dropzone]');
+        if (!dropzone || !event.dataTransfer) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+        this.clearDropHighlights();
+        dropzone.classList.add('ring-2', 'ring-primary');
+    };
+
+    private onTimelineDragLeave = (event: DragEvent): void => {
+        const dropzone = (event.target as HTMLElement | null)?.closest<HTMLElement>('[data-gant-dropzone]');
+        if (!dropzone || dropzone.contains(event.relatedTarget as Node | null)) return;
+        dropzone.classList.remove('ring-2', 'ring-primary');
+    };
+
+    private onTimelineDrop = (event: DragEvent): void => {
+        if (!this.element || !event.dataTransfer || this.mutationInFlight) return;
+        const dropzone = (event.target as HTMLElement | null)?.closest<HTMLElement>('[data-gant-dropzone]');
+        if (!dropzone) return;
+        event.preventDefault();
+        this.clearDropHighlights();
+        if (!this.canUseCurrentGranularity()) {
+            showMessage('Hour-level scheduling requires DateTime fields.', MessageType.INFO);
+            return;
+        }
+        const objectId = event.dataTransfer.getData('application/x-bloomerp-gant-object')
+            || event.dataTransfer.getData('text/plain');
+        if (!objectId) return;
+
+        const rootRect = this.element.getBoundingClientRect();
+        const canvasX = event.clientX - rootRect.left + this.element.scrollLeft - this.sidebarWidth;
+        const rawTimestamp = this.rangeStart + (
+            Math.max(0, Math.min(canvasX, this.canvasWidth)) / this.canvasWidth
+        ) * (this.rangeEnd - this.rangeStart);
+        const start = this.snapDropTimestamp(rawTimestamp);
+        const end = this.shiftTimestamp(start, 1);
+        void this.persistDateUpdates([{ object_id: objectId, start_ms: start, end_ms: end }]).then(
+            (response) => {
+                if (response) this.dataViewContainer?.refresh();
+            },
+        );
+    };
+
+    private snapDropTimestamp(timestamp: number): number {
+        const value = new Date(timestamp);
+        if (this.zoomIndex === ZOOM_LEVELS.length - 1) {
+            value.setSeconds(0, 0);
+            value.setMinutes(Math.round(value.getMinutes() / 15) * 15);
+            return value.getTime();
+        }
+        value.setHours(0, 0, 0, 0);
+        return value.getTime();
+    }
+
+    private clearDropHighlights = (): void => {
+        if (!this.element) return;
+        for (const dropzone of this.element.querySelectorAll<HTMLElement>('[data-gant-dropzone]')) {
+            dropzone.classList.remove('ring-2', 'ring-primary');
+        }
+    };
 
     private scheduleDependencyDraw = (): void => {
         if (this.drawFrame !== null) window.cancelAnimationFrame(this.drawFrame);

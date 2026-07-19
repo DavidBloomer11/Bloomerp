@@ -10,6 +10,9 @@
     data-content-type-id="{{ content_type_id }}"
     data-gant-start="{{ gant_start_ms }}"
     data-gant-end="{{ gant_end_ms }}"
+    data-gant-start-field-type="{{ gant_start_field_type }}"
+    data-gant-end-field-type="{{ gant_end_field_type }}"
+    data-gant-update-url="{% url 'components_dataview_action' content_type_id=content_type_id action='dates' %}"
     data-resizable-div-container
     class="relative h-full min-h-[400px] w-full min-w-0 overflow-auto rounded-xl border border-gray-200 bg-base focus:outline-none focus:ring-0"
 >
@@ -56,6 +59,16 @@
     <div class="relative" data-gant-rows>
         <div class="pointer-events-none absolute inset-y-0 z-10" data-gant-grid aria-hidden="true"></div>
         {% include "components/objects/dataview_gant_rows.html" %}
+    </div>
+
+    <div class="sticky left-0 z-30 min-h-28 border-t border-gray-200 bg-gray-50 p-3" data-gant-unscheduled-tray>
+        <div class="mb-2">
+            <div class="text-sm font-medium text-dark"><c-i18n.blocktrans>Unscheduled records</c-i18n.blocktrans></div>
+            <div class="text-xs text-gray-500"><c-i18n.blocktrans>Drag a record onto the timeline to schedule it.</c-i18n.blocktrans></div>
+        </div>
+        <div class="flex flex-wrap gap-2" data-gant-unscheduled-items>
+            {% include "components/objects/dataview_gant_unscheduled.html" %}
+        </div>
     </div>
 
     <svg class="pointer-events-none absolute inset-0 z-20 overflow-visible" data-gant-dependencies aria-hidden="true">

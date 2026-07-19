@@ -1,3 +1,4 @@
+import json
 from datetime import date, datetime, timedelta
 
 from django.db import models
@@ -792,6 +793,7 @@ class TestGantDataView(BaseBloomerpModelTestCase):
         page_size: int = 10,
         with_dependency: bool = False,
         with_times: bool = False,
+        user=None,
     ):
         content_type = ContentType.objects.get_for_model(self.GantTaskModel)
         start_field = ApplicationField.get_by_field(
@@ -804,7 +806,7 @@ class TestGantDataView(BaseBloomerpModelTestCase):
         )
         name_field = ApplicationField.get_by_field(self.GantTaskModel, "name")
         dependency_field = ApplicationField.get_by_field(self.GantTaskModel, "dependency")
-        preference = get_user_list_view_preference(self.admin_user, content_type)
+        preference = get_user_list_view_preference(user or self.admin_user, content_type)
         preference.view_type = "gant"
         preference.options = {
             "gant": {
@@ -844,7 +846,7 @@ class TestGantDataView(BaseBloomerpModelTestCase):
 
         # 2. Request the permission-filtered data-view component.
         url = reverse(
-            "components_data_view",
+            "components_dataview",
             kwargs={"content_type_id": content_type.id},
         )
         response = self.client.get(url, HTTP_HX_REQUEST="true")
@@ -858,6 +860,10 @@ class TestGantDataView(BaseBloomerpModelTestCase):
         self.assertContains(response, 'data-resize-from="right"', html=False)
         self.assertContains(response, "data-gant-zoom", html=False)
         self.assertContains(response, "data-gant-today", html=False)
+        self.assertContains(response, "data-gant-update-url", html=False)
+        self.assertContains(response, 'data-gant-start-field-type="DateField"', html=False)
+        self.assertContains(response, "data-gant-resize-start", count=2, html=False)
+        self.assertContains(response, "data-gant-resize-end", count=2, html=False)
         self.assertContains(response, "data-start=", count=2, html=False)
         self.assertContains(response, "data-end=", count=2, html=False)
         discovery_start = timezone.make_aware(datetime(2026, 1, 1)).timestamp() * 1000
@@ -886,7 +892,7 @@ class TestGantDataView(BaseBloomerpModelTestCase):
 
         # 2. Request the Gantt component.
         url = reverse(
-            "components_data_view",
+            "components_dataview",
             kwargs={"content_type_id": content_type.id},
         )
         response = self.client.get(url, HTTP_HX_REQUEST="true")
@@ -916,7 +922,7 @@ class TestGantDataView(BaseBloomerpModelTestCase):
 
         # 2. Request the initial data view.
         url = reverse(
-            "components_data_view",
+            "components_dataview",
             kwargs={"content_type_id": content_type.id},
         )
         response = self.client.get(url, HTTP_HX_REQUEST="true")
@@ -929,7 +935,7 @@ class TestGantDataView(BaseBloomerpModelTestCase):
 
         # 4. Request page two through the renderer action.
         page_url = reverse(
-            "components_data_view_action",
+            "components_dataview_action",
             kwargs={"content_type_id": content_type.id, "action": "page"},
         )
         page_response = self.client.get(
@@ -942,6 +948,141 @@ class TestGantDataView(BaseBloomerpModelTestCase):
         self.assertContains(page_response, 'bloomerp-component="gant-chart-item"', count=10, html=False)
         self.assertContains(page_response, "gant_page=3", html=False)
 
+    def test_gant_dataview_paginates_unscheduled_records_separately(self):
+        """
+        Use case: More unscheduled records exist than fit in one Gantt page.
+        Expected result: They render in the bottom tray with their own incremental pagination.
+        """
+        self.client.force_login(self.admin_user)
+        content_type, _dependency_field = self._configure_gant(page_size=10)
+        scheduled = self.GantTaskModel.objects.create(
+            name="Scheduled",
+            starts_on=date(2026, 8, 1),
+            ends_on=date(2026, 8, 2),
+        )
+        for index in range(25):
+            self.GantTaskModel.objects.create(name=f"Unscheduled {index:02d}")
+
+        url = reverse(
+            "components_dataview",
+            kwargs={"content_type_id": content_type.id},
+        )
+        response = self.client.get(url, HTTP_HX_REQUEST="true")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'data-gant-item', count=1, html=False)
+        self.assertContains(response, f'data-object-id="{scheduled.pk}"', html=False)
+        self.assertContains(response, 'draggable="true"', count=10, html=False)
+        self.assertContains(response, "gant_unscheduled_page=2", html=False)
+
+        page_url = reverse(
+            "components_dataview_action",
+            kwargs={"content_type_id": content_type.id, "action": "unscheduled"},
+        )
+        page_response = self.client.get(
+            f"{page_url}?gant_unscheduled_page=2",
+            HTTP_HX_REQUEST="true",
+        )
+        self.assertEqual(page_response.status_code, 200)
+        self.assertContains(page_response, 'draggable="true"', count=10, html=False)
+        self.assertContains(page_response, "gant_unscheduled_page=3", html=False)
+
+    def test_gant_date_action_updates_multiple_records_and_individual_edges(self):
+        """
+        Use case: Keyboard movement updates a selection and edge dragging updates one boundary.
+        Expected result: The configured fields are updated atomically and retain DateField semantics.
+        """
+        self.client.force_login(self.admin_user)
+        content_type, _dependency_field = self._configure_gant()
+        first = self.GantTaskModel.objects.create(
+            name="First",
+            starts_on=date(2026, 9, 1),
+            ends_on=date(2026, 9, 3),
+        )
+        second = self.GantTaskModel.objects.create(
+            name="Second",
+            starts_on=date(2026, 9, 5),
+            ends_on=date(2026, 9, 6),
+        )
+        action_url = reverse(
+            "components_dataview_action",
+            kwargs={"content_type_id": content_type.id, "action": "dates"},
+        )
+        local_tz = timezone.get_current_timezone()
+        first_start = timezone.make_aware(datetime(2026, 9, 2), local_tz)
+        first_end_exclusive = timezone.make_aware(datetime(2026, 9, 5), local_tz)
+        second_start = timezone.make_aware(datetime(2026, 9, 6), local_tz)
+        second_end_exclusive = timezone.make_aware(datetime(2026, 9, 8), local_tz)
+
+        response = self.client.post(
+            action_url,
+            data=json.dumps({
+                "updates": [
+                    {
+                        "object_id": str(first.pk),
+                        "start_ms": round(first_start.timestamp() * 1000),
+                        "end_ms": round(first_end_exclusive.timestamp() * 1000),
+                    },
+                    {
+                        "object_id": str(second.pk),
+                        "start_ms": round(second_start.timestamp() * 1000),
+                        "end_ms": round(second_end_exclusive.timestamp() * 1000),
+                    },
+                ],
+            }),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        first.refresh_from_db()
+        second.refresh_from_db()
+        self.assertEqual((first.starts_on, first.ends_on), (date(2026, 9, 2), date(2026, 9, 4)))
+        self.assertEqual((second.starts_on, second.ends_on), (date(2026, 9, 6), date(2026, 9, 7)))
+
+        resized_start = timezone.make_aware(datetime(2026, 9, 3), local_tz)
+        edge_response = self.client.post(
+            action_url,
+            data=json.dumps({
+                "updates": [{
+                    "object_id": str(first.pk),
+                    "start_ms": round(resized_start.timestamp() * 1000),
+                }],
+            }),
+            content_type="application/json",
+        )
+        self.assertEqual(edge_response.status_code, 200)
+        first.refresh_from_db()
+        self.assertEqual(first.starts_on, date(2026, 9, 3))
+        self.assertEqual(first.ends_on, date(2026, 9, 4))
+
+    def test_gant_date_action_denies_user_without_change_policies(self):
+        """
+        Use case: A user without row or field change access submits a Gantt mutation.
+        Expected result: The endpoint denies the write and preserves the record.
+        """
+        content_type, _dependency_field = self._configure_gant(user=self.normal_user)
+        record = self.GantTaskModel.objects.create(
+            name="Protected",
+            starts_on=date(2026, 10, 1),
+            ends_on=date(2026, 10, 2),
+        )
+        self.client.force_login(self.normal_user)
+        action_url = reverse(
+            "components_dataview_action",
+            kwargs={"content_type_id": content_type.id, "action": "dates"},
+        )
+        target = timezone.make_aware(datetime(2026, 10, 4)).timestamp() * 1000
+        response = self.client.post(
+            action_url,
+            data=json.dumps({
+                "updates": [{"object_id": str(record.pk), "start_ms": round(target)}],
+            }),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 403)
+        record.refresh_from_db()
+        self.assertEqual(record.starts_on, date(2026, 10, 1))
+
     def test_gant_options_only_offer_self_referencing_dependency_fields(self):
         """
         Use case: A user configures optional Gantt dependency fields.
@@ -951,7 +1092,7 @@ class TestGantDataView(BaseBloomerpModelTestCase):
         self.client.force_login(self.admin_user)
         content_type, dependency_field = self._configure_gant()
         url = reverse(
-            "components_data_view",
+            "components_dataview",
             kwargs={"content_type_id": content_type.id},
         )
         response = self.client.get(url, HTTP_HX_REQUEST="true")
