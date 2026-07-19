@@ -8,7 +8,7 @@ from django.urls import reverse
 from playwright.sync_api import Locator, Page, expect
 
 from bloomerp.management.commands import save_application_fields
-from bloomerp.models import ApplicationField
+from bloomerp.models import ApplicationField, Sidebar, SidebarItem
 from bloomerp.models.users.user_list_view_preference import UserListViewPreference, ViewTypeEnum
 from bloomerp.tests.base import BaseBloomerpModelTestCase
 from bloomerp.tests.utils.dynamic_models import create_test_models
@@ -593,4 +593,52 @@ class TestDataViewE2E:
         
         # 3. Assert that the bloomerp-component="dataview-container" is still visible
         expect(page.locator("[bloomerp-component='dataview-container']")).to_be_visible()
+
+    def test_mixed_htmx_and_href_history_restores_complete_pages(
+        self,
+        authenticated_dataview_page: Page,
+        dataview_admin,
+        dataview_model,
+        live_server_url: str,
+    ):
+        """
+        Use case: An HTMX sidebar navigation is followed by a normal href navigation and browser back actions.
+        Expected result: History never restores a loader or an HTMX fragment as the complete document.
+        """
+        page = authenticated_dataview_page
+        list_path = reverse(get_list_view_url(dataview_model))
+
+        # 1. Add an internal sidebar link so the first navigation uses HTMX and the global loader.
+        sidebar = Sidebar.objects.filter(user=dataview_admin, selected=True).first()
+        if sidebar is None:
+            sidebar = Sidebar.objects.create(user=dataview_admin, name="History", selected=True)
+        SidebarItem.create_link(sidebar, "History list", list_path)
+        page.goto(f"{live_server_url}/")
+
+        with page.expect_response(lambda response: response.url.endswith(list_path)):
+            page.get_by_role("link", name="History list").click()
+        expect(page.locator("[bloomerp-component='dataview-container']")).to_be_visible()
+
+        # 2. Follow a plain href, reproducing the mixed navigation sequence from link tiles.
+        page.locator("#main-content").evaluate(
+            """element => {
+                const link = document.createElement('a');
+                link.id = 'plain-home-link';
+                link.href = '/';
+                link.textContent = 'Plain home link';
+                element.appendChild(link);
+            }"""
+        )
+        page.get_by_role("link", name="Plain home link").click()
+        expect(page).to_have_url(f"{live_server_url}/")
+
+        # 3. Go back through both entries and verify the outgoing home snapshot was not the loader.
+        go_page_back(page, expected_selector="[bloomerp-component='dataview-container']")
+        go_page_back(page, expected_url=f"{live_server_url}/")
+        expect(page.locator(".skeleton-loader")).to_have_count(0)
+
+        # 4. Refresh the restored entry and verify a complete document is returned, not an HTMX fragment.
+        page.reload(wait_until="domcontentloaded")
+        expect(page.locator("html > body#bloomerpBody")).to_have_count(1)
+        expect(page.locator("#main-content #htmx-addendum")).to_be_visible()
     

@@ -9,6 +9,10 @@ function insertSkeleton(target: HTMLElement) {
     // Create skeleton element
     const skeleton = document.createElement('div');
     skeleton.className = 'skeleton-loader';
+    // The loader is transient UI, not a valid page snapshot. If this request
+    // pushes a URL, make HTMX fetch the outgoing page again rather than cache
+    // and later restore the skeleton as its history content.
+    skeleton.setAttribute('hx-history', 'false');
     skeleton.innerHTML = `
     <div class="w-full">
         <div class="skeleton-header"></div>
