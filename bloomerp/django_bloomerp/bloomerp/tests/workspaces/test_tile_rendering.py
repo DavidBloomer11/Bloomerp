@@ -79,6 +79,11 @@ class WorkspaceTileRenderingTests(BaseBloomerpModelTestCase):
         self.assertEqual(rendered, f"/employees/?user={self.normal_user.pk}")
 
     def test_link_tile_resolves_current_user_parameters(self):
+        """
+        Use case: A workspace link tile points to an internal Bloomerp URL.
+        Expected result: The tile renders an HTMX navigation link with resolved parameters.
+        """
+        # 1. Render a link tile whose URL contains a current-user template parameter.
         config = LinkTileConfig(
             links=[
                 Link(
@@ -91,10 +96,43 @@ class WorkspaceTileRenderingTests(BaseBloomerpModelTestCase):
         request = self.factory.get("/")
         request.user = self.admin_user
 
+        # 2. Render the tile.
         html = LinksTileRenderer.render(config, request)
 
+        # 3. Verify the original config is preserved and rendered links use HTMX navigation.
+        resolved_url = f"/employees/?user={self.admin_user.id}"
         self.assertIn(f'href="/employees/?user={self.admin_user.id}"', html)
+        self.assertIn(f'hx-get="{resolved_url}"', html)
+        self.assertIn('hx-target="#main-content"', html)
+        self.assertIn('hx-push-url="true"', html)
+        self.assertIn('hx-swap="innerHTML"', html)
         self.assertEqual(config.links[0].url, "/employees/?user={{ current_user.id }}")
+
+    def test_link_tile_leaves_external_links_as_regular_anchors(self):
+        """
+        Use case: A workspace link tile points to an external URL.
+        Expected result: The tile renders a regular anchor without HTMX navigation.
+        """
+        # 1. Render a link tile with an external URL.
+        config = LinkTileConfig(
+            links=[
+                Link(
+                    url="https://example.com/docs",
+                    name="Docs",
+                    is_internal=False,
+                )
+            ]
+        )
+        request = self.factory.get("/")
+        request.user = self.admin_user
+
+        # 2. Render the tile.
+        html = LinksTileRenderer.render(config, request)
+
+        # 3. Verify external navigation remains a normal browser link.
+        self.assertIn('href="https://example.com/docs"', html)
+        self.assertNotIn("hx-get=", html)
+        self.assertNotIn("hx-target=", html)
 
     def test_user_parameter_resolver_hides_model_object_without_view_permission(self):
         customer = self.CustomerModel.objects.create(
