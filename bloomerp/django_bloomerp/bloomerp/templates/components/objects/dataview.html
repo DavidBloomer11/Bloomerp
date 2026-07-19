@@ -70,6 +70,8 @@
                         wrapper_class="w-full"
                         size="sm"
                         width="w-128"
+                        fixed=True
+                        menu_class="max-h-[calc(100vh-6rem)] max-w-[calc(100vw-1rem)] overflow-auto"
                         >
                         <div class="p-3">
                             <div>
@@ -92,7 +94,7 @@
             </div>
 
             <!--Add button-->
-            <div data-data-view-button="add">    
+            <div class="w-full sm:w-auto" data-data-view-button="add">
                 <c-ui.shortcut_tooltip 
                     position="bottom"
                     action="click"
@@ -113,12 +115,14 @@
             </div>
 
             <!--Bulk actions button-->
-            <div data-data-view-button="bulk-actions">
+            <div class="w-full sm:w-auto" data-data-view-button="bulk-actions">
                 <c-ui.shortcut_tooltip position="bottom" shortcut="mod+3">
                     <c-ui.dropdown.body 
                         trigger_text="Bulk Actions"
                         trigger_icon_class="fa fa-list-check"
                         trigger_button_class="btn-secondary"
+                        trigger_class="w-full justify-center gap-2"
+                        wrapper_class="w-full"
                         size="sm"
                         >
                         <c-ui.dropdown.item 
@@ -134,7 +138,7 @@
             </div>
 
             <!--Export button-->
-            <div data-data-view-button="export">
+            <div class="w-full sm:w-auto" data-data-view-button="export">
                 <c-ui.shortcut_tooltip 
                     position="bottom"  
                     shortcut="mod+4">
@@ -169,6 +173,8 @@
                         wrapper_class="w-full"
                         size="sm"
                         width="w-80"
+                        fixed=True
+                        menu_class="max-h-[calc(100vh-6rem)] max-w-[calc(100vw-1rem)] overflow-auto"
                         >
                     
                     <div class="p-2" id="data-table-display-options-{{ content_type_id }}">
@@ -188,7 +194,7 @@
             {% endif %}
             
             <!--Select-->
-            <div data-data-view-button="select-preference">
+            <div class="w-full sm:w-auto" data-data-view-button="select-preference">
                 <c-ui.shortcut_tooltip position="bottom" shortcut="mod+6">
                     <c-features.preferences.select_preference_button
                         model="UserListViewPreference"
