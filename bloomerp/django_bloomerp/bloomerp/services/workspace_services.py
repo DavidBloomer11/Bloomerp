@@ -118,8 +118,10 @@ def render_tile_to_string(
         **tile.schema
     )
 
-    # 3. Get the render class
-    return tile_type.value.render_cls.render(config=config, request=request)
+    # 3. Get the render class. Saved canvases receive their persistence context;
+    # previews call the renderer directly without a Tile instance.
+    render_kwargs = {"tile": tile} if tile_type == TileType.CANVAS_TILE else {}
+    return tile_type.value.render_cls.render(config=config, request=request, **render_kwargs)
 
 @dataclass
 class WorkspaceFilter:
