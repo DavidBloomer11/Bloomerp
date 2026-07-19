@@ -156,6 +156,8 @@ class PreviewWorkspaceTile(TemplateView):
                 return "components/workspaces/tile_builders/links_tile_builder.html"
             case TileType.TEXT_TILE:
                 return "components/workspaces/tile_builders/text_tile_builder.html"
+            case TileType.CANVAS_TILE:
+                return "components/workspaces/tile_builders/canvas_tile_builder.html"
             # case TileType.FORM_TILE:
             #     return "components/workspaces/tile_builders/form_tile_builder.html"
             case _:

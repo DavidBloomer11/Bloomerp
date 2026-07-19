@@ -156,6 +156,7 @@ if _has_allauth():
     ]
 
 BLOOMERP_MIDDLEWARE = [
+    "bloomerp.middleware.HTMXVaryMiddleware",
     "bloomerp.middleware.HTMXPermissionDeniedMiddleware",
     "django_htmx.middleware.HtmxMiddleware",
     "django_browser_reload.middleware.BrowserReloadMiddleware",

@@ -1,5 +1,8 @@
 <div 
-    bloomerp-component="workspace-tile-canvas" 
-    class="w-full h-96 min-h-64">
-    {{ content }}
+    bloomerp-component="workspace-tile-canvas"
+    class="w-full min-h-64"
+    data-initial-state="{{ content_json }}"
+    {% if save_url %}data-save-url="{{ save_url }}"{% endif %}
+    style="height: {{ height }}px;"
+>
 </div>
