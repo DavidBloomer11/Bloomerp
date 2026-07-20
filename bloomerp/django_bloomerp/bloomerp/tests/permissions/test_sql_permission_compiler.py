@@ -28,12 +28,14 @@ class TestSqlPermissionCompiler(BaseBloomerpModelTestCase):
     def _all_rows_rule() -> RowPolicyRuleContent:
         return RowPolicyRuleContent(
             connector="AND",
+            permissions=[BloomerpPermission.VIEW],
             conditions=[RowPolicyRuleCondition(field="__all__")],
         )
 
     def _first_customer_rule(self) -> RowPolicyRuleContent:
         return RowPolicyRuleContent(
             connector="AND",
+            permissions=[BloomerpPermission.VIEW],
             conditions=[
                 RowPolicyRuleCondition(
                     field="first_name",

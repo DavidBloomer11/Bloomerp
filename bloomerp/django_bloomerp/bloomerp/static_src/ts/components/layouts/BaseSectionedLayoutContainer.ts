@@ -2,7 +2,8 @@ import htmx from "htmx.org";
 import Sortable, { type SortableEvent } from "sortablejs";
 
 import BaseComponent, { componentIdentifier, getComponent, initComponents } from "../BaseComponent";
-import BaseSectionedLayoutItem from "./BaseSectionedLayoutItem";
+import { Modal } from "../Modal";
+import BaseSectionedLayoutItem, { type LayoutItemEditRequestDetail } from "./BaseSectionedLayoutItem";
 import { getCsrfToken } from "../../utils/cookies";
 import { parseBoolean } from "../../utils/booleans";
 
@@ -61,6 +62,9 @@ export default abstract class BaseSectionedLayoutContainer<TItem extends BaseSec
     protected searchActive = false;
     protected searchMatches: SearchMatch<TItem>[] = [];
     protected activeSearchMatchIndex: number | null = null;
+    protected activeItemEditorId: string | null = null;
+    protected itemEditorModalClosedHandler: (() => void) | null = null;
+    protected itemEditRequestHandler: ((event: Event) => void) | null = null;
 
     protected abstract getItemComponent(element: HTMLElement): TItem | null;
     protected abstract getItemSelector(): string;
@@ -72,7 +76,13 @@ export default abstract class BaseSectionedLayoutContainer<TItem extends BaseSec
         
 
         return {
-            content_type_id: Number.parseInt(this.element?.dataset.contentTypeId ?? "", 10) || null,
+            target_content_type_id:
+                Number.parseInt(
+                    this.element?.dataset.targetContentTypeId
+                        ?? this.element?.dataset.contentTypeId
+                        ?? "",
+                    10,
+                ) || null,
             layout: {
                 rows: this.serializeRows(),
             },
@@ -96,43 +106,6 @@ export default abstract class BaseSectionedLayoutContainer<TItem extends BaseSec
             return this.normalizeLayoutItemConfig(JSON.parse(value));
         } catch {
             return {};
-        }
-    }
-
-    protected async loadInitialItems(): Promise<void> {
-        for (let rowIndex = 0; rowIndex < this.layoutRows.length; rowIndex += 1) {
-            const row = this.layoutRows[rowIndex];
-            const rowEl = this.rowElements[rowIndex];
-            const targetGrid = rowEl?.querySelector<HTMLElement>("[data-layout-grid]");
-            if (!targetGrid) continue;
-
-            const expectedIds = new Set(row.items.map((item) => item.id));
-            const seenIds = new Set<string>();
-
-            Array.from(targetGrid.querySelectorAll<HTMLElement>(this.getItemSelector())).forEach((element) => {
-                const itemId = this.normalizeLayoutItemId(element.dataset.layoutItemId);
-                if (!itemId) {
-                    element.remove();
-                    return;
-                }
-                if (!expectedIds.has(itemId) || seenIds.has(itemId)) {
-                    element.remove();
-                    return;
-                }
-
-                seenIds.add(itemId);
-                const component = this.getItemComponent(element);
-                component?.setMaxCols(row.columns);
-            });
-
-            for (const item of row.items) {
-                if (seenIds.has(item.id)) {
-                    continue;
-                }
-                // eslint-disable-next-line no-await-in-loop
-                await this.renderItem(item.id, rowIndex);
-                seenIds.add(item.id);
-            }
         }
     }
 
@@ -196,6 +169,11 @@ export default abstract class BaseSectionedLayoutContainer<TItem extends BaseSec
         this.element.addEventListener("layout:item-colspan-change", () => {
             void this.requestSave();
         });
+        this.itemEditRequestHandler = (event: Event) => {
+            const { detail } = event as CustomEvent<LayoutItemEditRequestDetail>;
+            this.openItemEditor(detail);
+        };
+        this.element.addEventListener("layout:item-edit-request", this.itemEditRequestHandler);
 
         // Add event listener to edit button
         const editToggle = this.element.querySelector<HTMLElement>("[data-layout-edit-toggle]");
@@ -221,24 +199,19 @@ export default abstract class BaseSectionedLayoutContainer<TItem extends BaseSec
         this.searchButton?.addEventListener("click", this.searchButtonHandler);
         this.searchInput?.addEventListener("input", this.searchInputHandler);
         this.element.addEventListener("keydown", this.searchKeydownHandler, true);
+        this.itemEditorModalClosedHandler = () => {
+            const itemId = this.activeItemEditorId;
+            this.activeItemEditorId = null;
+            if (itemId) void this.rerenderItem(itemId);
+        };
 
         this.setupDnD();
         const initEditMode = this.parseBooleanDatasetValue(this.element.dataset.initEdit);
-        this.itemLoadQueue = this.loadInitialItems().then(() => {
-            this.reindexItems();
-            this.syncAvailableItemsState();
-            this.refreshSortables();
-
-            if (initEditMode) {
-                this.setEditMode(true);
-            } else if (!this.editMode && this.items.length > 0) {
-                this.focusItemByIndex(0);
-            }
-
-            if (this.searchActive) {
-                this.refreshSearchMatches();
-            }
-        });
+        if (initEditMode) {
+            this.setEditMode(true);
+        } else if (this.items.length > 0) {
+            this.focusItemByIndex(0);
+        }
     }
 
     public override destroy(): void {
@@ -252,6 +225,15 @@ export default abstract class BaseSectionedLayoutContainer<TItem extends BaseSec
         if (this.searchKeydownHandler && this.element) {
             this.element.removeEventListener("keydown", this.searchKeydownHandler, true);
         }
+        if (this.itemEditRequestHandler && this.element) {
+            this.element.removeEventListener("layout:item-edit-request", this.itemEditRequestHandler);
+        }
+        if (this.itemEditorModalClosedHandler) {
+            this.getItemEditorModal()?.element?.removeEventListener(
+                "bloomerp:modal-closed",
+                this.itemEditorModalClosedHandler,
+            );
+        }
         this.searchButton = null;
         this.searchPanel = null;
         this.searchInput = null;
@@ -259,6 +241,9 @@ export default abstract class BaseSectionedLayoutContainer<TItem extends BaseSec
         this.searchButtonHandler = null;
         this.searchInputHandler = null;
         this.searchKeydownHandler = null;
+        this.itemEditorModalClosedHandler = null;
+        this.itemEditRequestHandler = null;
+        this.activeItemEditorId = null;
         this.searchMatches = [];
     }
 
@@ -457,6 +442,43 @@ export default abstract class BaseSectionedLayoutContainer<TItem extends BaseSec
             const rowIndex = Number.parseInt(rowElement.dataset.rowIndex ?? "0", 10);
             this.focusRowByIndex(rowIndex);
         }
+    }
+
+    protected openItemEditor({ itemId, url }: LayoutItemEditRequestDetail): void {
+        const modal = this.getItemEditorModal();
+        if (!url || !itemId || !modal) return;
+        const modalBody = modal.element?.querySelector<HTMLElement>("#field-display-option-modal-body");
+        if (!modalBody) return;
+
+        if (this.itemEditorModalClosedHandler) {
+            modal.element?.removeEventListener("bloomerp:modal-closed", this.itemEditorModalClosedHandler);
+            modal.element?.addEventListener("bloomerp:modal-closed", this.itemEditorModalClosedHandler);
+        }
+        this.activeItemEditorId = itemId;
+        modal.open();
+        void htmx.ajax("get", url, {
+            target: modalBody,
+            swap: "innerHTML",
+        });
+    }
+
+    protected getItemEditorModal(): Modal | null {
+        const modalElement = document.getElementById("field-display-option-modal");
+        const modal = modalElement ? getComponent(modalElement) : null;
+        return modal instanceof Modal ? modal : null;
+    }
+
+    protected async rerenderItem(itemId: string): Promise<void> {
+        const item = this.items.find((candidate) => candidate.getLayoutItemId() === itemId);
+        const itemElement = item?.element;
+        const rowElement = itemElement?.closest<HTMLElement>("[data-layout-row]");
+        if (!itemElement || !rowElement) return;
+
+        const rowIndex = this.getRowIndexFromElement(rowElement);
+        const position = Array.from(rowElement.querySelectorAll<HTMLElement>(this.getItemSelector())).indexOf(itemElement);
+        itemElement.remove();
+        await this.renderItem(itemId, rowIndex, position);
+        this.reindexItems();
     }
 
     protected onKeyDown(event: KeyboardEvent): void {
@@ -896,13 +918,16 @@ export default abstract class BaseSectionedLayoutContainer<TItem extends BaseSec
     public async loadAvailableItems(options?: { focusFirstItem?: boolean }): Promise<void> {
         const container = this.element?.querySelector<HTMLElement>("[data-layout-available-items]");
         const url = this.element?.dataset.layoutAvailableItemsUrl;
+
         if (!container || !url) return;
 
         await htmx.ajax("get", url, {
             target: container,
             swap: "innerHTML",
-            values: this.element?.dataset.contentTypeId
-                ? { content_type_id: this.element.dataset.contentTypeId }
+            values: this.element?.dataset.targetContentTypeId
+                ? { target_content_type_id: this.element.dataset.targetContentTypeId }
+                : this.element?.dataset.contentTypeId
+                    ? { content_type_id: this.element.dataset.contentTypeId }
                 : undefined,
         });
         this.bindSidebarItems(container);

@@ -1,0 +1,88 @@
+<div
+    class="layout-item group relative flex flex-col gap-1{% if item.border %} layout-item--bordered{% endif %}{% if layout_edit_mode %} layout-item--editing{% endif %}{% if non_required_fields_visible|default:'true'|lower != 'true' and not is_required and not errors %} hidden{% endif %}"
+
+    id="layout-field-{{ item.id }}"
+
+    bloomerp-component="{{ item.component_name }}"
+
+    data-layout-item-id="{{ item.id }}"
+
+    data-colspan="{{ item.colspan|default:'1' }}"
+
+    data-layout-search-text="{{ item.label|striptags }}"
+
+    data-layout-search-keywords="{{ item.search_keywords|default:'' }}"
+
+    data-layout-item-config="{{ item.config_json }}"
+
+    style="grid-column: span {{ item.colspan|default:'1' }} / span {{ item.colspan|default:'1' }};"
+
+    {% if item.extra_attrs %}
+        {% for attr, value in item.extra_attrs.items %}
+            {{ attr }}="{{ value }}"
+        {% endfor %}
+    {% endif %}
+>
+    <div class="layout-item__header flex items-center justify-between gap-2" data-layout-item-header>
+        <label class="text-slate-700 font-medium text-sm my-2 mb-0" data-detail-label>
+            {% if item.icon %}
+                <i class="{{ item.icon }} me-2"></i>
+            {% endif %}
+            {{ item.label | safe }}
+        </label>
+
+        <!--Controls-->
+        <div data-layout-item-controls class="{% if layout_edit_mode and item.is_visible %}flex{% else %}hidden{% endif %} items-center gap-1">
+            {% if item.edit_url %}
+            <button
+                type="button"
+                data-layout-edit-item
+                data-layout-edit-url="{{ item.edit_url }}"
+                class="h-6 w-6 rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-50"
+                title="Edit item"
+                aria-label="Edit item"
+                >
+                <i class="fa fa-gear"></i>
+            </button>
+            {% endif %}
+            <button
+                data-layout-item-drag-handle
+                type="button"
+                class="h-6 w-6 cursor-grab rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-50 active:cursor-grabbing"
+                title="Drag field"
+                aria-label="Drag field"
+            >
+                <i class="fa fa-grip-vertical"></i>
+            </button>
+            <input
+                data-layout-colspan-input
+                type="number"
+                min="1"
+                value="{{ item.colspan|default:'1' }}"
+                class="w-12 rounded-md border border-slate-200 px-1 py-0.5 text-center text-xs"
+                title="Field width"
+            />
+            <button
+                data-layout-remove-item
+                type="button"
+                class="h-6 w-6 rounded-full border border-rose-200 text-rose-500 transition hover:bg-rose-50"
+                title="Remove field"
+            >
+                <i class="fa fa-xmark"></i>
+            </button>
+        </div>
+        <!--End controls-->
+    </div>
+
+    <div class="layout-item__body" data-layout-item-body>
+        {{ item.content | safe }}
+    </div>
+
+    <button
+        data-layout-colspan-resize-handle
+        class="absolute right-0 top-1/2 {% if layout_edit_mode and item.is_visible %}block{% else %}hidden{% endif %} h-8 w-2 -translate-y-1/2 cursor-ew-resize rounded bg-slate-200/80 transition"
+        title="Drag to resize width"
+        aria-label="Drag to resize width"
+        type="button"
+    ></button>
+</div>

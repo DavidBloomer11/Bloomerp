@@ -52,6 +52,17 @@ class Initiative(BloomerpModel):
                         LayoutItem(id="labels", colspan=1),
                     ],
                 ),
+                LayoutRow(
+                    title="Todo's",
+                    columns=1,
+                    items=[
+                        LayoutItem(
+                            id="todos",
+                            colspan=1,
+                            config={"inline_fields": ["title", "status"]},
+                        ),
+                    ]
+                ),
             ]
         ),
         string_search_fields=["name", "description"],

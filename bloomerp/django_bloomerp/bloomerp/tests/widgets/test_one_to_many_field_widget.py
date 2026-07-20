@@ -1,5 +1,6 @@
 from bloomerp.tests.base import BaseBloomerpModelTestCase
 from bloomerp.widgets.one_to_many_field_widget import OneToManyFieldWidget
+from django.http import QueryDict
 
 class TestCreateView(BaseBloomerpModelTestCase):
     create_foreign_models = True
@@ -55,5 +56,27 @@ class TestCreateView(BaseBloomerpModelTestCase):
             self.assertIn(field_name, widget_html)
             
         self.assertNotIn("age", widget_html)  # Ensure that a field not specified is not rendered
+
+    def test_widget_collects_nested_rows_for_form_cleaning(self):
+        widget = OneToManyFieldWidget()
+        data = QueryDict(mutable=True)
+        data.update(
+            {
+                "contracts__1__id": "20",
+                "contracts__1__status": "draft",
+                "contracts__0__id": "10",
+                "contracts__0__status": "active",
+                "contracts__0__DELETE": "1",
+                "unrelated": "ignored",
+            }
+        )
+
+        self.assertEqual(
+            widget.value_from_datadict(data, {}, "contracts"),
+            [
+                {"id": "10", "status": "active", "DELETE": "1"},
+                {"id": "20", "status": "draft"},
+            ],
+        )
         
     

@@ -116,8 +116,9 @@ class RowPolicyRuleCondition(BaseModel):
 
 
 class RowPolicyRuleContent(BaseModel):
-    connector: Literal["AND", "OR"]
+    connector: Literal["AND", "OR"] = "AND"
     conditions: list[RowPolicyRuleCondition]
+    permissions: list[BloomerpPermission | str] = Field(default_factory=list)
 
     @field_validator("conditions")
     @classmethod

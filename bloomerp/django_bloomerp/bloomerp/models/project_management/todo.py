@@ -11,6 +11,7 @@ from django.core.exceptions import ValidationError
 
 from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.definition import BloomerpModelConfig, ObjectAction, ObjectHTML
+from bloomerp.permissions.definition import BloomerpPermission
 from bloomerp.utils.requests import render_message
 from bloomerp.workspaces.form_tile import render
 
@@ -43,10 +44,10 @@ def _mark_as_completed(request:HttpRequest, object:"Todo") -> HttpResponse:
     """
     Marks the todo as completed and sets the datetime_completed field to the current time.
     """
-    from bloomerp.services.permission_services import UserPermissionManager
+    from bloomerp.permissions.manager import UserPermissionManager
     manager = UserPermissionManager(request.user)
     
-    if not manager.has_access_to_object(object, "change_todo"):
+    if not manager.has_access_to_object(object, BloomerpPermission.CHANGE):
         message = _("You do not have permission to mark this todo as completed.")
     else:
         message = _("Todo marked as completed.")
@@ -91,6 +92,7 @@ class Todo(BloomerpModel):
                     items=[
                         LayoutItem(id="required_by"),
                         LayoutItem(id="datetime_completed"),
+                        LayoutItem(id="is_completed"),
                     ],
                 ),
             ]

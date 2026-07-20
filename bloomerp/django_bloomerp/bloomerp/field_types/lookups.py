@@ -421,6 +421,111 @@ class RelativeDateRangeFilter(django_filters.BooleanFilter):
         )
 
 
+def _python_collection(value: Any) -> list | None:
+    if isinstance(value, QuerySet):
+        return list(value)
+    if isinstance(value, (list, tuple, set, frozenset)):
+        return list(value)
+    return None
+
+
+def _python_equals(actual: Any, expected: Any) -> bool:
+    values = _python_collection(actual)
+    return expected in values if values is not None else actual == expected
+
+
+def _python_compare(actual: Any, expected: Any, operator: Callable) -> bool:
+    try:
+        return operator(actual, expected)
+    except (TypeError, ValueError):
+        return False
+
+
+def _python_in(actual: Any, expected: Any) -> bool:
+    values = expected
+    if isinstance(expected, str):
+        values = [item.strip() for item in expected.split(",") if item.strip()]
+    elif not isinstance(expected, (list, tuple, set, frozenset, QuerySet)):
+        values = [expected]
+    actual_values = _python_collection(actual)
+    if actual_values is not None:
+        return any(item in values for item in actual_values)
+    return actual in values
+
+
+def _python_as_date(value: Any) -> date | None:
+    if isinstance(value, datetime):
+        if timezone.is_aware(value):
+            value = timezone.localtime(value)
+        return value.date()
+    return value if isinstance(value, date) else None
+
+
+def _python_relative_date(lookup_id: str) -> Callable[[Any, Any], bool]:
+    def evaluate(actual: Any, _expected: Any) -> bool:
+        actual_date = _python_as_date(actual)
+        if actual_date is None:
+            return False
+        start, end = _get_relative_date_range(lookup_id, timezone.localdate())
+        return start <= actual_date < end
+
+    return evaluate
+
+
+def _python_date_part(part: str) -> Callable[[Any, Any], bool]:
+    def evaluate(actual: Any, expected: Any) -> bool:
+        actual_date = _python_as_date(actual)
+        if actual_date is None:
+            return False
+        try:
+            expected_int = int(expected)
+        except (TypeError, ValueError):
+            return False
+        if part == "week":
+            return actual_date.isocalendar().week == expected_int
+        if part == "day_of_week":
+            return actual_date.weekday() == expected_int
+        return getattr(actual_date, part) == expected_int
+
+    return evaluate
+
+
+def _python_day_of_week_in(actual: Any, expected: Any) -> bool:
+    actual_date = _python_as_date(actual)
+    if actual_date is None:
+        return False
+    values = expected
+    if isinstance(values, str):
+        values = [item.strip() for item in values.split(",") if item.strip()]
+    try:
+        return actual_date.weekday() in {int(item) for item in values}
+    except (TypeError, ValueError):
+        return False
+
+
+def _python_count(value: Any) -> int | None:
+    values = _python_collection(value)
+    if values is not None:
+        return len(values)
+    try:
+        return len(value)
+    except (TypeError, AttributeError):
+        return None
+
+
+def _python_count_compare(operator: Callable) -> Callable[[Any, Any], bool]:
+    def evaluate(actual: Any, expected: Any) -> bool:
+        count = _python_count(actual)
+        if count is None:
+            return False
+        try:
+            return operator(count, int(expected))
+        except (TypeError, ValueError):
+            return False
+
+    return evaluate
+
+
 
 # ---------------------
 # Defintion
@@ -450,7 +555,10 @@ class LookupDefinition:
     # Filter class function
     filter_class_funcs : Optional[Callable[["ApplicationField"], dict[str, django_filters.Filter]]] = None
     
-    
+    # Python operator
+    python_eval : Optional[Callable[[Any, Any], bool]] = None
+
+
 class Lookup(Enum):
     EQUALS = LookupDefinition(
         id="equals",
@@ -463,7 +571,8 @@ class Lookup(Enum):
             _relation_filter_class(value, lookup or Lookup.EQUALS.value)
             if _is_relation_choice_field(value)
             else _simple_filter_classes(value, lookup or Lookup.EQUALS.value)
-        )
+        ),
+        python_eval=_python_equals,
     )
     
     IEXACT = LookupDefinition(
@@ -474,7 +583,8 @@ class Lookup(Enum):
         description="Case-insensitive exact match.",
         sql_operator=lambda value: f"LIKE {_sql_literal(value)}",
         widget_func=_equals_widget,
-        filter_class_funcs=lambda value, lookup=None: _simple_filter_classes(value, lookup or Lookup.IEXACT.value, filter_cls=django_filters.CharFilter)
+        filter_class_funcs=lambda value, lookup=None: _simple_filter_classes(value, lookup or Lookup.IEXACT.value, filter_cls=django_filters.CharFilter),
+        python_eval=lambda actual, expected: str(actual).casefold() == str(expected).casefold(),
     )
 
     CONTAINS = LookupDefinition(
@@ -485,7 +595,8 @@ class Lookup(Enum):
         description="Containment test (generated as icontains by default).",
         sql_operator=lambda value: f"LIKE {_sql_like_value(value, prefix='%', suffix='%')}",
         widget_func=_equals_widget,
-        filter_class_funcs=lambda value, lookup=None: _simple_filter_classes(value, lookup or Lookup.CONTAINS.value, filter_cls=django_filters.CharFilter)
+        filter_class_funcs=lambda value, lookup=None: _simple_filter_classes(value, lookup or Lookup.CONTAINS.value, filter_cls=django_filters.CharFilter),
+        python_eval=lambda actual, expected: str(expected).casefold() in str(actual).casefold(),
     )
 
     STARTS_WITH = LookupDefinition(
@@ -496,7 +607,8 @@ class Lookup(Enum):
         description="Starts with test.",
         sql_operator=lambda value: f"LIKE {_sql_like_value(value, suffix='%')}",
         widget_func=_equals_widget,
-        filter_class_funcs=lambda value, lookup=None: _simple_filter_classes(value, lookup or Lookup.STARTS_WITH.value, filter_cls=django_filters.CharFilter)
+        filter_class_funcs=lambda value, lookup=None: _simple_filter_classes(value, lookup or Lookup.STARTS_WITH.value, filter_cls=django_filters.CharFilter),
+        python_eval=lambda actual, expected: str(actual).startswith(str(expected)),
     )
 
     ENDS_WITH = LookupDefinition(
@@ -507,7 +619,8 @@ class Lookup(Enum):
         description="Ends with test.",
         sql_operator=lambda value: f"LIKE {_sql_like_value(value, prefix='%')}",
         widget_func=_equals_widget,
-        filter_class_funcs=lambda value, lookup=None: _simple_filter_classes(value, lookup or Lookup.ENDS_WITH.value, filter_cls=django_filters.CharFilter)
+        filter_class_funcs=lambda value, lookup=None: _simple_filter_classes(value, lookup or Lookup.ENDS_WITH.value, filter_cls=django_filters.CharFilter),
+        python_eval=lambda actual, expected: str(actual).endswith(str(expected)),
     )
 
     GREATER_THAN = LookupDefinition(
@@ -517,7 +630,8 @@ class Lookup(Enum):
         aliases=["__gt"],
         sql_operator=lambda value: f"> {_sql_literal(value)}",
         widget_func=_equals_widget,
-        filter_class_funcs=lambda value, lookup=None: _simple_filter_classes(value, lookup or Lookup.GREATER_THAN.value)
+        filter_class_funcs=lambda value, lookup=None: _simple_filter_classes(value, lookup or Lookup.GREATER_THAN.value),
+        python_eval=lambda actual, expected: _python_compare(actual, expected, lambda a, b: a > b),
     )
 
     GREATER_THAN_OR_EQUAL = LookupDefinition(
@@ -527,7 +641,8 @@ class Lookup(Enum):
         aliases=["__gte"],
         sql_operator=lambda value: f">= {_sql_literal(value)}",
         widget_func=_equals_widget,
-        filter_class_funcs=lambda value, lookup=None: _simple_filter_classes(value, lookup or Lookup.GREATER_THAN_OR_EQUAL.value)
+        filter_class_funcs=lambda value, lookup=None: _simple_filter_classes(value, lookup or Lookup.GREATER_THAN_OR_EQUAL.value),
+        python_eval=lambda actual, expected: _python_compare(actual, expected, lambda a, b: a >= b),
     )
 
     LESS_THAN = LookupDefinition(
@@ -537,7 +652,8 @@ class Lookup(Enum):
         aliases=["__lt"],
         sql_operator=lambda value: f"< {_sql_literal(value)}",
         widget_func=_equals_widget,
-        filter_class_funcs=lambda value, lookup=None: _simple_filter_classes(value, lookup or Lookup.LESS_THAN.value)
+        filter_class_funcs=lambda value, lookup=None: _simple_filter_classes(value, lookup or Lookup.LESS_THAN.value),
+        python_eval=lambda actual, expected: _python_compare(actual, expected, lambda a, b: a < b),
     )
 
     LESS_THAN_OR_EQUAL = LookupDefinition(
@@ -547,7 +663,8 @@ class Lookup(Enum):
         aliases=["__lte"],
         sql_operator=lambda value: f"<= {_sql_literal(value)}",
         widget_func=_equals_widget,
-        filter_class_funcs=lambda value, lookup=None: _simple_filter_classes(value, lookup or Lookup.LESS_THAN_OR_EQUAL.value)
+        filter_class_funcs=lambda value, lookup=None: _simple_filter_classes(value, lookup or Lookup.LESS_THAN_OR_EQUAL.value),
+        python_eval=lambda actual, expected: _python_compare(actual, expected, lambda a, b: a <= b),
     )
 
     IN = LookupDefinition(
@@ -562,7 +679,8 @@ class Lookup(Enum):
             _relation_filter_class(value, lookup or Lookup.IN.value)
             if _is_relation_choice_field(value)
             else _simple_filter_classes(value, lookup or Lookup.IN.value, filter_cls=_in_filter_class_for_field(value))
-        )
+        ),
+        python_eval=_python_in,
     )
 
     IS_NULL = LookupDefinition(
@@ -573,7 +691,8 @@ class Lookup(Enum):
         description="Checks if value is null (True) or not null (False).",
         sql_operator=_sql_is_null,
         widget_func=lambda _: forms.Select(choices=[("true", "True"), ("false", "False")], attrs={"class": "select w-full"}),
-        filter_class_funcs=lambda value, lookup=None: _simple_filter_classes(value, lookup or Lookup.IS_NULL.value, filter_cls=django_filters.BooleanFilter)
+        filter_class_funcs=lambda value, lookup=None: _simple_filter_classes(value, lookup or Lookup.IS_NULL.value, filter_cls=django_filters.BooleanFilter),
+        python_eval=lambda actual, expected: (actual is None) is bool(expected),
     )
 
     NOT_EQUALS = LookupDefinition(
@@ -584,14 +703,16 @@ class Lookup(Enum):
         description="Not equal comparison.",
         sql_operator=lambda value: f"!= {_sql_literal(value)}",
         widget_func=_equals_widget,
-        filter_class_funcs=lambda value, lookup=None: _not_equals_filter_class(value, lookup or Lookup.NOT_EQUALS.value)
+        filter_class_funcs=lambda value, lookup=None: _not_equals_filter_class(value, lookup or Lookup.NOT_EQUALS.value),
+        python_eval=lambda actual, expected: not _python_equals(actual, expected),
     )
 
     EQUALS_USER = LookupDefinition(
         id="equals_user",
         display_name="Equals Current User",
         django_representation="",
-        widget_func=lambda x: forms.HiddenInput(attrs={"value": "$user"})
+        widget_func=lambda x: forms.HiddenInput(attrs={"value": "$user"}),
+        python_eval=_python_equals,
     )
 
     FOREIGN_ADVANCED = LookupDefinition(
@@ -612,7 +733,8 @@ class Lookup(Enum):
         django_representation="today",
         aliases=["__today"],
         widget_func=_hidden_true,
-        filter_class_funcs=lambda value, lookup=None: _relative_date_filter_class(value, lookup or Lookup.TODAY.value)
+        filter_class_funcs=lambda value, lookup=None: _relative_date_filter_class(value, lookup or Lookup.TODAY.value),
+        python_eval=_python_relative_date("today"),
     )
 
     YESTERDAY = LookupDefinition(
@@ -621,7 +743,8 @@ class Lookup(Enum):
         django_representation="yesterday",
         aliases=["__yesterday"],
         widget_func=_hidden_true,
-        filter_class_funcs=lambda value, lookup=None: _relative_date_filter_class(value, lookup or Lookup.YESTERDAY.value)
+        filter_class_funcs=lambda value, lookup=None: _relative_date_filter_class(value, lookup or Lookup.YESTERDAY.value),
+        python_eval=_python_relative_date("yesterday"),
     )
 
     THIS_WEEK = LookupDefinition(
@@ -630,7 +753,8 @@ class Lookup(Enum):
         django_representation="this_week",
         aliases=["__this_week"],
         widget_func=_hidden_true,
-        filter_class_funcs=lambda value, lookup=None: _relative_date_filter_class(value, lookup or Lookup.THIS_WEEK.value)
+        filter_class_funcs=lambda value, lookup=None: _relative_date_filter_class(value, lookup or Lookup.THIS_WEEK.value),
+        python_eval=_python_relative_date("this_week"),
     )
 
     LAST_WEEK = LookupDefinition(
@@ -639,7 +763,8 @@ class Lookup(Enum):
         django_representation="last_week",
         aliases=["__last_week"],
         widget_func=_hidden_true,
-        filter_class_funcs=lambda value, lookup=None: _relative_date_filter_class(value, lookup or Lookup.LAST_WEEK.value)
+        filter_class_funcs=lambda value, lookup=None: _relative_date_filter_class(value, lookup or Lookup.LAST_WEEK.value),
+        python_eval=_python_relative_date("last_week"),
     )
 
     THIS_MONTH = LookupDefinition(
@@ -648,7 +773,8 @@ class Lookup(Enum):
         django_representation="this_month",
         aliases=["__this_month"],
         widget_func=_hidden_true,
-        filter_class_funcs=lambda value, lookup=None: _relative_date_filter_class(value, lookup or Lookup.THIS_MONTH.value)
+        filter_class_funcs=lambda value, lookup=None: _relative_date_filter_class(value, lookup or Lookup.THIS_MONTH.value),
+        python_eval=_python_relative_date("this_month"),
     )
 
     LAST_MONTH = LookupDefinition(
@@ -657,7 +783,8 @@ class Lookup(Enum):
         django_representation="last_month",
         aliases=["__last_month"],
         widget_func=_hidden_true,
-        filter_class_funcs=lambda value, lookup=None: _relative_date_filter_class(value, lookup or Lookup.LAST_MONTH.value)
+        filter_class_funcs=lambda value, lookup=None: _relative_date_filter_class(value, lookup or Lookup.LAST_MONTH.value),
+        python_eval=_python_relative_date("last_month"),
     )
 
     THIS_QUARTER = LookupDefinition(
@@ -666,7 +793,8 @@ class Lookup(Enum):
         django_representation="this_quarter",
         aliases=["__this_quarter"],
         widget_func=_hidden_true,
-        filter_class_funcs=lambda value, lookup=None: _relative_date_filter_class(value, lookup or Lookup.THIS_QUARTER.value)
+        filter_class_funcs=lambda value, lookup=None: _relative_date_filter_class(value, lookup or Lookup.THIS_QUARTER.value),
+        python_eval=_python_relative_date("this_quarter"),
     )
 
     LAST_QUARTER = LookupDefinition(
@@ -675,7 +803,8 @@ class Lookup(Enum):
         django_representation="last_quarter",
         aliases=["__last_quarter"],
         widget_func=_hidden_true,
-        filter_class_funcs=lambda value, lookup=None: _relative_date_filter_class(value, lookup or Lookup.LAST_QUARTER.value)
+        filter_class_funcs=lambda value, lookup=None: _relative_date_filter_class(value, lookup or Lookup.LAST_QUARTER.value),
+        python_eval=_python_relative_date("last_quarter"),
     )
 
     THIS_YEAR = LookupDefinition(
@@ -684,7 +813,8 @@ class Lookup(Enum):
         django_representation="this_year",
         aliases=["__this_year"],
         widget_func=_hidden_true,
-        filter_class_funcs=lambda value, lookup=None: _relative_date_filter_class(value, lookup or Lookup.THIS_YEAR.value)
+        filter_class_funcs=lambda value, lookup=None: _relative_date_filter_class(value, lookup or Lookup.THIS_YEAR.value),
+        python_eval=_python_relative_date("this_year"),
     )
 
     LAST_YEAR = LookupDefinition(
@@ -693,7 +823,8 @@ class Lookup(Enum):
         django_representation="last_year",
         aliases=["__last_year"],
         widget_func=_hidden_true,
-        filter_class_funcs=lambda value, lookup=None: _relative_date_filter_class(value, lookup or Lookup.LAST_YEAR.value)
+        filter_class_funcs=lambda value, lookup=None: _relative_date_filter_class(value, lookup or Lookup.LAST_YEAR.value),
+        python_eval=_python_relative_date("last_year"),
     )
 
     YEAR = LookupDefinition(
@@ -702,7 +833,8 @@ class Lookup(Enum):
         django_representation="year",
         aliases=["__year"],
         widget_func=lambda x: forms.NumberInput(attrs={"class": "input w-full", "min": 1, "max": 9999, "type": "number"}),
-        filter_class_funcs=lambda value, lookup=None: _simple_filter_classes(value, lookup or Lookup.YEAR.value, filter_cls=django_filters.NumberFilter)
+        filter_class_funcs=lambda value, lookup=None: _simple_filter_classes(value, lookup or Lookup.YEAR.value, filter_cls=django_filters.NumberFilter),
+        python_eval=_python_date_part("year"),
     )
 
     MONTH = LookupDefinition(
@@ -711,7 +843,8 @@ class Lookup(Enum):
         django_representation="month",
         aliases=["__month"],
         widget_func=lambda x: forms.NumberInput(attrs={"class": "input w-full", "min": 1, "max": 12, "type": "number"}),
-        filter_class_funcs=lambda value, lookup=None: _simple_filter_classes(value, lookup or Lookup.MONTH.value, filter_cls=django_filters.NumberFilter)
+        filter_class_funcs=lambda value, lookup=None: _simple_filter_classes(value, lookup or Lookup.MONTH.value, filter_cls=django_filters.NumberFilter),
+        python_eval=_python_date_part("month"),
     )
 
     DAY = LookupDefinition(
@@ -720,7 +853,8 @@ class Lookup(Enum):
         django_representation="day",
         aliases=["__day"],
         widget_func=lambda x: forms.NumberInput(attrs={"class": "input w-full", "min": 1, "max": 31, "type": "number"}),
-        filter_class_funcs=lambda value, lookup=None: _simple_filter_classes(value, lookup or Lookup.DAY.value, filter_cls=django_filters.NumberFilter)
+        filter_class_funcs=lambda value, lookup=None: _simple_filter_classes(value, lookup or Lookup.DAY.value, filter_cls=django_filters.NumberFilter),
+        python_eval=_python_date_part("day"),
     )
 
     WEEK = LookupDefinition(
@@ -729,7 +863,8 @@ class Lookup(Enum):
         django_representation="week",
         aliases=["__week"],
         widget_func=lambda application_field: forms.NumberInput(attrs={"class": "input w-full", "min": 1, "max": 53, "type": "number"}),
-        filter_class_funcs=lambda value, lookup=None: _simple_filter_classes(value, lookup or Lookup.WEEK.value, filter_cls=django_filters.NumberFilter)
+        filter_class_funcs=lambda value, lookup=None: _simple_filter_classes(value, lookup or Lookup.WEEK.value, filter_cls=django_filters.NumberFilter),
+        python_eval=_python_date_part("week"),
     )
     
     DAY_OF_WEEK = LookupDefinition(
@@ -741,7 +876,8 @@ class Lookup(Enum):
         filter_class_funcs=lambda value, lookup=None: {
             name: DayOfWeekFilter(field_name=value.field)
             for name in _filter_names(value, lookup or Lookup.DAY_OF_WEEK.value)
-        }
+        },
+        python_eval=_python_date_part("day_of_week"),
     )
     
     DAY_OF_WEEK_IN = LookupDefinition(
@@ -753,7 +889,8 @@ class Lookup(Enum):
         filter_class_funcs=lambda value, lookup=None: {
             name: DayOfWeekInFilter(field_name=value.field)
             for name in _filter_names(value, lookup or Lookup.DAY_OF_WEEK_IN.value)
-        }
+        },
+        python_eval=_python_day_of_week_in,
     )
 
     COUNT_EQUALS = LookupDefinition(
@@ -763,6 +900,7 @@ class Lookup(Enum):
         aliases=["__count", "__count__exact", "__count_equals"],
         widget_func=lambda application_field: forms.NumberInput(attrs={"class": "input w-full", "min": 0, "type": "number"}),
         filter_class_funcs=lambda value, lookup=None: _count_filter_class(value, lookup or Lookup.COUNT_EQUALS.value, "exact"),
+        python_eval=_python_count_compare(lambda a, b: a == b),
     )
 
     COUNT_GREATER_THAN = LookupDefinition(
@@ -772,6 +910,7 @@ class Lookup(Enum):
         aliases=["__count__gt", "__count_greater_than"],
         widget_func=lambda application_field: forms.NumberInput(attrs={"class": "input w-full", "min": 0, "type": "number"}),
         filter_class_funcs=lambda value, lookup=None: _count_filter_class(value, lookup or Lookup.COUNT_GREATER_THAN.value, "gt"),
+        python_eval=_python_count_compare(lambda a, b: a > b),
     )
 
     COUNT_GREATER_THAN_OR_EQUAL = LookupDefinition(
@@ -781,6 +920,7 @@ class Lookup(Enum):
         aliases=["__count__gte", "__count_greater_than_or_equal"],
         widget_func=lambda application_field: forms.NumberInput(attrs={"class": "input w-full", "min": 0, "type": "number"}),
         filter_class_funcs=lambda value, lookup=None: _count_filter_class(value, lookup or Lookup.COUNT_GREATER_THAN_OR_EQUAL.value, "gte"),
+        python_eval=_python_count_compare(lambda a, b: a >= b),
     )
 
     COUNT_LESS_THAN = LookupDefinition(
@@ -790,6 +930,7 @@ class Lookup(Enum):
         aliases=["__count__lt", "__count_less_than"],
         widget_func=lambda application_field: forms.NumberInput(attrs={"class": "input w-full", "min": 0, "type": "number"}),
         filter_class_funcs=lambda value, lookup=None: _count_filter_class(value, lookup or Lookup.COUNT_LESS_THAN.value, "lt"),
+        python_eval=_python_count_compare(lambda a, b: a < b),
     )
 
     COUNT_LESS_THAN_OR_EQUAL = LookupDefinition(
@@ -799,6 +940,7 @@ class Lookup(Enum):
         aliases=["__count__lte", "__count_less_than_or_equal"],
         widget_func=lambda application_field: forms.NumberInput(attrs={"class": "input w-full", "min": 0, "type": "number"}),
         filter_class_funcs=lambda value, lookup=None: _count_filter_class(value, lookup or Lookup.COUNT_LESS_THAN_OR_EQUAL.value, "lte"),
+        python_eval=_python_count_compare(lambda a, b: a <= b),
     )
     
     

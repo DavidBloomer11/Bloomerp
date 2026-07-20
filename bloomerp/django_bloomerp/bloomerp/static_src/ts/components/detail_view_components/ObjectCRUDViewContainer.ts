@@ -202,16 +202,21 @@ export default class ObjectCRUDViewContainer extends BaseSectionedLayoutContaine
         const rowEl = this.rowElements[rowIndex];
         const targetGrid = rowEl?.querySelector<HTMLElement>("[data-layout-grid]");
         const renderUrl = this.element.dataset.layoutRenderItemUrl;
-        const contentTypeId = this.element.dataset.contentTypeId;
+        const targetContentTypeId = this.element.dataset.targetContentTypeId
+            ?? this.element.dataset.contentTypeId;
         const objectId = this.element.dataset.objectId;
-        if (!targetGrid || !renderUrl || !contentTypeId) return;
+        const layoutObjectId = this.element.dataset.layoutObjectId;
+        if (!targetGrid || !renderUrl || !targetContentTypeId) return;
 
         const values: Record<string, string | number> = {
-            content_type_id: contentTypeId,
+            target_content_type_id: targetContentTypeId,
             field_id: itemId,
         };
         if (objectId) {
             values.object_id = objectId;
+        }
+        if (layoutObjectId) {
+            values.layout_object_id = layoutObjectId;
         }
 
         await htmx.ajax("get", renderUrl, {
@@ -482,10 +487,8 @@ export default class ObjectCRUDViewContainer extends BaseSectionedLayoutContaine
 
         this.items.forEach((item) => {
             if (!item.element) return;
-
-            const isRequired = item.element.dataset.isRequired === "true";
-            const hasErrors = item.element.dataset.hasErrors === "true";
-            const shouldShow = shouldShowAllFields || isRequired || hasErrors;
+            const isRequired = item.element.dataset.required === "True";
+            const shouldShow = shouldShowAllFields || isRequired;
             item.element.classList.toggle("hidden", !shouldShow);
         });
 

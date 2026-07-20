@@ -9,9 +9,11 @@ from django.db.models import Model
 
 from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.application_field import ApplicationField
+from bloomerp.permissions.manager import UserPolicyManager
 from bloomerp.services.permission_services import UserPermissionManager
 from django.db.models import QuerySet
 from bloomerp.models.users import User
+from bloomerp.forms.model_form import get_model_form_application_fields
 
 MAX_LAYOUT_COLUMNS = 12
 
@@ -298,29 +300,23 @@ def get_available_layout_fields(*, content_type: ContentType, user, layout_kind:
     """
     # TODO: use dataclass for response here
     model = content_type.model_class()
-    permission_manager = UserPermissionManager(user)
+    permission_manager = UserPolicyManager(user)
     permission_prefix = "add" if layout_kind == "create" else "view"
     permission_str = f"{permission_prefix}_{model._meta.model_name}"
 
-    if layout_kind == "create":
-        from bloomerp.services.create_view_services import AUTO_MANAGED_FIELD_NAMES
-    else:
-        AUTO_MANAGED_FIELD_NAMES = frozenset()
-
     fields = ApplicationField.objects.filter(content_type=content_type).order_by("field")
+    if layout_kind == "create":
+        fields = get_model_form_application_fields(
+            model,
+            fields,
+            exclude_auto_managed=True,
+        )
     available: list[dict[str, Any]] = []
     for field in fields:
         if not permission_manager.has_field_permission(field, permission_str):
             continue
 
         field_type = field.get_field_type_enum().value
-        if field.field in AUTO_MANAGED_FIELD_NAMES and not field_type.editable_without_form_field:
-            continue
-
-        if layout_kind == "create" and not (
-            field_type.allow_in_model or field_type.editable_without_form_field
-        ):
-            continue
 
         available.append(
             {
@@ -414,6 +410,7 @@ def create_default_layout(
                     LayoutItem(
                         id=resolved_id,
                         colspan=clamp_layout_colspan(item.colspan, row.columns),
+                        config=item.config,
                     )
                 )
 
