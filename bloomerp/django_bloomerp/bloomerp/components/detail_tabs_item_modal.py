@@ -1,16 +1,18 @@
+import json
+
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.http import HttpRequest, HttpResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 
 from bloomerp.forms.detail_tabs import DetailTabItemForm
 from bloomerp.models.users.user_detail_view_tabs_preference import (
     UserDetailViewTabsPreference,
 )
 from bloomerp.router import router
-from bloomerp.services.detail_tab_services import get_detail_route_options
 from bloomerp.services.preference_services import PreferenceManager
+from bloomerp.utils.requests import render_blank_form
 
 
 @router.register(
@@ -63,20 +65,41 @@ def detail_tabs_item_modal(request: HttpRequest) -> HttpResponse:
         "name": item.name if item is not None else values.get("name", ""),
         "url": item.url if item is not None else values.get("url", ""),
     }
-    form = DetailTabItemForm(request.POST or None, initial=initial)
+    route_options = UserDetailViewTabsPreference.get_detail_route_options(
+        content_type.model_class()
+    )
+    form = DetailTabItemForm(
+        request.POST or None,
+        initial=initial,
+        item_type=item_type,
+        route_options=route_options,
+    )
     success = request.method == "POST" and form.is_valid()
 
-    return render(
-        request,
-        "components/detail_tabs/item_modal_form.html",
-        {
-            "form": form,
+    if success:
+        result = form.cleaned_data
+        response = HttpResponse(status=204)
+        response["HX-Trigger"] = json.dumps(
+            {
+                "detail-tabs-item-saved": {
+                    "mode": mode,
+                    "item_type": item_type,
+                    "item_id": str(result.get("item_id") or ""),
+                    "name": result["name"],
+                    "url": result.get("url") or "",
+                }
+            }
+        )
+        return response
+
+    return render_blank_form(
+        request=request,
+        form=form,
+        url=request.path,
+        hidden_args={
             "mode": mode,
-            "item_type": item_type,
             "content_type_id": content_type.pk,
-            "route_options": get_detail_route_options(content_type.model_class()),
-            "pk_placeholder": "{{pk}}",
-            "success": success,
-            "result": form.cleaned_data if success else None,
         },
+        submit_label="Save" if mode == "edit" else "Create",
+        form_args={"data-detail-tabs-item-form": ""},
     )

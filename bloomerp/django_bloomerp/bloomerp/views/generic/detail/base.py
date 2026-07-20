@@ -15,7 +15,6 @@ from bloomerp.models.users.user_detail_view_tabs_preference import (
     UserDetailViewTabsPreference,
 )
 from bloomerp.services.preference_services import PreferenceManager
-from bloomerp.services.detail_tab_services import build_rendered_tab_items
 
 
 class BaseBloomerpDetailView(BaseBloomerpView, BloomerpModelContextMixin, DetailView):
@@ -122,8 +121,7 @@ class BaseBloomerpDetailView(BaseBloomerpView, BloomerpModelContextMixin, Detail
         context["can_manage_detail_tabs_preference"] = preference_manager.can_manage(
             tabs_preference
         )
-        context["tab_items"] = build_rendered_tab_items(
-            tabs_preference,
+        context["tab_items"] = tabs_preference.build_rendered_items(
             object_pk=self.object.pk,
             request_path=self.request.path,
         )

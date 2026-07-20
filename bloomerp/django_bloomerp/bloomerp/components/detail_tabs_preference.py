@@ -10,7 +10,6 @@ from bloomerp.models.users.user_detail_view_tabs_preference import (
     UserDetailViewTabsPreference,
 )
 from bloomerp.router import router
-from bloomerp.services.detail_tab_services import sync_tab_items
 from bloomerp.services.preference_services import PreferenceManager
 
 
@@ -43,7 +42,7 @@ def detail_tabs_preference(request: HttpRequest) -> HttpResponse:
 
     try:
         payload = json.loads(request.POST.get("items", "[]"))
-        sync_tab_items(preference, payload)
+        preference.sync_items(payload)
     except (json.JSONDecodeError, ValidationError) as exc:
         message = exc.messages[0] if isinstance(exc, ValidationError) else "Invalid JSON."
         return JsonResponse({"status": "error", "error": message}, status=400)

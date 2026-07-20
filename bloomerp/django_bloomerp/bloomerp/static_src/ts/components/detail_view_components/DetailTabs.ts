@@ -20,6 +20,14 @@ type TabItemPayload = {
     position: number;
 };
 
+type TabItemSavedDetail = {
+    mode: 'create' | 'edit';
+    item_type: 'folder' | 'url';
+    item_id: string;
+    name: string;
+    url: string;
+};
+
 export default class DetailTabs extends BaseComponent {
     private stripContainer: HTMLElement | null = null;
     private stripList: HTMLElement | null = null;
@@ -39,7 +47,7 @@ export default class DetailTabs extends BaseComponent {
     private readonly dropHandler = (event: DragEvent) => this.onDrop(event);
     private readonly documentClickHandler = (event: MouseEvent) => this.onDocumentClick(event);
     private readonly keydownHandler = (event: KeyboardEvent) => this.onKeyDown(event);
-    private readonly modalAfterSwapHandler = () => this.onModalAfterSwap();
+    private readonly modalSavedHandler = (event: Event) => this.onModalSaved(event as CustomEvent<TabItemSavedDetail>);
     private readonly modalInputHandler = (event: Event) => this.onModalInput(event);
 
     public initialize(): void {
@@ -63,8 +71,8 @@ export default class DetailTabs extends BaseComponent {
             this.stripContainer.addEventListener('dragover', this.dragOverHandler);
             this.stripContainer.addEventListener('drop', this.dropHandler);
 
+            document.addEventListener('detail-tabs-item-saved', this.modalSavedHandler);
             const modalBody = document.getElementById('bloomerp-general-use-modal-body');
-            modalBody?.addEventListener('htmx:afterSwap', this.modalAfterSwapHandler);
             modalBody?.addEventListener('input', this.modalInputHandler);
         }
 
@@ -82,7 +90,7 @@ export default class DetailTabs extends BaseComponent {
         document.removeEventListener('keydown', this.keydownHandler);
 
         const modalBody = document.getElementById('bloomerp-general-use-modal-body');
-        modalBody?.removeEventListener('htmx:afterSwap', this.modalAfterSwapHandler);
+        document.removeEventListener('detail-tabs-item-saved', this.modalSavedHandler);
         modalBody?.removeEventListener('input', this.modalInputHandler);
 
         if (this.saveTimer) window.clearTimeout(this.saveTimer);
@@ -325,23 +333,16 @@ export default class DetailTabs extends BaseComponent {
     private onModalInput(event: Event): void {
         const urlInput = (event.target as HTMLElement).closest<HTMLInputElement>('[data-detail-tab-url-input]');
         if (!urlInput) return;
-        const modal = urlInput.closest<HTMLElement>('[data-detail-tabs-item-modal]');
-        const nameInput = modal?.querySelector<HTMLInputElement>('[data-detail-tab-name-input]');
-        const options = modal?.querySelectorAll<HTMLOptionElement>('datalist option') || [];
+        const modalBody = document.getElementById('bloomerp-general-use-modal-body');
+        const nameInput = modalBody?.querySelector<HTMLInputElement>('[data-detail-tab-name-input]');
+        const options = modalBody?.querySelectorAll<HTMLOptionElement>('datalist option') || [];
         const match = Array.from(options).find((option) => option.value === urlInput.value);
         if (match && nameInput) nameInput.value = match.dataset.name || match.textContent || '';
     }
 
-    private onModalAfterSwap(): void {
-        const modalBody = document.getElementById('bloomerp-general-use-modal-body');
-        const state = modalBody?.querySelector<HTMLElement>('[data-detail-tabs-item-modal]');
-        if (!state || state.dataset.success !== 'true') return;
-
-        const type = state.dataset.itemType;
-        const mode = state.dataset.mode;
-        const id = state.dataset.itemId || this.generateId();
-        const name = state.dataset.itemName || '';
-        const url = state.dataset.itemUrl || '';
+    private onModalSaved(event: CustomEvent<TabItemSavedDetail>): void {
+        const { mode, item_type: type, name, url } = event.detail;
+        const id = event.detail.item_id || this.generateId();
 
         if (mode === 'edit') {
             const item = this.findItem(id);
@@ -512,8 +513,10 @@ export default class DetailTabs extends BaseComponent {
             const active = item.dataset.itemId === this.activeId || folderActive;
             item.classList.toggle('border-primary', active);
             item.classList.toggle('bg-primary/5', active);
+            item.classList.toggle('text-primary', active);
             item.classList.toggle('font-medium', active);
             item.classList.toggle('border-transparent', !active);
+            item.classList.toggle('text-gray-700', !active);
         }
         this.element?.querySelectorAll<HTMLElement>('[data-folder-tab-item]').forEach((tab) => {
             const active = tab.dataset.itemId === this.activeId;

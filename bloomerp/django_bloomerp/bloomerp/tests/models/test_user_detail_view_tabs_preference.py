@@ -11,11 +11,6 @@ from bloomerp.models.users.user_detail_view_tabs_preference import (
     UserDetailViewTabItem,
     UserDetailViewTabsPreference,
 )
-from bloomerp.services.detail_tab_services import (
-    build_rendered_tab_items,
-    get_detail_route_options,
-    sync_tab_items,
-)
 from bloomerp.services.preference_services import PreferenceManager
 
 
@@ -42,13 +37,26 @@ class UserDetailViewTabsPreferenceTests(TestCase):
             content_type_id=self.content_type.pk,
         )
 
-        # 2. Compare the relational items with the route catalog.
-        options = get_detail_route_options(Todo)
-        items = list(preference.items.order_by("position"))
+        # 2. Compare the relational tab items with the route catalog.
+        options = UserDetailViewTabsPreference.get_detail_route_options(Todo)
+        items = list(preference.items.exclude(url=None).order_by("position"))
         self.assertTrue(options)
-        self.assertEqual([item.name for item in items], [option["name"] for option in options])
-        self.assertEqual([item.url for item in items], [option["url"] for option in options])
+        self.assertCountEqual(
+            [(item.name, item.url) for item in items],
+            [(option["name"], option["url"]) for option in options],
+        )
         self.assertTrue(all("{{pk}}" in (item.url or "") for item in items))
+
+        # 3. Confirm relationship routes are grouped instead of becoming base tabs.
+        relationship_options = [
+            option for option in options if option["is_relationship"]
+        ]
+        if relationship_options:
+            folder = preference.items.get(name="Relationships", url=None)
+            self.assertEqual(
+                list(folder.children.values_list("url", flat=True)),
+                [option["url"] for option in relationship_options],
+            )
 
     def test_preference_api_is_owner_scoped_and_items_are_not_exposed(self):
         """
@@ -129,8 +137,7 @@ class UserDetailViewTabsPreferenceTests(TestCase):
         tab_id = uuid.uuid4()
 
         # 2. Save a new folder tree snapshot.
-        sync_tab_items(
-            preference,
+        preference.sync_items(
             [
                 {
                     "id": str(folder_id),
@@ -212,8 +219,7 @@ class UserDetailViewTabsPreferenceTests(TestCase):
         )
 
         # 2. Render the preference for object 42.
-        rendered = build_rendered_tab_items(
-            preference,
+        rendered = preference.build_rendered_items(
             object_pk=42,
             request_path="/todos/42/overview/",
         )
@@ -345,3 +351,40 @@ class DetailTabsComponentTests(TestCase):
         self.assertContains(response, '<datalist id="detail-tab-route-options">', html=False)
         self.assertContains(response, "{{pk}}", html=False)
         self.assertContains(response, 'data-name="', html=False)
+
+    def test_item_modal_uses_blank_form_and_emits_saved_event(self):
+        """
+        Use case: The owner creates a tab through the generic blank form.
+        Expected result: The form posts to itself and emits the item payload without a custom success template.
+        """
+        # 1. Load the generic form fragment.
+        self.client.force_login(self.owner)
+        endpoint = reverse("components_detail_tabs_item_modal")
+        response = self.client.get(
+            endpoint,
+            {
+                "content_type_id": self.content_type.pk,
+                "item_type": "url",
+                "mode": "create",
+            },
+        )
+        self.assertTemplateUsed(response, "utils/blank_form.html")
+        self.assertContains(response, 'data-detail-tabs-item-form=""', html=False)
+
+        # 2. Submit valid data and inspect the HTMX event payload.
+        response = self.client.post(
+            endpoint,
+            {
+                "content_type_id": self.content_type.pk,
+                "item_type": "url",
+                "mode": "create",
+                "name": "Overview",
+                "url": "/todos/{{pk}}/overview/",
+            },
+        )
+        self.assertEqual(response.status_code, 204)
+        event = json.loads(response.headers["HX-Trigger"])
+        self.assertEqual(
+            event["detail-tabs-item-saved"]["url"],
+            "/todos/{{pk}}/overview/",
+        )
