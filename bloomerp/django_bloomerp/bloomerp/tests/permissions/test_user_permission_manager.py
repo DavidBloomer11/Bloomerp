@@ -282,6 +282,69 @@ class TestUserPermissionManager(BaseBloomerpModelTestCase):
             )
         )
 
+    def test_related_user_rule_filters_queryset_and_matches_candidate(self):
+        country_field = ApplicationField.get_for_model(self.CustomerModel).get(
+            field="country"
+        )
+        allowed_country = self.CountryModel.objects.get(name="Belgium")
+        blocked_country = self.CountryModel.objects.get(name="Helvetia")
+        allowed_country.created_by = self.normal_user
+        allowed_country.save(update_fields=["created_by"])
+        blocked_country.created_by = self.admin_user
+        blocked_country.save(update_fields=["created_by"])
+        allowed_customer = self.CustomerModel.objects.create(
+            first_name="Allowed",
+            last_name="Employee",
+            age=30,
+            country=allowed_country,
+        )
+        blocked_customer = self.CustomerModel.objects.create(
+            first_name="Blocked",
+            last_name="Employee",
+            age=30,
+            country=blocked_country,
+        )
+        policy = PolicyManager.create_policy(
+            model_or_content_type=self.CustomerModel,
+            field_permissions={},
+            row_permissions=[
+                RowPolicyRuleContent(
+                    connector="AND",
+                    permissions=[BloomerpPermission.VIEW],
+                    conditions=[
+                        RowPolicyRuleCondition(
+                            application_field_id=str(country_field.pk),
+                            field="country__created_by",
+                            operator=Lookup.EQUALS_USER.value.id,
+                            value="$user",
+                        )
+                    ],
+                )
+            ],
+        )
+        PolicyManager.assign(policy, self.normal_user)
+        manager = UserPolicyManager(self.normal_user)
+
+        accessible = manager.get_accessible_queryset(
+            self.CustomerModel,
+            BloomerpPermission.VIEW,
+        )
+
+        self.assertIn(allowed_customer, accessible)
+        self.assertNotIn(blocked_customer, accessible)
+        self.assertTrue(
+            manager.candidate_matches_row_policies(
+                self.CustomerModel(country=allowed_country),
+                BloomerpPermission.VIEW,
+            )
+        )
+        self.assertFalse(
+            manager.candidate_matches_row_policies(
+                self.CustomerModel(country=blocked_country),
+                BloomerpPermission.VIEW,
+            )
+        )
+
     def test_candidate_matching_supports_user_and_typed_comparisons(self):
         created_by = ApplicationField.get_for_model(self.CustomerModel).get(
             field="created_by"

@@ -133,7 +133,12 @@ class PythonPermissionCompiler(BasePermissionCompiler[CompiledPythonAccess]):
                 if isinstance(condition.field, str) and "__" in condition.field
                 else application_field.field
             )
-            lookup = self.resolve_lookup(application_field, operator)
+            lookup = (
+                Lookup.EQUALS_USER
+                if self.resolve_lookup_globally(operator) == Lookup.EQUALS_USER
+                or str(condition.value) == "$user"
+                else self.resolve_lookup(application_field, operator)
+            )
         if lookup is None or lookup.value.python_eval is None:
             return None
 
