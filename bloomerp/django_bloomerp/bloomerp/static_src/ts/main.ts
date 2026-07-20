@@ -65,6 +65,7 @@ import { PivotTable } from './components/data_view_components/PivotTable';
 import { openModal } from './utils/modals';
 import { closeModal } from './utils/modals';
 import { SelectPreference } from './components/SelectPreference';
+import BaseSectionedLayoutContainer from './components/layouts/BaseSectionedLayoutContainer';
 
 Object.assign(window, { showMessage });
 

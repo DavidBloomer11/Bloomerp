@@ -31,31 +31,23 @@ export default class UiMessage extends BaseComponent {
      */
     public showMessage(): void {
         const messageContainer = document.createElement("div");
-        // Map logical message types to Tailwind color names
-        const colorMap: Record<MessageType, string> = {
-            [MessageType.INFO]: "blue",
-            [MessageType.SUCCESS]: "green",
-            [MessageType.WARNING]: "amber",
-            [MessageType.ERROR]: "red",
+        const alertClassMap: Record<MessageType, string> = {
+            [MessageType.INFO]: "alert-info",
+            [MessageType.SUCCESS]: "alert-success",
+            [MessageType.WARNING]: "alert-warning",
+            [MessageType.ERROR]: "alert-danger",
         };
 
-        const color = colorMap[this.messageType] || "blue";
-
         messageContainer.classList.add(
-            `bg-${color}-100`,
-            `border-${color}-400`,
-            `text-${color}-800`,
-            "px-4",
-            "py-3",
-            "rounded",
+            "alert",
+            alertClassMap[this.messageType] || "alert-info",
+            "flex",
+            "items-center",
+            "justify-between",
             "shadow-md",
             "my-2",
-            "message-container",
-            "alert-message"
+            "message-container"
         );
-
-        // Add a specific alert class so custom CSS can also target it
-        messageContainer.classList.add(`alert-message-${this.messageType}`);
 
         // Create message inside the element with an icon and close button
         const left = document.createElement('div');

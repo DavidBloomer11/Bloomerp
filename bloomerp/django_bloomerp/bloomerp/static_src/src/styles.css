@@ -709,31 +709,35 @@
     @apply hidden;
   }
 
-  .detail-layout-item--editing .detail-layout-item__body {
+  .layout-item--editing [data-layout-item-body] {
     @apply pointer-events-none opacity-70;
   }
 
-  .detail-layout-item {
+  .layout-item {
     @apply relative;
   }
 
-  .detail-layout-item:not(.detail-layout-item--editing) {
+  .layout-item:not(.layout-item--editing):not(.layout-item--bordered) {
     @apply rounded-none border-0 bg-transparent p-0 shadow-none outline-none ring-0;
   }
 
-  .detail-layout-item__header {
-    @apply gap-2;
-  }
-
-  .detail-layout-item--editing {
+  .layout-item--bordered {
     @apply rounded-xl border border-slate-200 bg-white/95 p-3;
   }
 
-  .detail-layout-item--editing .detail-layout-item__header {
+  [data-layout-item-header] {
+    @apply gap-2;
+  }
+
+  .layout-item--editing {
+    @apply rounded-xl border border-slate-200 bg-white/95 p-3;
+  }
+
+  .layout-item--editing [data-layout-item-header] {
     @apply mb-2 text-xs text-slate-500;
   }
 
-  .detail-layout-item--editing [data-layout-colspan-resize-handle] {
+  .layout-item--editing [data-layout-colspan-resize-handle] {
     @apply block;
   }
 }
@@ -1133,36 +1137,6 @@ Dashboard
   max-width: 600px; /* Optional: Set a maximum width */
   opacity: 1; /* Initial opacity */
   transition: opacity 0.5s ease-out, transform 0.5s ease-out; /* Transition for fade-out and slight upward movement */
-}
-
-/* Specific styles for error messages */
-.alert-message-error {
-  background-color: #f8d7da; /* Light red background */
-  color: #721c24;           /* Dark red text */
-}
-
-/* Specific styles for success messages */
-.alert-message-success {
-  background-color: #d4edda; /* Light green background */
-  color: #155724;           /* Dark green text */
-}
-
-/* Styles for the inner message content */
-.alert-message {
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.alert-message-info {
-  background-color: #cce5ff; /* Light blue background */
-  color: #004085;           /* Dark blue text */
-}
-
-.alert-message-warning {
-  background-color: #fff3cd; /* Light yellow background */
-  color: #856404;           /* Dark yellow text */
 }
 
 .alert-icon {

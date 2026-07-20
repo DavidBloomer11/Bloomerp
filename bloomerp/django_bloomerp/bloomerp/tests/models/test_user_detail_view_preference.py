@@ -543,7 +543,13 @@ class DetailViewTabsTestCase(BaseBloomerpModelTestCase):
                     LayoutRow(
                         title="Primary",
                         columns=2,
-                        items=[LayoutItem(id="first_name", colspan=2)],
+                        items=[
+                            LayoutItem(
+                                id="first_name",
+                                colspan=2,
+                                config={"inline_fields": ["name"]},
+                            )
+                        ],
                     )
                 ]
             )
@@ -560,6 +566,10 @@ class DetailViewTabsTestCase(BaseBloomerpModelTestCase):
             self.assertEqual(
                 [item.id for item in preference.layout_obj.rows[0].items],
                 [str(configured_field.pk)],
+            )
+            self.assertEqual(
+                preference.layout_obj.rows[0].items[0].config,
+                {"inline_fields": ["name"]},
             )
         finally:
             self.CustomerModel.bloomerp_config = original_config

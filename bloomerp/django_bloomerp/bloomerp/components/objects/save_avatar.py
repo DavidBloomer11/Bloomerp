@@ -4,6 +4,8 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 
 from bloomerp.models import ApplicationField
+from bloomerp.permissions.definition import BloomerpPermission
+from bloomerp.permissions.manager import UserPolicyManager
 from bloomerp.router import router
 from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
 from bloomerp.utils.models import get_object_from_content_type
@@ -22,11 +24,11 @@ def _can_change_avatar(request: HttpRequest, object, content_type_id: int) -> bo
     if not avatar_field:
         return False
 
-    permission_str = create_permission_str(object, "change")
-    permission_manager = UserPermissionManager(request.user)
-    return (
-        permission_manager.has_access_to_object(object, permission_str)
-        and permission_manager.has_field_permission(avatar_field, permission_str)
+    permission_manager = UserPolicyManager(request.user)
+    return permission_manager.has_access_to_object(
+        object,
+        BloomerpPermission.CHANGE,
+        fields=[avatar_field]
     )
 
 

@@ -35,14 +35,6 @@ class BloomerpModelFormViewMixin(ModelFormMixin):
         # Save the form instance but don't commit to the database yet
         obj = form.save(commit=False)
 
-        # Check if the instance has 'last_updated_by' attribute and set it
-        if hasattr(obj, "updated_by"):
-            obj.updated_by = self.request.user
-
-        # Check if the instance has 'created_by' attribute and set it
-        if hasattr(obj, "created_by") and not obj.created_by:
-            obj.created_by = self.request.user
-
         # Now save the object to the database
         obj.save()
 
@@ -58,13 +50,6 @@ class BloomerpModelFormViewMixin(ModelFormMixin):
 
     def get_form(self, form_class=None) -> BloomerpModelForm:
         form = super().get_form(form_class)
-
-        if "updated_by" in form.fields:
-            del form.fields["updated_by"]
-
-        if "created_by" in form.fields:
-            del form.fields["created_by"]
-
         return form
 
     def get_form_class(self) -> BloomerpModelForm:

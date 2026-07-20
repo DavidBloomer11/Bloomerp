@@ -1,4 +1,23 @@
+{% comment %}
+container
+
+A layout container which takes in a certain parameters
+
+Parameters:
+- component_name (str): the container component
+- layout (json): the layout object
+- layout_object_id (str/int): the object id of the layout
+- init_edit (bool): whether to initialize editing
+
+Slots:
+- default: layout items
+- buttons_left: buttons on the left side of the header
+- buttons_right: buttons on the right side of the header
+{% endcomment %}
+
+
 {% load bloomerp %}
+
 
 <style>
     @media (max-width: 640px) {
@@ -39,12 +58,18 @@
 
 <div
     bloomerp-component="{{ component_name }}"
+
     data-layout="{{ layout | dump_layout_json }}"
-    data-layout-available-items-url="{% url 'components_available_layout_items' layout_object_content_type_id %}"
-    data-layout-render-item-url="{% url 'components_render_layout_item' layout_object_content_type_id %}"
-    data-layout-save-url="{% url 'components_save_layout_object' layout_object_content_type_id layout_object_id  %}"
+    
+    {% if can_change and change_context %}
+    data-layout-available-items-url="{{ change_context.available_items_url }}"
+    data-layout-render-item-url="{{ change_context.render_item_url }}"
+    data-layout-save-url="{{ change_context.save_url }}"
     data-layout-object-id="{{ layout_object_id }}"
-    data-init-edit="{{ init_edit }}"
+    {% endif %}
+
+    data-init-edit="{{ init_edit | default:False }}"
+
     {% for attr,value in extra_attrs.items %}
     {{attr}}="{{value}}"
     {% endfor %}
@@ -70,14 +95,12 @@
             {{ buttons_left }}
         </div>
         <!--End Right Section-->
-
+        
         <!--Left section-->
         <div class="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end" data-layout-action-group>
             {{ buttons_right }}
             
-            {% can_manage_preference_object request.user preference_object as can_manage %}
-            
-            {% if can_manage or force_edit %}
+            {% if can_change %}
             <c-ui.shortcut_tooltip 
                 shortcut="mod+e" 
                 action="click" 
@@ -115,10 +138,17 @@
 
     <!--Layout items-->
     <div class="space-y-4" data-layout-root>
-        {{ slot }}
+        {% if layout %}
+            {% for row in layout.rows %}
+                <c-features.layout.row :row="row" />
+            {% endfor %}
+        {% else %}
+            {{ slot }}
+        {% endif %}
     </div>
     <!--End layout items-->
 
+    {% if can_change and change_context %}
     <!--Drawer section-->
     <c-ui.drawer 
         id="layout-drawer-items" 
@@ -135,10 +165,7 @@
     <!--Display options modal-->
     <c-ui.modal id="field-display-option-modal" title="Edit display options"></c-ui.modal>
     <!--End display options modal-->
-
-    <!--Display options modal-->
-    <c-ui.modal id="layout-object-delete-modal" title="Delete"></c-ui.modal>
-    <!--End display options modal-->
+    {% endif %}
 
 
     <!--Search panel-->
@@ -162,3 +189,5 @@
     </div>
     <!--End Search panel-->
 </div>
+
+

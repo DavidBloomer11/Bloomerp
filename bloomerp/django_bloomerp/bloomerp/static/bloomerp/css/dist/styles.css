@@ -392,9 +392,6 @@
   .right-0\.5 {
     right: calc(var(--spacing) * 0.5);
   }
-  .right-1 {
-    right: calc(var(--spacing) * 1);
-  }
   .right-3 {
     right: calc(var(--spacing) * 3);
   }
@@ -735,9 +732,6 @@
   .h-72 {
     height: calc(var(--spacing) * 72);
   }
-  .h-96 {
-    height: calc(var(--spacing) * 96);
-  }
   .h-\[320px\] {
     height: 320px;
   }
@@ -821,9 +815,6 @@
   }
   .min-h-16 {
     min-height: calc(var(--spacing) * 16);
-  }
-  .min-h-20 {
-    min-height: calc(var(--spacing) * 20);
   }
   .min-h-28 {
     min-height: calc(var(--spacing) * 28);
@@ -1026,9 +1017,6 @@
   .min-w-1 {
     min-width: calc(var(--spacing) * 1);
   }
-  .min-w-2 {
-    min-width: calc(var(--spacing) * 2);
-  }
   .min-w-6 {
     min-width: calc(var(--spacing) * 6);
   }
@@ -1055,9 +1043,6 @@
   }
   .min-w-72 {
     min-width: calc(var(--spacing) * 72);
-  }
-  .min-w-128 {
-    min-width: calc(var(--spacing) * 128);
   }
   .min-w-\[12rem\] {
     min-width: 12rem;
@@ -1876,9 +1861,6 @@
   .bg-green-100 {
     background-color: var(--color-green-100);
   }
-  .bg-green-200 {
-    background-color: var(--color-green-200);
-  }
   .bg-inherit {
     background-color: inherit;
   }
@@ -1992,12 +1974,6 @@
   }
   .bg-white {
     background-color: var(--color-white);
-  }
-  .bg-white\/95 {
-    background-color: color-mix(in srgb, #fff 95%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      background-color: color-mix(in oklab, var(--color-white) 95%, transparent);
-    }
   }
   .bg-yellow-50 {
     background-color: var(--color-yellow-50);
@@ -2395,9 +2371,6 @@
   .text-blue-800 {
     color: var(--color-blue-800);
   }
-  .text-danger-dark {
-    color: var(--color-danger-dark);
-  }
   .text-dark {
     color: var(--color-dark);
   }
@@ -2778,16 +2751,18 @@
       }
     }
   }
+  .group-hover\:bg-primary {
+    &:is(:where(.group):hover *) {
+      @media (hover: hover) {
+        background-color: var(--color-primary);
+      }
+    }
+  }
   .group-hover\:opacity-100 {
     &:is(:where(.group):hover *) {
       @media (hover: hover) {
         opacity: 100%;
       }
-    }
-  }
-  .group-\[\.workspace-tile--editing\]\:block {
-    &:is(:where(.group):is(.workspace-tile--editing) *) {
-      display: block;
     }
   }
   .placeholder\:text-gray-400 {
@@ -3020,16 +2995,6 @@
     &:hover {
       @media (hover: hover) {
         background-color: var(--color-primary-200);
-      }
-    }
-  }
-  .hover\:bg-primary-500\/25 {
-    &:hover {
-      @media (hover: hover) {
-        background-color: color-mix(in srgb, #4154f1 25%, transparent);
-        @supports (color: color-mix(in lab, red, red)) {
-          background-color: color-mix(in oklab, var(--color-primary-500) 25%, transparent);
-        }
       }
     }
   }
@@ -3276,11 +3241,6 @@
       opacity: 50%;
     }
   }
-  .sm\:mb-4 {
-    @media (width >= 40rem) {
-      margin-bottom: calc(var(--spacing) * 4);
-    }
-  }
   .sm\:inline {
     @media (width >= 40rem) {
       display: inline;
@@ -3354,11 +3314,6 @@
   .sm\:gap-3 {
     @media (width >= 40rem) {
       gap: calc(var(--spacing) * 3);
-    }
-  }
-  .sm\:gap-4 {
-    @media (width >= 40rem) {
-      gap: calc(var(--spacing) * 4);
     }
   }
   .md\:col-span-2 {
@@ -3479,11 +3434,6 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
-  .lg\:grid-cols-3 {
-    @media (width >= 64rem) {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-  }
   .lg\:grid-cols-4 {
     @media (width >= 64rem) {
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -3567,11 +3517,6 @@
   .xl\:grid-cols-3 {
     @media (width >= 80rem) {
       grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-  }
-  .xl\:grid-cols-4 {
-    @media (width >= 80rem) {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
     }
   }
   .xl\:grid-cols-\[minmax\(0\,1fr\)_340px\] {
@@ -4385,14 +4330,14 @@
   .workspace-row-selection [data-layout-colspan-resize-handle] {
     display: none;
   }
-  .detail-layout-item--editing .detail-layout-item__body {
+  .layout-item--editing [data-layout-item-body] {
     pointer-events: none;
     opacity: 70%;
   }
-  .detail-layout-item {
+  .layout-item {
     position: relative;
   }
-  .detail-layout-item:not(.detail-layout-item--editing) {
+  .layout-item:not(.layout-item--editing):not(.layout-item--bordered) {
     border-radius: 0;
     border-style: var(--tw-border-style);
     border-width: 0px;
@@ -4405,10 +4350,7 @@
     --tw-outline-style: none;
     outline-style: none;
   }
-  .detail-layout-item__header {
-    gap: calc(var(--spacing) * 2);
-  }
-  .detail-layout-item--editing {
+  .layout-item--bordered {
     border-radius: var(--radius-xl);
     border-style: var(--tw-border-style);
     border-width: 1px;
@@ -4419,13 +4361,27 @@
     }
     padding: calc(var(--spacing) * 3);
   }
-  .detail-layout-item--editing .detail-layout-item__header {
+  [data-layout-item-header] {
+    gap: calc(var(--spacing) * 2);
+  }
+  .layout-item--editing {
+    border-radius: var(--radius-xl);
+    border-style: var(--tw-border-style);
+    border-width: 1px;
+    border-color: var(--color-slate-200);
+    background-color: color-mix(in srgb, #fff 95%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-white) 95%, transparent);
+    }
+    padding: calc(var(--spacing) * 3);
+  }
+  .layout-item--editing [data-layout-item-header] {
     margin-bottom: calc(var(--spacing) * 2);
     font-size: var(--text-xs);
     line-height: var(--tw-leading, var(--text-xs--line-height));
     color: var(--color-slate-500);
   }
-  .detail-layout-item--editing [data-layout-colspan-resize-handle] {
+  .layout-item--editing [data-layout-colspan-resize-handle] {
     display: block;
   }
 }
@@ -4802,28 +4758,6 @@
   max-width: 600px;
   opacity: 1;
   transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-}
-.alert-message-error {
-  background-color: #f8d7da;
-  color: #721c24;
-}
-.alert-message-success {
-  background-color: #d4edda;
-  color: #155724;
-}
-.alert-message {
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.alert-message-info {
-  background-color: #cce5ff;
-  color: #004085;
-}
-.alert-message-warning {
-  background-color: #fff3cd;
-  color: #856404;
 }
 .alert-icon {
   padding-right: 5px;

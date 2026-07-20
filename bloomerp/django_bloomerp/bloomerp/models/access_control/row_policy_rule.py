@@ -261,7 +261,9 @@ class RowPolicyRule(AbsoluteUrlModelMixin, models.Model):
             condition["operator"] = condition.get("operator")
 
         try:
-            self.rule = RowPolicyRuleContent.model_validate(self.rule).model_dump()
+            self.rule = RowPolicyRuleContent.model_validate(self.rule).model_dump(
+                exclude={"permissions"}
+            )
         except PydanticValidationError:
             return
 

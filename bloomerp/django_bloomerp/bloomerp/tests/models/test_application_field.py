@@ -4,6 +4,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django import forms
 from django.db import models
 from django.db import connection
+from django.http import QueryDict
 from django.utils.datastructures import MultiValueDict
 
 from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
@@ -22,8 +23,14 @@ from bloomerp.services.one_to_many_field_services import (
 )
 from bloomerp.field_types import FieldType, Lookup
 from bloomerp.form_fields.address_field import AddressFormField, AddressValue
+from bloomerp.form_fields.files_relation_field import FilesCleanedData
+from bloomerp.form_fields.one_to_many_field import OneToManyCleanedData, OneToManyField
 from bloomerp.form_fields.phone_number_field import PhoneNumberFormField
 from bloomerp.form_fields.week_field import WeekFormField, WeekValue
+from bloomerp.forms.model_form import (
+    bloomerp_modelform_factory,
+    get_model_form_application_fields,
+)
 from bloomerp.model_fields.address_field import AddressField
 from bloomerp.model_fields.phone_number_field import PhoneNumberField
 from bloomerp.model_fields.week_field import WeekField
@@ -492,6 +499,66 @@ class TestApplicationField(BaseBloomerpModelTestCase):
 
         self.assertIsNone(form_field)
 
+    def test_model_form_factory_declares_property_as_read_only_form_field(self):
+        content_type = ContentType.objects.get_for_model(RowPolicyRule)
+        application_field = ApplicationField.objects.get(
+            content_type=content_type,
+            field="content_type",
+        )
+        target_content_type = ContentType.objects.get_for_model(Policy)
+        row_policy = RowPolicy.objects.create(
+            content_type=target_content_type,
+            name="Property form field",
+        )
+        row_policy_rule = RowPolicyRule.objects.create(
+            row_policy=row_policy,
+            rule={
+                "connector": "OR",
+                "conditions": [
+                    {
+                        "application_field_id": str(
+                            ApplicationField.objects.get(
+                                content_type=target_content_type,
+                                field="name",
+                            ).pk
+                        ),
+                        "operator": Lookup.EQUALS.value.id,
+                        "value": "Policy",
+                    }
+                ],
+            },
+        )
+
+        form_class = bloomerp_modelform_factory(
+            RowPolicyRule,
+            fields=[application_field.field],
+        )
+        form = form_class(instance=row_policy_rule)
+
+        self.assertIn("content_type", form.fields)
+        self.assertTrue(form.fields["content_type"].disabled)
+        self.assertEqual(form.initial["content_type"], row_policy_rule.content_type)
+
+    def test_create_form_fields_include_properties_but_exclude_managed_fields(self):
+        content_type = ContentType.objects.get_for_model(RowPolicyRule)
+        property_field = ApplicationField.objects.get(
+            content_type=content_type,
+            field="content_type",
+        )
+        managed_field = ApplicationField.objects.get(
+            content_type=content_type,
+            field="id",
+        )
+
+        fields = get_model_form_application_fields(
+            RowPolicyRule,
+            [property_field, managed_field],
+            exclude_auto_managed=True,
+        )
+
+        self.assertTrue(fields.filter(pk=property_field.pk).exists())
+        self.assertFalse(fields.filter(pk=managed_field.pk).exists())
+
     def test_row_policy_rule_detail_view_renders_property_backed_field(self):
         target_content_type = ContentType.objects.get_for_model(Policy)
         target_field = ApplicationField.objects.get(
@@ -573,6 +640,187 @@ class TestApplicationField(BaseBloomerpModelTestCase):
                 hours="3.75",
             ).exists()
         )
+
+    def test_model_form_factory_declares_one_to_many_application_fields(self):
+        customer = self.create_customer("Inline", "Viewer", 38)
+        self.CustomerLineModel.objects.create(
+            customer=customer,
+            description="Existing line",
+            hours="1.50",
+        )
+
+        form_class = bloomerp_modelform_factory(
+            self.CustomerModel,
+            fields=["first_name", "lines"],
+        )
+        form = form_class(instance=customer)
+
+        self.assertIn("lines", form.fields)
+        self.assertNotIn("lines", form._meta.fields)
+        self.assertIsInstance(form.fields["lines"], OneToManyField)
+        self.assertIsInstance(form.fields["lines"].widget, OneToManyFieldWidget)
+        self.assertIn("Existing line", form["lines"].as_widget())
+
+    def test_one_to_many_form_field_returns_structured_changes(self):
+        customer = self.create_customer("Inline", "Editor", 39)
+        existing_line = self.CustomerLineModel.objects.create(
+            customer=customer,
+            description="Old description",
+            hours="1.00",
+        )
+        deleted_line = self.CustomerLineModel.objects.create(
+            customer=customer,
+            description="Delete me",
+            hours="2.00",
+        )
+        form_class = bloomerp_modelform_factory(
+            self.CustomerModel,
+            fields=["first_name", "lines"],
+        )
+        form = form_class(
+            data={
+                "first_name": customer.first_name,
+                "lines__0__id": str(existing_line.pk),
+                "lines__0__description": "Updated description",
+                "lines__0__hours": "3.50",
+                "lines__1__id": "",
+                "lines__1__description": "New line",
+                "lines__1__hours": "4.25",
+                "lines__2__id": str(deleted_line.pk),
+                "lines__2__DELETE": "1",
+            },
+            instance=customer,
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+        result = form.cleaned_data["lines"]
+        self.assertIsInstance(result, OneToManyCleanedData)
+        self.assertEqual(len(result.to_save), 2)
+        self.assertEqual(result.to_save[0].pk, existing_line.pk)
+        self.assertEqual(result.to_save[0].description, "Updated description")
+        self.assertTrue(result.to_save[1]._state.adding)
+        self.assertEqual(result.to_save[1].description, "New line")
+        self.assertEqual(result.to_delete, [deleted_line])
+
+        cleaned_o2m_data = form.get_cleaned_o2m_data()
+        self.assertEqual(set(cleaned_o2m_data), {"lines"})
+        updated_entry, created_entry, deleted_entry = cleaned_o2m_data["lines"]
+        self.assertIs(updated_entry.object, result.to_save[0])
+        self.assertTrue(updated_entry.changed)
+        self.assertFalse(updated_entry.created)
+        self.assertFalse(updated_entry.deleted)
+        self.assertIs(created_entry.object, result.to_save[1])
+        self.assertTrue(created_entry.created)
+        self.assertFalse(created_entry.changed)
+        self.assertFalse(created_entry.deleted)
+        self.assertEqual(deleted_entry.object.pk, deleted_line.pk)
+        self.assertTrue(deleted_entry.deleted)
+        self.assertFalse(deleted_entry.created)
+        self.assertFalse(deleted_entry.changed)
+
+        serialized_data = form.serialize_cleaned_data()
+        self.assertEqual(serialized_data["lines"][0]["description"], "Updated description")
+        self.assertEqual(serialized_data["lines"][2]["DELETE"], True)
+
+        existing_line.refresh_from_db()
+        self.assertEqual(existing_line.description, "Old description")
+        self.assertTrue(self.CustomerLineModel.objects.filter(pk=deleted_line.pk).exists())
+
+        form.save()
+        form.save_o2m()
+
+        existing_line.refresh_from_db()
+        self.assertEqual(existing_line.description, "Updated description")
+        self.assertFalse(self.CustomerLineModel.objects.filter(pk=deleted_line.pk).exists())
+        self.assertTrue(
+            self.CustomerLineModel.objects.filter(
+                customer=customer,
+                description="New line",
+                hours="4.25",
+            ).exists()
+        )
+
+    def test_model_form_save_persists_structured_file_values(self):
+        customer = self.create_customer("File", "Owner", 42)
+        uploaded_file = SimpleUploadedFile(
+            "agreement.pdf",
+            b"agreement content",
+            content_type="application/pdf",
+        )
+        form_class = bloomerp_modelform_factory(
+            self.CustomerModel,
+            fields=["first_name", "files"],
+        )
+        form = form_class(
+            data={"first_name": customer.first_name},
+            files=MultiValueDict({"files": [uploaded_file]}),
+            instance=customer,
+            user=self.admin_user,
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertIsInstance(form.cleaned_data["files"], FilesCleanedData)
+
+        saved_customer = form.save()
+
+        attached_file = File.objects.get(name="agreement.pdf")
+        self.assertEqual(attached_file.object_id, str(saved_customer.pk))
+        self.assertTrue(attached_file.persisted)
+
+    def test_model_form_deserializes_json_compatible_values(self):
+        customer = self.create_customer("Deserialize", "Values", 43)
+        form_class = bloomerp_modelform_factory(
+            self.CustomerModel,
+            fields=["age"],
+        )
+        form = form_class(instance=customer)
+
+        cleaned_data = form.deserialize_cleaned_data({"age": "44"})
+
+        self.assertEqual(cleaned_data, {"age": 44})
+
+    def test_model_form_prepares_omitted_values_for_partial_update(self):
+        customer = self.create_customer("Partial", "Update", 44)
+        form_class = bloomerp_modelform_factory(
+            self.CustomerModel,
+            fields=["first_name", "last_name", "age"],
+        )
+
+        prepared_data = form_class.prepare_bound_data(
+            QueryDict("age=45"),
+            MultiValueDict(),
+            customer,
+            partial=True,
+        )
+
+        self.assertEqual(prepared_data["first_name"], "Partial")
+        self.assertEqual(prepared_data["last_name"], "Update")
+        self.assertEqual(prepared_data["age"], "45")
+
+    def test_one_to_many_form_field_rejects_an_object_from_another_parent(self):
+        customer = self.create_customer("First", "Parent", 40)
+        other_customer = self.create_customer("Other", "Parent", 41)
+        other_line = self.CustomerLineModel.objects.create(
+            customer=other_customer,
+            description="Private line",
+            hours="1.00",
+        )
+        form_class = bloomerp_modelform_factory(
+            self.CustomerModel,
+            fields=["first_name", "lines"],
+        )
+        form = form_class(
+            data={
+                "first_name": customer.first_name,
+                "lines__0__id": str(other_line.pk),
+                "lines__0__description": "Stolen update",
+                "lines__0__hours": "2.00",
+            },
+            instance=customer,
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("Invalid related object", form.errors["lines"].as_text())
 
     def test_form_submission_includes_one_to_many_layout_rows(self):
         parent_content_type = ContentType.objects.get_for_model(self.CustomerModel)

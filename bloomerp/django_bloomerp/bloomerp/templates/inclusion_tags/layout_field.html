@@ -1,6 +1,6 @@
 <div
     bloomerp-component="detail-view-value"
-    class="detail-layout-item group relative flex flex-col gap-1{% if layout_edit_mode %} workspace-tile--editing detail-layout-item--editing{% endif %}{% if non_required_fields_visible|default:'true'|lower != 'true' and not is_required and not errors %} hidden{% endif %}"
+    class="layout-item group relative flex flex-col gap-1{% if layout_edit_mode %} layout-item--editing{% endif %}{% if non_required_fields_visible|default:'true'|lower != 'true' and not is_required and not errors %} hidden{% endif %}"
     id="layout-field-{{ application_field.id }}"
     style="grid-column: span {{ colspan|default:'1' }} / span {{ colspan|default:'1' }};"
     data-value="{{ value|default:'' }}"
@@ -13,7 +13,7 @@
     data-is-required="{% if is_required %}true{% else %}false{% endif %}"
     data-has-errors="{% if errors %}true{% else %}false{% endif %}"
 >
-    <div class="detail-layout-item__header flex items-center justify-between gap-2">
+    <div class="layout-item__header flex items-center justify-between gap-2" data-layout-item-header>
         <label class="text-slate-700 font-medium text-sm my-2 mb-0" data-detail-label>
             {{ display_label|default:application_field.title }}
             {% if is_required %}
@@ -22,21 +22,6 @@
         </label>
 
         <div data-layout-item-controls class="{% if layout_edit_mode %}flex{% else %}hidden{% endif %} items-center gap-1">
-            {% comment %}# TODO: This is also there in tile.html and should be refactored into a separate template or component{% endcomment %}
-            {% if application_field.get_field_type_enum.value.field_display_options and layout_object_content_type_id and layout_object_id %}
-            <button
-                type="button"
-                hx-get="{% url 'components_field_display_options' application_field.id %}?layout_object_content_type_id={{ layout_object_content_type_id }}&layout_object_id={{ layout_object_id }}&layout_mode={{ layout_mode|default:'detail' }}&layout_edit_mode=true{% if object_id %}&object_id={{ object_id }}{% endif %}"
-                hx-target="#field-display-option-modal-body"
-                hx-trigger="click"
-                bloomerp-open-modal="field-display-option-modal"
-                class="h-6 w-6 rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-50"
-                title="Display options"
-                aria-label="Display options"
-                >
-                <i class="fa fa-gear"></i>
-            </button>
-            {% endif %}
             <button
                 data-layout-item-drag-handle
                 type="button"
@@ -65,7 +50,7 @@
         </div>
     </div>
 
-    <div class="detail-layout-item__body">
+    <div class="layout-item__body" data-layout-item-body>
         {{ input }}
         {% for error in errors %}
             <p class="mt-1 text-sm text-red-500">{{ error }}</p>

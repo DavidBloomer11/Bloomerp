@@ -33,7 +33,7 @@ class OneToManyFieldWidget(widgets.Widget):
             return list(value)
         return [value]
 
-    def _get_columns(self):
+    def get_columns(self):
         if not self.related_model:
             return []
 
@@ -74,6 +74,9 @@ class OneToManyFieldWidget(widgets.Widget):
             if len(columns) >= 6:
                 break
         return columns
+
+    # Backwards-compatible alias for callers that used the former private API.
+    _get_columns = get_columns
 
     def _is_parent_link_field(self, application_field) -> bool:
         if self.parent_model is None:
@@ -138,7 +141,7 @@ class OneToManyFieldWidget(widgets.Widget):
         else:
             context['content_type_id'] = None
         
-        columns = self._get_columns()
+        columns = self.get_columns()
         related_objects = self._get_related_objects(value)
         rows = []
         for row_index, obj in enumerate(related_objects):
@@ -174,8 +177,44 @@ class OneToManyFieldWidget(widgets.Widget):
         return context
 
     def _render_row_id_input(self, *, name, obj, row_index):
-        value = getattr(obj, "pk", "") if obj is not None else ""
+        if isinstance(obj, dict):
+            value = obj.get("id", "")
+        else:
+            value = getattr(obj, "pk", "") if obj is not None else ""
         return widgets.HiddenInput().render(
             name=f"{name}__{row_index}__id",
             value=value,
         )
+
+    def value_from_datadict(self, data, files, name):
+        rows: dict[str, dict[str, object]] = {}
+        prefix = f"{name}__"
+
+        for source in (data, files):
+            for key in source.keys():
+                if not key.startswith(prefix):
+                    continue
+                parts = key.split("__", 2)
+                if len(parts) != 3:
+                    continue
+                _, row_index, field_name = parts
+                rows.setdefault(row_index, {})[field_name] = self._submitted_value(source, key)
+
+        return [
+            row
+            for _, row in sorted(rows.items(), key=lambda item: self._row_sort_key(item[0]))
+        ]
+
+    @staticmethod
+    def _submitted_value(source, key):
+        if hasattr(source, "getlist"):
+            values = source.getlist(key)
+            if len(values) > 1:
+                return values
+        return source.get(key)
+
+    @staticmethod
+    def _row_sort_key(row_index: str):
+        if row_index.isdigit():
+            return (0, int(row_index))
+        return (1, row_index)
