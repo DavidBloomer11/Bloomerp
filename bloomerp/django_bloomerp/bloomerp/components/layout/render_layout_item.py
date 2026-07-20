@@ -168,7 +168,6 @@ def _build_create_render_context(*, request: HttpRequest, content_type: ContentT
     form_application_fields = get_model_form_application_fields(
         model,
         accessible_fields,
-        exclude_auto_managed=True,
     )
     allowed_field_names = list(
         form_application_fields.values_list("field", flat=True)

@@ -16,7 +16,10 @@ from bloomerp.models.application_field import ApplicationField
 from bloomerp.models.files.file import File
 from bloomerp.models.forms.form import Form as BloomerpForm
 from bloomerp.models.forms.form_submission import FormSubmission
-from bloomerp.services.sectioned_layout_services import build_crud_layout_field_context
+from bloomerp.services.sectioned_layout_services import (
+    build_crud_layout_field_context,
+    get_available_layout_fields,
+)
 from bloomerp.services.form_services import FormManager
 from bloomerp.services.one_to_many_field_services import (
     save_submitted_one_to_many_fields,
@@ -558,6 +561,86 @@ class TestApplicationField(BaseBloomerpModelTestCase):
 
         self.assertTrue(fields.filter(pk=property_field.pk).exists())
         self.assertFalse(fields.filter(pk=managed_field.pk).exists())
+
+    def test_layout_form_disables_system_fields_but_keeps_files_enabled(self):
+        form_class = bloomerp_modelform_factory(
+            self.CustomerModel,
+            fields=[
+                "id",
+                "pk",
+                "datetime_created",
+                "datetime_updated",
+                "created_by",
+                "updated_by",
+                "comments",
+                "files",
+            ],
+        )
+
+        form = form_class()
+
+        for field_name in {
+            "id",
+            "pk",
+            "datetime_created",
+            "datetime_updated",
+            "created_by",
+            "updated_by",
+            "comments",
+        }:
+            self.assertTrue(form.fields[field_name].disabled, field_name)
+        self.assertFalse(form.fields["files"].disabled)
+
+    def test_disabled_system_field_ignores_submitted_value(self):
+        customer = self.CustomerModel.objects.create(
+            first_name="Ada",
+            last_name="Lovelace",
+            age=36,
+        )
+        original_id = customer.id
+        form_class = bloomerp_modelform_factory(
+            self.CustomerModel,
+            fields=["first_name", "id"],
+        )
+        form = form_class(
+            data={
+                "first_name": "Grace",
+                "id": "00000000-0000-0000-0000-000000000001",
+            },
+            instance=customer,
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+        saved = form.save()
+
+        self.assertEqual(saved.id, original_id)
+        self.assertEqual(saved.first_name, "Grace")
+
+    def test_create_layout_fields_include_permitted_system_fields(self):
+        content_type = ContentType.objects.get_for_model(self.CustomerModel)
+
+        available_fields = get_available_layout_fields(
+            content_type=content_type,
+            user=self.admin_user,
+            layout_kind="create",
+        )
+        available_ids = {field["id"] for field in available_fields}
+
+        for field_name in {
+            "id",
+            "pk",
+            "datetime_created",
+            "datetime_updated",
+            "created_by",
+            "updated_by",
+            "comments",
+            "files",
+        }:
+            application_field = ApplicationField.objects.get(
+                content_type=content_type,
+                field=field_name,
+            )
+            self.assertIn(application_field.pk, available_ids, field_name)
 
     def test_row_policy_rule_detail_view_renders_property_backed_field(self):
         target_content_type = ContentType.objects.get_for_model(Policy)

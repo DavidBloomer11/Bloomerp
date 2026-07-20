@@ -28,6 +28,13 @@ AUTO_MANAGED_MODEL_FORM_FIELD_NAMES = frozenset(
     }
 )
 
+# These fields belong in CRUD layouts, but their values are maintained by the
+# model/application lifecycle rather than ordinary form submissions. Files are
+# intentionally excluded: their structured form field owns its persistence.
+READ_ONLY_AUTO_MANAGED_MODEL_FORM_FIELD_NAMES = (
+    AUTO_MANAGED_MODEL_FORM_FIELD_NAMES - {"files"}
+)
+
 
 @dataclass(frozen=True, slots=True)
 class CleanedO2MData:
@@ -249,6 +256,10 @@ def bloomerp_modelform_factory(
     for application_field in application_fields:
         field_type = application_field.get_field_type_enum().value
         form_field = application_field.get_form_field()
+        is_read_only_auto_managed = (
+            application_field.field
+            in READ_ONLY_AUTO_MANAGED_MODEL_FORM_FIELD_NAMES
+        )
 
         try:
             model_field = application_field._get_model_field()
@@ -256,7 +267,8 @@ def bloomerp_modelform_factory(
             model_field = None
 
         is_model_form_field = bool(
-            field_type.allow_in_model
+            not is_read_only_auto_managed
+            and field_type.allow_in_model
             and model_field is not None
             and model_field.editable
             and (model_field.concrete or model_field.many_to_many)
@@ -264,7 +276,11 @@ def bloomerp_modelform_factory(
         if is_model_form_field:
             model_field_names.append(application_field.field)
 
-        if form_field is None and field_type.editable_without_form_field:
+        if (
+            form_field is None
+            and field_type.editable_without_form_field
+            and not is_read_only_auto_managed
+        ):
             form_field_class = field_type.form_field_cls or forms.Field
             form_field_kwargs = {
                 "required": False,
@@ -281,6 +297,9 @@ def bloomerp_modelform_factory(
                 widget=application_field.get_widget(),
                 disabled=True,
             )
+            read_only_field_names.add(application_field.field)
+
+        if is_read_only_auto_managed:
             read_only_field_names.add(application_field.field)
 
         if not is_model_form_field:

@@ -13,7 +13,6 @@ from bloomerp.permissions.manager import UserPolicyManager
 from bloomerp.services.permission_services import UserPermissionManager
 from django.db.models import QuerySet
 from bloomerp.models.users import User
-from bloomerp.forms.model_form import get_model_form_application_fields
 
 MAX_LAYOUT_COLUMNS = 12
 
@@ -305,12 +304,6 @@ def get_available_layout_fields(*, content_type: ContentType, user, layout_kind:
     permission_str = f"{permission_prefix}_{model._meta.model_name}"
 
     fields = ApplicationField.objects.filter(content_type=content_type).order_by("field")
-    if layout_kind == "create":
-        fields = get_model_form_application_fields(
-            model,
-            fields,
-            exclude_auto_managed=True,
-        )
     available: list[dict[str, Any]] = []
     for field in fields:
         if not permission_manager.has_field_permission(field, permission_str):

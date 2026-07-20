@@ -197,6 +197,35 @@ class TestOverviewView(CrudViewTestMixin):
         self.assertContains(response, 'name="age"', html=False)
         self.assertContains(response, "disabled", html=False)
 
+    def test_get_renders_system_fields_disabled_but_keeps_files_enabled(self):
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self.get_url())
+
+        self.assertEqual(response.status_code, 200)
+        layout_items = {
+            str(item.id): item
+            for row in response.context["layout"].rows
+            for item in row.items
+        }
+        for field_name in {
+            "id",
+            "pk",
+            "datetime_created",
+            "datetime_updated",
+            "created_by",
+            "updated_by",
+            "comments",
+        }:
+            item = layout_items[str(self.fields_by_name[field_name].pk)]
+            self.assertTrue(item.is_visible, field_name)
+            self.assertIn("disabled", item.content, field_name)
+
+        files_item = layout_items[str(self.fields_by_name["files"].pk)]
+        self.assertTrue(files_item.is_visible)
+        self.assertNotIn("disabled", files_item.content)
+        self.assertNotContains(response, "You don't have access to this field")
+
     def test_customer_detail_shows_create_todo_button(self):
         """
         Use case: A regular model detail page renders its side-section actions.

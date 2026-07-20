@@ -34,7 +34,7 @@ class ApplicationFieldLayoutFormMixin(LayoutFormMixin, ABC):
     content_extractor_func = lambda self, item: self.render_field(item)
     is_visible_extractor_func = lambda self, item: self.is_visible(item)
     not_visible_content_extractor_func = lambda self, item: (
-        "You don't have access to this field"
+        "<div class='text-gray-600 text-sm'>You don't have access to this field</div>"
     )
     def edit_url_extractor_func(self, item: LayoutItem) -> str | None:
         application_field = self.get_application_field(item)
@@ -178,7 +178,6 @@ class ApplicationFieldLayoutFormMixin(LayoutFormMixin, ABC):
         self._form_application_fields = get_model_form_application_fields(
             self.layout_model,
             fields,
-            exclude_auto_managed=True,
         )
         return self._form_application_fields
 
