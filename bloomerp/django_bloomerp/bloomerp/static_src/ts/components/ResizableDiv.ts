@@ -235,7 +235,7 @@ export default class ResizableDiv extends BaseComponent {
             "absolute",
             this.resizeFrom === "right" ? "right-0" : "left-0",
             "top-0",
-            "z-50",
+            "z-40",
             "h-full",
             "group",
             "w-2",

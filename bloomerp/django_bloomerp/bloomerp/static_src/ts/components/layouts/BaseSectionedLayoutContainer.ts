@@ -3,6 +3,7 @@ import Sortable, { type SortableEvent } from "sortablejs";
 
 import BaseComponent, { componentIdentifier, getComponent, initComponents } from "../BaseComponent";
 import { Modal } from "../Modal";
+import SearchSection from "../SearchSection";
 import BaseSectionedLayoutItem, { type LayoutItemEditRequestDetail } from "./BaseSectionedLayoutItem";
 import { getCsrfToken } from "../../utils/cookies";
 import { parseBoolean } from "../../utils/booleans";
@@ -183,7 +184,7 @@ export default abstract class BaseSectionedLayoutContainer<TItem extends BaseSec
         this.openSidebarButtons = Array.from(this.element.querySelectorAll<HTMLElement>("[data-layout-open-sidebar]"));
         this.openSidebarButtons.forEach((button) => {
             button.addEventListener("click", () => {
-                void this.loadAvailableItems({ focusFirstItem: true });
+                this.getAvailableItemsSearchSection()?.focus();
             });
         });
         this.cacheSearchElements();
@@ -915,7 +916,7 @@ export default abstract class BaseSectionedLayoutContainer<TItem extends BaseSec
         });
     }
 
-    public async loadAvailableItems(options?: { focusFirstItem?: boolean }): Promise<void> {
+    public async loadAvailableItems(): Promise<void> {
         const container = this.element?.querySelector<HTMLElement>("[data-layout-available-items]");
         const url = this.element?.dataset.layoutAvailableItemsUrl;
 
@@ -932,85 +933,34 @@ export default abstract class BaseSectionedLayoutContainer<TItem extends BaseSec
         });
         this.bindSidebarItems(container);
         this.syncAvailableItemsState();
-
-        if (options?.focusFirstItem) {
-            this.focusFirstAvailableSidebarItem();
-        }
-    }
-
-    protected focusFirstAvailableSidebarItem(): void {
-        let attemptsRemaining = 12;
-
-        const tryFocus = () => {
-            const firstAvailableItem = this.element?.querySelector<HTMLElement>(
-                "[data-layout-sidebar-item]:not([disabled]):not([aria-disabled='true'])",
-            );
-
-            if (firstAvailableItem && this.isFocusableElement(firstAvailableItem) && this.isActionableElement(firstAvailableItem)) {
-                firstAvailableItem.focus();
-                if (document.activeElement === firstAvailableItem) {
-                    return;
-                }
-            }
-
-            attemptsRemaining -= 1;
-            if (attemptsRemaining <= 0) return;
-            window.requestAnimationFrame(tryFocus);
-        };
-
-        window.requestAnimationFrame(tryFocus);
     }
 
     protected bindSidebarItems(container: HTMLElement): void {
-        const items = Array.from(container.querySelectorAll<HTMLElement>("[data-layout-sidebar-item]"));
-        items.forEach((item) => {
-            if (!item.dataset.bound) {
-                item.dataset.bound = "true";
-                item.setAttribute("draggable", "false");
-                item.addEventListener("click", () => {
-                    if (!this.editMode) return;
-                    const itemId = this.normalizeLayoutItemId(item.dataset.layoutItemId);
-                    if (!itemId) return;
-                    if (this.items.some((layoutItem) => layoutItem.getLayoutItemId() === itemId)) return;
-                    const targetRowIndex = this.isRowFocused ? this.focusedRowIndex : Math.max(0, this.getRowIndexForItem(this.items[this.focusedItemIndex]));
-                    void this.renderItem(itemId, targetRowIndex).then(() => {
-                        this.reindexItems();
-                        this.syncAvailableItemsState();
-        void this.requestSave();
-                    });
-                });
-                item.addEventListener("keydown", (event: KeyboardEvent) => {
-                    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        this.moveSidebarItemFocus(item, event.key === "ArrowDown" ? 1 : -1);
-                        return;
-                    }
-
-                    if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        item.click();
-                    }
-                });
-            }
-        });
+        this.getAvailableItemsSearchSection(container)?.setOnClickHandler((item) => this.addAvailableItem(item));
         this.refreshSortables();
     }
 
-    protected moveSidebarItemFocus(currentItem: HTMLElement, delta: number): void {
-        const focusableSidebarItems = Array.from(
-            this.element?.querySelectorAll<HTMLElement>("[data-layout-sidebar-item]:not([disabled]):not([aria-disabled='true'])") ?? [],
+    protected getAvailableItemsSearchSection(container?: HTMLElement): SearchSection | null {
+        const searchElement = (container ?? this.element)?.querySelector<HTMLElement>(
+            '[bloomerp-component="search-section"]',
         );
-        if (focusableSidebarItems.length === 0) return;
+        return searchElement ? getComponent(searchElement) as SearchSection : null;
+    }
 
-        const currentIndex = focusableSidebarItems.indexOf(currentItem);
-        if (currentIndex < 0) {
-            focusableSidebarItems[0]?.focus();
-            return;
-        }
+    protected addAvailableItem(item: HTMLElement): void {
+        if (!this.editMode) return;
 
-        const nextIndex = Math.max(0, Math.min(focusableSidebarItems.length - 1, currentIndex + delta));
-        focusableSidebarItems[nextIndex]?.focus();
+        const itemId = this.normalizeLayoutItemId(item.dataset.layoutItemId);
+        if (!itemId || this.items.some((layoutItem) => layoutItem.getLayoutItemId() === itemId)) return;
+
+        const targetRowIndex = this.isRowFocused
+            ? this.focusedRowIndex
+            : Math.max(0, this.getRowIndexForItem(this.items[this.focusedItemIndex]));
+        void this.renderItem(itemId, targetRowIndex).then(() => {
+            this.reindexItems();
+            this.syncAvailableItemsState();
+            void this.requestSave();
+        });
     }
 
     protected syncAvailableItemsState(): void {

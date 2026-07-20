@@ -242,6 +242,9 @@ class PreferenceManager:
         )
         with transaction.atomic():
             created = preference_model.objects.create(**values)
+            copy_configuration = getattr(source, "copy_configuration_to", None)
+            if callable(copy_configuration):
+                copy_configuration(created)
             self._select_entry(created, scope)
         return created
 
