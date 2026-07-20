@@ -6,14 +6,15 @@ from django.forms import modelform_factory
 from django.db import models
 
 from bloomerp.models import ApplicationField
-from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
+from bloomerp.permissions.definition import BloomerpPermission
+from bloomerp.permissions.manager import UserPolicyManager, create_permission_str
 
 
 class BulkActionService:
     def __init__(self, *, model: type[models.Model], user):
         self.model = model
         self.user = user
-        self.permission_manager = UserPermissionManager(user)
+        self.permission_manager = UserPolicyManager(user)
 
     @classmethod
     def from_content_type_id(cls, *, content_type_id: int, user) -> "BulkActionService":
@@ -46,11 +47,13 @@ class BulkActionService:
 
         form_cls = modelform_factory(self.model, fields=[field_name])
         updated_count = 0
+        
+        # TODO: Change to bulk change
         for obj in queryset:
             form = form_cls(data={field_name: value}, instance=obj)
             if not form.is_valid():
                 raise ValidationError(form.errors)
             form.save()
             updated_count += 1
-
+        
         return updated_count

@@ -36,15 +36,24 @@ class UserCreateViewPreference(ContentLayoutModelMixin, BaseViewPreference):
 
         Expected scope: ``content_type_id``.
         """
+        from bloomerp.services.sectioned_layout_services import create_default_layout
+
         content_type = ContentType.objects.get(pk=scope["content_type_id"])
-
-        from bloomerp.services.create_view_services import create_default_create_view_preference
-
-        return create_default_create_view_preference(content_type=content_type, user=user)
+        model = content_type.model_class()
+        if model is None:
+            raise ValueError("The content type does not resolve to a model.")
+        return cls.objects.create(
+            user=user,
+            content_type=content_type,
+            layout=create_default_layout(model).model_dump(),
+        )
 
     def ensure_default_state(self, *, user, content_type: ContentType) -> None:
         if not self.layout_obj.rows or not any(row.items for row in self.layout_obj.rows):
-            from bloomerp.services.create_view_services import get_default_layout
+            from bloomerp.services.sectioned_layout_services import create_default_layout
 
-            self.layout = get_default_layout(content_type=content_type, user=user).model_dump()
+            model = content_type.model_class()
+            if model is None:
+                return
+            self.layout = create_default_layout(model).model_dump()
             self.save(update_fields=["layout"])

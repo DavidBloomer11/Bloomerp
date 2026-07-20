@@ -1,0 +1,7 @@
+{{ input }}
+{% for error in errors %}
+    <p class="mt-1 text-sm text-red-500">{{ error }}</p>
+{% endfor %}
+{% if help_text %}
+    <c-ui.text.help_text>{{ help_text|safe }}</c-ui.text.help_text>
+{% endif %}

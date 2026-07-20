@@ -43,9 +43,10 @@ class UpdateTileView(CreateTileView):
         self.orchestrator.set_session_data(TILE_ICON_SESSION_KEY, self.object.icon or "")
         self.orchestrator.set_session_data("config", schema)
 
-        print("Query", query)
         if query:
             self.orchestrator.set_session_data("query", query)
+        
+        self.set_current_step_index(1)
 
     def done(self):
         payload = self.orchestrator.get_all_session_data()

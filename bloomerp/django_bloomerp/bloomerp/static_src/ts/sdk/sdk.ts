@@ -1861,6 +1861,56 @@ export class UserDetailViewPreferenceApi extends ModelApi<UserDetailViewPreferen
   }
 }
 
+export interface UserDetailViewTabsPreference {
+  content_type: number;
+  id: number;
+  initial_default: boolean;
+  name: string;
+  selected: boolean;
+  shared_with_groups: Array<number>;
+  shared_with_users: Array<number>;
+  source_object: number | null;
+  user: number;
+}
+
+export type UserDetailViewTabsPreferenceId = number;
+export type UserDetailViewTabsPreferenceFieldName = "content_type" | "id" | "initial_default" | "name" | "selected" | "shared_with_groups" | "shared_with_users" | "source_object" | "user";
+
+export interface UserDetailViewTabsPreferenceCreate {
+  content_type: number;
+  initial_default?: boolean;
+  name?: string;
+  selected?: boolean;
+  shared_with_groups?: Array<number>;
+  shared_with_users?: Array<number>;
+  source_object?: number | null;
+  user: number;
+}
+
+export type UserDetailViewTabsPreferenceUpdate = Partial<UserDetailViewTabsPreferenceCreate>;
+export type UserDetailViewTabsPreferenceQuery = Partial<Record<UserDetailViewTabsPreferenceFieldName | `${UserDetailViewTabsPreferenceFieldName}__${string}`, QueryValue | QueryValue[]>>;
+
+export const userDetailViewTabsPreferencesFields: Record<UserDetailViewTabsPreferenceFieldName, BloomerpFieldMetadata> = {
+  "content_type": {"name": "content_type", "title": "Content Type", "fieldType": "ForeignKey", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": "ContentType", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
+  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
+  "initial_default": {"name": "initial_default", "title": "Initial Default", "fieldType": "BooleanField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
+  "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
+  "selected": {"name": "selected", "title": "Selected", "fieldType": "BooleanField", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
+  "shared_with_groups": {"name": "shared_with_groups", "title": "Shared With Groups", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "Group", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
+  "shared_with_users": {"name": "shared_with_users", "title": "Shared With Users", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
+  "source_object": {"name": "source_object", "title": "Source Object", "fieldType": "ForeignKey", "dbFieldType": null, "nullable": true, "many": false, "relatedModel": "UserDetailViewTabsPreference", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
+  "user": {"name": "user", "title": "User", "fieldType": "ForeignKey", "dbFieldType": null, "nullable": false, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
+} as const;
+
+export const userDetailViewTabsPreferencesCapabilities: BloomerpModelCapabilities = {"list": true, "retrieve": true, "create": true, "createMany": true, "update": true, "partialUpdate": true, "destroy": true} as const;
+export const userDetailViewTabsPreferencesPublicAccess: BloomerpModelPublicAccessMetadata = {"listAllowed": false, "readAllowed": false, "listFields": [], "readFields": [], "nesting": [], "authenticatedFallbackEnabled": true} as const;
+
+export class UserDetailViewTabsPreferenceApi extends ModelApi<UserDetailViewTabsPreference, UserDetailViewTabsPreferenceId, UserDetailViewTabsPreferenceCreate, UserDetailViewTabsPreferenceUpdate, UserDetailViewTabsPreferenceQuery, UserDetailViewTabsPreferenceFieldName> {
+  constructor(client: BloomerpHttpClient) {
+    super(client, "/api/user_detail_view_tabs_preferences/");
+  }
+}
+
 export interface UserListViewPreference {
   content_type: number;
   default_filters: unknown;
@@ -2358,6 +2408,12 @@ export class BloomerpSdk {
         publicAccess: userDetailViewPreferencesPublicAccess,
         fields: userDetailViewPreferencesFields,
       },
+      userDetailViewTabsPreferences: {
+        endpoint: "/api/user_detail_view_tabs_preferences/",
+        capabilities: userDetailViewTabsPreferencesCapabilities,
+        publicAccess: userDetailViewTabsPreferencesPublicAccess,
+        fields: userDetailViewTabsPreferencesFields,
+      },
       userListViewPreferences: {
         endpoint: "/api/user_list_view_preferences/",
         capabilities: userListViewPreferencesCapabilities,
@@ -2429,6 +2485,7 @@ export class BloomerpSdk {
   public readonly users: UserApi;
   public readonly userCreateViewPreferences: UserCreateViewPreferenceApi;
   public readonly userDetailViewPreferences: UserDetailViewPreferenceApi;
+  public readonly userDetailViewTabsPreferences: UserDetailViewTabsPreferenceApi;
   public readonly userListViewPreferences: UserListViewPreferenceApi;
   public readonly workflows: WorkflowApi;
   public readonly workflowEdges: WorkflowEdgeApi;
@@ -2467,6 +2524,7 @@ export class BloomerpSdk {
     this.users = new UserApi(this.client);
     this.userCreateViewPreferences = new UserCreateViewPreferenceApi(this.client);
     this.userDetailViewPreferences = new UserDetailViewPreferenceApi(this.client);
+    this.userDetailViewTabsPreferences = new UserDetailViewTabsPreferenceApi(this.client);
     this.userListViewPreferences = new UserListViewPreferenceApi(this.client);
     this.workflows = new WorkflowApi(this.client);
     this.workflowEdges = new WorkflowEdgeApi(this.client);

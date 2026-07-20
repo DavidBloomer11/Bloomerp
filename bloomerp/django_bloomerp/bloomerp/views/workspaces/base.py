@@ -3,19 +3,73 @@
 from abc import abstractmethod
 from typing import Optional
 
-from django.db.models import Q
+from django.contrib.contenttypes.models import ContentType
+from django.db.models import Q, QuerySet
 from django.urls import reverse
 
-from bloomerp.modules.definition import module_registry
+from bloomerp.models.base_bloomerp_model import LayoutItem
+from bloomerp.models.workspaces.tile import Tile
 from bloomerp.models.workspaces.workspace import Workspace
 from bloomerp.services.sectioned_layout_services import dump_layout_json
-from bloomerp.services.preference_services import PreferenceManager
+from bloomerp.services.workspace_services import build_workspace_layout_item
 from bloomerp.utils.models import get_create_view_url
 from bloomerp.views.base import BaseBloomerpView
-from django.contrib.contenttypes.models import ContentType
+from bloomerp.views.mixins.layout_mixin import ChangeContext, LayoutMixin
 
-class BaseWorkspaceView(BaseBloomerpView):
-    template_name = 'views/workspaces/bloomerp_workspace_view.html'
+
+class BaseWorkspaceView(LayoutMixin, BaseBloomerpView):
+    template_name = "views/workspaces/bloomerp_workspace_view.html"
+    
+    ts_container_component = "workspace-container"
+    ts_item_component = "workspace-tile"
+    item_has_border = True
+    
+    is_visible_extractor_func = lambda _, __: True
+    label_extractor_func = lambda self, item: self.get_rendered_tile_item(item).label
+    content_extractor_func = lambda self, item: self.get_rendered_tile_item(item).content
+    icon_extractor_func = lambda self, item: self.get_rendered_tile_item(item).icon
+    edit_url_extractor_func = lambda self, item: self.get_rendered_tile_item(item).edit_url
+    search_keywords_extractor_func = lambda self, item: self.get_rendered_tile_item(item).search_keywords
+    
+    
+    tiles: QuerySet[Tile] | None = None
+    rendered_tile_items: dict[str, LayoutItem] | None = None
+
+    def get_rendered_tile_item(self, item: LayoutItem) -> LayoutItem:
+        if self.rendered_tile_items is None:
+            self.rendered_tile_items = {}
+        item_id = str(item.id)
+        if item_id not in self.rendered_tile_items:
+            self.rendered_tile_items[item_id] = build_workspace_layout_item(
+                tile=self.get_tile(item.id),
+                request=self.request,
+                colspan=item.colspan,
+                config=item.config,
+            )
+        return self.rendered_tile_items[item_id]
+
+    def get_tile(self, id):
+        if self.tiles is None:
+            self.tiles = Tile.objects.all()
+        return self.tiles.get(id=id)
+    
+    def get_change_context(self) -> ChangeContext | None:
+        workspace = self.get_workspace()
+        if not workspace:
+            return None
+
+        return ChangeContext(
+            owner_content_type_id=ContentType.objects.get_for_model(Workspace).id,
+            owner_object_id=workspace.id,
+        )
+
+    def get_can_change(self) -> bool:
+        workspace = self.get_workspace()
+        return bool(workspace and workspace.user_id == self.request.user.id)
+
+    def get_layout_container_extra_attrs(self) -> dict[str, object]:
+        workspace = self.get_workspace()
+        return {"data-workspace-id": workspace.id} if workspace else {}
     
     @abstractmethod
     def get_module_id(self) -> Optional[str]:
@@ -24,34 +78,7 @@ class BaseWorkspaceView(BaseBloomerpView):
     @abstractmethod
     def get_workspace(self) -> Optional[Workspace]:
         pass
-
-    def get_visible_workspaces(self):
-        return PreferenceManager(self.request.user).get_available(
-            Workspace,
-            {"module_id": self.get_module_id()},
-        )
-
-    def get_fallback_workspace(self) -> Optional[Workspace]:
-        return self.get_visible_workspaces().first()
-
-    def get_workspace_badges(self, workspace: Workspace) -> list[dict[str, str]]:
-        module = module_registry.get_all().get(workspace.module_id) if workspace.module_id else None
-        lineage = module_registry.get_lineage(workspace.module_id) if module else []
-
-        badges: list[dict[str, str]] = []
-        if lineage:
-            badges.append({"label": lineage[0].name, "tone": "module"})
-        else:
-            badges.append({"label": "General", "tone": "general"})
-
-        for nested_module in lineage[1:]:
-            badges.append({"label": nested_module.name, "tone": "nested"})
-
-        if workspace.user_id != self.request.user.id:
-            badges.append({"label": "Shared", "tone": "shared"})
-
-        return badges
-
+    
     def build_workspace_item(self, workspace: Workspace) -> dict:
         workspace = workspace.effective_preference
         return {
@@ -75,11 +102,10 @@ class BaseWorkspaceView(BaseBloomerpView):
         workspace = self.get_workspace()
         if workspace:
             workspace = workspace.effective_preference
-        visible_workspaces = [self.build_workspace_item(item) for item in self.get_visible_workspaces()]
+        
         
         context = {
             "workspace": workspace,
-            "available_workspaces": visible_workspaces,
             "create_url": self.get_create_url(),
             "my_workspaces_url": reverse("my_workspaces"),
             "module_id": self.get_module_id(),
@@ -103,3 +129,6 @@ class BaseWorkspaceView(BaseBloomerpView):
 
         return context
         
+    def get_layout(self):
+        workspace = self.get_workspace()
+        return workspace.layout_obj if workspace else None

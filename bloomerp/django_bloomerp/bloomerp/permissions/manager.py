@@ -14,7 +14,16 @@ from bloomerp.models.access_control.row_policy import RowPolicy
 from bloomerp.models.access_control.row_policy_rule import RowPolicyRule
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.models.users.user import AbstractBloomerpUser
-from bloomerp.permissions.compiler import CompiledSqlAccess, PermissionCompiler
+from bloomerp.permissions.compilers.django_q_permission_compiler import (
+    DjangoQPermissionCompiler,
+)
+from bloomerp.permissions.compilers.python_permission_compiler import (
+    PythonPermissionCompiler,
+)
+from bloomerp.permissions.compilers.sql_permission_compiler import (
+    CompiledSqlAccess,
+    SqlPermissionCompiler,
+)
 from bloomerp.permissions.definition import (
     AccessRule,
     BloomerpPermission,
@@ -179,7 +188,11 @@ class UserPolicyManager:
                     continue
                 access_rules.append(
                     AccessRule(
-                        row_permissions=[row_content],
+                        row_permissions=[
+                            row_content.model_copy(
+                                update={"permissions": sorted(granted)}
+                            )
+                        ],
                         field_permissions=field_permissions,
                     )
                 )
@@ -323,12 +336,10 @@ class UserPolicyManager:
 
         requested = PolicyManager._qualify_permission_codenames(model, permissions)
         access_rules = self.get_access_rules(model, permissions, match)
-        compilation = PermissionCompiler.compile_to_django(
+        compilation = DjangoQPermissionCompiler(
             access_rules,
-            requested,
-            match,
             user=self.user,
-        )
+        ).compile(requested, match)
         return model.objects.filter(compilation.row_filter).distinct()
 
     def get_queryset(
@@ -353,7 +364,7 @@ class UserPolicyManager:
         model, content_type = resolve_model_and_content_type(model_or_content_type)
         if getattr(self.user, "is_superuser", False) or self.is_anonymous:
             return []
-        
+
         requested = PolicyManager._qualify_permission_codenames(model, permissions)
         applicable_rules: list[RowPolicyRule] = []
         for row_policy in self.get_row_policies().filter(content_type=content_type):
@@ -396,6 +407,7 @@ class UserPolicyManager:
         self,
         obj: models.Model,
         permissions: list[str] | list[BloomerpPermission] | str | BloomerpPermission,
+        fields:Optional[list[str|ApplicationField]]=None,
         match: PermissionMatch = PermissionMatch.ANY,
         check_global: bool = True,
     ) -> bool:
@@ -414,11 +426,19 @@ class UserPolicyManager:
             return False
         if check_global and not self.has_global_permission(type(obj), permissions, match):
             return False
-        return self.get_accessible_queryset(
+
+        has_row_permission = self.get_accessible_queryset(
             type(obj),
             permissions,
             match,
         ).filter(pk=obj.pk).exists()
+
+        if fields:
+
+            accessible_fields = self.get_accessible_fields_for_object(obj, permissions, match)
+
+
+        return has_row_permission
 
     def has_global_permission(
         self,
@@ -471,12 +491,10 @@ class UserPolicyManager:
             else []
         )
         access_rules = self.get_access_rules(model, permissions or [], match)
-        compilation = PermissionCompiler.compile_to_django(
+        compilation = DjangoQPermissionCompiler(
             access_rules,
-            requested,
-            match,
             user=self.user,
-        )
+        ).compile(requested, match)
         if not compilation.field_filters:
             return fields.none()
 
@@ -570,13 +588,37 @@ class UserPolicyManager:
                 continue
             rules[model] = self.get_access_rules(model, permissions, match)
 
-        return PermissionCompiler.compile_to_sql(
-            query=sql,
-            rules=rules,
-            permissions=permissions,
-            match=match,
-            user=self.user,
+        return SqlPermissionCompiler(rules, user=self.user).compile(
+            sql,
+            permissions,
+            match,
         )
+
+    def candidate_matches_row_policies(
+        self,
+        candidate: models.Model,
+        permissions: list[str] | list[BloomerpPermission] | str | BloomerpPermission,
+        match: PermissionMatch = PermissionMatch.ANY,
+    ) -> bool:
+        """Evaluate row rules against a complete, possibly unsaved candidate."""
+        if not isinstance(candidate, models.Model):
+            return False
+        if getattr(self.user, "is_superuser", False):
+            return True
+        if self.is_anonymous:
+            return False
+
+        requested = PolicyManager._qualify_permission_codenames(type(candidate), permissions)
+        rules = self.get_access_rules(
+            type(candidate),
+            permissions,
+            match,
+        )
+        evaluator = PythonPermissionCompiler(rules, user=self.user).compile(
+            requested,
+            match,
+        )
+        return evaluator.matches(candidate)
 
 
 # Keep the established service name available while callers migrate to the
@@ -685,7 +727,8 @@ class PolicyManager:
         return RowPolicyRuleContent(
             connector=rule.connector,
             conditions=conditions,
-        ).model_dump(exclude_none=True)
+            permissions=rule.permissions,
+        ).model_dump(exclude={"permissions"}, exclude_none=True)
 
     @classmethod
     @transaction.atomic
@@ -741,6 +784,22 @@ class PolicyManager:
                 if codename not in inferred_codenames:
                     inferred_codenames.append(codename)
 
+        normalized_row_rules: list[tuple[RowPolicyRuleContent, list[str]]] = []
+        for row_rule in row_permissions:
+            if not isinstance(row_rule, RowPolicyRuleContent):
+                row_rule = RowPolicyRuleContent.model_validate(row_rule)
+            row_codenames = cls._qualify_permission_codenames(
+                model,
+                row_rule.permissions,
+                required_scope=PermissionScope.ROW,
+            )
+            if not row_codenames:
+                raise ValueError("Each row policy rule requires at least one permission")
+            normalized_row_rules.append((row_rule, row_codenames))
+            for codename in row_codenames:
+                if codename not in inferred_codenames:
+                    inferred_codenames.append(codename)
+
         if global_permissions is None:
             global_codenames = inferred_codenames
         else:
@@ -754,25 +813,22 @@ class PolicyManager:
             ]
             if missing_global_grants:
                 raise ValueError(
-                    "Field permissions must also be global permissions: "
+                    "Row and field permissions must also be global permissions: "
                     + ", ".join(missing_global_grants)
                 )
 
         permission_objects = cls._get_permissions(content_type, global_codenames)
-        if row_permissions and not permission_objects:
-            raise ValueError("Row policy rules require at least one global permission")
-
         model_label = str(model._meta.verbose_name).title()
         row_policy = RowPolicy.objects.create(
             content_type=content_type,
             name=f"{model_label} row policy",
         )
-        for row_rule in row_permissions:
+        for row_rule, row_codenames in normalized_row_rules:
             rule = RowPolicyRule.objects.create(
                 row_policy=row_policy,
                 rule=cls._normalize_row_rule(content_type, row_rule),
             )
-            rule.permissions.set(permission_objects)
+            rule.permissions.set(cls._get_permissions(content_type, row_codenames))
 
         field_policy = FieldPolicy.objects.create(
             content_type=content_type,
@@ -823,7 +879,4 @@ class PolicyManager:
             raise TypeError("policy must be a Policy instance")
         return policy.get_users()
     
-
-
-
-  
+    

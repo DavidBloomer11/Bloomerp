@@ -36,7 +36,7 @@ class TestUserPermissionManager(BaseBloomerpModelTestCase):
     def _validate_queryset_results(self, input_queryset: models.QuerySet, expected_queryset: models.QuerySet):
         """
         Validates that the input queryset matches the expected queryset.
-        
+
         Args:
             input_queryset (models.QuerySet): The queryset to validate.
             expected_queryset (models.QuerySet): The expected queryset to compare against.
@@ -57,7 +57,6 @@ class TestUserPermissionManager(BaseBloomerpModelTestCase):
     def test_admin_user_has_access_to_all_objects(self):
         """
         UC: An admin should always have access to all objects
-        
         Expected Result: admin has access to all objects
         """
         #1. Query objects for admin
@@ -140,6 +139,7 @@ class TestUserPermissionManager(BaseBloomerpModelTestCase):
             row_permissions=[
                 RowPolicyRuleContent(
                     connector="AND",
+                    permissions=[BloomerpPermission.VIEW],
                     conditions=[
                         RowPolicyRuleCondition(
                             field="first_name",
@@ -178,6 +178,7 @@ class TestUserPermissionManager(BaseBloomerpModelTestCase):
             row_permissions=[
                 RowPolicyRuleContent(
                     connector="AND",
+                    permissions=[BloomerpPermission.VIEW],
                     conditions=[
                         RowPolicyRuleCondition(
                             field="first_name",
@@ -200,6 +201,130 @@ class TestUserPermissionManager(BaseBloomerpModelTestCase):
             self.CustomerModel.objects.exclude(first_name=first_name_value)
         )
 
+    def test_candidate_matching_uses_in_memory_state_without_persisting_it(self):
+        current = self.CustomerModel.objects.exclude(first_name=FIRST_NAMES[0]).first()
+        original_name = current.first_name
+        policy = PolicyManager.create_policy(
+            model_or_content_type=self.CustomerModel,
+            field_permissions={},
+            row_permissions=[
+                RowPolicyRuleContent(
+                    connector="AND",
+                    permissions=[BloomerpPermission.CHANGE],
+                    conditions=[
+                        RowPolicyRuleCondition(
+                            field="first_name",
+                            operator=Lookup.EQUALS.value.id,
+                            value=FIRST_NAMES[0],
+                        )
+                    ],
+                )
+            ],
+        )
+        PolicyManager.assign(policy, self.normal_user)
+        manager = UserPolicyManager(self.normal_user)
+        candidate = self.CustomerModel.objects.get(pk=current.pk)
+
+        self.assertFalse(
+            manager.candidate_matches_row_policies(
+                candidate,
+                BloomerpPermission.CHANGE,
+            )
+        )
+        candidate.first_name = FIRST_NAMES[0]
+        self.assertTrue(
+            manager.candidate_matches_row_policies(
+                candidate,
+                BloomerpPermission.CHANGE,
+            )
+        )
+        current.refresh_from_db()
+        self.assertEqual(current.first_name, original_name)
+
+    def test_candidate_matching_supports_nested_relations(self):
+        country_field = ApplicationField.get_for_model(self.CustomerModel).get(
+            field="country"
+        )
+        policy = PolicyManager.create_policy(
+            model_or_content_type=self.CustomerModel,
+            field_permissions={},
+            row_permissions=[
+                RowPolicyRuleContent(
+                    connector="AND",
+                    permissions=[BloomerpPermission.ADD],
+                    conditions=[
+                        RowPolicyRuleCondition(
+                            application_field_id=str(country_field.pk),
+                            operator="__country__planet__name",
+                            value="Earth",
+                        )
+                    ],
+                )
+            ],
+        )
+        PolicyManager.assign(policy, self.normal_user)
+        manager = UserPolicyManager(self.normal_user)
+
+        self.assertTrue(
+            manager.candidate_matches_row_policies(
+                self.CustomerModel(
+                    country=self.CountryModel.objects.get(name="Belgium")
+                ),
+                BloomerpPermission.ADD,
+            )
+        )
+        self.assertFalse(
+            manager.candidate_matches_row_policies(
+                self.CustomerModel(
+                    country=self.CountryModel.objects.get(name="Helvetia")
+                ),
+                BloomerpPermission.ADD,
+            )
+        )
+
+    def test_candidate_matching_supports_user_and_typed_comparisons(self):
+        created_by = ApplicationField.get_for_model(self.CustomerModel).get(
+            field="created_by"
+        )
+        age = ApplicationField.get_for_model(self.CustomerModel).get(field="age")
+        policy = PolicyManager.create_policy(
+            model_or_content_type=self.CustomerModel,
+            field_permissions={},
+            row_permissions=[
+                RowPolicyRuleContent(
+                    connector="AND",
+                    permissions=[BloomerpPermission.ADD],
+                    conditions=[
+                        RowPolicyRuleCondition(
+                            application_field_id=str(created_by.pk),
+                            operator=Lookup.EQUALS_USER.value.id,
+                            value="$user",
+                        ),
+                        RowPolicyRuleCondition(
+                            application_field_id=str(age.pk),
+                            operator=Lookup.GREATER_THAN_OR_EQUAL.value.id,
+                            value="18",
+                        ),
+                    ],
+                )
+            ],
+        )
+        PolicyManager.assign(policy, self.normal_user)
+        manager = UserPolicyManager(self.normal_user)
+
+        self.assertTrue(
+            manager.candidate_matches_row_policies(
+                self.CustomerModel(age=18, created_by=self.normal_user),
+                BloomerpPermission.ADD,
+            )
+        )
+        self.assertFalse(
+            manager.candidate_matches_row_policies(
+                self.CustomerModel(age=17, created_by=self.normal_user),
+                BloomerpPermission.ADD,
+            )
+        )
+
     # D
     def test_row_rules_from_different_policies_are_combined_with_or(self):
         """
@@ -217,6 +342,7 @@ class TestUserPermissionManager(BaseBloomerpModelTestCase):
                 row_permissions=[
                     RowPolicyRuleContent(
                         connector="AND",
+                        permissions=[BloomerpPermission.VIEW],
                         conditions=[
                             RowPolicyRuleCondition(
                                 field="first_name",
@@ -334,6 +460,7 @@ class TestUserPermissionManager(BaseBloomerpModelTestCase):
                 row_permissions=[
                     RowPolicyRuleContent(
                         connector="AND",
+                        permissions=[BloomerpPermission.VIEW],
                         conditions=[
                             RowPolicyRuleCondition(
                                 field="first_name",
@@ -384,10 +511,6 @@ class TestUserPermissionManager(BaseBloomerpModelTestCase):
     def test_normal_user_gets_accessible_fields_for_table(self):
         """
         UC: Users want to know which fields they are able to access for a specific table
-        
+
         Expected Result: The fields the user has access to
         """
-        
-    
-
-        

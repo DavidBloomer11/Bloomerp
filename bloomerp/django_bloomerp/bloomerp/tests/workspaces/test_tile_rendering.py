@@ -8,7 +8,9 @@ from django.urls import reverse
 from unittest.mock import patch
 
 from bloomerp.models.users.user_list_view_preference import UserListViewPreference
+from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.workspaces.tile import Tile
+from bloomerp.components.layout.render_layout_item import _tile
 from bloomerp.services.permission_services import UserPermissionManager
 from bloomerp.services.workspace_services import render_tile_to_string
 from bloomerp.tests.base import BaseBloomerpModelTestCase
@@ -25,6 +27,7 @@ from bloomerp.workspaces.tiles import TileType
 from bloomerp.workspaces.utils import UserParameterResolver
 from bloomerp.widgets.foreign_field_widget import ForeignFieldWidget
 from bloomerp.views.workspaces.create_tile import CREATE_TILE_SESSION_KEY
+from bloomerp.views.workspaces.base import BaseWorkspaceView
 
 
 class WorkspaceTileRenderingTests(BaseBloomerpModelTestCase):
@@ -57,6 +60,75 @@ class WorkspaceTileRenderingTests(BaseBloomerpModelTestCase):
         # 3. Verify the template content renders instead of the template file name.
         self.assertIn("Visible workspace tile", html)
         self.assertNotIn("cotton/workspaces/tiles/text.html", html)
+
+    @patch(
+        "bloomerp.services.workspace_services.render_tile_to_string",
+        return_value="<p>Rendered tile body</p>",
+    )
+    def test_layout_tile_endpoint_wraps_sidebar_insertions(self, _render_tile):
+        tile = Tile.objects.create(
+            name="Sidebar tile",
+            description="",
+            type=TileType.TEXT_TILE.name,
+            schema={"markdown": "Sidebar tile"},
+            created_by=self.admin_user,
+            updated_by=self.admin_user,
+        )
+        request = self.factory.get("/", {"tile_id": tile.pk})
+        request.user = self.admin_user
+
+        response = _tile(request, ContentType.objects.get_for_model(Tile))
+        soup = BeautifulSoup(response.content, "html.parser")
+
+        rendered_tile = soup.find(attrs={"bloomerp-component": "workspace-tile"})
+        self.assertIsNotNone(rendered_tile)
+        self.assertEqual(rendered_tile["data-layout-item-id"], str(tile.pk))
+        self.assertIn("layout-item--bordered", rendered_tile.get("class", []))
+        self.assertIn("Rendered tile body", rendered_tile.get_text())
+
+    @patch(
+        "bloomerp.services.workspace_services.render_tile_to_string",
+        return_value="<p>Initial tile body</p>",
+    )
+    def test_workspace_view_transforms_initial_tiles_without_an_extra_template(self, _render_tile):
+        tile = Tile.objects.create(
+            name="Initial tile",
+            description="",
+            type=TileType.TEXT_TILE.name,
+            schema={"markdown": "Initial tile"},
+            created_by=self.admin_user,
+            updated_by=self.admin_user,
+        )
+        request = self.factory.get("/")
+        request.user = self.admin_user
+
+        class TestWorkspaceView(BaseWorkspaceView):
+            def get_module_id(self):
+                return None
+
+            def get_workspace(self):
+                return None
+
+            def get_layout(self):
+                return FieldLayout(
+                    rows=[
+                        LayoutRow(
+                            columns=4,
+                            items=[LayoutItem(id=str(tile.pk), colspan=2)],
+                        )
+                    ]
+                )
+
+        view = TestWorkspaceView()
+        view.request = request
+
+        item = view.get_transformed_layout().rows[0].items[0]
+
+        self.assertEqual(item.component_name, "workspace-tile")
+        self.assertEqual(item.content, "<p>Initial tile body</p>")
+        self.assertEqual(item.colspan, 2)
+        self.assertTrue(item.border)
+        self.assertNotIn("hx-get", item.content)
 
     def test_data_view_tile_is_registered_with_its_builder_and_renderer(self):
         """
@@ -150,6 +222,8 @@ class WorkspaceTileRenderingTests(BaseBloomerpModelTestCase):
 
         # 3. Verify the component accepted and persisted the nullable configuration.
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'data-layout-item-id="preview"', html=False)
+        self.assertContains(response, 'bloomerp-component="workspace-tile"', html=False)
         config = self.client.session[CREATE_TILE_SESSION_KEY]["config"]
         self.assertEqual(config["content_type_id"], content_type.pk)
         self.assertIsNone(config["list_view_preference_id"])

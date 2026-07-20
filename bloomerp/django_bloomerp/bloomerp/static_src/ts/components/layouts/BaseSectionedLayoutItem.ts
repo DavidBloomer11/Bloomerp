@@ -1,10 +1,17 @@
 import BaseComponent from "../BaseComponent";
 
+export type LayoutItemEditRequestDetail = {
+    itemId: string;
+    url: string;
+};
+
 export default abstract class BaseSectionedLayoutItem extends BaseComponent {
     protected itemId = "";
     protected colspan = 1;
     protected maxCols = 4;
     protected isEditMode = false;
+    private layoutEditButton: HTMLButtonElement | null = null;
+    private layoutEditButtonHandler: ((event: MouseEvent) => void) | null = null;
 
     public initialize(): void {
         if (!this.element) return;
@@ -20,6 +27,15 @@ export default abstract class BaseSectionedLayoutItem extends BaseComponent {
         this.setColspan(this.colspan);
         this.initializeColspanInput();
         this.initializeResizeHandle();
+        this.initializeEditButton();
+    }
+
+    public override destroy(): void {
+        if (this.layoutEditButton && this.layoutEditButtonHandler) {
+            this.layoutEditButton.removeEventListener("click", this.layoutEditButtonHandler);
+        }
+        this.layoutEditButton = null;
+        this.layoutEditButtonHandler = null;
     }
 
     public getLayoutItemId(): string {
@@ -68,7 +84,7 @@ export default abstract class BaseSectionedLayoutItem extends BaseComponent {
         if (!this.element) return;
 
         this.isEditMode = typeof isEditMode === "boolean" ? isEditMode : !this.isEditMode;
-        this.element.classList.toggle("workspace-tile--editing", this.isEditMode);
+        this.element.classList.toggle("layout-item--editing", this.isEditMode);
         this.element.setAttribute("draggable", "false");
 
         const controls = this.element.querySelector<HTMLElement>("[data-layout-item-controls]");
@@ -99,6 +115,10 @@ export default abstract class BaseSectionedLayoutItem extends BaseComponent {
         const explicitText = this.element?.dataset.layoutSearchText?.trim();
         const keywordText = this.element?.dataset.layoutSearchKeywords?.trim();
         return [explicitText, keywordText].filter(Boolean).join(" ");
+    }
+
+    protected getBodyElement(): HTMLElement | null {
+        return this.element?.querySelector<HTMLElement>("[data-layout-item-body]") ?? null;
     }
 
     public getReadModeActions(): string[] {
@@ -157,5 +177,27 @@ export default abstract class BaseSectionedLayoutItem extends BaseComponent {
             document.addEventListener("pointermove", onPointerMove);
             document.addEventListener("pointerup", onPointerUp);
         });
+    }
+
+    private initializeEditButton(): void {
+        if (!this.element) return;
+
+        this.layoutEditButton = this.element.querySelector<HTMLButtonElement>("[data-layout-edit-item]");
+        if (!this.layoutEditButton) return;
+
+        this.layoutEditButtonHandler = (event: MouseEvent) => {
+            const url = this.layoutEditButton?.dataset.layoutEditUrl;
+            if (!url || !this.itemId) return;
+
+            event.preventDefault();
+            event.stopPropagation();
+            this.element?.dispatchEvent(
+                new CustomEvent<LayoutItemEditRequestDetail>("layout:item-edit-request", {
+                    bubbles: true,
+                    detail: { itemId: this.itemId, url },
+                }),
+            );
+        };
+        this.layoutEditButton.addEventListener("click", this.layoutEditButtonHandler);
     }
 }

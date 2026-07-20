@@ -4,7 +4,7 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpRequest
 from bloomerp.models import Comment
 
-from bloomerp.permissions.manager import UserPermissionManager, create_permission_str
+from bloomerp.permissions.manager import UserPolicyManager, create_permission_str
 
 
 from bloomerp.utils.models import get_object_model_and_content_type_or_404
@@ -18,7 +18,7 @@ def comments(request:HttpRequest, content_type_id:int, object_id:str) -> HttpRes
     object, _, content_type = get_object_model_and_content_type_or_404(content_type_id, object_id)
     
     # Check permissions
-    permission_manager = UserPermissionManager(request.user)
+    permission_manager = UserPolicyManager(request.user)
     if not permission_manager.has_access_to_object(
         object,
         BloomerpPermission.VIEW,

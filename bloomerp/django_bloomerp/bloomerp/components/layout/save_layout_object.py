@@ -1,5 +1,3 @@
-
-
 import json
 
 from django.contrib.contenttypes.models import ContentType
@@ -7,24 +5,31 @@ from django.http import Http404, HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
 
-from bloomerp.models import UserCreateViewPreference
+from bloomerp.models import ApplicationField
 from bloomerp.models.forms.form import Form
-from bloomerp.models.users.user_detail_view_preference import UserDetailViewPreference
+from bloomerp.models.users.user_object_layout_preference import UserObjectLayoutPreference
 from bloomerp.models.workspaces.tile import Tile
 from bloomerp.models.workspaces.workspace import Workspace
 from bloomerp.router import router
-from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
+from bloomerp.permissions.manager import UserPolicyManager, create_permission_str
+from bloomerp.services.preference_services import PreferenceManager
 from bloomerp.services.sectioned_layout_services import (
     get_available_layout_fields,
     normalize_layout_payload,
 )
 
 
+def _get_payload_target_content_type_id(payload: dict) -> str | int | None:
+    value = payload.get("target_content_type_id") or payload.get("content_type_id")
+    return value if isinstance(value, (str, int)) else None
 
-def _get_preference_model(*, scope: str):
-    return UserCreateViewPreference if scope == "create" else UserDetailViewPreference
 
-def _get_valid_field_ids(request: HttpRequest, *, content_type: ContentType, scope: str) -> set[str]:
+def _get_valid_field_ids(
+    request: HttpRequest,
+    *,
+    content_type: ContentType,
+    scope: str,
+) -> set[str]:
     return {
         str(item["id"])
         for item in get_available_layout_fields(
@@ -34,6 +39,34 @@ def _get_valid_field_ids(request: HttpRequest, *, content_type: ContentType, sco
         )
     }
 
+
+def _protected_layout_items_are_unchanged(
+    *,
+    existing_layout,
+    submitted_layout,
+    protected_ids: set[str],
+) -> bool:
+    def item_states(layout):
+        states = {}
+        for row_index, row in enumerate(layout.rows):
+            for item in row.items:
+                states[str(item.id)] = (
+                    row_index,
+                    row.columns,
+                    row.title,
+                    item.colspan,
+                    item.config,
+                )
+        return states
+
+    existing_states = item_states(existing_layout)
+    submitted_states = item_states(submitted_layout)
+    return all(
+        submitted_states.get(field_id) == existing_states.get(field_id)
+        for field_id in protected_ids
+    )
+
+
 def _save_layout_preference(
     request: HttpRequest,
     *,
@@ -41,27 +74,62 @@ def _save_layout_preference(
     content_type: ContentType,
     model,
     scope: str,
+    preference: UserObjectLayoutPreference,
 ) -> HttpResponse:
-    manager = UserPermissionManager(request.user)
-    if payload.get("content_type_id") and str(payload.get("content_type_id")) != str(content_type.id):
-        return HttpResponse("content_type_id does not match route", status=400)
+    manager = UserPolicyManager(request.user)
+    target_content_type_id = _get_payload_target_content_type_id(payload)
+    if target_content_type_id and str(target_content_type_id) != str(content_type.id):
+        return HttpResponse("target_content_type_id does not match route", status=400)
 
     permission = create_permission_str(model, "add" if scope == "create" else "view")
     if not manager.has_global_permission(model, permission):
         return HttpResponse("Permission denied", status=403)
 
     layout = normalize_layout_payload(payload.get("layout"))
-    valid_ids = _get_valid_field_ids(request, content_type=content_type, scope=scope)
     submitted_ids = {str(item.id) for row in layout.rows for item in row.items}
-    if not submitted_ids.issubset(valid_ids):
-        invalid_ids = sorted(submitted_ids - valid_ids)
+    known_ids = {
+        str(field_id)
+        for field_id in ApplicationField.get_for_model(model).values_list("id", flat=True)
+    }
+    if not submitted_ids.issubset(known_ids):
+        invalid_ids = sorted(submitted_ids - known_ids)
         return JsonResponse(
             {"error": "Unknown field id in layout", "invalid_ids": invalid_ids},
             status=400,
         )
 
-    preference_model = _get_preference_model(scope=scope)
-    preference = preference_model.get_or_create_for_user(request.user, content_type)
+    existing_ids = {
+        str(item.id)
+        for row in preference.layout_obj.rows
+        for item in row.items
+    }
+    newly_added_ids = submitted_ids - existing_ids
+    valid_new_ids = _get_valid_field_ids(
+        request,
+        content_type=content_type,
+        scope=scope,
+    )
+    if not newly_added_ids.issubset(valid_new_ids):
+        invalid_ids = sorted(newly_added_ids - valid_new_ids)
+        return JsonResponse(
+            {"error": "Permission denied for layout field", "invalid_ids": invalid_ids},
+            status=403,
+        )
+
+    protected_ids = existing_ids - valid_new_ids
+    if not _protected_layout_items_are_unchanged(
+        existing_layout=preference.layout_obj,
+        submitted_layout=layout,
+        protected_ids=protected_ids,
+    ):
+        return JsonResponse(
+            {
+                "error": "Permission denied for protected layout field",
+                "invalid_ids": sorted(protected_ids),
+            },
+            status=403,
+        )
+
     preference.layout = layout.model_dump()
     preference.save(update_fields=["layout"])
     return JsonResponse({"status": "ok", "layout": layout.model_dump()})
@@ -69,48 +137,105 @@ def _save_layout_preference(
 # ---------------------------------------------------------------------------
 # Callables
 # ---------------------------------------------------------------------------
-def _save_workspace(request: HttpRequest, workspace: Workspace, payload: dict) -> dict:
+def _save_workspace(
+    request: HttpRequest,
+    workspace: Workspace,
+    payload: dict,
+) -> JsonResponse:
     if workspace.user_id != request.user.id:
-        return {"status": "error", "message": "Permission denied"}
+        return JsonResponse(
+            {"status": "error", "message": "Permission denied"},
+            status=403,
+        )
 
     layout = normalize_layout_payload(payload.get("layout"))
     valid_ids = {str(tile_id) for tile_id in Tile.objects.values_list("id", flat=True)}
     requested_ids = {str(item.id) for row in layout.rows for item in row.items}
     if not requested_ids.issubset(valid_ids):
-        return {"status": "error", "message": "Unknown tile id in layout"}
+        return JsonResponse(
+            {"status": "error", "message": "Unknown tile id in layout"},
+            status=400,
+        )
 
     workspace.layout = layout.model_dump()
     workspace.save(update_fields=["layout"])
-    return {"status": "ok", "layout": layout.model_dump()}
+    return JsonResponse({"status": "ok", "layout": layout.model_dump()})
+
 
 def _save_form(request: HttpRequest, form: Form, payload: dict) -> HttpResponse:
-    manager = UserPermissionManager(request.user)
+    manager = UserPolicyManager(request.user)
     if not manager.has_access_to_object(form, create_permission_str(form, "change")):
         return HttpResponse("Permission denied", status=403)
 
     target_content_type = form.content_type
-    if payload.get("content_type_id") and str(payload.get("content_type_id")) != str(target_content_type.id):
-        return HttpResponse("content_type_id does not match form target", status=400)
+    target_content_type_id = _get_payload_target_content_type_id(payload)
+    if target_content_type_id and str(target_content_type_id) != str(
+        target_content_type.id
+    ):
+        return HttpResponse(
+            "target_content_type_id does not match form target",
+            status=400,
+        )
 
     layout = normalize_layout_payload(payload.get("layout"))
     valid_ids = _get_valid_field_ids(request, content_type=target_content_type, scope="create")
     submitted_ids = {str(item.id) for row in layout.rows for item in row.items}
-    if not submitted_ids.issubset(valid_ids):
-        invalid_ids = sorted(submitted_ids - valid_ids)
+    known_ids = {
+        str(field_id)
+        for field_id in ApplicationField.objects.filter(
+            content_type=target_content_type,
+        ).values_list("id", flat=True)
+    }
+    if not submitted_ids.issubset(known_ids):
+        invalid_ids = sorted(submitted_ids - known_ids)
         return JsonResponse(
             {"error": "Unknown field id in layout", "invalid_ids": invalid_ids},
             status=400,
+        )
+
+    existing_ids = {
+        str(item.id)
+        for row in form.layout_obj.rows
+        for item in row.items
+    }
+    newly_added_ids = submitted_ids - existing_ids
+    if not newly_added_ids.issubset(valid_ids):
+        invalid_ids = sorted(newly_added_ids - valid_ids)
+        return JsonResponse(
+            {"error": "Permission denied for layout field", "invalid_ids": invalid_ids},
+            status=403,
+        )
+
+    protected_ids = existing_ids - valid_ids
+    if not _protected_layout_items_are_unchanged(
+        existing_layout=form.layout_obj,
+        submitted_layout=layout,
+        protected_ids=protected_ids,
+    ):
+        return JsonResponse(
+            {
+                "error": "Permission denied for protected layout field",
+                "invalid_ids": sorted(protected_ids),
+            },
+            status=403,
         )
 
     form.layout = layout.model_dump()
     form.save(update_fields=["layout"])
     return JsonResponse({"status": "ok", "layout": layout.model_dump()})
 
-def _save_user_detail_view_preference(
+
+def _save_user_object_layout_preference(
     request: HttpRequest,
-    preference: UserDetailViewPreference,
+    preference: UserObjectLayoutPreference,
     payload: dict,
 ) -> HttpResponse:
+    scope = request.GET.get("layout_mode", "detail")
+    if scope not in {"create", "detail"}:
+        return HttpResponse("Invalid layout mode", status=400)
+    if not PreferenceManager(request.user).can_manage(preference):
+        return HttpResponse("Permission denied", status=403)
+
     content_type = preference.content_type
     model = content_type.model_class()
     if model is None:
@@ -120,31 +245,15 @@ def _save_user_detail_view_preference(
         payload=payload,
         content_type=content_type,
         model=model,
-        scope="detail",
+        scope=scope,
+        preference=preference,
     )
 
-def _save_user_create_view_preference(
-    request: HttpRequest,
-    preference: UserCreateViewPreference,
-    payload: dict,
-) -> HttpResponse:
-    content_type = preference.content_type
-    model = content_type.model_class()
-    if model is None:
-        return HttpResponse("Invalid content type", status=400)
-    return _save_layout_preference(
-        request,
-        payload=payload,
-        content_type=content_type,
-        model=model,
-        scope="create",
-    )
 
 CALLABLES = {
     Workspace: _save_workspace,
     Form: _save_form,
-    UserDetailViewPreference : _save_user_detail_view_preference,
-    UserCreateViewPreference : _save_user_create_view_preference
+    UserObjectLayoutPreference: _save_user_object_layout_preference,
 }
 
 
@@ -179,7 +288,3 @@ def save_layout_object(
     if isinstance(result, HttpResponse):
         return result
     return JsonResponse(result)
-
-
-
-

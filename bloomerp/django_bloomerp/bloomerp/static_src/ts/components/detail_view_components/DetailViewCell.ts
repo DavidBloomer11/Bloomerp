@@ -120,10 +120,9 @@ export class DetailViewCell extends BaseSectionedLayoutItem {
         super.setEditMode(isEditMode);
         if (!this.element) return;
 
-        this.element.classList.toggle("detail-layout-item--editing", this.isEditMode);
-        const focusableElements = this.element.querySelectorAll<HTMLElement>(
-            ".detail-layout-item__body input, .detail-layout-item__body textarea, .detail-layout-item__body select, .detail-layout-item__body button",
-        );
+        const focusableElements = this.getBodyElement()?.querySelectorAll<HTMLElement>(
+            "input, textarea, select, button",
+        ) ?? [];
         focusableElements.forEach((element) => {
             if (this.isEditMode) {
                 element.setAttribute("tabindex", "-1");
@@ -142,12 +141,12 @@ export class DetailViewCell extends BaseSectionedLayoutItem {
 
         const focusTarget = this.getFirstFocusableElement([
             ".bloomerp-text-editor", // TODO: this is for the text editor
-            ".detail-layout-item__body [contenteditable=\"true\"]",
-            ".detail-layout-item__body input:not([type=\"hidden\"])",
-            ".detail-layout-item__body textarea",
-            ".detail-layout-item__body select",
-            ".detail-layout-item__body button:not([tabindex=\"-1\"])",
-            ".detail-layout-item__body [tabindex]:not([tabindex=\"-1\"])",
+            "[contenteditable=\"true\"]",
+            "input:not([type=\"hidden\"])",
+            "textarea",
+            "select",
+            "button:not([tabindex=\"-1\"])",
+            "[tabindex]:not([tabindex=\"-1\"])",
         ]);
         
 
@@ -159,8 +158,11 @@ export class DetailViewCell extends BaseSectionedLayoutItem {
     }
 
     private getFirstFocusableElement(selectors: string[]): HTMLElement | null {
+        const body = this.getBodyElement();
+        if (!body) return null;
+
         for (const selector of selectors) {
-            const element = this.element?.querySelector<HTMLElement>(selector);
+            const element = body.querySelector<HTMLElement>(selector);
             if (element) {
                 return element;
             }
@@ -587,9 +589,12 @@ export class DetailViewCell extends BaseSectionedLayoutItem {
     private getNativeFields(): Array<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement> {
         if (!this.element) return [];
 
+        const body = this.getBodyElement();
+        if (!body) return [];
+
         const fields = Array.from(
-            this.element.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
-                ".detail-layout-item__body input, .detail-layout-item__body textarea, .detail-layout-item__body select",
+            body.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
+                "input, textarea, select",
             ),
         );
         return fields.filter((field) => {

@@ -81,7 +81,7 @@ class FormManager:
             submission,
         )
         
-                
+             
     def can_submit(self, request:HttpRequest) -> bool:
         """Checks whether a form can be submitted
 
@@ -95,6 +95,7 @@ class FormManager:
             
         return True
 
+    
     def build_submission_data(self, *, data: dict, request: HttpRequest | None) -> dict:
         """Combine ModelForm data with layout-only submitted fields."""
         initial_payload = self.get_initial_payload()
@@ -325,7 +326,7 @@ class FormManager:
             elif value is not None:
                 querydict[field_name] = str(value)
         return querydict
-
+    
     def persist_form_submission(self, form_submission:FormSubmission, request: HttpRequest | None = None):
         """Method to persist a form submission. Can be used
 

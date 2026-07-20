@@ -11,8 +11,10 @@ from bloomerp.router import router
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import FieldDoesNotExist
 from bloomerp.models.users.user_detail_view_preference import UserDetailViewPreference
+from bloomerp.models.users.user_detail_view_tabs_preference import (
+    UserDetailViewTabsPreference,
+)
 from bloomerp.services.preference_services import PreferenceManager
-from bloomerp.services.detail_view_services import resolve_tabs_with_state
 
 
 class BaseBloomerpDetailView(BaseBloomerpView, BloomerpModelContextMixin, DetailView):
@@ -29,6 +31,15 @@ class BaseBloomerpDetailView(BaseBloomerpView, BloomerpModelContextMixin, Detail
         content_type = ContentType.objects.get_for_model(self.model)
         return PreferenceManager(self.request.user).get_or_create_selected(
             UserDetailViewPreference,
+            scope={"content_type_id": content_type.pk},
+        )
+
+    @cached_property
+    def detail_tabs_preference(self) -> UserDetailViewTabsPreference:
+        """Resolve the selected tab layout independently from the field layout."""
+        content_type = ContentType.objects.get_for_model(self.model)
+        return PreferenceManager(self.request.user).get_or_create_selected(
+            UserDetailViewTabsPreference,
             scope={"content_type_id": content_type.pk},
         )
     
@@ -101,20 +112,22 @@ class BaseBloomerpDetailView(BaseBloomerpView, BloomerpModelContextMixin, Detail
         if self.tabs:
             context["tabs"] = self.tabs
             
-        tabs = context.get("tabs") or self.get_tabs()
-
         content_type = ContentType.objects.get_for_model(self.model)
         context["detail_view_content_type_id"] = content_type.pk
         context["can_change_avatar"] = self._can_change_avatar(content_type)
-        preference = self.detail_view_preference
-        resolved_tabs, normalized_state = resolve_tabs_with_state(tabs=tabs, state=preference.tab_state_obj)
-        if normalized_state != preference.tab_state_obj:
-            preference.tab_state = normalized_state
-            preference.save(update_fields=["tab_state"])
-
-        context["tabs_top_level"] = resolved_tabs.get("top_level_tabs", [])
-        context["tab_folders"] = resolved_tabs.get("folders", [])
-        context["tabs"] = resolved_tabs.get("top_level_tabs", [])
+        tabs_preference = self.detail_tabs_preference
+        preference_manager = PreferenceManager(self.request.user)
+        context["detail_tabs_preference"] = tabs_preference
+        context["can_manage_detail_tabs_preference"] = preference_manager.can_manage(
+            tabs_preference
+        )
+        context["tab_items"] = tabs_preference.build_rendered_items(
+            object_pk=self.object.pk,
+            request_path=self.request.path,
+        )
+        context["tabs"] = [
+            item for item in context["tab_items"] if not item["is_folder"]
+        ]
         context["extra_buttons"] = self.get_extra_buttons()
         context["object_actions"] = self.get_object_actions()
         return context
