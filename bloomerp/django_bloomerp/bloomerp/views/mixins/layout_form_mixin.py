@@ -34,7 +34,8 @@ class LayoutFormMixin(LayoutMixin, FormMixin):
         return label
 
     def resolve_is_required(self, item: LayoutItem) -> bool:
-        return self.get_form()[self.resolve_form_key(item)].field.required
+        form_field = self.get_form().fields.get(self.resolve_form_key(item))
+        return bool(form_field and form_field.required)
 
     def get_layout_widget(
         self,
