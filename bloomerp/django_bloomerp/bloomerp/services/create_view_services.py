@@ -3,6 +3,7 @@ from typing import Any
 
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.contrib.contenttypes.fields import GenericForeignKey
 
 from bloomerp.models import ApplicationField, UserCreateViewPreference
 from bloomerp.models.base_bloomerp_model import FieldLayout
@@ -20,6 +21,32 @@ AUTO_MANAGED_FIELD_NAMES = {
     "comments",
     "files",
 }
+
+
+def get_generic_foreign_key_backing_field_names(model) -> set[str]:
+    """Return concrete field names represented by generic foreign keys."""
+    return {
+        field_name
+        for field in model._meta.private_fields
+        if isinstance(field, GenericForeignKey)
+        for field_name in (field.ct_field, field.fk_field)
+    }
+
+
+def get_generic_foreign_key_backing_fields(application_field: ApplicationField) -> list[ApplicationField]:
+    """Return the concrete ApplicationFields submitted by a generic relation widget."""
+    try:
+        generic_foreign_key = application_field._get_model_field()
+    except Exception:
+        return []
+    if not isinstance(generic_foreign_key, GenericForeignKey):
+        return []
+    return list(
+        ApplicationField.objects.filter(
+            content_type=application_field.content_type,
+            field__in=[generic_foreign_key.ct_field, generic_foreign_key.fk_field],
+        )
+    )
 
 
 @dataclass
@@ -77,9 +104,12 @@ def get_addable_fields(*, content_type: ContentType, user) -> models.QuerySet[Ap
 
     permission_manager = UserPermissionManager(user)
     permission_str = create_permission_str(model, "add")
+    generic_backing_field_names = get_generic_foreign_key_backing_field_names(model)
     accessible_fields = permission_manager.get_accessible_fields(content_type, permission_str).order_by("field")
     allowed_ids: list[int] = []
     for application_field in accessible_fields:
+        if application_field.field in generic_backing_field_names:
+            continue
         if application_field.field in AUTO_MANAGED_FIELD_NAMES:
             continue
         try:
@@ -112,8 +142,11 @@ def get_required_create_fields(*, content_type: ContentType) -> list[Application
         return []
 
     required_fields: list[ApplicationField] = []
+    generic_backing_field_names = get_generic_foreign_key_backing_field_names(model)
     for model_field in model._meta.concrete_fields:
         if model_field.name in AUTO_MANAGED_FIELD_NAMES:
+            continue
+        if model_field.name in generic_backing_field_names:
             continue
         if getattr(model_field, "auto_created", False):
             continue

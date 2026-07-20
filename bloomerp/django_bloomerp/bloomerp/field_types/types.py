@@ -19,6 +19,7 @@ from bloomerp.model_fields.week_field import WeekField
 from bloomerp.widgets.address_widget import AddressWidget
 from bloomerp.widgets.code_editor_widget import CodeEditorWidget
 from bloomerp.widgets.foreign_field_widget import ForeignFieldWidget
+from bloomerp.widgets.generic_foreign_key_widget import GenericForeignKeyWidget
 from bloomerp.widgets.icon_picker_widget import IconPickerWidget
 from bloomerp.widgets.object_files_widget import ObjectFilesWidget
 from bloomerp.widgets.one_to_many_field_widget import OneToManyFieldWidget
@@ -176,6 +177,14 @@ class FieldTypeDefinition:
             attrs[self.widget_related_model_attr] = related_model
         if self.widget_parent_model_attr:
             attrs[self.widget_parent_model_attr] = application_field.get_model()
+
+        if self.id == "GenericForeignKey":
+            try:
+                generic_foreign_key = application_field._get_model_field()
+                attrs["content_type_field_name"] = generic_foreign_key.ct_field
+                attrs["object_id_field_name"] = generic_foreign_key.fk_field
+            except Exception:
+                pass
         
         if self.widget_cls:
             return self.get_widget_cls()(
@@ -827,7 +836,9 @@ class FieldType(Enum):
         id="GenericForeignKey",
         display_name="Generic Foreign Key",
         icon="fa-solid fa-link",
+        widget_cls=GenericForeignKeyWidget,
         allow_in_model=False,
+        editable_without_form_field=True,
         dataview_value_func=render_foreign_key_dataview_value
     )
 

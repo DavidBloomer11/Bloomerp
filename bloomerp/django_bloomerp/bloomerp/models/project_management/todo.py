@@ -74,6 +74,7 @@ class Todo(BloomerpModel):
                         LayoutItem(id="effort", colspan=1),
                         LayoutItem(id="labels", colspan=1),
                         LayoutItem(id="initiative", colspan=1),
+                        LayoutItem(id="content_object", colspan=2),
                         LayoutItem(id="content", colspan=4),
                     ],
                 ),

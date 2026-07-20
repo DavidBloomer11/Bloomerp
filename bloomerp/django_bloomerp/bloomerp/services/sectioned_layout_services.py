@@ -308,8 +308,12 @@ def get_available_layout_fields(*, content_type: ContentType, user, layout_kind:
         AUTO_MANAGED_FIELD_NAMES = frozenset()
 
     fields = ApplicationField.objects.filter(content_type=content_type).order_by("field")
+    from bloomerp.services.create_view_services import get_generic_foreign_key_backing_field_names
+    generic_backing_field_names = get_generic_foreign_key_backing_field_names(model)
     available: list[dict[str, Any]] = []
     for field in fields:
+        if field.field in generic_backing_field_names:
+            continue
         if not permission_manager.has_field_permission(field, permission_str):
             continue
 
