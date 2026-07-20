@@ -155,9 +155,16 @@ class ApplicationFieldLayoutFormMixin(LayoutFormMixin, ABC):
         return self.application_fields
 
     def get_application_field(self, item: LayoutItem) -> ApplicationField:
+        fields_by_id = getattr(self, "_application_fields_by_id", None)
+        if fields_by_id is None:
+            fields_by_id = {
+                str(application_field.pk): application_field
+                for application_field in self.get_application_fields()
+            }
+            self._application_fields_by_id = fields_by_id
         try:
-            return self.get_application_fields().get(id=item.id)
-        except ApplicationField.DoesNotExist as exc:
+            return fields_by_id[str(item.id)]
+        except KeyError as exc:
             raise ValidationError(
                 f"ApplicationField with id {item.id} does not exist for "
                 f"{self.layout_model.__name__}"
