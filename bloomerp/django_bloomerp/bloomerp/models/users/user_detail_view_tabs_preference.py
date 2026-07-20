@@ -371,7 +371,22 @@ class UserDetailViewTabsPreference(BasePreference):
 
 class UserDetailViewTabItem(models.Model):
     """A top-level folder when ``url`` is null, otherwise a navigable tab."""
-
+    class Meta:
+        db_table = "bloomerp_user_detail_view_tab_item"
+        ordering = ["position", "id"]
+        indexes = [
+            models.Index(
+                fields=["preference", "parent", "position"],
+                name="detail_tab_tree_order_idx",
+            ),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(url__isnull=True) | ~Q(url=""),
+                name="detail_tab_url_null_or_nonempty",
+            ),
+        ]
+    
     bloomerp_config = BloomerpModelConfig(
         is_internal=True,
         api_settings=ApiSettings(enable_auto_generation=False),
@@ -393,22 +408,6 @@ class UserDetailViewTabItem(models.Model):
     name = models.CharField(max_length=255)
     url = models.CharField(max_length=2048, null=True, blank=True)
     position = models.PositiveIntegerField(default=0)
-
-    class Meta:
-        db_table = "bloomerp_user_detail_view_tab_item"
-        ordering = ["position", "id"]
-        indexes = [
-            models.Index(
-                fields=["preference", "parent", "position"],
-                name="detail_tab_tree_order_idx",
-            ),
-        ]
-        constraints = [
-            models.CheckConstraint(
-                condition=Q(url__isnull=True) | ~Q(url=""),
-                name="detail_tab_url_null_or_nonempty",
-            ),
-        ]
 
     def __str__(self) -> str:
         return self.name

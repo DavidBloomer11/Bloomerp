@@ -27,7 +27,7 @@ class DetailTabItemForm(forms.Form):
     ) -> None:
         super().__init__(*args, **kwargs)
         self.fields["name"].widget.attrs.update(
-            {"autofocus": True, "data-detail-tab-name-input": ""}
+            {"autofocus": True, "data-detail-tab-name-input": "", "class": "input w-full"}
         )
         if item_type == "folder":
             self.fields.pop("url")
@@ -42,6 +42,7 @@ class DetailTabItemForm(forms.Form):
                 "data-detail-tab-url-input": "",
                 "list": "detail-tab-route-options",
                 "placeholder": "/module/objects/{{pk}}/overview/",
+                "class": "input w-full",
             },
         )
 
