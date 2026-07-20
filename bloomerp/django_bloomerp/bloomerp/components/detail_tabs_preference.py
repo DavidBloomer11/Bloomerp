@@ -1,72 +1,51 @@
 import json
 
+from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
-from django.http import HttpRequest, JsonResponse, HttpResponse
+from django.core.exceptions import ValidationError
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 
-from bloomerp.models.users.user_detail_view_preference import UserDetailViewPreference
-from bloomerp.router import router
-from bloomerp.services.detail_view_services import (
-    build_default_tab_state_from_tabs,
-    get_ordered_tab_keys_from_state,
-    get_router_detail_tabs,
-    save_detail_tab_state,
+from bloomerp.models.users.user_detail_view_tabs_preference import (
+    UserDetailViewTabsPreference,
 )
+from bloomerp.router import router
+from bloomerp.services.detail_tab_services import sync_tab_items
+from bloomerp.services.preference_services import PreferenceManager
 
 
 @router.register(
-    path='components/detail_tabs_preference/',
-    name='components_detail_tabs_preference',
+    path="components/detail-tabs/preference/",
+    name="components_detail_tabs_preference",
 )
+@login_required
 def detail_tabs_preference(request: HttpRequest) -> HttpResponse:
-    if request.method != 'POST':
-        return HttpResponse('Method not allowed', status=405)
+    """Persist the selected, owner-managed detail-tab tree."""
+    if request.method != "POST":
+        return HttpResponse("Method not allowed", status=405)
 
-    content_type_id = request.POST.get('content_type_id')
+    content_type_id = request.POST.get("content_type_id")
     if not content_type_id:
-        return HttpResponse('Missing content_type_id', status=400)
-
+        return HttpResponse("Missing content_type_id", status=400)
     try:
-        content_type_id = int(content_type_id)
+        content_type_pk = int(content_type_id)
     except ValueError:
-        return HttpResponse('Invalid content_type_id', status=400)
+        return HttpResponse("Invalid content_type_id", status=400)
+    content_type = get_object_or_404(ContentType, id=content_type_pk)
 
-    content_type = get_object_or_404(ContentType, id=content_type_id)
-    preference = UserDetailViewPreference.get_or_create_for_user(request.user, content_type)
-
-    model = content_type.model_class()
-    available_tabs = get_router_detail_tabs(model) if model else []
-
-    state_raw = request.POST.get('state')
-    if not state_raw:
-        state = build_default_tab_state_from_tabs(available_tabs)
-    else:
-        try:
-            state = json.loads(state_raw)
-        except json.JSONDecodeError:
-            state = build_default_tab_state_from_tabs(available_tabs)
-
-    try:
-        requested_keys = get_ordered_tab_keys_from_state(state)
-    except ValueError:
-        state = build_default_tab_state_from_tabs(available_tabs)
-        requested_keys = get_ordered_tab_keys_from_state(state)
-
-    existing_keys = {str(tab.get('key')) for tab in available_tabs if tab.get('key')}
-    for key in requested_keys:
-        if key in existing_keys:
-            continue
-        available_tabs.append({
-            'key': key,
-            'url': key,
-            'name': key,
-            'requires_pk': False,
-        })
-
-    normalized = save_detail_tab_state(
-        preference=preference,
-        tabs=available_tabs,
-        state=state,
+    manager = PreferenceManager(request.user)
+    preference = manager.get_or_create_selected(
+        UserDetailViewTabsPreference,
+        {"content_type_id": content_type.pk},
     )
+    if preference is None or not manager.can_manage(preference):
+        return HttpResponse("You cannot edit this tabs preference.", status=403)
 
-    return JsonResponse({'status': 'ok', 'tab_state': normalized})
+    try:
+        payload = json.loads(request.POST.get("items", "[]"))
+        sync_tab_items(preference, payload)
+    except (json.JSONDecodeError, ValidationError) as exc:
+        message = exc.messages[0] if isinstance(exc, ValidationError) else "Invalid JSON."
+        return JsonResponse({"status": "error", "error": message}, status=400)
+
+    return JsonResponse({"status": "ok"})
