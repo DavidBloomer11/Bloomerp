@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 import logging
 
@@ -19,6 +20,33 @@ from bloomerp.models.application_field import ApplicationField
 from bloomerp.utils.filters import dynamic_filterset_factory
 
 logger = logging.getLogger(__name__)
+
+
+def _normalize_api_choice_value(value):
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    return str(value)
+
+
+def _normalize_api_choices(choices):
+    if isinstance(choices, Mapping):
+        choice_items = choices.items()
+    else:
+        choice_items = choices
+
+    normalized_choices = []
+    for choice in choice_items:
+        if not isinstance(choice, (list, tuple)) or len(choice) != 2:
+            normalized_choices.append(choice)
+            continue
+
+        value, label = choice
+        if isinstance(label, (list, tuple)):
+            normalized_choices.append((value, _normalize_api_choices(label)))
+        else:
+            normalized_choices.append((_normalize_api_choice_value(value), label))
+
+    return normalized_choices
 
 
 def _fallback_filterset_class(model: type[Model]) -> type[django_filters.FilterSet]:
@@ -434,6 +462,19 @@ def generate_serializer(model:Model) -> type[serializers.ModelSerializer]:
     class GeneratedSerializer(serializers.ModelSerializer):
         Meta = meta_class
 
+        def build_standard_field(self, field_name, model_field):
+            field_class, field_kwargs = super().build_standard_field(
+                field_name,
+                model_field,
+            )
+
+            if "choices" in field_kwargs:
+                field_kwargs["choices"] = _normalize_api_choices(
+                    field_kwargs["choices"]
+                )
+
+            return field_class, field_kwargs
+
         def _get_serializer_action(self) -> str:
             view = self.context.get("view")
             return getattr(view, "action", None) or "retrieve"
@@ -604,6 +645,9 @@ def generate_model_viewset_class(
     '''
 
     def get_filterset_class(self):
+        if getattr(self, "swagger_fake_view", False):
+            return _fallback_filterset_class(model)
+
         filterset_class = getattr(self.__class__, "_bloomerp_filterset_class", None)
         if filterset_class is not None:
             return filterset_class

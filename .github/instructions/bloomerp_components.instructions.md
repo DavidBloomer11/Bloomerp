@@ -465,10 +465,10 @@ def permissions_table(request: HttpRequest) -> HttpResponse:
 
 ```python
 @router.register(
-    path="components/data_view/<int:content_type_id>/",
-    name="components_data_view",
+    path="components/dataview/<int:content_type_id>/",
+    name="components_dataview",
 )
-def data_view(request: HttpRequest, content_type_id: int) -> HttpResponse:
+def dataview(request: HttpRequest, content_type_id: int) -> HttpResponse:
     """Main data view component that renders tables, kanban, calendar, etc.
     
     Args:
@@ -620,7 +620,7 @@ Backend components work seamlessly with HTMX. Here's how:
 
 ```html
 <!-- Load a data view when page loads -->
-<div hx-get="{% url 'components_data_view' content_type_id %}"
+<div hx-get="{% url 'components_dataview' content_type_id %}"
      hx-trigger="load"
      hx-swap="outerHTML">
     Loading...

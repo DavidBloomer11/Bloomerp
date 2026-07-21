@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.db import models
+from django.db.models import Count
 from django.utils import timezone
+from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 
 from bloomerp.models.base_bloomerp_model import BloomerpModel, FieldLayout, LayoutItem, LayoutRow
@@ -50,6 +52,17 @@ class Initiative(BloomerpModel):
                         LayoutItem(id="labels", colspan=1),
                     ],
                 ),
+                LayoutRow(
+                    title="Todo's",
+                    columns=1,
+                    items=[
+                        LayoutItem(
+                            id="todos",
+                            colspan=1,
+                            config={"inline_fields": ["title", "status"]},
+                        ),
+                    ]
+                ),
             ]
         ),
         string_search_fields=["name", "description"],
@@ -85,10 +98,58 @@ class Initiative(BloomerpModel):
         help_text=_("Labels assigned to the initiative"),
     )
 
+    @cached_property
+    def todo_status_counts(self) -> dict[str, int]:
+        """Return assigned to-do counts grouped by status."""
+        prefetched_todos = getattr(self, "_prefetched_objects_cache", {}).get("todos")
+        if prefetched_todos is not None:
+            counts = {}
+            for todo in prefetched_todos:
+                counts[todo.status] = counts.get(todo.status, 0) + 1
+            return counts
+
+        return {
+            row["status"]: row["total"]
+            for row in self.todos.values("status").annotate(total=Count("id"))
+        }
+
     @property
     def todo_count(self) -> int:
         """Return the number of to-dos assigned to this initiative."""
-        return self.todos.count()
+        return sum(self.todo_status_counts.values())
+
+    @property
+    def completion_percentage(self) -> str:
+        """Return the percentage of finished to-dos as a string."""
+        from bloomerp.models.project_management.todo import TodoStatus
+
+        total = self.todo_count
+        if total == 0:
+            return "0%"
+
+        finished_total = sum(
+            self.todo_status_counts.get(status, 0)
+            for status in (
+                TodoStatus.COMPLETED,
+                TodoStatus.DUPLICATE,
+                TodoStatus.CANCELLED,
+            )
+        )
+        return f"{round((finished_total / total) * 100)}%"
+
+    @property
+    def has_started(self) -> bool:
+        """Return whether any assigned to-do has started."""
+        from bloomerp.models.project_management.todo import TodoStatus
+
+        return any(
+            self.todo_status_counts.get(status, 0) > 0
+            for status in (
+                TodoStatus.IN_PROGRESS,
+                TodoStatus.IN_REVIEW,
+                TodoStatus.COMPLETED,
+            )
+        )
 
     @property
     def is_completed(self) -> bool:

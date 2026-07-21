@@ -1,4 +1,5 @@
 from django import forms
+from django.db.models import Q
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
 
@@ -8,6 +9,18 @@ from bloomerp.router import router
 from bloomerp.services.workspace_services import WorkspaceFilter, WorkspaceManager
 
 URL_NAME = "components_filter_workspace"
+
+
+def _get_available_workspace(request: HttpRequest, workspace_id: int) -> Workspace:
+    """Return a workspace the requesting user owns or receives through sharing."""
+    return get_object_or_404(
+        Workspace.objects.filter(
+            Q(user=request.user)
+            | Q(shared_with_users=request.user)
+            | Q(shared_with_groups__user=request.user)
+        ).distinct(),
+        id=workspace_id,
+    )
 
 
 
@@ -118,7 +131,7 @@ def _render_workspace_filter_lookup_value(field: WorkspaceFilter, field_type: Fi
     name="components_workspaces_filters_init",
 )
 def workspace_filters_init(request: HttpRequest, workspace_id: int) -> HttpResponse:
-    workspace = get_object_or_404(Workspace, id=workspace_id)
+    workspace = _get_available_workspace(request, workspace_id)
     manager = WorkspaceManager(workspace)
 
     return render(
@@ -140,7 +153,7 @@ def workspace_filters_lookup_operators(
     workspace_id: int,
     filter_key: str,
 ) -> HttpResponse:
-    workspace = get_object_or_404(Workspace, id=workspace_id)
+    workspace = _get_available_workspace(request, workspace_id)
     manager = WorkspaceManager(workspace)
     field = manager.get_filter_fields(request.user).get(filter_key)
     if field is None:
@@ -166,7 +179,7 @@ def workspace_filters_value_input(
     workspace_id: int,
     filter_key: str,
 ) -> HttpResponse:
-    workspace = get_object_or_404(Workspace, id=workspace_id)
+    workspace = _get_available_workspace(request, workspace_id)
     manager = WorkspaceManager(workspace)
     field = manager.get_filter_fields(request.user).get(filter_key)
     if field is None:

@@ -143,6 +143,7 @@ BLOOMERP_APPS = [
     "django_browser_reload",
     "crispy_tailwind",
     "django_celery_beat",
+    "drf_spectacular",
 ]
 
 if _has_allauth():
@@ -155,6 +156,7 @@ if _has_allauth():
     ]
 
 BLOOMERP_MIDDLEWARE = [
+    "bloomerp.middleware.HTMXVaryMiddleware",
     "bloomerp.middleware.HTMXPermissionDeniedMiddleware",
     "django_htmx.middleware.HtmxMiddleware",
     "django_browser_reload.middleware.BrowserReloadMiddleware",
@@ -177,3 +179,8 @@ if _has_allauth():
 
 BLOOMERP_SITE_ID = 1
 BLOOMERP_ALLAUTH_AVAILABLE = _has_allauth()
+
+# DRF Settings
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}

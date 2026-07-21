@@ -8,7 +8,9 @@ from django.urls import reverse
 from playwright.sync_api import Locator, Page, expect
 
 from bloomerp.management.commands import save_application_fields
-from bloomerp.models.users.user_list_view_preference import UserListViewPreference, ViewTypeEnum
+from bloomerp.models import ApplicationField
+from bloomerp.models.users.user_list_view_preference import UserListViewPreference, DataviewType
+from bloomerp.models import ApplicationField, Sidebar, SidebarItem
 from bloomerp.tests.base import BaseBloomerpModelTestCase
 from bloomerp.tests.utils.dynamic_models import create_test_models
 from bloomerp.utils.models import get_list_view_url
@@ -104,7 +106,7 @@ def _apply_first_name_filter(page: Page, value: str, response_timeout: int = 300
     value_input.fill(value)
 
     with page.expect_response(
-        lambda response: "components/data_view" in response.url,
+        lambda response: "components/dataview" in response.url,
         timeout=response_timeout,
     ):
         page.locator("#apply-filters-button").click()
@@ -126,7 +128,7 @@ def apply_filter(page: Page, filter_key: str, filter_value: str, response_timeou
     value_input.fill(filter_value)
 
     with page.expect_response(
-        lambda response: "components/data_view" in response.url,
+        lambda response: "components/dataview" in response.url,
         timeout=response_timeout,
     ):
         page.locator("#apply-filters-button").click()
@@ -164,7 +166,7 @@ def search(
     search_input.click()
 
     with page.expect_response(
-        lambda response: "components/data_view" in response.url and f"q={query}" in response.url,
+        lambda response: "components/dataview" in response.url and f"q={query}" in response.url,
         timeout=response_timeout,
     ):
         page.keyboard.type(query, delay=20)
@@ -176,7 +178,7 @@ def search(
     )
 
 
-def change_view_type(view_type:ViewTypeEnum, page: Page) -> None:
+def change_view_type(view_type:DataviewType, page: Page) -> None:
     page.get_by_role("button", name="Display").click()
     display_menu = page.locator("div[role='menu']:visible").filter(
         has=page.locator(f"button[data-display-options-values*='\"view_type\": \"{view_type.value.key}\"']")
@@ -302,6 +304,59 @@ class TestDataViewE2E:
     # ------------------------------------
     # Display Options Tests
     # ------------------------------------
+    def test_pivot_selectors_persist_multiple_row_and_value_fields(
+        self,
+        authenticated_dataview_page: Page,
+        dataview_admin,
+        dataview_model,
+    ):
+        """
+        Use case: A user selects multiple row dimensions and values for a pivot table.
+        Expected result: Every selected field is submitted and persisted in selector order.
+        """
+        page = authenticated_dataview_page
+
+        # 1. Switch to the pivot view and locate its native row-field selector.
+        change_view_type(DataviewType.PIVOT_TABLE, page)
+        display_menu = page.locator("div[role='menu']:visible").filter(
+            has=page.locator("select[name='row_field_ids']")
+        )
+
+        # 2. Select both row dimensions in one native multiple-select change.
+        row_selector = display_menu.locator("select[name='row_field_ids']")
+        with page.expect_response(
+            lambda response: "change_data_view_preference" in response.url,
+            timeout=5000,
+        ):
+            row_selector.select_option(label=["First Name", "Last Name"])
+
+        # 3. Select two value fields after the display options re-render.
+        display_menu = page.locator("div[role='menu']:visible").filter(
+            has=page.locator("select[name='value_field_ids']")
+        )
+        value_selector = display_menu.locator("select[name='value_field_ids']")
+        with page.expect_response(
+            lambda response: "change_data_view_preference" in response.url,
+            timeout=5000,
+        ):
+            value_selector.select_option(label=["First Name", "Age"])
+
+        # 4. Verify both row and value field lists were persisted.
+        content_type = ContentType.objects.get_for_model(dataview_model)
+        preference = UserListViewPreference.objects.get(
+            user=dataview_admin,
+            content_type=content_type,
+            selected=True,
+        )
+        assert preference.options["pivot_table"]["row_field_ids"] == [
+            ApplicationField.get_by_field(dataview_model, "first_name").id,
+            ApplicationField.get_by_field(dataview_model, "last_name").id,
+        ]
+        assert preference.options["pivot_table"]["value_field_ids"] == [
+            ApplicationField.get_by_field(dataview_model, "first_name").id,
+            ApplicationField.get_by_field(dataview_model, "age").id,
+        ]
+
     def test_change_visible_fields(self, authenticated_dataview_page: Page):
         """
         Tests whether the dataview correctly changes the visible fields based on the user input.
@@ -539,4 +594,52 @@ class TestDataViewE2E:
         
         # 3. Assert that the bloomerp-component="dataview-container" is still visible
         expect(page.locator("[bloomerp-component='dataview-container']")).to_be_visible()
+
+    def test_mixed_htmx_and_href_history_restores_complete_pages(
+        self,
+        authenticated_dataview_page: Page,
+        dataview_admin,
+        dataview_model,
+        live_server_url: str,
+    ):
+        """
+        Use case: An HTMX sidebar navigation is followed by a normal href navigation and browser back actions.
+        Expected result: History never restores a loader or an HTMX fragment as the complete document.
+        """
+        page = authenticated_dataview_page
+        list_path = reverse(get_list_view_url(dataview_model))
+
+        # 1. Add an internal sidebar link so the first navigation uses HTMX and the global loader.
+        sidebar = Sidebar.objects.filter(user=dataview_admin, selected=True).first()
+        if sidebar is None:
+            sidebar = Sidebar.objects.create(user=dataview_admin, name="History", selected=True)
+        SidebarItem.create_link(sidebar, "History list", list_path)
+        page.goto(f"{live_server_url}/")
+
+        with page.expect_response(lambda response: response.url.endswith(list_path)):
+            page.get_by_role("link", name="History list").click()
+        expect(page.locator("[bloomerp-component='dataview-container']")).to_be_visible()
+
+        # 2. Follow a plain href, reproducing the mixed navigation sequence from link tiles.
+        page.locator("#main-content").evaluate(
+            """element => {
+                const link = document.createElement('a');
+                link.id = 'plain-home-link';
+                link.href = '/';
+                link.textContent = 'Plain home link';
+                element.appendChild(link);
+            }"""
+        )
+        page.get_by_role("link", name="Plain home link").click()
+        expect(page).to_have_url(f"{live_server_url}/")
+
+        # 3. Go back through both entries and verify the outgoing home snapshot was not the loader.
+        go_page_back(page, expected_selector="[bloomerp-component='dataview-container']")
+        go_page_back(page, expected_url=f"{live_server_url}/")
+        expect(page.locator(".skeleton-loader")).to_have_count(0)
+
+        # 4. Refresh the restored entry and verify a complete document is returned, not an HTMX fragment.
+        page.reload(wait_until="domcontentloaded")
+        expect(page.locator("html > body#bloomerpBody")).to_have_count(1)
+        expect(page.locator("#main-content #htmx-addendum")).to_be_visible()
     

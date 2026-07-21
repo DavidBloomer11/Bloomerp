@@ -19,8 +19,16 @@
         </div>
 
         <div>
-            {{ form.shared_with|as_crispy_field }}
+            {{ form.shared_with_users|as_crispy_field }}
         </div>
+        <div>
+            {{ form.shared_with_groups|as_crispy_field }}
+        </div>
+        {% if form.initial_default %}
+            <div>
+                {{ form.initial_default|as_crispy_field }}
+            </div>
+        {% endif %}
 
         {% if success %}
             <div class="text-sm text-emerald-600">

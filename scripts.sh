@@ -20,6 +20,15 @@ update-internal-sdk() {
             --app bloomerp \
             "$@"
     )
+reset-test-data() {
+  local script_dir
+  script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+  cd "$script_dir/bloomerp/django_bloomerp"
+  rm -f db.sqlite3
+  uv run manage.py migrate
+  uv run manage.py save_application_fields
+  uv run manage.py create_test_data
 }
 
 document-cotton-components() {
@@ -261,6 +270,10 @@ case "${1:-}" in
         shift
         update-internal-sdk "$@"
         ;;
+  reset-test-data)
+    shift
+    reset-test-data "$@"
+    ;;
   document-cotton-components)
     shift
     document-cotton-components "$@"
@@ -273,6 +286,16 @@ case "${1:-}" in
     echo "Unknown command: $1" >&2
         echo "Usage: ./scripts.sh update-internal-sdk [create_sdk options]" >&2
         echo "       ./scripts.sh document-cotton-components" >&2
+    echo "Usage: ./scripts.sh <command>"
+    echo
+    echo "Commands:"
+    echo "  reset-test-data"
+    echo "  document-cotton-components"
+    ;;
+  *)
+    echo "Unknown command: $1" >&2
+    echo "Usage: ./scripts.sh <command>" >&2
+    echo "Commands: reset-test-data, document-cotton-components" >&2
     exit 1
     ;;
 esac

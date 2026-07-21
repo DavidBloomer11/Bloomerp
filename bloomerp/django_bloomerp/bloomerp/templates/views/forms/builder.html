@@ -1,19 +1,20 @@
 {% if layout_non_field_errors %}
-    {% for error in layout_non_field_errors %}
-        <div class="alert-message-error mb-4 rounded px-4 py-3" role="alert">
-            <div class="alert-message">{{ error }}</div>
-        </div>
-    {% endfor %}
+    <div class="space-y-2 mb-4">
+        {% for error in layout_non_field_errors %}
+            <div class="alert alert-danger mb-4 rounded px-4 py-3" role="alert">
+                <div>{{ error }}</div>
+            </div>
+        {% endfor %}
+    </div>
 {% endif %}
 
-<c-features.sectioned_layouts.container
-    component_name="object-crud-view-container"
+<c-features.layout.container
+    :component_name="ts_container_component"
     :init_edit="True"
     :layout="layout"
     :layout_object_id="layout_object_id"
-    :layout_object_content_type_id="layout_object_content_type_id"
-    :can_edit="can_change_layout"
-    :can_delete="can_delete_layout_object"
+    :can_change="can_change"
+    :change_context="change_context"
     :extra_attrs="layout_container_extra_attrs"
 >
     <c-slot name="buttons_left">
@@ -29,9 +30,7 @@
             <c-i18n.blocktrans>Initial data</c-i18n.blocktrans>
         </button>
     </c-slot>
-
-    {% include "inclusion_tags/sectioned_layout_rows.html" %}
-</c-features.sectioned_layouts.container>
+</c-features.layout.container>
 
 <c-ui.modal id="initial-data-modal" title="Initial data" size="lg">
     <div class="text-sm text-gray-500">

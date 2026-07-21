@@ -107,7 +107,7 @@ class BaseDataviewRenderer:
         return HttpResponse(f"Unsupported dataview action: {action}", status=400)
 
     @staticmethod
-    def get_field_from_data_view_fields(data_view_fields, field_id):
+    def get_field_from_data_view_fields(dataview_fields, field_id):
         if field_id in (None, ""):
             return None
 
@@ -116,11 +116,11 @@ class BaseDataviewRenderer:
         except (TypeError, ValueError):
             return None
 
-        for field, _is_visible in getattr(data_view_fields, "accessible_fields", []):
+        for field, _is_visible in getattr(dataview_fields, "accessible_fields", []):
             if field.id == field_id:
                 return field
 
-        for field in getattr(data_view_fields, "visible_fields", []):
+        for field in getattr(dataview_fields, "visible_fields", []):
             if field.id == field_id:
                 return field
 

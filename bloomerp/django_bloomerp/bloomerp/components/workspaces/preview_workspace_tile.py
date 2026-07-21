@@ -5,6 +5,7 @@ from django.http import HttpRequest
 from django.utils.translation import gettext_lazy as _
 
 from bloomerp.forms.workspaces import DEFAULT_TILE_ICON, TileMetadataForm
+from bloomerp.models.base_bloomerp_model import LayoutItem
 from bloomerp.router import router
 from bloomerp.services.permission_services import UserPermissionManager
 from bloomerp.services.sql_services import DatabaseTable
@@ -135,12 +136,24 @@ class PreviewWorkspaceTile(TemplateView):
         ctx["tile_preview_title"] = ctx["tile_name"] or _("Untitled tile")
         ctx["tile_preview_description"] = ctx["tile_description"]
         ctx["tile_preview_icon"] = ctx["tile_icon"] or DEFAULT_TILE_ICON
+        ctx["tile_preview_item"] = LayoutItem(
+            id="preview",
+            icon=ctx["tile_preview_icon"],
+            label=str(ctx["tile_preview_title"]),
+            content=ctx["tile_preview_html"],
+            component_name="workspace-tile",
+            border=True,
+            search_keywords=ctx["tile_preview_description"],
+        )
         ctx["include_builder_section"] = parse_bool_parameter(
             self.request.GET.get("include_builder_section", True),
             True
         )
         if self.get_tile_type().value.form_cls:
-            ctx["form"] = self.get_tile_type().value.form_cls()
+            form_kwargs = {"initial": config.model_dump()}
+            if self.get_tile_type() == TileType.DATAVIEW_TILE:
+                form_kwargs["user"] = self.request.user
+            ctx["form"] = self.get_tile_type().value.form_cls(**form_kwargs)
         
         return ctx
     
@@ -153,8 +166,8 @@ class PreviewWorkspaceTile(TemplateView):
                 return "components/workspaces/tile_builders/links_tile_builder.html"
             case TileType.TEXT_TILE:
                 return "components/workspaces/tile_builders/text_tile_builder.html"
-            # case TileType.DATAVIEW_TILE:
-            #     return "components/workspaces/tile_builders/dataview_tile_builder.html"
+            case TileType.CANVAS_TILE:
+                return "components/workspaces/tile_builders/canvas_tile_builder.html"
             # case TileType.FORM_TILE:
             #     return "components/workspaces/tile_builders/form_tile_builder.html"
             case _:
@@ -277,8 +290,11 @@ class PreviewWorkspaceTile(TemplateView):
         try:
             # Get the new configuration based on the handler
             
-            if isinstance(operation_def.validation_model, forms.Form):
-                data = operation_def.validation_model(data=request.POST, files=request.FILES)
+            if issubclass(operation_def.validation_model, forms.Form):
+                form_kwargs = {"data": request.POST, "files": request.FILES}
+                if tile_type == TileType.DATAVIEW_TILE:
+                    form_kwargs["user"] = request.user
+                data = operation_def.validation_model(**form_kwargs)
             else:
                 data = operation_def.validation_model(**data)
             

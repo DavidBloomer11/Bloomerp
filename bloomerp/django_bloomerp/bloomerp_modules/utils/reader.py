@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from string import Formatter
 from typing import Any, Callable
 
 import yaml
@@ -62,6 +63,20 @@ def _convert_string_to_callable(field_opts: dict) -> dict:
 
 def get_model_class_name(model_name: str) -> str:
     return "".join(word.capitalize() for word in model_name.replace("-", " ").replace("_", " ").split())
+
+
+def _get_string_representation_field_names(format_string: str) -> tuple[str, ...]:
+    """Return the model attributes referenced by a named format string."""
+    field_names = []
+    for _literal, field_name, _format_spec, _conversion in Formatter().parse(format_string):
+        if not field_name:
+            continue
+
+        root_name = field_name.split(".", 1)[0].split("[", 1)[0]
+        if root_name and root_name not in field_names:
+            field_names.append(root_name)
+
+    return tuple(field_names)
 
 
 def _normalize_layout_item(raw_item: Any) -> LayoutItem | None:
@@ -180,10 +195,18 @@ def create_model_from_config(
     model_class_name = get_model_class_name(model_config.name)
 
     if model_config.string_representation:
+        string_representation = model_config.string_representation
+        representation_field_names = _get_string_representation_field_names(
+            string_representation
+        )
+
         def __str__(self):
             try:
-                values = {field.id: getattr(self, field.id) for field in model_config.fields}
-                return model_config.string_representation.format(**values)
+                values = {
+                    field_name: getattr(self, field_name)
+                    for field_name in representation_field_names
+                }
+                return string_representation.format(**values)
             except Exception as exc:
                 return f"<{model_class_name} (error in __str__: {exc})>"
 

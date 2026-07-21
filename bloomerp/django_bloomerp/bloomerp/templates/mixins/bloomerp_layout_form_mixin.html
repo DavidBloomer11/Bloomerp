@@ -1,203 +1,53 @@
 {% load crispy_forms_tags %}
 {% load cotton %}
 
-{% if layout %}
-    {% if layout_non_field_errors %}
+{% if layout_non_field_errors %}
+    <div class="space-y-2 mb-4">
         {% for error in layout_non_field_errors %}
-            <div class="alert-message-error mb-4 rounded px-4 py-3" role="alert">
-                <div class="alert-message">{{ error }}</div>
+            <div class="alert alert-danger" role="alert">
+                <div>{{ error }}</div>
             </div>
         {% endfor %}
-    {% endif %}
+    </div>
+{% endif %}
 
-    {% if create_blocked_message %}
-        <div class="alert-message-error mb-4 rounded px-4 py-3" role="alert">
-            <div class="alert-message">{{ create_blocked_message }}</div>
-        </div>
-    {% endif %}
-
-    {% if layout_has_form %}
-    <form
-        {% if layout_is_create %}
-            hx-post="{{ request.path }}"
-            hx-encoding="multipart/form-data"
-            hx-target="{{ form_hx_target|default:'#main-content' }}"
-            hx-swap="innerHTML"
-            hx-push-url="{{ form_hx_push_url|yesno:'true,false' }}"
-        {% else %}
-            hx-post="{{ request.path }}"
-            hx-encoding="multipart/form-data"
-            hx-target="{{ form_hx_target|default:'#detail-view-content' }}"
-            hx-swap="innerHTML"
-            hx-push-url="false"
-        {% endif %}
-    >
-        {% csrf_token %}
-        {% if foreign_field_widget_id %}
-            <input type="hidden" name="foreign_field_widget_id" value="{{ foreign_field_widget_id }}">
-        {% endif %}
-        {% for field_name, value in hidden_initial_fields %}
-            <input type="hidden" name="{{ field_name }}" value="{{ value }}">
-        {% endfor %}
-
-        <c-features.sectioned_layouts.container
-            component_name="object-crud-view-container"
-            :layout="layout"
-            :layout_object_id="layout_object_id"
-            :layout_object_content_type_id="layout_object_content_type_id"
-            :can_edit="can_change_layout"
-            :can_delete="can_delete_layout_object"
-            :extra_attrs="layout_container_extra_attrs"
-        >
-            <c-slot name="buttons_left">
-                <div data-toggle-non-required-fields-container>
-                    <c-ui.shortcut_tooltip
-                        shortcut="mod+."
-                        position="bottom">
-                        <button
-                            type="button"
-                            class="btn btn-sm btn-secondary"
-                            data-toggle-non-required-fields
-                            aria-pressed="false"
-                        >
-                            <i class="fa fa-asterisk"></i>
-                            <span data-toggle-non-required-fields-label>
-                                <c-i18n.blocktrans>
-                                    Show Required Only
-                                </c-i18n.blocktrans>
-                            </span>
-                        </button>
-                    </c-ui.shortcut_tooltip>
-                </div>
-            </c-slot>
-
-            {% if full_form_url %}
-            <c-slot name="buttons_right">
-                <c-features.preferences.select_preference_button
-                    type="{{ layout_mode }}"
-                    :content_type_id="content_type_id"
-                    selected_preference_name="{{ layout_preference_object.name }}"
-                />
-
-                <div class="hidden flex gap-3" id="object-crud-container-buttons">
-                    <button type="button" class="btn btn-sm btn-secondary" id="object-crud-container-back-button">
-                        <i class="fa fa-arrow-left"></i>
-                        <c-i18n.blocktrans>
-                            Back
-                        </c-i18n.blocktrans>
-                    </button>
-                    <button type="button" class="btn btn-sm btn-secondary" id="object-crud-container-reset-button">
-                        <i class="fa fa-rotate-left"></i>
-                        <c-i18n.blocktrans>
-                            Reset
-                        </c-i18n.blocktrans>
-                    </button>
-                    <c-ui.shortcut_tooltip
-                        shortcut="mod+s"
-                        action="click"
-                        position="bottom">
-                        <button type="submit" class="btn btn-sm btn-primary" id="object-crud-container-save-button">
-                            <i class="fa fa-save"></i>
-                            <c-i18n.blocktrans>
-                                Save
-                            </c-i18n.blocktrans>
-                        </button>
-                    </c-ui.shortcut_tooltip>
-                    {% if layout_is_create %}
-                    <button
-                        type="submit"
-                        name="next"
-                        value="{{ request.path }}"
-                        class="btn btn-sm btn-secondary"
-                        id="object-crud-container-save-and-create-new-button"
-                    >
-                        <i class="fa fa-plus"></i>
-                        <c-i18n.blocktrans>
-                            Save and Create New
-                        </c-i18n.blocktrans>
-                    </button>
-                    {% endif %}
-                </div>
-
-                <button
-                    type="button"
-                    class="btn btn-sm btn-secondary"
-                    data-open-full-form
-                    data-full-form-url="{{ full_form_url }}"
-                >
-                    <i class="fa fa-up-right-from-square"></i>
-                    Open Full Form
-                </button>
-            </c-slot>
-            {% else %}
-            <c-slot name="buttons_right">
-                <c-features.preferences.select_preference_button
-                    type="{{ layout_mode }}"
-                    :content_type_id="content_type_id"
-                    selected_preference_name="{{ layout_preference_object.name }}"
-                />
-
-                <div class="hidden flex gap-3" id="object-crud-container-buttons">
-                    <button type="button" class="btn btn-sm btn-secondary" id="object-crud-container-back-button">
-                        <i class="fa fa-arrow-left"></i>
-                        <c-i18n.blocktrans>
-                            Back
-                        </c-i18n.blocktrans>
-                    </button>
-                    <button type="button" class="btn btn-sm btn-secondary" id="object-crud-container-reset-button">
-                        <i class="fa fa-rotate-left"></i>
-                        <c-i18n.blocktrans>
-                            Reset
-                        </c-i18n.blocktrans>
-                    </button>
-                    <c-ui.shortcut_tooltip
-                        shortcut="mod+s"
-                        action="click"
-                        position="bottom">
-                        <button type="submit" class="btn btn-sm btn-primary" id="object-crud-container-save-button">
-                            <i class="fa fa-save"></i>
-                            <c-i18n.blocktrans>
-                                Save
-                            </c-i18n.blocktrans>
-                        </button>
-                    </c-ui.shortcut_tooltip>
-                    {% if layout_is_create %}
-                    <c-ui.shortcut_tooltip
-                        shortcut="mod+shift+s"
-                        action="click"
-                        position="bottom"
-                    >
-                        <button
-                            type="submit"
-                            name="next"
-                            value="{{ request.path }}"
-                            class="btn btn-sm btn-secondary"
-                            id="object-crud-container-save-and-create-new-button"
-                        >
-                            <i class="fa fa-plus"></i>
-                            <c-i18n.blocktrans>
-                                Save and Create New
-                            </c-i18n.blocktrans>
-                        </button>
-                    </c-ui.shortcut_tooltip>
-                    {% endif %}
-                </div>
-            </c-slot>
-            {% endif %}
-
-            {% include "inclusion_tags/sectioned_layout_rows.html" %}
-        </c-features.sectioned_layouts.container>
-    </form>
+<form
+    {% if layout_is_create %}
+        hx-post="{{ request.path }}"
+        hx-encoding="multipart/form-data"
+        hx-target="{{ form_hx_target|default:'#main-content' }}"
+        hx-swap="innerHTML"
+        hx-push-url="{{ form_hx_push_url|yesno:'true,false' }}"
     {% else %}
-    <c-features.sectioned_layouts.container
-        component_name="object-crud-view-container"
+        hx-post="{{ request.path }}"
+        hx-encoding="multipart/form-data"
+        hx-target="{{ form_hx_target|default:'#detail-view-content' }}"
+        hx-swap="innerHTML"
+        hx-push-url="false"
+    {% endif %}
+>   
+    {% csrf_token %}
+    {% if foreign_field_widget_id %}
+        <input type="hidden" name="foreign_field_widget_id" value="{{ foreign_field_widget_id }}">
+    {% endif %}
+    {% for field_name, value in hidden_initial_fields %}
+        <input type="hidden" name="{{ field_name }}" value="{{ value }}">
+    {% endfor %}
+
+    <c-features.layout.container
+        :component_name="ts_container_component"
+
+        :can_change="can_change"
+
+        :change_context="change_context"
+
         :layout="layout"
+
         :layout_object_id="layout_object_id"
-        :layout_object_content_type_id="layout_object_content_type_id"
-        :can_edit="can_change_layout"
-        :can_delete="can_delete_layout_object"
+
         :extra_attrs="layout_container_extra_attrs"
-    >
+    >   
+        <!--Buttons left-->
         <c-slot name="buttons_left">
             <div data-toggle-non-required-fields-container>
                 <c-ui.shortcut_tooltip
@@ -219,35 +69,126 @@
                 </c-ui.shortcut_tooltip>
             </div>
         </c-slot>
+        <!--End buttons left-->
 
+        <!--Buttons right-->
+        {% if full_form_url %}
         <c-slot name="buttons_right">
             <c-features.preferences.select_preference_button
-                type="{{ layout_mode }}"
-                :content_type_id="content_type_id"
+                model="UserObjectLayoutPreference"
+                :args="{
+                    'content_type_id': '{{ content_type_id }}',
+                }"
                 selected_preference_name="{{ layout_preference_object.name }}"
             />
+
+            <div class="hidden flex gap-3" id="object-crud-container-buttons">
+                <button type="button" class="btn btn-sm btn-secondary" id="object-crud-container-back-button">
+                    <i class="fa fa-arrow-left"></i>
+                    <c-i18n.blocktrans>
+                        Back
+                    </c-i18n.blocktrans>
+                </button>
+                <button type="button" class="btn btn-sm btn-secondary" id="object-crud-container-reset-button">
+                    <i class="fa fa-rotate-left"></i>
+                    <c-i18n.blocktrans>
+                        Reset
+                    </c-i18n.blocktrans>
+                </button>
+                <c-ui.shortcut_tooltip
+                    shortcut="mod+s"
+                    action="click"
+                    position="bottom">
+                    <button type="submit" class="btn btn-sm btn-primary" id="object-crud-container-save-button">
+                        <i class="fa fa-save"></i>
+                        <c-i18n.blocktrans>
+                            Save
+                        </c-i18n.blocktrans>
+                    </button>
+                </c-ui.shortcut_tooltip>
+                {% if layout_is_create %}
+                <button
+                    type="submit"
+                    name="next"
+                    value="{{ request.path }}"
+                    class="btn btn-sm btn-secondary"
+                    id="object-crud-container-save-and-create-new-button"
+                >
+                    <i class="fa fa-plus"></i>
+                    <c-i18n.blocktrans>
+                        Save and Create New
+                    </c-i18n.blocktrans>
+                </button>
+                {% endif %}
+            </div>
+
+            <button
+                type="button"
+                class="btn btn-sm btn-secondary"
+                data-open-full-form
+                data-full-form-url="{{ full_form_url }}"
+            >
+                <i class="fa fa-up-right-from-square"></i>
+                Open Full Form
+            </button>
         </c-slot>
+        {% else %}
+        <c-slot name="buttons_right">
+            <c-features.preferences.select_preference_button
+                model="UserObjectLayoutPreference"
+                :args="{
+                    'content_type_id': '{{ content_type_id }}',
+                }"
+                selected_preference_name="{{ layout_preference_object.name }}"
+            />
 
-        {% include "inclusion_tags/sectioned_layout_rows.html" %}
-    </c-features.sectioned_layouts.container>
-    {% endif %}
-{% else %}
-    {% if form.non_field_errors %}
-        {% for error in form.non_field_errors %}
-        <div class="alert-message-error mb-4 rounded px-4 py-3" role="alert">
-            <div class="alert-message">{{ error }}</div>
-        </div>
-        {% endfor %}
-    {% endif %}
-
-    <form method="post" action="{{ request.path }}" enctype="multipart/form-data">
-        {% csrf_token %}
-
-        {% if form.helper %}{% crispy form %}{% else %}{{ form|crispy }}{% endif %}
-
-        <div class="flex justify-center gap-2 mt-2">
-            <button type="submit" class="btn btn-primary">Create {{ model_name }}</button>
-            <button type="reset" class="btn btn-secondary">Reset</button>
-        </div>
-    </form>
-{% endif %}
+            <div class="hidden flex gap-3" id="object-crud-container-buttons">
+                <button type="button" class="btn btn-sm btn-secondary" id="object-crud-container-back-button">
+                    <i class="fa fa-arrow-left"></i>
+                    <c-i18n.blocktrans>
+                        Back
+                    </c-i18n.blocktrans>
+                </button>
+                <button type="button" class="btn btn-sm btn-secondary" id="object-crud-container-reset-button">
+                    <i class="fa fa-rotate-left"></i>
+                    <c-i18n.blocktrans>
+                        Reset
+                    </c-i18n.blocktrans>
+                </button>
+                <c-ui.shortcut_tooltip
+                    shortcut="mod+s"
+                    action="click"
+                    position="bottom">
+                    <button type="submit" class="btn btn-sm btn-primary" id="object-crud-container-save-button">
+                        <i class="fa fa-save"></i>
+                        <c-i18n.blocktrans>
+                            Save
+                        </c-i18n.blocktrans>
+                    </button>
+                </c-ui.shortcut_tooltip>
+                {% if layout_is_create %}
+                <c-ui.shortcut_tooltip
+                    shortcut="mod+shift+s"
+                    action="click"
+                    position="bottom"
+                >
+                    <button
+                        type="submit"
+                        name="next"
+                        value="{{ request.path }}"
+                        class="btn btn-sm btn-secondary"
+                        id="object-crud-container-save-and-create-new-button"
+                    >
+                        <i class="fa fa-plus"></i>
+                        <c-i18n.blocktrans>
+                            Save and Create New
+                        </c-i18n.blocktrans>
+                    </button>
+                </c-ui.shortcut_tooltip>
+                {% endif %}
+            </div>
+        </c-slot>
+        {% endif %}
+        
+    </c-features.layout.container>
+</form>

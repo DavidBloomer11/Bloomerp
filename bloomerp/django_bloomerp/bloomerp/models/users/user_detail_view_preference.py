@@ -24,6 +24,11 @@ class UserDetailViewPreference(ContentLayoutModelMixin, BaseViewPreference):
                 condition=Q(selected=True),
                 name="unique_selected_detail_view_preference",
             ),
+            models.UniqueConstraint(
+                fields=["user", "source_object"],
+                condition=Q(source_object__isnull=False),
+                name="unique_detail_view_preference_reference",
+            ),
         ]
     
     tab_state = models.JSONField(
@@ -31,9 +36,16 @@ class UserDetailViewPreference(ContentLayoutModelMixin, BaseViewPreference):
     )
     
     @classmethod
-    def create_default_for_user(cls, user:AbstractBloomerpUser, content_type_or_model:ContentType|models.Model) -> "UserDetailViewPreference":
-        """Creates a default detail view preference for a certain user."""
-        content_type = cls.resolve_content_type(content_type_or_model)
+    def create_default_for_user(
+        cls,
+        user: AbstractBloomerpUser,
+        **scope,
+    ) -> "UserDetailViewPreference":
+        """Create the user's default detail-view preference for a content type.
+
+        Expected scope: ``content_type_id``.
+        """
+        content_type = ContentType.objects.get(pk=scope["content_type_id"])
         from bloomerp.services.detail_view_services import create_default_detail_view_preference
         return create_default_detail_view_preference(content_type=content_type, user=user)
 

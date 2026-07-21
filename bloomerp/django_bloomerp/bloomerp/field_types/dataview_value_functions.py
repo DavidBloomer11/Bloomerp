@@ -1,6 +1,5 @@
 from django.db.models import Model
 from typing import TYPE_CHECKING
-
 from django.urls import reverse
 
 from bloomerp.utils.labels import safe_object_label
@@ -69,6 +68,7 @@ def render_foreign_key_dataview_value(application_field: "ApplicationField", obj
     url = getattr(related_object, "get_absolute_url", lambda: "#")()
     name = safe_object_label(related_object)
     return f'<a href="{url}" class="text-primary hover:underline">{name}</a>'
+
 
 def render_generic_relation_value(application_field: "ApplicationField", object: Model) -> str:
     """

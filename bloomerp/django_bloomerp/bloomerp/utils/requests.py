@@ -8,6 +8,11 @@ from django.http import HttpRequest, HttpResponse
 from django.forms import Form
 from django.shortcuts import render
 from django.template.loader import render_to_string
+from django.contrib import messages
+from django_cotton import render_component
+
+from bloomerp.models.base_bloomerp_model import FieldLayout
+from bloomerp.utils.renderer import render_field
 
 def parse_bool_parameter(value : Any, default_value=False) -> bool:
     """
@@ -197,23 +202,16 @@ def render_page_refresh() -> HttpResponse:
     from django_htmx.http import HttpResponseClientRefresh
     return HttpResponseClientRefresh()
 
-def render_message_and_refresh(
+def render_page_refresh_with_message(
     request: HttpRequest,
     message: str,
     type: Literal["info", "warning", "error", "success"],
 ) -> HttpResponse:
-    """Renders a message and refreshes the page
-
-    Args:
-        request (HttpRequest): the request object
-        message (str): the message to render
-        type (Literal["info", "warning", "error", "success"]): the type of message
-
-    Returns:
-        HttpResponse: the response object
-    """
+    """Returns a HTMX page refresh with a message"""
+    from django_htmx.http import HttpResponseClientRefresh
+    response = HttpResponseClientRefresh()
     messages.add_message(request, getattr(messages, type.upper()), message)
-    return render_page_refresh()
+    return response
 
 def render_oob_swap(
         request: HttpRequest,
@@ -267,3 +265,40 @@ def get_ip_from_request(request:HttpRequest) -> Optional[str]:
         return str(ip_address(raw_ip_address.strip()))
     except ValueError:
         return None
+
+def render_form_with_layout(request:HttpRequest, form:Form, layout:FieldLayout) -> HttpResponse:
+    fields = form.fields
+    
+    transformed_rows = []
+    for row in layout.rows:
+        transformed_items = []
+        for item in row.items:
+            field = fields.get(item.id)
+            
+            if field:
+                item.set_content(
+                    render_field(
+                        field.widget,
+                        field.label,
+                        item.id,
+                        field.initial,
+                        help_text=field.help_text
+                    )
+                )
+            
+            transformed_items.append(
+                item
+            )
+        
+        transformed_rows.append(row)
+    
+    transformed_layout = FieldLayout(
+        rows=transformed_rows,
+    )
+    
+    return render_component(
+        request,
+        "features.sectioned_layouts.container"
+    )
+    
+    

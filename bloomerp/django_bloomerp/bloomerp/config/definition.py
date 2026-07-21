@@ -1,4 +1,5 @@
 from typing import Literal, Optional
+from django.conf import settings
 from pydantic import BaseModel, Field
 
 INTERNAL_MODELS = [
@@ -106,5 +107,12 @@ class BloomerpConfig(BaseModel):
     vite_dev_server_url : Optional[str] = 'http://localhost:5173'
 
     auth: BloomerpAuthSettings = Field(default_factory=BloomerpAuthSettings)
+
+
+def get_bloomerp_config() -> BloomerpConfig:
+    config = getattr(settings, "BLOOMERP_CONFIG", None)
+    if isinstance(config, BloomerpConfig):
+        return config
+    return BloomerpConfig()
     
     email_secret_key: Optional[str] = None

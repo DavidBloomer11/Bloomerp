@@ -20,6 +20,7 @@ from bloomerp.config.settings import (
     BLOOMERP_MIDDLEWARE,
     BLOOMERP_SITE_ID,
     BLOOMERP_USER_MODEL,
+    REST_FRAMEWORK,
 )
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -74,6 +75,20 @@ MIDDLEWARE = [
 ]
 
 MIDDLEWARE += BLOOMERP_MIDDLEWARE
+
+# Keep the toolbar strictly development-only.  HTMX swaps only fragments, so
+# preserve the toolbar element and update it after each HTMX/fetch request.
+if DEBUG:
+    INSTALLED_APPS.append("debug_toolbar")
+    MIDDLEWARE.append("debug_toolbar.middleware.DebugToolbarMiddleware")
+
+    INTERNAL_IPS = ["127.0.0.1", "::1"]
+    DEBUG_TOOLBAR_CONFIG = {
+        "ROOT_TAG_EXTRA_ATTRS": "hx-preserve",
+        "UPDATE_ON_FETCH": True,
+        "SHOW_COLLAPSED": True,
+        "SQL_WARNING_THRESHOLD": 50,
+    }
 
 ROOT_URLCONF = 'config.urls'
 
@@ -172,3 +187,4 @@ BLOOMERP_CONFIG = BloomerpConfig(
     auto_generate_api_endpoints=True,
     email_secret_key="GqUtCcrykNhXgKQzF2XA9uTHTkqoB8wqpuZ6WfrBJbKrQhWUzG"
 )
+

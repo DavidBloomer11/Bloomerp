@@ -14,7 +14,9 @@ from bloomerp.models import (
     RowPolicyRule,
     File,
 )
+from bloomerp.models.project_management import Initiative, Todo
 from bloomerp.models.users.user_detail_view_preference import UserDetailViewPreference
+from bloomerp.models.workspaces.sidebar import Sidebar
 from bloomerp.tests.views.crud_test_mixin import CrudViewTestMixin
 
 
@@ -194,6 +196,82 @@ class TestOverviewView(CrudViewTestMixin):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'name="age"', html=False)
         self.assertContains(response, "disabled", html=False)
+
+    def test_get_renders_system_fields_disabled_but_keeps_files_enabled(self):
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self.get_url())
+
+        self.assertEqual(response.status_code, 200)
+        layout_items = {
+            str(item.id): item
+            for row in response.context["layout"].rows
+            for item in row.items
+        }
+        for field_name in {
+            "id",
+            "pk",
+            "datetime_created",
+            "datetime_updated",
+            "created_by",
+            "updated_by",
+            "comments",
+        }:
+            item = layout_items[str(self.fields_by_name[field_name].pk)]
+            self.assertTrue(item.is_visible, field_name)
+            self.assertIn("disabled", item.content, field_name)
+
+        files_item = layout_items[str(self.fields_by_name["files"].pk)]
+        self.assertTrue(files_item.is_visible)
+        self.assertNotIn("disabled", files_item.content)
+        self.assertNotContains(response, "You don't have access to this field")
+
+    def test_customer_detail_shows_create_todo_button(self):
+        """
+        Use case: A regular model detail page renders its side-section actions.
+        Expected result: The create-todo action remains available.
+        """
+        # 1. Authenticate as an admin user with detail access.
+        self.client.force_login(self.admin_user)
+
+        # 2. Render a customer detail page.
+        response = self.client.get(self.get_url())
+
+        # 3. Verify the create-todo action is still rendered.
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "/components/todo/create-todo-for-object/", html=False)
+
+    def test_todo_detail_hides_create_todo_button(self):
+        """
+        Use case: A Todo detail page renders its side-section actions.
+        Expected result: The create-todo action is hidden to avoid self-referential to-dos.
+        """
+        # 1. Create a todo and authenticate as an admin user with detail access.
+        todo = Todo.objects.create(title="Fix recursive todo action")
+        self.client.force_login(self.admin_user)
+
+        # 2. Render the todo detail page.
+        response = self.client.get(reverse("todos_detail_overview", kwargs={"pk": todo.pk}))
+
+        # 3. Verify the create-todo action is not rendered.
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "/components/todo/create-todo-for-object/", html=False)
+
+    def test_initiative_detail_hides_create_todo_button(self):
+        """
+        Use case: An Initiative detail page renders its side-section actions.
+        Expected result: The create-todo action is hidden to avoid recursive planning objects.
+        """
+        # 1. Create an initiative and authenticate as an admin user with detail access.
+        initiative = Initiative.objects.create(name="Launch planning")
+        self.client.force_login(self.admin_user)
+
+        # 2. Render the initiative detail page.
+        response = self.client.get(reverse("initiatives_detail_overview", kwargs={"pk": initiative.pk}))
+
+        # 3. Verify the create-todo action is not rendered.
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "/components/todo/create-todo-for-object/", html=False)
 
     def test_POST_on_fields_user_has_no_access_to_gives_error_msg(self):
         self.grant_policy(
@@ -397,3 +475,54 @@ class TestOverviewView(CrudViewTestMixin):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "data-layout-item-id", html=False)
+
+    def test_overview_uses_shared_initial_detail_preference(self):
+        shared_preference = UserDetailViewPreference.objects.create(
+            user=self.normal_user,
+            content_type=self.content_type,
+            name="Shared initial detail",
+            initial_default=True,
+            layout={
+                "rows": [
+                    {
+                        "title": "Shared layout",
+                        "columns": 1,
+                        "items": [
+                            {
+                                "id": self.fields_by_name["first_name"].pk,
+                                "colspan": 1,
+                            }
+                        ],
+                    }
+                ]
+            },
+        )
+        shared_preference.shared_with_users.add(self.admin_user)
+        UserDetailViewPreference.objects.filter(
+            user=self.admin_user,
+            content_type=self.content_type,
+        ).delete()
+        Sidebar.objects.create(
+            user=self.admin_user,
+            name="Test sidebar",
+            selected=True,
+        )
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self.get_url())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Shared layout")
+        reference = UserDetailViewPreference.objects.get(
+            user=self.admin_user,
+            content_type=self.content_type,
+        )
+        self.assertEqual(reference.source_object, shared_preference)
+        self.assertTrue(reference.selected)
+        self.assertFalse(
+            UserDetailViewPreference.objects.filter(
+                user=self.admin_user,
+                content_type=self.content_type,
+                source_object__isnull=True,
+            ).exists()
+        )

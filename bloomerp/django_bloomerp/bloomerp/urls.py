@@ -7,13 +7,11 @@ from django.urls import NoReverseMatch
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from bloomerp.config.definition import BloomerpConfig
-from bloomerp.models.access_control.policy import Policy
 from bloomerp.serializers.model_serializers import set_serializer_cls
-from bloomerp.views.api.access_control import PolicyViewSet
 from django.db.models import Model
 from bloomerp.utils.models import (model_name_plural_underline)
 from bloomerp.utils.api import generate_serializer, generate_model_viewset_class
-from bloomerp.views.api.api_views import BloomerpModelViewSet
+from bloomerp.api.base import BloomerpModelViewSet
 from bloomerp.models.definition import BloomerpModelConfig
 from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
 from bloomerp.utils.urls import IntOrUUIDConverter
@@ -23,7 +21,6 @@ from django.contrib import admin
 from django.contrib.admin.sites import AlreadyRegistered
 from django.urls import reverse_lazy
 from django.conf import settings
-from bloomerp.views.api.auth import csrf_view, login_view, logout_view, register_view, session_view
 from bloomerp.auth import allauth_is_enabled
 from bloomerp.views.auth.login import BloomerpLoginView
 
@@ -89,8 +86,6 @@ def get_api_models() -> list[type[Model]]:
     api_models: list[type[Model]] = []
 
     for model in apps.get_models():
-        if model is Policy:
-            continue
         if model._meta.abstract or model._meta.proxy:
             continue
         
@@ -106,25 +101,6 @@ def register_model_with_admin(model: type[Model]) -> None:
     except AlreadyRegistered:
         pass
 
-
-def register_model_api(model: type[Model]) -> None:
-    serializer_class = generate_serializer(model)
-    ApiViewSet = generate_model_viewset_class(
-        model=model,
-        serializer=serializer_class,
-        base_viewset=BloomerpModelViewSet
-    )
-    
-    config = getattr(model, "bloomerp_config", None)
-    if isinstance(config, BloomerpModelConfig):
-        if not config.should_enable_api_auto_generation():
-            return
-
-    drf_router.register(
-        prefix=model_name_plural_underline(model),
-        viewset=ApiViewSet,
-        basename=model_name_plural_underline(model)
-    )
 
 # Get the config
 bloomerp_config : BloomerpConfig = getattr(settings, "BLOOMERP_CONFIG", None)
@@ -154,45 +130,5 @@ urlpatterns = [
 
 if allauth_is_enabled():
     urlpatterns.append(path("accounts/", include("allauth.urls")))
-
-for model in get_api_models():
-    register_model_with_admin(model)
-
-    try:
-        register_model_api(model)
-    except Exception:
-        logger.exception(
-            "Error registering generated API for model %s.%s",
-            model._meta.app_label,
-            model.__name__,
-        )
-
-# Register models
-drf_router.register(
-    prefix = model_name_plural_underline(Policy),
-    viewset = PolicyViewSet,
-    basename=model_name_plural_underline(Policy)
-)
-
-# Add api's to url patterns
-urlpatterns += [
-    path(
-        "api/auth/",
-        include(
-            (
-                [
-                    path("session/", session_view, name="session"),
-                    path("csrf/", csrf_view, name="csrf"),
-                    path("login/", login_view, name="api_login"),
-                    path("logout/", logout_view, name="api_logout"),
-                    path("register/", register_view, name="api_register"),
-                ],
-                "bloomerp_auth",
-            )
-        ),
-    ),
-    path('api/', include(drf_router.urls)),
-]
-
 # Create url patterns
 urlpatterns.extend(router.create_url_patterns())

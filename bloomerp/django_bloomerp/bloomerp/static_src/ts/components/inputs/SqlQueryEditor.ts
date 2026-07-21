@@ -26,15 +26,10 @@ interface SqlSchemaResponse {
 }
 
 interface SavedSqlQuery {
-    id: number;
+    id: string;
     name: string;
     query: string;
 }
-
-interface SavedSqlQueryResponse {
-    queries: SavedSqlQuery[];
-}
-
 
 export default class SqlQueryEditor extends BaseComponent {
     private editor: any = null;
@@ -62,7 +57,7 @@ export default class SqlQueryEditor extends BaseComponent {
     private queriesUrl = '/api/sql/queries/';
     private schemaData: SqlDatabase[] = [];
     private savedQueries: SavedSqlQuery[] = [];
-    private activeQueryId: number | null = null;
+    private activeQueryId: string | null = null;
     private completionWords: string[] = [];
     private tableFieldMap: Map<string, { name: string; fields: string[] }> = new Map();
     private onEditorChange: (() => void) | null = null;
@@ -495,8 +490,8 @@ export default class SqlQueryEditor extends BaseComponent {
                 throw new Error(`Failed to fetch saved queries: ${response.status}`);
             }
 
-            const payload = await response.json() as SavedSqlQueryResponse;
-            this.savedQueries = payload.queries || [];
+            const payload = await response.json() as SavedSqlQuery[] | { results?: SavedSqlQuery[] };
+            this.savedQueries = Array.isArray(payload) ? payload : payload.results || [];
 
             if (this.savedQueries.length > 0) {
                 const initialId = this.activeQueryId ?? this.savedQueries[0].id;
@@ -594,7 +589,7 @@ export default class SqlQueryEditor extends BaseComponent {
         });
     }
 
-    private renderTabs(activeId: number | null): void {
+    private renderTabs(activeId: string | null): void {
         if (!this.tabsContainer) return;
 
         const tabs: string[] = [];
@@ -661,8 +656,7 @@ export default class SqlQueryEditor extends BaseComponent {
             this.hiddenQueryInput.value = activeQuery;
         }
 
-        const numericId = Number.parseInt(tabId, 10);
-        this.activeQueryId = Number.isNaN(numericId) ? null : numericId;
+        this.activeQueryId = tabId.startsWith('local-') || tabId === 'unsaved' ? null : tabId;
 
         if (this.activeQueryIdInput) {
             this.activeQueryIdInput.value = this.activeQueryId ? String(this.activeQueryId) : '';
@@ -717,17 +711,16 @@ export default class SqlQueryEditor extends BaseComponent {
             return;
         }
 
-        const payload: Record<string, string | number> = {
+        const payload = {
             name,
             query,
         };
 
-        if (this.activeQueryId) {
-            payload.id = this.activeQueryId;
-        }
+        const isUpdating = this.activeQueryId !== null;
+        const endpoint = isUpdating ? `${this.queriesUrl}${this.activeQueryId}/` : this.queriesUrl;
 
-        const response = await fetch(this.queriesUrl, {
-            method: 'POST',
+        const response = await fetch(endpoint, {
+            method: isUpdating ? 'PATCH' : 'POST',
             credentials: 'same-origin',
             headers: {
                 'Content-Type': 'application/json',
@@ -740,8 +733,7 @@ export default class SqlQueryEditor extends BaseComponent {
             return;
         }
 
-        const payloadResult = await response.json() as { query: SavedSqlQuery };
-        const savedQuery = payloadResult.query;
+        const savedQuery = await response.json() as SavedSqlQuery;
 
         this.activeQueryId = savedQuery.id;
 

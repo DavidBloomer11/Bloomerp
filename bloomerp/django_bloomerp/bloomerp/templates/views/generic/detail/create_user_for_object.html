@@ -1,0 +1,105 @@
+<c-ui.container>
+    <div class="space-y-5">
+        <div class="space-y-1">
+            <c-ui.text.text>
+                Create a user account for <span class="font-semibold">{{ object }}</span>.
+            </c-ui.text.text>
+            {% if relation_field %}
+                <c-ui.text.muted>
+                    The account will be linked through {{ relation_field.verbose_name }}.
+                </c-ui.text.muted>
+            {% endif %}
+        </div>
+
+        {% if related_user %}
+            <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                This record is already linked to {{ related_user }}.
+            </div>
+        {% endif %}
+
+        {% if created_user and generated_password %}
+            <div class="alert alert-success">
+                <div class="space-y-3">
+                    <div>
+                        <p class="text-sm font-semibold text-success-dark">User created</p>
+                        <p class="mt-1 text-sm text-emerald-900">
+                            {{ created_user }} can now sign in. This password is only shown now.
+                        </p>
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-xs font-medium uppercase text-success-dark">Temporary password</label>
+                        <input class="input w-full font-mono" value="{{ generated_password }}" readonly>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        {% if relation_fields %}
+            <form method="post" action="" class="space-y-5">
+                {% csrf_token %}
+
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-slate-800" for="{{ form.relation_field.id_for_label }}">
+                        {{ form.relation_field.label }}
+                    </label>
+                    {{ form.relation_field }}
+                    {% if form.relation_field.errors %}
+                        <div class="text-sm text-red-700">{{ form.relation_field.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-slate-800" for="{{ form.identifier.id_for_label }}">
+                        {{ form.identifier.label }}
+                    </label>
+                    {{ form.identifier }}
+                    {% if form.identifier.errors %}
+                        <div class="text-sm text-red-700">{{ form.identifier.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="grid gap-5 md:grid-cols-2">
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-slate-800" for="{{ form.groups.id_for_label }}">
+                            Groups
+                        </label>
+                        {{ form.groups }}
+                        {% if form.groups.errors %}
+                            <div class="text-sm text-red-700">{{ form.groups.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-slate-800" for="{{ form.policies.id_for_label }}">
+                            Policies
+                        </label>
+                        {{ form.policies }}
+                        {% if form.policies.errors %}
+                            <div class="text-sm text-red-700">{{ form.policies.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="flex justify-start pt-2">
+                    <button type="submit" class="btn btn-primary">
+                        Create user
+                    </button>
+                </div>
+            </form>
+        {% else %}
+            <div class="alert alert-warning">
+                This record does not have a user field.
+            </div>
+        {% endif %}
+    </div>
+</c-ui.container>
+
+
+
+

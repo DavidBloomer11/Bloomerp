@@ -1,13 +1,17 @@
+import bleach
 from django import template
 from django.db.models.manager import Manager
 from django.db.models import Model
 from django.http import HttpRequest, HttpResponse
 from bloomerp.models.definition import ObjectAction, ObjectHTML
+from bloomerp.models.users.base_preference import BasePreference
+from bloomerp.services.preference_services import PreferenceManager
 from bloomerp.utils.models import get_initials, get_detail_view_url, get_delete_view_url
 from django.urls import reverse 
 from django.contrib.contenttypes.models import ContentType
 from django.utils.safestring import mark_safe
 from django.utils.html import escape, format_html
+from django.utils.text import Truncator
 from django.middleware.csrf import get_token
 import re
 import uuid
@@ -29,6 +33,45 @@ from bloomerp.services.sectioned_layout_services import (
 from bloomerp.widgets.icon_picker_widget import parse_icon_value as parse_icon_value_service
 
 register = template.Library()
+
+ACTIVITY_LOG_VALUE_MAX_LENGTH = 300
+ACTIVITY_LOG_ALLOWED_TAGS = {
+    "a",
+    "blockquote",
+    "br",
+    "code",
+    "em",
+    "li",
+    "ol",
+    "p",
+    "pre",
+    "strong",
+    "ul",
+}
+ACTIVITY_LOG_ALLOWED_ATTRIBUTES = {
+    "a": ["href", "title"],
+}
+ACTIVITY_LOG_ALLOWED_PROTOCOLS = ["http", "https", "mailto"]
+
+
+@register.filter
+def activity_log_html(value):
+    """Return length-limited editor HTML that is safe to render in an activity log."""
+    if value is None:
+        return ""
+
+    cleaned_html = bleach.clean(
+        str(value),
+        tags=ACTIVITY_LOG_ALLOWED_TAGS,
+        attributes=ACTIVITY_LOG_ALLOWED_ATTRIBUTES,
+        protocols=ACTIVITY_LOG_ALLOWED_PROTOCOLS,
+        strip=True,
+    )
+    truncated_html = Truncator(cleaned_html).chars(
+        ACTIVITY_LOG_VALUE_MAX_LENGTH,
+        html=True,
+    )
+    return mark_safe(truncated_html)
 
 
 @register.filter(name="dump_layout_json")
@@ -110,9 +153,6 @@ def getattr_filter(obj, attr):
         return None
 
    
-
-
-
 @register.inclusion_tag('snippets/workspace_item.html')
 def workspace_item(item:dict):
     '''
@@ -125,8 +165,6 @@ def workspace_item(item:dict):
     item['id'] = uuid.uuid4()
 
     return {'item': item}
-
-
 
 
 @register.inclusion_tag('components/bookmark.html')
@@ -495,3 +533,21 @@ def render_object_action(
         action.label,
     )
     
+@register.simple_tag
+def can_manage_preference_object(user:AbstractBloomerpUser, object:BasePreference) -> bool:
+    """Checks if a user can manage a preference object.
+
+    Args:
+        user (AbstractBloomerpUser): the user
+        object (BasePreference): the object
+    Returns:
+        bool: whether the user can manage the object or not.
+        
+    Example usage:
+    {% can_manage_preference_object user object as can_manage %}
+    """
+    try:
+        manager = PreferenceManager(user)
+        return manager.can_manage(object)
+    except:
+        return False

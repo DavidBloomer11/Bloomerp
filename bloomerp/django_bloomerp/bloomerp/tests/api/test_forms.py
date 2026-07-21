@@ -3,6 +3,7 @@
 from bloomerp.models.forms.form import Form
 from bloomerp.tests.base import BaseBloomerpModelTestCase
 from django.contrib.contenttypes.models import ContentType
+from django.urls import resolve
 import json
 import requests
 
@@ -46,6 +47,13 @@ class TestFormAPI(BaseBloomerpModelTestCase):
         # 4. Assert that the endpoint is accessible (returns 200)
         response = self.client.get(endpoint)
         self.assertEqual(response.status_code, 200)
+
+    def test_form_submit_endpoint_keeps_its_custom_url_name(self):
+        form = self.create_form(public_embed_enabled=True)
+
+        match = resolve(form.submit_api_url)
+
+        self.assertEqual(match.url_name, "api_form_submit")
         
     
     def test_form_with_public_embed_disabled_does_not_have_endpoint(self):

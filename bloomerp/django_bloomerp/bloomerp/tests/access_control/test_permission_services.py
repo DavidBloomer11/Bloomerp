@@ -15,10 +15,12 @@ from bloomerp.models.definition import (
 from bloomerp.services.permission_services import UserPermissionManager
 from bloomerp.services.permission_services import ensure_model_permissions
 from bloomerp.utils.api import generate_model_viewset_class, generate_serializer
-from bloomerp.views.api.api_views import BloomerpModelViewSet
+from bloomerp.api.base import BloomerpModelViewSet
+from bloomerp.views.api.docs.schema import filter_openapi_schema_for_request
 from bloomerp.models.users import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.models import AnonymousUser
 from bloomerp.field_types.lookups import Lookup
 from bloomerp.tests.base import BaseBloomerpModelTestCase
 from rest_framework.test import APIRequestFactory, force_authenticate
@@ -110,6 +112,99 @@ class TestUserPermissionManager(BaseBloomerpModelTestCase):
         if isinstance(response.data, dict) and "results" in response.data:
             return response.data["results"]
         return response.data
+
+    def _schema_request(self, user=None):
+        request = self.factory.get("/api/schema/")
+        request.user = user or AnonymousUser()
+        return request
+
+    def _sample_customer_schema(self):
+        return {
+            "openapi": "3.0.3",
+            "paths": {
+                "/api/auth/session/": {
+                    "get": {
+                        "responses": {"200": {"description": "OK"}},
+                    },
+                },
+                "/api/customers/": {
+                    "get": {
+                        "responses": {
+                            "200": {
+                                "content": {
+                                    "application/json": {
+                                        "schema": {"$ref": "#/components/schemas/Customer"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "post": {
+                        "requestBody": {
+                            "content": {
+                                "application/json": {
+                                    "schema": {"$ref": "#/components/schemas/Customer"}
+                                }
+                            }
+                        },
+                        "responses": {"201": {"description": "Created"}},
+                    },
+                },
+                "/api/customers/{id}/": {
+                    "get": {
+                        "responses": {
+                            "200": {
+                                "content": {
+                                    "application/json": {
+                                        "schema": {"$ref": "#/components/schemas/Customer"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "patch": {
+                        "requestBody": {
+                            "content": {
+                                "application/json": {
+                                    "schema": {"$ref": "#/components/schemas/PatchedCustomer"}
+                                }
+                            }
+                        },
+                        "responses": {"200": {"description": "OK"}},
+                    },
+                    "delete": {
+                        "responses": {"204": {"description": "Deleted"}},
+                    },
+                },
+            },
+            "components": {
+                "schemas": {
+                    "Customer": {
+                        "type": "object",
+                        "properties": {
+                            "id": {"type": "integer"},
+                            "first_name": {"type": "string"},
+                            "last_name": {"type": "string"},
+                        },
+                        "required": ["id", "first_name", "last_name"],
+                    },
+                    "PatchedCustomer": {
+                        "type": "object",
+                        "properties": {
+                            "first_name": {"type": "string"},
+                            "last_name": {"type": "string"},
+                        },
+                    },
+                    "CustomerStatusEnum": {
+                        "type": "string",
+                        "enum": ["active", "inactive"],
+                    },
+                }
+            },
+        }
+
+    def _sample_customer_registry(self):
+        return [("customers", self.ApiViewSet, "customers")]
 
     def test_ensure_model_permissions_creates_bulk_add_permission(self):
         content_type = ContentType.objects.get_for_model(self.CustomerModel)
@@ -298,6 +393,22 @@ class TestUserPermissionManager(BaseBloomerpModelTestCase):
         
         # 3. Check that all fields are returned
         self.assertEqual(accessible_fields.count(), self.customer_model_fields.count())
+
+    def test_accessible_fields_eager_load_content_type_metadata(self):
+        """
+        UC: We want to ensure that the accessible fields returned by the UserPermissionManager
+        Expected Result: The accessible fields should have their content_type and related_model attributes eagerly loaded to avoid additional database queries.
+        """
+        manager = UserPermissionManager(self.admin_user)
+        accessible_fields = list(manager.get_accessible_fields(
+            ContentType.objects.get_for_model(self.CustomerModel),
+            "view_customer",
+        ))
+
+        self.assertTrue(accessible_fields)
+        for application_field in accessible_fields:
+            self.assertIn("content_type", application_field._state.fields_cache)
+            self.assertIn("related_model", application_field._state.fields_cache)
     
     def test_normal_user_accessible_fields(self):
         """
@@ -793,7 +904,7 @@ class TestUserPermissionManager(BaseBloomerpModelTestCase):
                 ),
                 RowPolicyRuleCondition(
                     application_field_id=str(self.country_field.id),
-                    operator=Lookup.FOREIGN_EQUALS.value.id,
+                    operator=Lookup.EQUALS.value.id,
                     value=str(country.pk),
                 ),
             ],
@@ -1005,6 +1116,86 @@ class TestUserPermissionManager(BaseBloomerpModelTestCase):
 
         api_key.refresh_from_db()
         self.assertIsNotNone(api_key.last_used_at)
+
+    def test_openapi_schema_hides_model_routes_without_policy_access(self):
+        """
+        UC: We don't want to expose our open-api schema to non-authenticated users / users without any policies
+        Expected result: non authenticated users don't get anything to see
+        """
+        # 1. Create a row policy rule that matches a single record
+        request = self._schema_request(self.normal_user)
+
+        # 2. Filter the openapi schema for the request, which should hide the model routes
+        schema = filter_openapi_schema_for_request(
+            self._sample_customer_schema(),
+            request,
+            registry=self._sample_customer_registry(),
+        )
+        
+        self.assertIn("/api/auth/session/", schema["paths"])
+        self.assertNotIn("/api/customers/", schema["paths"])
+        self.assertNotIn("/api/customers/{id}/", schema["paths"])
+        self.assertNotIn("Customer", schema["components"]["schemas"])
+        self.assertNotIn("PatchedCustomer", schema["components"]["schemas"])
+        self.assertNotIn("CustomerStatusEnum", schema["components"]["schemas"])
+
+    def test_openapi_schema_respects_row_and_field_permissions(self):
+        target = self.CustomerModel.objects.first()
+        row_rule = RowPolicyRule.objects.create(
+            row_policy=self.row_policy,
+            rule=RowPolicyRuleContent(
+                connector="OR",
+                conditions=[
+                    RowPolicyRuleCondition(
+                        application_field_id=str(self.first_name_field.id),
+                        operator=Lookup.EQUALS.value.id,
+                        value=target.first_name,
+                    )
+                ],
+            ).model_dump(),
+        )
+        row_rule.add_permission("view_customer")
+        self.policy.assign_user(self.normal_user)
+        request = self._schema_request(self.normal_user)
+
+        schema = filter_openapi_schema_for_request(
+            self._sample_customer_schema(),
+            request,
+            registry=self._sample_customer_registry(),
+        )
+
+        self.assertEqual(set(schema["paths"]["/api/customers/"].keys()), {"get"})
+        self.assertEqual(set(schema["paths"]["/api/customers/{id}/"].keys()), {"get"})
+        self.assertEqual(
+            set(schema["components"]["schemas"]["Customer"]["properties"].keys()),
+            {"first_name"},
+        )
+        self.assertEqual(
+            schema["components"]["schemas"]["Customer"]["required"],
+            ["first_name"],
+        )
+
+    def test_openapi_schema_preserves_full_model_schema_for_superuser(self):
+        request = self._schema_request(self.admin_user)
+
+        schema = filter_openapi_schema_for_request(
+            self._sample_customer_schema(),
+            request,
+            registry=self._sample_customer_registry(),
+        )
+
+        self.assertEqual(
+            set(schema["paths"]["/api/customers/"].keys()),
+            {"get", "post"},
+        )
+        self.assertEqual(
+            set(schema["paths"]["/api/customers/{id}/"].keys()),
+            {"get", "patch", "delete"},
+        )
+        self.assertEqual(
+            set(schema["components"]["schemas"]["Customer"]["properties"].keys()),
+            {"id", "first_name", "last_name"},
+        )
 
     def test_api_update_denies_disallowed_field(self):
         """
@@ -1343,7 +1534,7 @@ class TestUserPermissionManager(BaseBloomerpModelTestCase):
             self.assertEqual(
                 response.data["country"],
                 {
-                    self.CountryModel._meta.pk.name: target.country.pk,
+                    self.CountryModel._meta.pk.name: str(target.country.pk),
                     "name": target.country.name,
                 },
             )
@@ -1379,7 +1570,7 @@ class TestUserPermissionManager(BaseBloomerpModelTestCase):
             self.assertEqual(
                 response.data["country"],
                 {
-                    self.CountryModel._meta.pk.name: target.country.pk,
+                    self.CountryModel._meta.pk.name: str(target.country.pk),
                     "name": target.country.name,
                 },
             )
@@ -1404,7 +1595,7 @@ class TestUserPermissionManager(BaseBloomerpModelTestCase):
                 filters=[ApiFilterRule(field="name", operator=Lookup.EQUALS.value.id, value=target.name)],
             ),
             nesting=[
-                ApiNesting(for_field="customer_set", fields=["id", "first_name"], on_action=["read"])
+                ApiNesting(for_field="customers", fields=["id", "first_name"], on_action=["read"])
             ],
         )
         previous_customer = self._set_model_public_access(
@@ -1425,7 +1616,7 @@ class TestUserPermissionManager(BaseBloomerpModelTestCase):
 
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.data["name"], target.name)
-            self.assertNotIn("customer_set", response.data)
+            self.assertNotIn("customers", response.data)
         finally:
             self._restore_model_config(self.CountryModel, previous_country)
             self._restore_model_config(self.CustomerModel, previous_customer)
@@ -1441,7 +1632,7 @@ class TestUserPermissionManager(BaseBloomerpModelTestCase):
                 enable_auto_generation=True,
                 nesting=[
                     ApiNesting(
-                        for_field="customer_set",
+                        for_field="customers",
                         fields=["id", "first_name"],
                         on_action=["read"],
                     )
@@ -1456,13 +1647,13 @@ class TestUserPermissionManager(BaseBloomerpModelTestCase):
 
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.data["name"], target.name)
-            self.assertIsInstance(response.data["customer_set"], list)
-            self.assertGreater(len(response.data["customer_set"]), 0)
+            self.assertIsInstance(response.data["customers"], list)
+            self.assertGreater(len(response.data["customers"]), 0)
             self.assertTrue(
-                all(isinstance(item, dict) for item in response.data["customer_set"])
+                all(isinstance(item, dict) for item in response.data["customers"])
             )
             self.assertTrue(
-                all(set(item.keys()) == {"id", "first_name"} for item in response.data["customer_set"])
+                all(set(item.keys()) == {"id", "first_name"} for item in response.data["customers"])
             )
         finally:
             self._restore_model_config(self.CountryModel, previous_country)
@@ -1478,7 +1669,7 @@ class TestUserPermissionManager(BaseBloomerpModelTestCase):
                 enable_auto_generation=True,
                 nesting=[
                     ApiNesting(
-                        for_field="customer_set",
+                        for_field="customers",
                         fields=["id", "first_name", "last_name", "age"],
                         on_action=["read"],
                     )
@@ -1489,9 +1680,9 @@ class TestUserPermissionManager(BaseBloomerpModelTestCase):
         country_content_type = ContentType.objects.get_for_model(self.CountryModel)
         customer_content_type = ContentType.objects.get_for_model(self.CustomerModel)
 
-        customer_set_field, _ = ApplicationField.objects.update_or_create(
+        customers_field, _ = ApplicationField.objects.update_or_create(
             content_type=country_content_type,
-            field="customer_set",
+            field="customers",
             defaults={
                 "field_type": "OneToManyField",
                 "meta": {
@@ -1508,14 +1699,14 @@ class TestUserPermissionManager(BaseBloomerpModelTestCase):
         country_fields = {
             field.field: field for field in ApplicationField.get_for_model(self.CountryModel)
         }
-        country_fields["customer_set"] = customer_set_field
+        country_fields["customers"] = customers_field
 
         country_field_policy = FieldPolicy.objects.create(
             content_type=country_content_type,
             name="Country nested field policy",
             rule={
                 str(country_fields["name"].id): ["view_country"],
-                str(country_fields["customer_set"].id): ["view_country"],
+                str(country_fields["customers"].id): ["view_country"],
             },
         )
         country_row_policy = RowPolicy.objects.create(
@@ -1589,14 +1780,14 @@ class TestUserPermissionManager(BaseBloomerpModelTestCase):
             response = view(request, pk=str(target.pk))
 
             self.assertEqual(response.status_code, 200)
-            self.assertIn("customer_set", response.data)
-            self.assertEqual(len(response.data["customer_set"]), 2)
+            self.assertIn("customers", response.data)
+            self.assertEqual(len(response.data["customers"]), 2)
             self.assertEqual(
-                {item["first_name"] for item in response.data["customer_set"]},
+                {item["first_name"] for item in response.data["customers"]},
                 {"Jaimy 0", "Jaimy 1"},
             )
             self.assertTrue(
-                all(set(item.keys()) == {"first_name"} for item in response.data["customer_set"])
+                all(set(item.keys()) == {"first_name"} for item in response.data["customers"])
             )
         finally:
             self._restore_model_config(self.CountryModel, previous_country)

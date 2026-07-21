@@ -4,34 +4,12 @@ Utility functions for filtering through Django models using django-filters.
 from datetime import date, datetime, time, timedelta
 
 import django_filters
-from django.conf import settings
-from django.db.models import (
-    ForeignKey, 
-    BooleanField,
-    CharField, 
-    DateField, 
-    IntegerField,
-    TextField,
-    JSONField,
-    ImageField,
-    FileField,
-    DateTimeField,
-    BigAutoField,
-    AutoField,
-    DecimalField,
-    FloatField,
-    UUIDField,
-    Field
-)
-from bloomerp.model_fields.status_field import StatusField
-from bloomerp.model_fields.week_field import WeekField
-from django_filters import DateFilter
-from django.utils import timezone
 
 from typing import Type, Optional
 from django.db.models import Model
 from django.db.models.query import QuerySet
 
+from bloomerp.field_types.filter_classes import filter_class_for_model_field_path
 from bloomerp.models.application_field import ApplicationField
 
 
@@ -98,7 +76,12 @@ def dynamic_filterset_factory(model: type[Model], filters:dict[str, str]=None) -
             field_name = filter_key
             lookup_expr = "exact"
 
-        filter_overrides[filter_key] = django_filters.CharFilter(
+        filter_cls = (
+            django_filters.BooleanFilter
+            if lookup_expr == "isnull"
+            else filter_class_for_model_field_path(model, field_name)
+        )
+        filter_overrides[filter_key] = filter_cls(
             field_name=field_name,
             lookup_expr=lookup_expr,
             distinct=True,

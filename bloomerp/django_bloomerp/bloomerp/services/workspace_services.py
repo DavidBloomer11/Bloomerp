@@ -1,10 +1,12 @@
+from copy import copy
 from dataclasses import dataclass
 from typing import Any, Optional, Type
 
-from django.db import transaction
 from django.http import HttpRequest
 from django.urls import reverse
+from django.utils.html import format_html
 
+from bloomerp.models.base_bloomerp_model import LayoutItem
 from bloomerp.models.workspaces.workspace import Workspace
 from bloomerp.models.workspaces.tile import Tile
 from bloomerp.modules.definition import module_registry
@@ -32,56 +34,13 @@ PRIMITIVE_FIELD_TYPE_MAP = {
     TileFieldType.BOOL.value.key: FieldType.BOOLEAN_FIELD,
 }
 
-def create_default_workspace(
-        user,
-        module_id:str
-):
-    """
-    Creates the default workspace for a particular user and module.
-    """
-    workspace = Workspace.get_default_for_user(user=user, module_id=module_id)
-    if workspace:
-        return workspace
-
-    workspace = Workspace.objects.create(
-        user=user,
-        name="Default",
-        module_id=module_id,
-        is_default=True,
-        layout={
-            "rows": [
-                {
-                    "title": None,
-                    "columns": 4,
-                    "items": [],
-                }
-            ]
-        },
-    )
-
-    ensure_default_workspace_tiles_for_module(user, module_id)
-    return workspace
 
 
-def set_default_workspace(workspace: Workspace, user: User) -> Workspace:
-    if workspace.user_id != user.id:
-        raise PermissionError("Only the workspace owner can set a default workspace.")
+def select_workspace(workspace: Workspace, user: User) -> Workspace:
+    """Select an owned or shared workspace for the user's module scope."""
+    from bloomerp.services.preference_services import PreferenceManager
 
-    if not workspace.module_id:
-        raise ValueError("Only module workspaces can be set as default.")
-
-    with transaction.atomic():
-        Workspace.objects.filter(
-            user=user,
-            module_id=workspace.module_id,
-            is_default=True,
-        ).exclude(pk=workspace.pk).update(is_default=False)
-
-        if not workspace.is_default:
-            workspace.is_default = True
-            workspace.save(update_fields=["is_default"])
-
-    return workspace
+    return PreferenceManager(user).select(workspace)
 
 
 def ensure_default_workspace_tiles_for_module(user, module_id: str) -> None:
@@ -162,8 +121,47 @@ def render_tile_to_string(
         **tile.schema
     )
 
-    # 3. Get the render class
-    return tile_type.value.render_cls.render(config=config, request=request)
+    # 3. Get the render class. Saved canvases receive their persistence context;
+    # previews call the renderer directly without a Tile instance.
+    render_kwargs = {"tile": tile} if tile_type == TileType.CANVAS_TILE else {}
+    return tile_type.value.render_cls.render(config=config, request=request, **render_kwargs)
+
+
+def build_workspace_layout_item(
+    *,
+    tile: Tile,
+    request: HttpRequest,
+    colspan: int = 1,
+    config: dict | None = None,
+) -> LayoutItem:
+    """Transform a tile into the shared layout item rendered by every layout."""
+    render_request = copy(request)
+    render_request.GET = request.GET.copy()
+    for transport_param in ("colspan", "max_cols"):
+        render_request.GET.pop(transport_param, None)
+    render_request.GET["tile_id"] = str(tile.pk)
+
+    try:
+        content = render_tile_to_string(tile, render_request)
+    except Exception as exc:
+        content = format_html('<div class="alert alert-danger">{}</div>', exc)
+
+    return LayoutItem(
+        id=str(tile.pk),
+        colspan=colspan,
+        config=config or {},
+        icon=tile.icon,
+        label=tile.name,
+        content=content,
+        component_name="workspace-tile",
+        border=True,
+        edit_url=(
+            f"{reverse('tiles_detail_update_tile', kwargs={'pk': tile.pk})}"
+            "?reset_wizard=true"
+        ),
+        search_keywords=tile.get_type_display(),
+    )
+
 
 @dataclass
 class WorkspaceFilter:
@@ -227,23 +225,23 @@ class WorkspaceManager:
                             type=PRIMITIVE_FIELD_TYPE_MAP[filter_config.type].value.id,
                             label=filter_config.field.replace("_", " ").title()
                         )
-                case TileType.DATAVIEW_TILE:
-                    config = DataViewTileConfig(**tile.schema)
-                    manager = UserPermissionManager(user)
-                    content_type = ContentType.objects.get(id=config.content_type_id)
-                    fields = manager.get_accessible_fields(
-                        content_type,
-                        create_permission_str(
-                            content_type.model_class(),
-                            "view"
-                        )
-                    )
-                    for field in fields:
-                        result[field.field] = WorkspaceFilter(
-                            field=field.field,
-                            type=field.field_type,
-                            label=field.title
-                        )
+                # case TileType.DATAVIEW_TILE:
+                #     config = DataViewTileConfig(**tile.schema)
+                #     manager = UserPermissionManager(user)
+                #     content_type = ContentType.objects.get(id=config.content_type_id)
+                #     fields = manager.get_accessible_fields(
+                #         content_type,
+                #         create_permission_str(
+                #             content_type.model_class(),
+                #             "view"
+                #         )
+                #     )
+                #     for field in fields:
+                #         result[field.field] = WorkspaceFilter(
+                #             field=field.field,
+                #             type=field.field_type,
+                #             label=field.title
+                #         )
                            
         return result
 

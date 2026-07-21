@@ -18,7 +18,7 @@ class SqlQuery(BloomerpModel):
             ('execute_sql_query', 'Can execute SQL queries')
             # Maybe add more permissions here corresponding to the actions that can be performed on the query
         ]
-
+    
     name = models.CharField(max_length=255)
     query = CodeField(language='sql', help_text=_("SQL Query to execute"))
 

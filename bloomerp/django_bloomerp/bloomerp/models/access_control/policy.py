@@ -6,12 +6,16 @@ from django.conf import settings
 
 from bloomerp.models.access_control import RowPolicy
 from bloomerp.models.access_control.field_policy import FieldPolicy
+from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
+from bloomerp.models.definition import BloomerpModelConfig
 from bloomerp.models.mixins import TimestampModelMixin
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import QuerySet
 from bloomerp.models.mixins.user_stamp_model_mixin import UserStampModelMixin
 from bloomerp.models.users.user import AbstractBloomerpUser
 from bloomerp.models.mixins import absolute_url_model_mixin
+from bloomerp.models.application_field import ApplicationField
+from bloomerp.permissions.definition import AccessRule, RowPolicyRuleContent
 
 class Policy(
     TimestampModelMixin,
@@ -26,11 +30,44 @@ class Policy(
         verbose_name = _("Access Control Policy")
         verbose_name_plural = _("Access Control Policies")
     
+    bloomerp_config = BloomerpModelConfig(
+        layout=FieldLayout(
+            rows=[
+                LayoutRow(
+                    title="Policy Details",
+                    columns=4,
+                    items=[
+                        LayoutItem(id="name", colspan=2),
+                        LayoutItem(id="users", colspan=1),
+                        LayoutItem(id="groups", colspan=1),
+                        LayoutItem(id="description", colspan=4),
+                    ],
+                ),
+                LayoutRow(
+                    title="Policy Scope",
+                    columns=4,
+                    items=[
+                        LayoutItem(id="row_policy", colspan=2),
+                        LayoutItem(id="field_policy", colspan=2),
+                    ],
+                ),
+                LayoutRow(
+                    title="Statistics",
+                    columns=4,
+                    items=[
+                        LayoutItem(id="number_of_users", colspan=2),
+                    ],
+                ),
+            ]
+        )
+    )
+
+
     name = models.CharField(
             max_length=255,
             help_text=_("The name of the access control policy.")
         )
-    
+
     description = models.TextField(
         blank=True,
         help_text=_("A description of the access control policy.")
@@ -72,7 +109,12 @@ class Policy(
     )
     
     def __str__(self):
-        return f"{self.name}"    
+        return f"{self.name}"
+
+    @property
+    def number_of_users(self) -> int:
+        """Returns the total number of users assigned to this policy, including those in groups."""
+        return self.get_users().count()
     
     @staticmethod
     def get_policies_for_model(model: models.Model):
@@ -146,4 +188,51 @@ class Policy(
         group_qs = self.groups.all()
         return User.objects.filter(models.Q(pk__in=direct_user_ids) | models.Q(groups__in=group_qs)).distinct()
     
-    
+    def to_access_rule(self) -> AccessRule:
+        """Creates an access rule out of the policy
+
+        Returns:
+            AccessRule: the access rule that exists from the policy
+        """
+        row_permissions = []
+        if self.row_policy_id:
+            for rule in self.row_policy.rules.all():
+                try:
+                    content = RowPolicyRuleContent.model_validate(rule.rule)
+                    row_permissions.append(
+                        content.model_copy(
+                            update={
+                                "permissions": list(
+                                    rule.permissions.values_list("codename", flat=True)
+                                )
+                            }
+                        )
+                    )
+                except Exception:
+                    continue
+
+        field_permissions = {}
+        if self.field_policy_id and isinstance(self.field_policy.rule, dict):
+            for field_id, permissions in self.field_policy.rule.items():
+                if field_id == "__all__":
+                    for application_field_id in ApplicationField.objects.filter(
+                        content_type=self.field_policy.content_type
+                    ).values_list("pk", flat=True):
+                        key = str(application_field_id)
+                        field_permissions[key] = list(
+                            dict.fromkeys(
+                                [*field_permissions.get(key, []), *(permissions or [])]
+                            )
+                        )
+                else:
+                    key = str(field_id)
+                    field_permissions[key] = list(
+                        dict.fromkeys(
+                            [*field_permissions.get(key, []), *(permissions or [])]
+                        )
+                    )
+
+        return AccessRule(
+            row_permissions=row_permissions,
+            field_permissions=field_permissions,
+        )

@@ -1,17 +1,19 @@
-
 <c-ui.dropdown.body
-    trigger_text="{{ selected_preference_name|default:'Preference' }}"
-    trigger_icon_class="fa fa-bookmark"
-    trigger_button_class="btn-secondary"
-    trigger_class="w-full justify-center gap-2 sm:w-auto"
-    wrapper_class="w-full sm:w-auto"
+    trigger_text="{% if not icon_only %}{{ selected_preference_name|default:'Preference' }}{% endif %}"
+    trigger_icon_class="{{ trigger_icon_class|default:'fa fa-bookmark' }}"
+    trigger_button_class="{{ trigger_button_class|default:'btn-secondary' }}"
+    trigger_class="{{ trigger_class|default:'w-full justify-center gap-2 sm:w-auto' }}"
+    trigger_aria_label="{{ trigger_aria_label }}"
+    wrapper_class="{{ wrapper_class|default:'w-full sm:w-auto' }}"
     position="right"
     size="sm"
     width="w-80"
+    fixed=True
+    menu_class="max-h-[calc(100vh-6rem)] max-w-[calc(100vw-1rem)] overflow-auto"
 >
     <div
-        id="select-preference-dropdown-{{ content_type_id }}-{{ type|default:'list' }}"
-        hx-get="{% url 'components_select_preference' content_type_id=content_type_id type=type|default:'list' %}"
+        id="select-preference-dropdown-{{ model }}"
+        hx-get="{% url 'components_select_preference' model=model%}?{% if args %}{% for key, value in args.items %}{{ key }}={{ value }}&{% endfor %}{% endif %}"
         hx-trigger="revealed once"
         hx-target="this"
         hx-swap="innerHTML"

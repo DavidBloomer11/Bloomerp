@@ -5,13 +5,16 @@ from bloomerp.field_types.display_options import FieldDisplayOption
 from bloomerp.field_types.lookups import BOOLEAN_LOOKUPS, DATE_LOOKUPS, NUMERIC_LOOKUPS, ONE_TO_MANY_LOOKUPS, TEXT_LOOKUPS, TIME_LOOKUPS, WEEK_LOOKUPS, Lookup
 from bloomerp.field_types.options import AUTO_NOW_ADD_FIELD_OPTION, AUTO_NOW_FIELD_OPTION, BLANK_FIELD_OPTION, COMMON_CHOICE_FIELD_OPTIONS, COMMON_FIELD_OPTIONS, COMMON_RELATION_FIELD_OPTIONS, COMMON_TEXT_FIELD_OPTIONS, DB_INDEX_FIELD_OPTION, DECIMAL_PLACES_FIELD_OPTION, DEFAULT_FIELD_OPTION, HELP_TEXT_FIELD_OPTION, MAX_DIGITS_FIELD_OPTION, NULL_FIELD_OPTION, ON_DELETE_FIELD_OPTION, PROPERTY_EXPRESSION, RELATED_NAME_FIELD_OPTION, TO_FIELD_OPTION, UNIQUE_FIELD_OPTION, UPLOAD_TO_FIELD_OPTION, VERBOSE_NAME_FIELD_OPTION, FieldOption
 from bloomerp.form_fields.address_field import AddressFormField
+from bloomerp.form_fields.files_relation_field import FilesRelationField
 from bloomerp.form_fields.icon_field import IconFormField
+from bloomerp.form_fields.one_to_many_field import OneToManyField
 from bloomerp.form_fields.ordered_multiple_choice_field import OrderedMultipleChoiceField
 from bloomerp.form_fields.phone_number_field import PhoneNumberFormField
 from bloomerp.form_fields.week_field import WeekFormField
 from bloomerp.model_fields.address_field import AddressField
 from bloomerp.model_fields.code_field import CodeField
 from bloomerp.model_fields.icon_field import IconField
+from bloomerp.model_fields.one_to_one_user_field import OneToOneUserField
 from bloomerp.model_fields.phone_number_field import PhoneNumberField
 from bloomerp.model_fields.user_field import UserField
 from bloomerp.model_fields.week_field import WeekField
@@ -163,7 +166,9 @@ class FieldTypeDefinition:
 
     def build_widget(self, application_field: "ApplicationField", layout_config: dict[str, Any] | None = None) -> forms.Widget:
         """Build the widget for this field type and application field."""
-        attrs = {}
+        attrs = {
+            "class" : "input w-full"
+        }
         attrs.update(self.default_widget_args)
         if application_field.meta:
             attrs.update(application_field.meta)
@@ -663,6 +668,7 @@ class FieldType(Enum):
         display_name="One To Many Field",
         icon="fa-solid fa-share-nodes",
         widget_cls=OneToManyFieldWidget,
+        form_field_cls=OneToManyField,
         widget_related_model_attr="related_model",
         widget_layout_config_attr="layout_config",
         widget_parent_model_attr="parent_model",
@@ -712,6 +718,32 @@ class FieldType(Enum):
             ON_DELETE_FIELD_OPTION,
         ],
     )
+    
+    ONE_TO_ONE_USER_FIELD = FieldTypeDefinition(
+        id="OneToOneUserField",
+        display_name="One To One User Field",
+        icon="fa-solid fa-user",
+        model_field_cls=OneToOneUserField,
+        widget_cls=ForeignFieldWidget,
+        default_widget_args={
+            "is_m2m" : False
+        },
+        lookups=[
+            Lookup.IS_NULL,
+            Lookup.EQUALS_USER,
+            Lookup.EQUALS
+        ],
+        field_options=[
+            VERBOSE_NAME_FIELD_OPTION,
+            NULL_FIELD_OPTION,
+            BLANK_FIELD_OPTION,
+            DB_INDEX_FIELD_OPTION,
+            RELATED_NAME_FIELD_OPTION,
+            HELP_TEXT_FIELD_OPTION,
+            ON_DELETE_FIELD_OPTION,
+        ],
+    )
+    
 
     # Other Fields
     UUID_FIELD = FieldTypeDefinition(
@@ -836,6 +868,7 @@ class FieldType(Enum):
         display_name="Files",
         icon="fa-solid fa-paperclip",
         widget_cls=ObjectFilesWidget,
+        form_field_cls=FilesRelationField,
         allow_in_model=False,
         editable_without_form_field=True,
         dataview_value_func=render_m2m_dataview_value # TODO: Make a custom dataview value function for this

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from django import forms
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
@@ -109,8 +111,11 @@ class ApplicationField(models.Model):
 
     def get_for_model(model:models.Model) -> QuerySet['ApplicationField']:
         """Returns application fields for a specific model"""
-        return ApplicationField.objects.filter(
-            content_type=ContentType.objects.get_for_model(model)
+        return (
+            ApplicationField.objects.filter(
+                content_type=ContentType.objects.get_for_model(model)
+            )
+            .select_related("content_type", "related_model")
         )
         
     @staticmethod
@@ -124,56 +129,56 @@ class ApplicationField(models.Model):
         except ApplicationField.DoesNotExist:
             return None
 
+    @classmethod
+    def resolve_for_content_type(
+        cls,
+        content_type: ContentType,
+        field: str | "ApplicationField",
+    ) -> "ApplicationField":
+        """Resolve a field name or ApplicationField within a content type.
+
+        Args:
+            content_type: The content type that must own the field.
+            field: A field name or an existing ApplicationField instance.
+
+        Returns:
+            The resolved ApplicationField.
+
+        Raises:
+            TypeError: If the arguments have unsupported types.
+            ValueError: If the field does not exist or belongs to another
+                content type.
+        """
+        if not isinstance(content_type, ContentType):
+            raise TypeError("content_type must be a ContentType instance")
+
+        if isinstance(field, cls):
+            application_field = field
+        elif isinstance(field, str) and field.strip():
+            field_name = field.strip()
+            try:
+                application_field = cls.objects.get(
+                    content_type=content_type,
+                    field=field_name,
+                )
+            except cls.DoesNotExist as exc:
+                raise ValueError(
+                    f"Unknown field '{field_name}' for '{content_type}'"
+                ) from exc
+        else:
+            raise TypeError("field must be a field name or ApplicationField instance")
+
+        if application_field.content_type_id != content_type.id:
+            raise ValueError(
+                f"Field '{application_field.field}' belongs to a different content type"
+            )
+        return application_field
+
     
     @property
     def title(self):
         return self.field.replace("_", " ").title()
-
-    @staticmethod
-    def get_related_models(model: models.Model, skip_auto_created=True):
-        """Returns all related models for a specific model"""
-        content_type_id = ContentType.objects.get_for_model(model).pk
-        qs = ApplicationField.objects.filter(
-            meta__related_model=content_type_id
-        ).exclude(content_type=content_type_id)
-        if skip_auto_created:
-            qs = qs.exclude(meta__auto_created=True)
-        return qs
-
-    @staticmethod
-    def get_db_tables_and_columns(user= None) -> list[tuple[str, list[str]]]:
-        """
-        Returns a tuple for each database table.
-        The tuple contains the table name and a tuple of the list of columns and there datatype.
-        
-        Args:
-            user (User): The user object
-
-
-        Example output:
-        [
-            ('auth_user', [('id', 'int'), ('username','varchar'), ...]),
-            ('auth_group', [('id', 'int'), ('name','varchar'), ...]),
-        ]
-
-        """
-        tables = []
-
-        qs = ApplicationField.objects.filter(db_table__isnull=False)
-
-        if user:
-            content_types = user.get_content_types_for_user(permission_types=["view"])
-            qs = qs.filter(content_type__in=content_types)
-
-
-        for table in qs.values("db_table").distinct():
-            table_name = table["db_table"]
-            columns = ApplicationField.objects.filter(db_table=table_name).values_list(
-                "db_column", "db_field_type"
-            )
-            tables.append((table_name, columns))
-        return tables
-
+    
     @staticmethod
     def get_for_content_type_id(content_type_id: int) -> QuerySet:
         """Retrieves the application fields for a particular content type ID.
@@ -184,8 +189,11 @@ class ApplicationField(models.Model):
         Returns:
             QuerySet: the application fields
         """
-        return ApplicationField.objects.filter(
-            content_type_id=content_type_id
+        return (
+            ApplicationField.objects.filter(
+                content_type_id=content_type_id
+            )
+            .select_related("content_type", "related_model")
         )
 
     def get_model(self) -> models.Model:
@@ -196,6 +204,10 @@ class ApplicationField(models.Model):
         """Returns the related model class for this application field, if any."""
         if self.related_model:
             return self.related_model.model_class()
+        try:
+            return getattr(self._get_model_field(), "related_model", None)
+        except FieldDoesNotExist:
+            return None
         return None
 
     def _get_model_field(self) -> models.Field:
@@ -271,3 +283,5 @@ class ApplicationField(models.Model):
     @property
     def field_type_enum(self):
         return self.get_field_type_enum()
+    
+    

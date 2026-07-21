@@ -14,7 +14,7 @@ import { insertSkeleton } from "@/utils/animations";
 
 export class DataViewContainer extends BaseComponent {
 
-    private target:string = '#data-view-data-section'
+    private target:HTMLElement|null = null;
     private baseUrl:string|null;
     private fullPath:string|null; // Includes query parameters
     private searchInput:HTMLInputElement|null = null;
@@ -33,7 +33,9 @@ export class DataViewContainer extends BaseComponent {
     private bulkAllClickHandler: ((event: Event) => void) | null = null;
     private bulkSelectionClickHandler: ((event: Event) => void) | null = null;
     private bulkActionCompleteHandler: ((event: Event) => void) | null = null;
+    private addButtonClickHandler: ((event: MouseEvent) => void) | null = null;
     private selectedObjectIds: Set<string> = new Set();
+    private createObjectModalLoaded: boolean = false;
 
     private static readonly RESERVED_FILTER_KEYS = new Set<string>([
         "q",
@@ -49,9 +51,13 @@ export class DataViewContainer extends BaseComponent {
         this.splitViewEnabled = this.element?.dataset.splitViewEnabled === 'True';
         this.syncUrl = this.element?.dataset.syncUrl === 'true';
 
-        this.focusSearchInput();
+        // Setup target
+        this.setDataviewTarget();
 
         // Focus on search input
+        this.focusSearchInput();
+
+        
         this.setupKeydownListeners();
 
         this.setupSplitViewFocusTargets();
@@ -110,6 +116,8 @@ export class DataViewContainer extends BaseComponent {
 
         this.bindDisplayOptionsCallback();
 
+        this.setupAddButton();
+
         // Setup bulk checkbox listeners
         this.addBulkListeners();
 
@@ -167,7 +175,7 @@ export class DataViewContainer extends BaseComponent {
             this.pendingHistoryMode = pushHistory ? "push" : "replace";
         }
 
-        insertSkeleton(document.querySelector(this.target) as HTMLElement);
+        insertSkeleton(this.target);
 
         htmx.ajax('get', this.fullPath, {
             target: this.target,
@@ -386,6 +394,46 @@ export class DataViewContainer extends BaseComponent {
         return false;
     }
 
+    private setupAddButton(): void {
+        const addButton = this.element?.querySelector<HTMLElement>('[data-dataview-create-button="true"]');
+        if (!addButton) return;
+
+        if (this.addButtonClickHandler) {
+            addButton.removeEventListener('click', this.addButtonClickHandler);
+        }
+
+        this.addButtonClickHandler = (event: MouseEvent) => this.handleAddButtonClick(event);
+        addButton.addEventListener('click', this.addButtonClickHandler);
+    }
+
+    private handleAddButtonClick(event: MouseEvent): void {
+        event.preventDefault();
+
+        if (this.onAdd(event)) return;
+
+        const addButton = event.currentTarget as HTMLElement | null;
+        const modalId = addButton?.dataset.modalId;
+        const createUrl = addButton?.dataset.createUrl;
+        const targetSelector = addButton?.dataset.target;
+        const target = targetSelector ? document.querySelector<HTMLElement>(targetSelector) : null;
+        const modal = modalId ? getModal(modalId) : null;
+
+        modal?.open();
+
+        if (!createUrl || !target || this.createObjectModalLoaded) return;
+
+        insertSkeleton(target);
+
+        void htmx.ajax('get', createUrl, {
+            target,
+            swap: 'innerHTML',
+        }).then(() => {
+            this.createObjectModalLoaded = true;
+        }).catch((error) => {
+            console.error('Failed to load create object modal:', error);
+        });
+    }
+
     protected onCellClick(_cell: BaseDataViewCell): boolean {
         this.splitViewFocusOnListPane = false;
         return false;
@@ -600,7 +648,7 @@ export class DataViewContainer extends BaseComponent {
         if (!this.contentTypeId) return null;
 
         const currentUrl = this.getCurrentUrl();
-        const url = new URL(`/components/data_view/${this.contentTypeId}/bulk_actions/`, window.location.origin);
+        const url = new URL(`/components/dataview/${this.contentTypeId}/bulk_actions/`, window.location.origin);
         url.searchParams.set('selection', useSelection ? 'selected' : 'filtered');
         currentUrl?.searchParams.forEach((value, key) => {
             if (key === 'page') return;
@@ -828,6 +876,13 @@ export class DataViewContainer extends BaseComponent {
         this.renderDefaultFilters();
     }
 
+    /**
+     * Sets the target element for the data view container. The target is the element where the data view content will be swapped in after an HTMX request. It looks for an element with the attribute `data-dataview-target` within the container's root element. If found, it sets `this.target` to that element; otherwise, it sets it to `null`.
+     */
+    private setDataviewTarget(): void {
+        this.target = this.element?.querySelector<HTMLElement>('#data-view-data-section') ?? null;
+    }
+
     public destroy(): void {
         if (this.afterSwapHandler) {
             this.element?.removeEventListener('htmx:afterSwap', this.afterSwapHandler);
@@ -840,6 +895,10 @@ export class DataViewContainer extends BaseComponent {
         }
         if (this.bulkActionCompleteHandler) {
             document.body.removeEventListener('bloomerp:bulk-action-complete', this.bulkActionCompleteHandler);
+        }
+        const addButton = this.element?.querySelector<HTMLElement>('[data-dataview-create-button="true"]');
+        if (addButton && this.addButtonClickHandler) {
+            addButton.removeEventListener('click', this.addButtonClickHandler);
         }
         const openModalForAllBtn = this.element?.querySelector<HTMLElement>('#bulk-actions-all-btn');
         const openModalForSelectionBtn = this.element?.querySelector<HTMLElement>('#bulk-actions-selection-btn');

@@ -30,6 +30,10 @@ FIELD_POLICY_NAME_KEY = "field_policy_name"
 FIELD_POLICIES_KEY = "field_policies"
 POLICY_NAME_KEY = "policy_name"
 POLICY_DESCRIPTION_KEY = "policy_description"
+ROW_POLICY_DISALLOWED_FIELD_TYPE_IDS = {
+    FieldType.ONE_TO_MANY_FIELD.id,
+    FieldType.PROPERTY.id,
+}
 
 
 def _content_type_for_model(model: type[Model]) -> ContentType:
@@ -90,6 +94,17 @@ def _field_title_by_id(application_fields) -> dict[str, str]:
     return {str(field.pk): field.title for field in application_fields}
 
 
+def _is_row_policy_field_allowed(application_field: ApplicationField) -> bool:
+    return application_field.field_type not in ROW_POLICY_DISALLOWED_FIELD_TYPE_IDS
+
+
+def _with_row_policy_flags(application_fields) -> list[ApplicationField]:
+    fields = list(application_fields)
+    for application_field in fields:
+        application_field.is_row_policy_allowed = _is_row_policy_field_allowed(application_field)
+    return fields
+
+
 def _get_row_policy_conditions(row_policy_rule: dict) -> list[dict]:
     if not isinstance(row_policy_rule, dict):
         return []
@@ -108,9 +123,7 @@ def _get_row_policy_conditions(row_policy_rule: dict) -> list[dict]:
 
 def _policy_builder_context(view, orchestrator: BaseStateOrchestrator) -> dict:
     policy_model = _policy_model_for_view(view)
-    application_fields = ApplicationField.get_for_model(policy_model).exclude(
-        field_type__in=[FieldType.ONE_TO_MANY_FIELD.id, FieldType.PROPERTY.id]
-    )
+    application_fields = _with_row_policy_flags(ApplicationField.get_for_model(policy_model))
     field_titles = _field_title_by_id(application_fields)
     global_permissions = orchestrator.get_session_data(GLOBAL_PERMISSIONS_KEY) or []
     available_permissions = [
@@ -234,6 +247,32 @@ def pcs_object_access_control(request: HttpRequest, view, orchestrator: BaseStat
         return WizardError(
             message=_("Row policies can only use permissions selected in step 1."),
             title=_("Row policy mismatch"),
+            step=1,
+        )
+
+    policy_content_type = _policy_content_type_for_view(view)
+    disallowed_row_policy_field_ids = {
+        str(field_id)
+        for field_id in ApplicationField.objects.filter(
+            content_type=policy_content_type,
+            field_type__in=ROW_POLICY_DISALLOWED_FIELD_TYPE_IDS,
+        ).values_list("id", flat=True)
+    }
+    invalid_row_policy_field_ids = sorted(
+        {
+            application_field_id
+            for row_policy_rule in row_policy_rules
+            for condition in _get_row_policy_conditions(row_policy_rule)
+            for application_field_id in [str(condition.get("application_field_id", "")).strip()]
+            if application_field_id
+            and application_field_id != "__all__"
+            and application_field_id in disallowed_row_policy_field_ids
+        }
+    )
+    if invalid_row_policy_field_ids:
+        return WizardError(
+            message=_("Properties and one-to-many fields cannot be used in row policies."),
+            title=_("Invalid row policy field"),
             step=1,
         )
 

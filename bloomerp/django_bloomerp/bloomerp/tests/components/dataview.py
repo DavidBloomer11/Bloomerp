@@ -1,4 +1,9 @@
+import json
+from datetime import date, datetime, timedelta
+
+from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import Permission
 from bloomerp.tests.base import BaseBloomerpModelTestCase
@@ -6,6 +11,8 @@ from bloomerp.models import ApplicationField
 from bloomerp.models import Policy, FieldPolicy, RowPolicy, RowPolicyRule
 from bloomerp.models.users.user_list_view_preference import UserListViewPreference
 from bloomerp.services.user_services import get_data_view_fields, get_user_list_view_preference
+from bloomerp.components.objects.dataviews.dataview import _select_related_rendered_relations
+from bloomerp.tests.utils.dynamic_models import create_test_models
 
 
 class TestDataView(BaseBloomerpModelTestCase):
@@ -13,6 +20,31 @@ class TestDataView(BaseBloomerpModelTestCase):
 
     def extendedSetup(self):
         return super().extendedSetup()    
+
+    def test_data_view_eager_loads_rendered_foreign_keys(self):
+        planet = self.PlanetModel.objects.create(name="Test planet")
+        country = self.CountryModel.objects.create(name="Test country", planet=planet)
+        customers = [
+            self.CustomerModel.objects.create(
+                first_name=f"Customer {index}",
+                last_name="Test",
+                age=20,
+                country=country,
+            )
+            for index in range(2)
+        ]
+
+        country_field = ApplicationField.get_by_field(self.CustomerModel, "country")
+        queryset = _select_related_rendered_relations(
+            self.CustomerModel.objects.filter(pk__in=[customer.pk for customer in customers]),
+            [country_field],
+        )
+
+        with self.assertNumQueries(1):
+            self.assertEqual(
+                [customer.country.pk for customer in queryset.order_by("pk")],
+                [country.pk, country.pk],
+            )
 
     def _ensure_permissions_for_model(self, model):
         """
@@ -50,7 +82,7 @@ class TestDataView(BaseBloomerpModelTestCase):
         # 4. Make sure the initial dataview load preserves the current query string
         content_type_id = ContentType.objects.get_for_model(self.CustomerModel).id
         dataview_url = reverse(
-            viewname="components_data_view",
+            viewname="components_dataview",
             kwargs={"content_type_id": content_type_id},
         )
 
@@ -61,7 +93,7 @@ class TestDataView(BaseBloomerpModelTestCase):
 
         content_type_id = ContentType.objects.get_for_model(self.CustomerModel).id
         url = reverse(
-            viewname="components_data_view",
+            viewname="components_dataview",
             kwargs={"content_type_id": content_type_id},
         ) + "?first_name=xyz&q=alice&page=3"
 
@@ -107,7 +139,7 @@ class TestDataView(BaseBloomerpModelTestCase):
         # 4. Make sure the page bootstraps the dataview with the filter query string
         content_type_id = ContentType.objects.get_for_model(self.CustomerModel).id
         dataview_url = reverse(
-            viewname="components_data_view",
+            viewname="components_dataview",
             kwargs={"content_type_id": content_type_id},
         )
 
@@ -198,7 +230,7 @@ class TestDataView(BaseBloomerpModelTestCase):
         self.client.force_login(self.normal_user)
         
         url = reverse(
-            viewname="components_data_view",
+            viewname="components_dataview",
             kwargs={"content_type_id": content_type.id},
         )
         response = self.client.get(url, HTTP_HX_REQUEST="true")
@@ -207,8 +239,8 @@ class TestDataView(BaseBloomerpModelTestCase):
         self.assertContains(response, "First Name", html=False)
         self.assertNotContains(response, "<th >Last Name</th>", html=False)
 
-        data_view_fields = get_data_view_fields(preference, "table")
-        self.assertEqual([field.id for field in data_view_fields.visible_fields], [first_name_field.id])
+        dataview_fields = get_data_view_fields(preference, "table")
+        self.assertEqual([field.id for field in dataview_fields.visible_fields], [first_name_field.id])
 
         preference.refresh_from_db()
         self.assertEqual(preference.get_visible_field_ids("table"), [first_name_field.id])
@@ -251,7 +283,7 @@ class TestDataView(BaseBloomerpModelTestCase):
         # Create url with filter for first_name
         content_type_id = ContentType.objects.get_for_model(self.CustomerModel).id
         url = reverse(
-            viewname="components_data_view",
+            viewname="components_dataview",
             kwargs={"content_type_id": content_type_id},
         ) + "?first_name=Alice"
         
@@ -272,7 +304,7 @@ class TestDataView(BaseBloomerpModelTestCase):
 
         content_type_id = ContentType.objects.get_for_model(self.CustomerModel).id
         url = reverse(
-            viewname="components_data_view",
+            viewname="components_dataview",
             kwargs={"content_type_id": content_type_id},
         ) + "?sort=first_name&direction=asc"
 
@@ -289,7 +321,7 @@ class TestDataView(BaseBloomerpModelTestCase):
 
         content_type_id = ContentType.objects.get_for_model(self.CustomerModel).id
         url = reverse(
-            viewname="components_data_view",
+            viewname="components_dataview",
             kwargs={"content_type_id": content_type_id},
         ) + "?first_name__icontains=a&q=a&page=3&sort=first_name&direction=asc"
 
@@ -297,7 +329,7 @@ class TestDataView(BaseBloomerpModelTestCase):
         self.assertEqual(response.status_code, 200)
 
         dataview_url = reverse(
-            viewname="components_data_view",
+            viewname="components_dataview",
             kwargs={"content_type_id": content_type_id},
         )
         content = response.content.decode()
@@ -338,7 +370,7 @@ class TestDataView(BaseBloomerpModelTestCase):
             self.create_customer(f"Batch-{index}", "Kanban", 123)
 
         dataview_url = reverse(
-            viewname="components_data_view",
+            viewname="components_dataview",
             kwargs={"content_type_id": content_type.id},
         )
 
@@ -351,7 +383,7 @@ class TestDataView(BaseBloomerpModelTestCase):
         self.assertNotContains(response, 'data-testid="data-view-pagination"', html=False)
 
         column_url = reverse(
-            viewname="components_data_view_action",
+            viewname="components_dataview_action",
             kwargs={"content_type_id": content_type.id, "action": "column"},
         )
         page_response = self.client.get(
@@ -393,7 +425,7 @@ class TestDataView(BaseBloomerpModelTestCase):
 
         # 2. Request the dataview component.
         url = reverse(
-            viewname="components_data_view",
+            viewname="components_dataview",
             kwargs={"content_type_id": content_type.id},
         )
         response = self.client.get(url, HTTP_HX_REQUEST="true")
@@ -439,7 +471,7 @@ class TestDataView(BaseBloomerpModelTestCase):
         for lookup in ["", "__exact"]:
             content_type_id = ContentType.objects.get_for_model(self.CustomerModel).id
             url = reverse(
-                viewname="components_data_view",
+                viewname="components_dataview",
                 kwargs={"content_type_id": content_type_id},
             ) + "?country" + lookup + "=" + str(country.id)
 
@@ -475,7 +507,7 @@ class TestDataView(BaseBloomerpModelTestCase):
         for lookup in ["__name", "__name__exact"]:
             content_type_id = ContentType.objects.get_for_model(self.CustomerModel).id
             url = reverse(
-                viewname="components_data_view",
+                viewname="components_dataview",
                 kwargs={"content_type_id": content_type_id},
             ) + "?country" + lookup + "=" + country.name
 
@@ -508,7 +540,7 @@ class TestDataView(BaseBloomerpModelTestCase):
         # Create url with filter for first_name and last_name
         content_type_id = ContentType.objects.get_for_model(self.CustomerModel).id
         url = reverse(
-            viewname="components_data_view",
+            viewname="components_dataview",
             kwargs={"content_type_id": content_type_id},
         ) + "?q=Alice Johnson"
         
@@ -539,8 +571,8 @@ class TestDataView(BaseBloomerpModelTestCase):
 
         url = reverse(
             viewname="components_select_preference",
-            kwargs={"content_type_id": content_type.id, "type": "list"},
-        )
+            kwargs={"model": "UserListViewPreference"},
+        ) + f"?content_type_id={content_type.id}"
 
         response = self.client.get(url, HTTP_HX_REQUEST="true")
 
@@ -571,12 +603,16 @@ class TestDataView(BaseBloomerpModelTestCase):
 
         url = reverse(
             viewname="components_select_preference",
-            kwargs={"content_type_id": content_type.id, "type": "list"},
+            kwargs={"model": "UserListViewPreference"},
         )
 
         response = self.client.post(
             url,
-            data={"action": "select", "preference_id": second.id},
+            data={
+                "action": "select",
+                "preference_id": second.id,
+                "content_type_id": content_type.id,
+            },
             HTTP_HX_REQUEST="true",
         )
 
@@ -614,13 +650,13 @@ class TestDataView(BaseBloomerpModelTestCase):
         )
 
         url = reverse(
-            viewname="components_select_preference",
-            kwargs={"content_type_id": content_type.id, "type": "list"},
+            viewname="components_new_preference",
+            kwargs={"model": "UserListViewPreference"},
         )
 
         response = self.client.post(
             url,
-            data={"action": "create", "name": "Ops board"},
+            data={"name": "Ops board", "content_type_id": content_type.id},
             HTTP_HX_REQUEST="true",
         )
 
@@ -638,6 +674,46 @@ class TestDataView(BaseBloomerpModelTestCase):
         self.assertEqual(created.view_type, "kanban")
         self.assertEqual(created.options, source.options)
         self.assertEqual(created.display_fields, source.display_fields)
+
+    def test_selecting_shared_preference_creates_live_reference_without_duplicate_menu_item(self):
+        self.client.force_login(self.admin_user)
+
+        content_type = ContentType.objects.get_for_model(self.CustomerModel)
+        source = UserListViewPreference.objects.create(
+            user=self.normal_user,
+            content_type=content_type,
+            name="Shared board",
+            view_type="kanban",
+        )
+        source.shared_with_users.add(self.admin_user)
+
+        url = reverse(
+            viewname="components_select_preference",
+            kwargs={"model": "UserListViewPreference"},
+        )
+        response = self.client.post(
+            url,
+            data={
+                "action": "select",
+                "preference_id": source.id,
+                "content_type_id": content_type.id,
+            },
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        reference = UserListViewPreference.objects.get(
+            user=self.admin_user,
+            source_object=source,
+        )
+        self.assertTrue(reference.selected)
+        self.assertEqual(reference.effective_preference, source)
+
+        response = self.client.get(
+            f"{url}?content_type_id={content_type.id}",
+            HTTP_HX_REQUEST="true",
+        )
+        self.assertContains(response, "Shared board", count=1)
 
     def test_change_data_view_preference_uses_selected_preference_when_multiple_exist(self):
         self.client.force_login(self.admin_user)
@@ -663,7 +739,7 @@ class TestDataView(BaseBloomerpModelTestCase):
         )
 
         url = reverse(
-            viewname="components_change_data_view_preference",
+            viewname="components_update_dataview_preference",
             kwargs={"content_type_id": content_type.id},
         )
 
@@ -680,3 +756,348 @@ class TestDataView(BaseBloomerpModelTestCase):
 
         selected.refresh_from_db()
         self.assertEqual(selected.options["table"]["page_size"], 50)
+
+
+class TestGantDataView(BaseBloomerpModelTestCase):
+    auto_create_customers = False
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.GantTaskModel = create_test_models(
+            app_label="bloomerp",
+            model_defs={
+                "GantTask": {
+                    "name": models.CharField(max_length=100),
+                    "starts_on": models.DateField(null=True, blank=True),
+                    "ends_on": models.DateField(null=True, blank=True),
+                    "starts_at": models.DateTimeField(null=True, blank=True),
+                    "ends_at": models.DateTimeField(null=True, blank=True),
+                    "dependency": models.ForeignKey(
+                        "self",
+                        null=True,
+                        blank=True,
+                        on_delete=models.SET_NULL,
+                        related_name="dependants",
+                    ),
+                    "__str__": lambda self: self.name,
+                },
+            },
+            use_bloomerp_base=True,
+        )["GantTask"]
+        cls._register_dynamic_model_routes([cls.GantTaskModel])
+
+    def _configure_gant(
+        self,
+        *,
+        page_size: int = 10,
+        with_dependency: bool = False,
+        with_times: bool = False,
+        user=None,
+    ):
+        content_type = ContentType.objects.get_for_model(self.GantTaskModel)
+        start_field = ApplicationField.get_by_field(
+            self.GantTaskModel,
+            "starts_at" if with_times else "starts_on",
+        )
+        end_field = ApplicationField.get_by_field(
+            self.GantTaskModel,
+            "ends_at" if with_times else "ends_on",
+        )
+        name_field = ApplicationField.get_by_field(self.GantTaskModel, "name")
+        dependency_field = ApplicationField.get_by_field(self.GantTaskModel, "dependency")
+        preference = get_user_list_view_preference(user or self.admin_user, content_type)
+        preference.view_type = "gant"
+        preference.options = {
+            "gant": {
+                "start_field_id": start_field.id,
+                "end_field_id": end_field.id,
+                "dependency_from_field_id": dependency_field.id if with_dependency else None,
+                "dependency_for_field_id": None,
+                "page_size": page_size,
+            },
+        }
+        preference.display_fields = {
+            **preference.display_fields,
+            "gant": [name_field.id],
+        }
+        preference.save()
+        return content_type, dependency_field
+
+    def test_gant_dataview_renders_continuous_rows_and_dependencies(self):
+        """
+        Use case: A configured Gantt view contains related, scheduled records.
+        Expected result: Each record renders on the shared timeline with its dependency metadata.
+        """
+        # 1. Configure the Gantt view with its self-referencing dependency field.
+        self.client.force_login(self.admin_user)
+        content_type, _dependency_field = self._configure_gant(with_dependency=True)
+        first = self.GantTaskModel.objects.create(
+            name="Discovery",
+            starts_on=date(2026, 1, 1),
+            ends_on=date(2026, 1, 10),
+        )
+        self.GantTaskModel.objects.create(
+            name="Delivery",
+            starts_on=date(2026, 1, 5),
+            ends_on=date(2026, 1, 20),
+            dependency=first,
+        )
+
+        # 2. Request the permission-filtered data-view component.
+        url = reverse(
+            "components_dataview",
+            kwargs={"content_type_id": content_type.id},
+        )
+        response = self.client.get(url, HTTP_HX_REQUEST="true")
+
+        # 3. Verify the continuous timeline, zoom controls, rows, and dependency endpoint render.
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'bloomerp-component="gant-chart"', html=False)
+        self.assertContains(response, 'bloomerp-component="gant-chart-item"', count=2, html=False)
+        self.assertContains(response, 'bloomerp-component="gant-chart-sidebar-item"', count=2, html=False)
+        self.assertContains(response, 'bloomerp-component="resizable-div"', html=False)
+        self.assertContains(response, 'data-resize-from="right"', html=False)
+        self.assertContains(response, "data-gant-zoom", html=False)
+        self.assertContains(response, "data-gant-today", html=False)
+        self.assertContains(response, "data-gant-update-url", html=False)
+        self.assertContains(response, 'data-gant-start-field-type="DateField"', html=False)
+        self.assertContains(response, "data-gant-resize-start", count=2, html=False)
+        self.assertContains(response, "data-gant-resize-end", count=2, html=False)
+        self.assertContains(response, "data-start=", count=2, html=False)
+        self.assertContains(response, "data-end=", count=2, html=False)
+        discovery_start = timezone.make_aware(datetime(2026, 1, 1)).timestamp() * 1000
+        discovery_end = timezone.make_aware(datetime(2026, 1, 11)).timestamp() * 1000
+        self.assertContains(response, f'data-start="{round(discovery_start)}"', html=False)
+        self.assertContains(response, f'data-end="{round(discovery_end)}"', html=False)
+        self.assertContains(response, f'data-dependency-from-id="{first.pk}"', html=False)
+        self.assertContains(response, "Discovery", html=False)
+        self.assertContains(response, "Delivery", html=False)
+
+    def test_gant_dataview_preserves_datetime_precision_for_hour_zoom(self):
+        """
+        Use case: An event plan uses DateTimeFields within a single day.
+        Expected result: Gantt data preserves exact times for hour-level positioning.
+        """
+        # 1. Configure DateTimeFields and create a ninety-minute event task.
+        self.client.force_login(self.admin_user)
+        content_type, _dependency_field = self._configure_gant(with_times=True)
+        start = timezone.make_aware(datetime(2026, 7, 17, 13, 15))
+        end = timezone.make_aware(datetime(2026, 7, 17, 14, 45))
+        self.GantTaskModel.objects.create(
+            name="Stage setup",
+            starts_at=start,
+            ends_at=end,
+        )
+
+        # 2. Request the Gantt component.
+        url = reverse(
+            "components_dataview",
+            kwargs={"content_type_id": content_type.id},
+        )
+        response = self.client.get(url, HTTP_HX_REQUEST="true")
+
+        # 3. Verify timestamps retain the minutes instead of being reduced to dates.
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, f'data-start="{round(start.timestamp() * 1000)}"', html=False)
+        self.assertContains(response, f'data-end="{round(end.timestamp() * 1000)}"', html=False)
+        self.assertContains(response, "Jul 17, 2026 13:15", html=False)
+        self.assertContains(response, "Jul 17, 2026 14:45", html=False)
+
+    def test_gant_dataview_loads_additional_rows_by_intersection_page(self):
+        """
+        Use case: A Gantt chart contains more records than its configured page size.
+        Expected result: The first page exposes an intersection loader and the action returns the next page.
+        """
+        # 1. Configure a ten-row page and create more than one page of scheduled records.
+        self.client.force_login(self.admin_user)
+        content_type, _dependency_field = self._configure_gant(page_size=10)
+        for index in range(25):
+            start = date(2026, 2, 1) + timedelta(days=index)
+            self.GantTaskModel.objects.create(
+                name=f"Task {index:02d}",
+                starts_on=start,
+                ends_on=start + timedelta(days=2),
+            )
+
+        # 2. Request the initial data view.
+        url = reverse(
+            "components_dataview",
+            kwargs={"content_type_id": content_type.id},
+        )
+        response = self.client.get(url, HTTP_HX_REQUEST="true")
+
+        # 3. Verify it renders ten bars and an incremental page-two request.
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'bloomerp-component="gant-chart-item"', count=10, html=False)
+        self.assertContains(response, "gant_page=2", html=False)
+        self.assertNotContains(response, 'data-testid="data-view-pagination"', html=False)
+
+        # 4. Request page two through the renderer action.
+        page_url = reverse(
+            "components_dataview_action",
+            kwargs={"content_type_id": content_type.id, "action": "page"},
+        )
+        page_response = self.client.get(
+            f"{page_url}?gant_page=2",
+            HTTP_HX_REQUEST="true",
+        )
+
+        # 5. Verify the fragment contains the next ten bars and the final-page loader.
+        self.assertEqual(page_response.status_code, 200)
+        self.assertContains(page_response, 'bloomerp-component="gant-chart-item"', count=10, html=False)
+        self.assertContains(page_response, "gant_page=3", html=False)
+
+    def test_gant_dataview_paginates_unscheduled_records_separately(self):
+        """
+        Use case: More unscheduled records exist than fit in one Gantt page.
+        Expected result: They render in the bottom tray with their own incremental pagination.
+        """
+        self.client.force_login(self.admin_user)
+        content_type, _dependency_field = self._configure_gant(page_size=10)
+        scheduled = self.GantTaskModel.objects.create(
+            name="Scheduled",
+            starts_on=date(2026, 8, 1),
+            ends_on=date(2026, 8, 2),
+        )
+        for index in range(25):
+            self.GantTaskModel.objects.create(name=f"Unscheduled {index:02d}")
+
+        url = reverse(
+            "components_dataview",
+            kwargs={"content_type_id": content_type.id},
+        )
+        response = self.client.get(url, HTTP_HX_REQUEST="true")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'data-gant-item', count=1, html=False)
+        self.assertContains(response, f'data-object-id="{scheduled.pk}"', html=False)
+        self.assertContains(response, 'draggable="true"', count=10, html=False)
+        self.assertContains(response, "gant_unscheduled_page=2", html=False)
+
+        page_url = reverse(
+            "components_dataview_action",
+            kwargs={"content_type_id": content_type.id, "action": "unscheduled"},
+        )
+        page_response = self.client.get(
+            f"{page_url}?gant_unscheduled_page=2",
+            HTTP_HX_REQUEST="true",
+        )
+        self.assertEqual(page_response.status_code, 200)
+        self.assertContains(page_response, 'draggable="true"', count=10, html=False)
+        self.assertContains(page_response, "gant_unscheduled_page=3", html=False)
+
+    def test_gant_date_action_updates_multiple_records_and_individual_edges(self):
+        """
+        Use case: Keyboard movement updates a selection and edge dragging updates one boundary.
+        Expected result: The configured fields are updated atomically and retain DateField semantics.
+        """
+        self.client.force_login(self.admin_user)
+        content_type, _dependency_field = self._configure_gant()
+        first = self.GantTaskModel.objects.create(
+            name="First",
+            starts_on=date(2026, 9, 1),
+            ends_on=date(2026, 9, 3),
+        )
+        second = self.GantTaskModel.objects.create(
+            name="Second",
+            starts_on=date(2026, 9, 5),
+            ends_on=date(2026, 9, 6),
+        )
+        action_url = reverse(
+            "components_dataview_action",
+            kwargs={"content_type_id": content_type.id, "action": "dates"},
+        )
+        local_tz = timezone.get_current_timezone()
+        first_start = timezone.make_aware(datetime(2026, 9, 2), local_tz)
+        first_end_exclusive = timezone.make_aware(datetime(2026, 9, 5), local_tz)
+        second_start = timezone.make_aware(datetime(2026, 9, 6), local_tz)
+        second_end_exclusive = timezone.make_aware(datetime(2026, 9, 8), local_tz)
+
+        response = self.client.post(
+            action_url,
+            data=json.dumps({
+                "updates": [
+                    {
+                        "object_id": str(first.pk),
+                        "start_ms": round(first_start.timestamp() * 1000),
+                        "end_ms": round(first_end_exclusive.timestamp() * 1000),
+                    },
+                    {
+                        "object_id": str(second.pk),
+                        "start_ms": round(second_start.timestamp() * 1000),
+                        "end_ms": round(second_end_exclusive.timestamp() * 1000),
+                    },
+                ],
+            }),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        first.refresh_from_db()
+        second.refresh_from_db()
+        self.assertEqual((first.starts_on, first.ends_on), (date(2026, 9, 2), date(2026, 9, 4)))
+        self.assertEqual((second.starts_on, second.ends_on), (date(2026, 9, 6), date(2026, 9, 7)))
+
+        resized_start = timezone.make_aware(datetime(2026, 9, 3), local_tz)
+        edge_response = self.client.post(
+            action_url,
+            data=json.dumps({
+                "updates": [{
+                    "object_id": str(first.pk),
+                    "start_ms": round(resized_start.timestamp() * 1000),
+                }],
+            }),
+            content_type="application/json",
+        )
+        self.assertEqual(edge_response.status_code, 200)
+        first.refresh_from_db()
+        self.assertEqual(first.starts_on, date(2026, 9, 3))
+        self.assertEqual(first.ends_on, date(2026, 9, 4))
+
+    def test_gant_date_action_denies_user_without_change_policies(self):
+        """
+        Use case: A user without row or field change access submits a Gantt mutation.
+        Expected result: The endpoint denies the write and preserves the record.
+        """
+        content_type, _dependency_field = self._configure_gant(user=self.normal_user)
+        record = self.GantTaskModel.objects.create(
+            name="Protected",
+            starts_on=date(2026, 10, 1),
+            ends_on=date(2026, 10, 2),
+        )
+        self.client.force_login(self.normal_user)
+        action_url = reverse(
+            "components_dataview_action",
+            kwargs={"content_type_id": content_type.id, "action": "dates"},
+        )
+        target = timezone.make_aware(datetime(2026, 10, 4)).timestamp() * 1000
+        response = self.client.post(
+            action_url,
+            data=json.dumps({
+                "updates": [{"object_id": str(record.pk), "start_ms": round(target)}],
+            }),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 403)
+        record.refresh_from_db()
+        self.assertEqual(record.starts_on, date(2026, 10, 1))
+
+    def test_gant_options_only_offer_self_referencing_dependency_fields(self):
+        """
+        Use case: A user configures optional Gantt dependency fields.
+        Expected result: Only relations back to the same model are offered as dependency choices.
+        """
+        # 1. Open the display options for the configured Gantt view.
+        self.client.force_login(self.admin_user)
+        content_type, dependency_field = self._configure_gant()
+        url = reverse(
+            "components_dataview",
+            kwargs={"content_type_id": content_type.id},
+        )
+        response = self.client.get(url, HTTP_HX_REQUEST="true")
+
+        # 2. Verify the self-reference is offered while scalar fields are not dependency choices.
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, f'value="{dependency_field.id}"', html=False)
+        self.assertContains(response, "Dependency from", html=False)

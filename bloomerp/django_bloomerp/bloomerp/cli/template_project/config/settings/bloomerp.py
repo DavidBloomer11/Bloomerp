@@ -6,6 +6,7 @@ from bloomerp.config.settings import (
     BLOOMERP_MIDDLEWARE,
     BLOOMERP_SITE_ID,
     BLOOMERP_USER_MODEL,
+    REST_FRAMEWORK,   
 )
 from bloomerp.config import BloomerpConfig
 

@@ -6,7 +6,7 @@ export default function renderDataView(
     element: HTMLElement,
     contentTypeId: number|string
 ): Promise<DataViewContainer> {
-    const url = `/components/data_view/${contentTypeId}/`;
+    const url = `/components/dataview/${contentTypeId}/`;
 
     return htmx.ajax('get', url, {
         target: `#${element.id}`,

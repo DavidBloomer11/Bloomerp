@@ -4,7 +4,12 @@ from types import SimpleNamespace
 from django.test import RequestFactory
 
 from bloomerp.tests.base import BaseBloomerpModelTestCase
-from bloomerp.models import ApplicationField, FieldPolicy, UserDetailViewPreference
+from bloomerp.models import (
+    ApplicationField,
+    FieldPolicy,
+    UserDetailViewPreference,
+    UserDetailViewTabsPreference,
+)
 from django.contrib.contenttypes.models import ContentType
 from bloomerp.router import router
 from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
@@ -20,19 +25,19 @@ class DetailViewTabsTestCase(BaseBloomerpModelTestCase):
     # -------------------
     def test_automatically_create_tabs(self):
         """
-        Tests whether detail view tabs are automatically created for users that don't have any tabs yet
-        for a particular model.
-        """        
+        Use case: A user opens a detail view without a tabs preference.
+        Expected result: A separate default tabs preference is created from the model routes.
+        """
         # 1. Get a random object and its detail view URL
         obj = self.CustomerModel.objects.first()
         url = obj.get_absolute_url()
         
-        # 2. Check whether the user has any detail view preferences for this model (there should be none)
-        detail_view_preference = UserDetailViewPreference.objects.filter(
+        # 2. Check that no tabs preference exists for the model yet.
+        tabs_preference = UserDetailViewTabsPreference.objects.filter(
             user=self.admin_user,
             content_type=ContentType.objects.get_for_model(self.CustomerModel)
         ).first()
-        self.assertIsNone(detail_view_preference)
+        self.assertIsNone(tabs_preference)
         
         # 3. Simulate a request to the detail view URL with the admin user and check whether detail view preferences are created
         self.factory = RequestFactory()
@@ -41,15 +46,15 @@ class DetailViewTabsTestCase(BaseBloomerpModelTestCase):
         self.client.force_login(self.admin_user)
         response = self.client.get(url)
         
-        # 4. Check whether detail view preferences are created for the user and model
-        detail_view_preference = UserDetailViewPreference.objects.filter(
+        # 4. Check that the independent tabs preference was created.
+        tabs_preference = UserDetailViewTabsPreference.objects.filter(
             user=self.admin_user,
             content_type=ContentType.objects.get_for_model(self.CustomerModel)
         ).first()
-        self.assertIsNotNone(detail_view_preference)
+        self.assertIsNotNone(tabs_preference)
         
-        # 5. Check whether the created detail view preferences have the default tabs
-        self.assertTrue(len(detail_view_preference.tab_state_obj.get("top_level_order")) > 0)
+        # 5. Check that the default route tabs were materialized relationally.
+        self.assertTrue(tabs_preference.items.exists())
                 
     def test_non_existant_url_name_should_not_return_500(self):
         """
@@ -455,13 +460,12 @@ class DetailViewTabsTestCase(BaseBloomerpModelTestCase):
     # -------------------
     def test_workspace_layout_save_persists_shape(self):
         self.client.force_login(self.admin_user)
-        workspace = Workspace.get_or_create_for_user(self.admin_user)
+        workspace = Workspace.create_default_for_user(self.admin_user)
         tile = Tile.objects.create(name="Revenue", description="Tile", schema={})
 
         response = self.client.post(
-            "/components/workspaces/save_workspace_layout/",
+            f"/components/layout/save-layout-object/{ContentType.objects.get_for_model(Workspace).pk}/{workspace.pk}/",
             data=json.dumps({
-                "workspace_id": str(workspace.pk),
                 "layout": {
                     "rows": [
                         {
@@ -482,13 +486,12 @@ class DetailViewTabsTestCase(BaseBloomerpModelTestCase):
 
     def test_workspace_layout_save_deduplicates_duplicate_item_ids(self):
         self.client.force_login(self.admin_user)
-        workspace = Workspace.get_or_create_for_user(self.admin_user)
+        workspace = Workspace.create_default_for_user(self.admin_user)
         tile = Tile.objects.create(name="Active deals", description="Tile", schema={})
 
         response = self.client.post(
-            "/components/workspaces/save_workspace_layout/",
+            f"/components/layout/save-layout-object/{ContentType.objects.get_for_model(Workspace).pk}/{workspace.pk}/",
             data=json.dumps({
-                "workspace_id": str(workspace.pk),
                 "layout": {
                     "rows": [
                         {
@@ -545,20 +548,33 @@ class DetailViewTabsTestCase(BaseBloomerpModelTestCase):
                     LayoutRow(
                         title="Primary",
                         columns=2,
-                        items=[LayoutItem(id="first_name", colspan=2)],
+                        items=[
+                            LayoutItem(
+                                id="first_name",
+                                colspan=2,
+                                config={"inline_fields": ["name"]},
+                            )
+                        ],
                     )
                 ]
             )
         )
 
         try:
-            preference = UserDetailViewPreference.create_default_for_user(self.admin_user, content_type)
+            preference = UserDetailViewPreference.create_default_for_user(
+                self.admin_user,
+                content_type_id=content_type.pk,
+            )
 
             self.assertEqual(len(preference.layout_obj.rows), 1)
             self.assertEqual(preference.layout_obj.rows[0].title, "Primary")
             self.assertEqual(
                 [item.id for item in preference.layout_obj.rows[0].items],
                 [str(configured_field.pk)],
+            )
+            self.assertEqual(
+                preference.layout_obj.rows[0].items[0].config,
+                {"inline_fields": ["name"]},
             )
         finally:
             self.CustomerModel.bloomerp_config = original_config
