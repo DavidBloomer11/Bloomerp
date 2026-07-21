@@ -4,6 +4,8 @@ from django.db.models import Q, QuerySet
 from django.http import HttpRequest, HttpResponse
 from django.db.models import Model
 from bloomerp.communication.emails.actions import delete_email, mark_email_as_read, query_emails, render_email
+from bloomerp.communication.inbox_sources import InboxEventSource, InboxJobSource, InboxSignalSource
+from bloomerp.communication.system_messages.base import SystemMessage
 from bloomerp.components.communication.emails.new_email import new_email
 from bloomerp.components.communication.emails.reply_to_email import reply_to_email
 from bloomerp.components.communication.emails.sync_emails import sync_emails
@@ -157,12 +159,14 @@ class InboxFolderTypeDefinition:
     
     # Is aggregate
     is_aggregate:bool = False
-    
+
     # Aggregate functions that takes an inbox folder and returns a QuerySet of InboxFolder objects
     aggregate_func: Optional[Callable[["InboxFolder"], QuerySet["InboxFolder"]]] = None
     
     # Is default folder
     is_default: bool = False
+
+    default_sources: Optional[list[InboxSignalSource | InboxJobSource | InboxEventSource]] = None
 
     def resolve_filters(self, folder: "InboxFolder") -> list[InboxFolderTypeFilterDefinition]:
         if not self.filters:
@@ -275,13 +279,39 @@ class InboxFolderType(BaseTypeDefinition):
             name="Notification",
             name_plural="Notifications",
             icon="fa fa-bell",
-            on_render=lambda item, _: f"Notification: {item.title}", 
+            on_render=SystemMessage.resolve_render,
             actions=[
                 MARK_INBOX_ITEM_AS_READ_ACTION,
                 DELETE_INBOX_ITEM_ACTION,
             ],
         ),
-        is_default=True
+        is_default=True,
+        default_sources=[
+            InboxEventSource(
+                key="workflow.result",
+                folder_qs_resolver=(
+                    "bloomerp.automation.inbox_sources."
+                    "resolve_workflow_notification_folders"
+                ),
+                handler=(
+                    "bloomerp.automation.inbox_sources."
+                    "handle_workflow_result"
+                ),
+                run_async=False,
+            ),
+            InboxEventSource(
+                key="system.message",
+                folder_qs_resolver=(
+                    "bloomerp.communication.system_messages.inbox_sources."
+                    "resolve_system_message_folders"
+                ),
+                handler=(
+                    "bloomerp.communication.system_messages.inbox_sources."
+                    "handle_system_message"
+                ),
+                run_async=False,
+            ),
+        ]
     )
     
     EMAIL = InboxFolderTypeDefinition(
@@ -346,7 +376,31 @@ class InboxFolderType(BaseTypeDefinition):
                 MARK_INBOX_ITEM_AS_READ_ACTION,
                 DELETE_INBOX_ITEM_ACTION,
             ],
-        )
+        ),
+        default_sources=[
+            InboxJobSource(
+                key="email.sync.dispatch",
+                folder_qs_resolver=(
+                    "bloomerp.communication.emails.sync.resolve_email_folders"
+                ),
+                handler=(
+                    "bloomerp.communication.emails.sync."
+                    "dispatch_due_email_syncs_source"
+                ),
+                schedule="*/2 * * * *",
+            ),
+            InboxEventSource(
+                key="email.sync.account",
+                folder_qs_resolver=(
+                    "bloomerp.communication.emails.sync.resolve_email_folders"
+                ),
+                handler=(
+                    "bloomerp.communication.emails.sync."
+                    "handle_email_account_sync"
+                ),
+                run_async=False,
+            ),
+        ]
     )
     
     @classmethod

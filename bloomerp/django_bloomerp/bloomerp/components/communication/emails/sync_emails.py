@@ -1,13 +1,14 @@
 import datetime
 
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
 from django.http import HttpRequest
 from django.http import HttpResponse
 from typing import TYPE_CHECKING
 from bloomerp.celery.utils import is_celery_available
-from bloomerp.communication.emails.actions import sync_emails_for_folder
+from bloomerp.communication.emails.actions import refresh_mailboxes_for_account
+from bloomerp.communication.inbox_sources import publish_event
 from bloomerp.router import router
-from bloomerp.utils.async_utils import run_async_or_sync
 from bloomerp.utils.requests import render_blank_form, render_message
 from django import forms
 from django.urls import reverse
@@ -45,8 +46,10 @@ class SyncEmailsForm(forms.Form):
 
     def __init__(self, *args, mailboxes: list[str] | None = None, **kwargs):
         super().__init__(*args, **kwargs)
-        mailbox_choices = [(mailbox, mailbox) for mailbox in (mailboxes or [])]
+        mailbox_values = list(mailboxes or [])
+        mailbox_choices = [(mailbox, mailbox) for mailbox in mailbox_values]
         self.fields["mailboxes"].choices = mailbox_choices
+        self.fields["mailboxes"].initial = mailbox_values
     
 
 
@@ -61,7 +64,24 @@ def sync_emails(request: HttpRequest, folder: "str | InboxFolder") -> HttpRespon
     
     folder = resolve_item(folder, target=InboxFolder)
     email_account = folder.related_object()
-    available_mailboxes = email_account.mailboxes if email_account else []
+    if not email_account:
+        return render_message(
+            request=request,
+            message="This inbox folder is not connected to an email account.",
+            type="danger",
+        )
+
+    available_mailboxes = email_account.mailboxes
+
+    if request.method == "GET":
+        try:
+            available_mailboxes = refresh_mailboxes_for_account(email_account)
+        except ValidationError as exc:
+            return render_message(
+                request=request,
+                message=" ".join(exc.messages),
+                type="danger",
+            )
     
     text = "Synchronize your emails starting from the specified date range. Please select the start and end dates for synchronization."
     if not is_celery_available():
@@ -92,23 +112,36 @@ def sync_emails(request: HttpRequest, folder: "str | InboxFolder") -> HttpRespon
             limit = form.cleaned_data.get("limit") or 50
             mailboxes = form.cleaned_data.get("mailboxes")
             
-            # Implement the logic to sync emails based on the provided dates
-            ran_async, result = run_async_or_sync(
-                sync_emails_for_folder,
-                folder=folder,
-                from_date=start_date,
-                to_date=end_date,
-                limit=limit,
-                mailboxes=mailboxes,
-            )
-            if ran_async:
+            try:
+                result = publish_event(
+                    key="email.sync.account",
+                    email_account_id=email_account.id,
+                    from_date=start_date,
+                    to_date=end_date,
+                    limit=limit,
+                    mailboxes=mailboxes,
+                )
+            except ValidationError as exc:
                 return render_message(
                     request=request,
-                    message=f"Email synchronization has been initiated asynchronously. You will be notified once the process is complete.",
+                    message=" ".join(exc.messages),
+                    type="danger",
+                )
+
+            if result is None:
+                return render_message(
+                    request=request,
+                    message="Email synchronization has been initiated asynchronously. You will be notified once the process is complete.",
                     type="info"
                 )
-            
-            return HttpResponse(f"Synced {result} emails from {start_date} to {end_date}")
+
+            synced_count = max(
+                (len(delivery.items) for delivery in result),
+                default=0,
+            )
+            return HttpResponse(
+                f"Synced {synced_count} emails from {start_date} to {end_date}"
+            )
         else:
             return render_blank_form(
                 request=request,

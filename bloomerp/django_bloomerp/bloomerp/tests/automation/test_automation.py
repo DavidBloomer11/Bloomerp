@@ -15,14 +15,13 @@ from bloomerp.models import ApplicationField, User
 from bloomerp.models.automation import Workflow, WorkflowEdge, WorkflowNode
 from bloomerp.models.automation.workflow_run import WorkflowRun
 from bloomerp.models.document_templates.document_template import DocumentTemplate
-from bloomerp.celery.tasks.workflow_task import run_scheduled_workflow
+from bloomerp.celery.tasks.workflow_task import run_scheduled_workflow, run_workflow_async
 from bloomerp.services.workflow_services import (
     _serialize_trigger_data,
     format_execution_trace,
     run_workflow,
-    run_workflow_async,
 )
-from bloomerp.signals.automations import setup_automation_signals
+from bloomerp.signals.automation_signals import setup_automation_signals
 from bloomerp.tests.utils.dynamic_models import create_test_models, ensure_content_types_for_models
 from django.contrib.auth import get_user_model
 
@@ -2321,12 +2320,12 @@ class TestAutomation(TransactionTestCase):
         workflow.connect_nodes(trigger, merge_branch)
         workflow.connect_nodes(merge_branch, send_message)
 
-        with patch("bloomerp.automation.actions.send_user_message.send_user_message") as send_message_mock:
+        with patch("bloomerp.automation.actions.send_user_message.publish_event") as send_message_mock:
             workflow_run = run_workflow(workflow, {})
 
         self.assertEqual(send_message_mock.call_count, 2)
         messages = [
-            call.kwargs["payload"]["message"]
+            call.kwargs["data"]["message"]
             for call in send_message_mock.call_args_list
         ]
         self.assertEqual(messages, ["A|A", "A|B"])

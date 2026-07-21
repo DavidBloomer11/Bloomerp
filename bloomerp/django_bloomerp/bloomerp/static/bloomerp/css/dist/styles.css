@@ -667,6 +667,10 @@
   .table {
     display: table;
   }
+  .size-2 {
+    width: calc(var(--spacing) * 2);
+    height: calc(var(--spacing) * 2);
+  }
   .size-5 {
     width: calc(var(--spacing) * 5);
     height: calc(var(--spacing) * 5);
@@ -832,6 +836,9 @@
   }
   .min-h-12 {
     min-height: calc(var(--spacing) * 12);
+  }
+  .min-h-14 {
+    min-height: calc(var(--spacing) * 14);
   }
   .min-h-16 {
     min-height: calc(var(--spacing) * 16);
@@ -1740,6 +1747,15 @@
   .border-b-gray-200 {
     border-bottom-color: var(--color-gray-200);
   }
+  .border-l-danger-dark {
+    border-left-color: var(--color-danger-dark);
+  }
+  .border-l-gray-400 {
+    border-left-color: var(--color-gray-400);
+  }
+  .border-l-success-dark {
+    border-left-color: var(--color-success-dark);
+  }
   .bg-\[\#000000\]\/4 {
     background-color: color-mix(in oklab, #000000 4%, transparent);
   }
@@ -1850,6 +1866,12 @@
   }
   .bg-blue-600 {
     background-color: var(--color-blue-600);
+  }
+  .bg-danger-dark {
+    background-color: var(--color-danger-dark);
+  }
+  .bg-danger-light {
+    background-color: var(--color-danger-light);
   }
   .bg-danger-light\/10 {
     background-color: color-mix(in srgb, #f8d7da 10%, transparent);
@@ -1998,6 +2020,12 @@
   .bg-slate-950 {
     background-color: var(--color-slate-950);
   }
+  .bg-success-dark {
+    background-color: var(--color-success-dark);
+  }
+  .bg-success-light {
+    background-color: var(--color-success-light);
+  }
   .bg-transparent {
     background-color: transparent;
   }
@@ -2023,6 +2051,9 @@
   .fill-primary {
     fill: var(--color-primary);
   }
+  .stroke-current {
+    stroke: currentcolor;
+  }
   .object-contain {
     object-fit: contain;
   }
@@ -2037,6 +2068,9 @@
   }
   .p-2 {
     padding: calc(var(--spacing) * 2);
+  }
+  .p-2\.5 {
+    padding: calc(var(--spacing) * 2.5);
   }
   .p-3 {
     padding: calc(var(--spacing) * 3);
@@ -2341,6 +2375,9 @@
   .whitespace-nowrap {
     white-space: nowrap;
   }
+  .whitespace-pre-wrap {
+    white-space: pre-wrap;
+  }
   .text-\[\#000000\] {
     color: #000000;
   }
@@ -2467,6 +2504,9 @@
   .text-primary {
     color: var(--color-primary);
   }
+  .text-primary-300 {
+    color: var(--color-primary-300);
+  }
   .text-primary-400 {
     color: var(--color-primary-400);
   }
@@ -2587,6 +2627,9 @@
   }
   .opacity-60 {
     opacity: 60%;
+  }
+  .opacity-70 {
+    opacity: 70%;
   }
   .opacity-80 {
     opacity: 80%;

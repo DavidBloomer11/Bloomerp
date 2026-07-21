@@ -1,9 +1,11 @@
 from typing import Type
 
 from django.db import models
+from django.db.models import Q
 from bloomerp.communication.inbox_folder_definition import InboxFolderType, InboxFolderTypeDefinition
 from bloomerp.models.base_bloomerp_model import BloomerpModel
 from bloomerp.models.communication.inbox.inbox_item import InboxItem
+from bloomerp.models.users.user import AbstractBloomerpUser
 from bloomerp.utils.requests import parse_bool_parameter
 from django.db.models.query import QuerySet
 
@@ -85,9 +87,16 @@ class InboxFolder(BloomerpModel):
             deep_search
         )
         
-        
     def __str__(self) -> str:
         """
         Returns a string representation of the folder.
         """
         return f"{self.name} ({self.type})"
+
+    def get_recipients(self) -> QuerySet[AbstractBloomerpUser]:
+        from django.contrib.auth import get_user_model
+
+        recipient_ids = self.inbox.members.values_list("pk", flat=True)
+        return get_user_model().objects.filter(
+            Q(pk=self.inbox.owner_id) | Q(pk__in=recipient_ids)
+        ).distinct()

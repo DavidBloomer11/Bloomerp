@@ -108,11 +108,10 @@ class BloomerpConfig(BaseModel):
 
     auth: BloomerpAuthSettings = Field(default_factory=BloomerpAuthSettings)
 
+    email_secret_key: Optional[str] = None
 
 def get_bloomerp_config() -> BloomerpConfig:
     config = getattr(settings, "BLOOMERP_CONFIG", None)
     if isinstance(config, BloomerpConfig):
         return config
     return BloomerpConfig()
-    
-    email_secret_key: Optional[str] = None

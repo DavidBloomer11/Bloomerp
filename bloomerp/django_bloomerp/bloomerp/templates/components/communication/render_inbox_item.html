@@ -82,7 +82,7 @@
                     <iframe
                         class="h-[70vh] w-full"
                         sandbox="allow-popups allow-popups-to-escape-sandbox"
-                        srcdoc="{{ content }}"
+                        srcdoc="{{ content|force_escape }}"
                     ></iframe>
                 {% elif item.snippet %}
                     <p class="text-base leading-7 text-gray-700">{{ item.snippet }}</p>
@@ -93,3 +93,11 @@
         </div>
     </div>
 </div>
+
+
+<c-features.communication.inbox_item 
+    :item="item"
+    :hx_swap_oob="True"    
+/>
+
+

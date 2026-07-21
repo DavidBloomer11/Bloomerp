@@ -1,9 +1,6 @@
-import { $createParagraphNode } from "lexical";
+import { $getRoot } from "lexical";
 import BaseComponent, { getComponent } from "../BaseComponent";
 import { BloomerpTextEditor } from "../text_editor/BloomerpTextEditor";
-import { $createHtmlNode } from "../text_editor/nodes/HtmlNode";
-
-
 
 export class EmailEditor extends BaseComponent {
     private editor: BloomerpTextEditor;
@@ -17,16 +14,23 @@ export class EmailEditor extends BaseComponent {
         const editorElement = this.element?.querySelector('[bloomerp-component="bloomerp-text-editor"]') as HTMLElement;
         this.editor = getComponent(editorElement) as BloomerpTextEditor;
 
-        // Add empty paragraph node to the editor to ensure it has a starting point
-        this.editor.insertNode(
-            ()=> $createParagraphNode()
-        )
-        
-        // Insert the parent email HTML into the editor if it exists
-        this.editor.insertNode(() =>
-            $createHtmlNode(this.getDataAttribute("parentEmail") || "")
-        );
-        
+        const parentEmail = this.getDataAttribute("parentEmail") || "";
+        if (!parentEmail.trim()) return;
+
+        const quotedEmail = `
+            <div data-text-editor-html-node="true">
+                <hr style="border: 0; border-top: 1px solid #d1d5db; margin: 24px 0;">
+                ${parentEmail}
+            </div>
+        `;
+        const replyContent = this.editor.getValue() || "<p><br></p>";
+
+        // Keep a dedicated editable paragraph above the quoted email.
+        this.editor.setValue(`${replyContent}${quotedEmail}`);
+        this.editor.editor?.update(() => {
+            $getRoot().getLastChild()?.getPreviousSibling()?.selectEnd();
+        }, { discrete: true });
+        this.editor.editor?.focus();
     }
 
     public setupCcBccListeners() : void {

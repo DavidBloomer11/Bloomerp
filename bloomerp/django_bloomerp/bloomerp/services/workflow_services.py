@@ -1,10 +1,12 @@
-from celery import shared_task
 from django.apps import apps
 from django.db.models import Model
+from django.utils import timezone
 
 from bloomerp.automation.actions.merge_branches import WaitForOtherBranchResult
 from bloomerp.automation.flows.for_each import ForEachResult
 from bloomerp.automation.flows.if_condition import BranchStopped
+from bloomerp.celery.tasks.workflow_task import run_workflow_async
+from bloomerp.communication.inbox_sources import publish_event
 from bloomerp.models.automation.workflow import Workflow
 from bloomerp.models.automation.workflow_node import WorkflowNode
 from bloomerp.models.automation.workflow_run import WorkflowRun
@@ -14,7 +16,6 @@ from bloomerp.utils.json_serialization import make_json_safe
 
 def _node_input_key(node: WorkflowNode) -> str:
     return f"node_{node.id}"
-
 
 def _serialize_trigger_data(value):
     if isinstance(value, Model):
@@ -121,7 +122,6 @@ def _trace_node(
         entry["error"] = str(error)
     trace.append(entry)
 
-
 def _create_run_step(
     workflow_run: WorkflowRun,
     node: WorkflowNode,
@@ -139,7 +139,6 @@ def _create_run_step(
         status=status,
     )
 
-
 def format_execution_trace(trace: list[dict]) -> str:
     parts = []
     for entry in trace:
@@ -150,7 +149,6 @@ def format_execution_trace(trace: list[dict]) -> str:
             f"{entry['node_sub_type']}: {entry['status']}{suffix}"
         )
     return "; ".join(parts)
-
 
 def serialize_workflow_run_result(workflow_run: WorkflowRun | None) -> dict | None:
     if workflow_run is None:
@@ -173,7 +171,6 @@ def run_workflow(workflow: Workflow, trigger_data:dict) -> WorkflowRun | None:
         return None
 
     return run_workflow_sync(workflow, trigger_data)
-
 
 def run_workflow_sync(workflow: Workflow, trigger_data:dict) -> WorkflowRun:
     workflow_run = WorkflowRun.objects.create(workflow=workflow)
@@ -344,8 +341,8 @@ def run_workflow_sync(workflow: Workflow, trigger_data:dict) -> WorkflowRun:
 
         if isinstance(output_data, WaitForOtherBranchResult):
             # Don't execute downstream nodes until the other branch has also reached this point
-            return 
-        
+            return
+
         for output_node in output_nodes:
             _execute_recursive(
                 node=output_node, 
@@ -355,23 +352,40 @@ def run_workflow_sync(workflow: Workflow, trigger_data:dict) -> WorkflowRun:
                 workflow_run=workflow_run, 
                 enable_logging=enable_logging,
             )
-    
-    # Run the actual workflow
-    _execute_recursive(
-        node=trigger, 
-        input_data=trigger_data, 
-        from_node=None,
-        scope_key=(),
-        workflow_run=workflow_run,
-        enable_logging=workflow.enable_logging,
+
+    related_object = (
+        trigger_data.get("instance")
+        if isinstance(trigger_data, dict)
+        else None
     )
-    
+
+    try:
+        _execute_recursive(
+            node=trigger,
+            input_data=trigger_data,
+            from_node=None,
+            scope_key=(),
+            workflow_run=workflow_run,
+            enable_logging=workflow.enable_logging,
+        )
+    except Exception:
+        publish_event(
+            "workflow.result",
+            workflow_run_id=str(workflow_run.id),
+            status="failed",
+            execution_trace=execution_trace,
+            related_object=related_object,
+            completed_at=timezone.now(),
+        )
+        raise
+
+    publish_event(
+        "workflow.result",
+        workflow_run_id=str(workflow_run.id),
+        status="successful",
+        execution_trace=execution_trace,
+        related_object=related_object,
+        completed_at=timezone.now(),
+    )
+
     return workflow_run
-
-
-@shared_task
-def run_workflow_async(workflow_id, trigger_data):
-    workflow = Workflow.objects.get(id=workflow_id)
-    deserialized_trigger_data = _deserialize_trigger_data(trigger_data)
-    workflow_run = run_workflow_sync(workflow, deserialized_trigger_data)
-    return serialize_workflow_run_result(workflow_run)

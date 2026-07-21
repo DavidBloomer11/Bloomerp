@@ -131,7 +131,10 @@ def _query_local_email_items(
     return queryset.distinct().order_by("-datetime_received", "-datetime_created")
 
 
-def _upsert_email_inbox_item(email: BloomerpEmail, folder: "InboxFolder") -> "InboxItem":
+def _upsert_email_inbox_item_result(
+    email: BloomerpEmail,
+    folder: "InboxFolder",
+) -> tuple["InboxItem", bool]:
     from bloomerp.communication.inbox_folder_definition import InboxFolderType
     from bloomerp.models.communication.inbox.inbox_item import InboxItem
 
@@ -148,7 +151,8 @@ def _upsert_email_inbox_item(email: BloomerpEmail, folder: "InboxFolder") -> "In
         .first()
     )
 
-    if inbox_item is None:
+    created = inbox_item is None
+    if created:
         inbox_item = InboxItem(
             item_type=item_type,
             related_item_id=email.provider_message_id,
@@ -162,6 +166,11 @@ def _upsert_email_inbox_item(email: BloomerpEmail, folder: "InboxFolder") -> "In
     inbox_item.folder = folder
     inbox_item.datetime_received = email.date
     inbox_item.save()
+    return inbox_item, created
+
+
+def _upsert_email_inbox_item(email: BloomerpEmail, folder: "InboxFolder") -> "InboxItem":
+    inbox_item, _ = _upsert_email_inbox_item_result(email, folder)
     return inbox_item
 
 
@@ -239,6 +248,19 @@ def _upsert_emails_to_folder(emails: list[BloomerpEmail], folder: "InboxFolder")
     return len(emails)
 
 
+def _upsert_new_emails_to_folder(
+    emails: list[BloomerpEmail],
+    folder: "InboxFolder",
+) -> tuple["InboxItem", ...]:
+    created_items = []
+    with transaction.atomic():
+        for email in emails:
+            inbox_item, created = _upsert_email_inbox_item_result(email, folder)
+            if created:
+                created_items.append(inbox_item)
+    return tuple(created_items)
+
+
 def _sync_email_account_to_folder(
     email_account: EmailAccount,
     folder: "InboxFolder",
@@ -294,7 +316,8 @@ def refresh_mailboxes_for_account(email_account: EmailAccount, *, save: bool = T
     if save:
         email_account.save(update_fields=["mailboxes", "datetime_updated"])
     return mailboxes
-    
+
+
 def sync_emails_for_account(
     email_account: EmailAccount,
     *,
@@ -318,9 +341,8 @@ def sync_emails_for_account(
     if not folders:
         return 0
 
-    selected_mailboxes = _normalize_mailboxes(mailboxes, email_account)
     emails: list[BloomerpEmail] = []
-    for mailbox in selected_mailboxes:
+    for mailbox in _normalize_mailboxes(mailboxes, email_account):
         emails.extend(
             _fetch_synced_emails_for_account(
                 email_account,
@@ -331,11 +353,9 @@ def sync_emails_for_account(
             )
         )
 
-    synced_count = len(emails)
     for folder in folders:
         _upsert_emails_to_folder(emails, folder)
-    
-    return synced_count
+    return len(emails)
 
 
 def sync_emails_for_folder(
@@ -374,7 +394,7 @@ def sync_emails_for_folder(
         email_account.last_sync_error = str(exc)
         email_account.save(update_fields=["last_sync_error", "datetime_updated"])
         raise
-    
+
     email_account.last_sync_finished_at = timezone.now()
     email_account.last_sync_error = ""
     email_account.mailboxes = available_mailboxes

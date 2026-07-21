@@ -250,6 +250,8 @@ class ImapSmtpAdapter(BaseEmailAdapter):
         for item in data:
             if not isinstance(item, bytes):
                 continue
+            if not self._is_selectable_mailbox(item):
+                continue
             mailbox = self._parse_mailbox_name(item)
             if mailbox:
                 mailboxes.append(mailbox)
@@ -257,7 +259,15 @@ class ImapSmtpAdapter(BaseEmailAdapter):
 
     def _select_mailbox(self, mailbox: str, readonly: bool = False) -> None:
         connection = self.connect()
-        status, _ = connection.select(mailbox, readonly=readonly)
+        try:
+            status, _ = connection.select(
+                self._quote_mailbox(mailbox),
+                readonly=readonly,
+            )
+        except imaplib.IMAP4.error as exc:
+            raise ValidationError(
+                f"Unable to select mailbox {mailbox}: {exc}"
+            ) from exc
         if status != "OK":
             raise ValidationError(f"Unable to select mailbox {mailbox}.")
 
@@ -397,6 +407,15 @@ class ImapSmtpAdapter(BaseEmailAdapter):
         parts = decoded_value.rsplit(" ", 1)
         return parts[-1].strip() if parts else ""
 
+    def _is_selectable_mailbox(self, value: bytes) -> bool:
+        decoded_value = value.decode("utf-8", errors="ignore").lstrip()
+        flags_match = re.match(r"^\(([^)]*)\)", decoded_value)
+        if not flags_match:
+            return True
+
+        flags = flags_match.group(1).split()
+        return all(flag.casefold() != r"\noselect" for flag in flags)
+
     def _extract_display_body(self, message: Message) -> str:
         html_body = self._find_message_part(message, "text/html")
         if html_body:
@@ -442,6 +461,10 @@ class ImapSmtpAdapter(BaseEmailAdapter):
 
     def _quote_search_term(self, value: str) -> str:
         escaped = value.replace("\\", "\\\\").replace('"', r"\"")
+        return f'"{escaped}"'
+
+    def _quote_mailbox(self, mailbox: str) -> str:
+        escaped = mailbox.replace("\\", "\\\\").replace('"', r"\"")
         return f'"{escaped}"'
 
     def _connect_smtp(self) -> smtplib.SMTP:

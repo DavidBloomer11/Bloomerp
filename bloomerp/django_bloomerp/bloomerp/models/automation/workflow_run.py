@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.db import models
 from bloomerp.models.automation import workflow
 from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
@@ -43,4 +45,24 @@ class WorkflowRun(
     
     def __str__(self):
         return f"{self.workflow.name} - {self.datetime_created}"
+
+    def is_successful(self) -> bool:
+        return True
+
+
+    @property
+    def execution_time(self) -> datetime:
+        """Returns the execution time of the workflow
+
+        Returns:
+            datetime: the time it took for the workflow to run
+        """
+        pass
+    
+    @property
+    def number_of_steps(self):
+        """Returns there were in the workflow
+        """
+        pass
+    
     
