@@ -22,12 +22,14 @@ class BloomerpApp(AppConfig):
         from bloomerp.config.settings import configure_bloomerp_allauth_settings
         from bloomerp.config.validator import validate_runtime_configuration
         from bloomerp.services.permission_services import ensure_bloomerp_model_permissions
-        from bloomerp.signals.automations import setup_automation_signals
+        from bloomerp.signals.automation_signals import setup_automation_signals
+        from bloomerp.signals.inbox_source_signals import ensure_inbox_source_schedules
+        from bloomerp.communication.inbox_sources import InboxSourceRegistry
         from bloomerp.modules.definition import module_registry
-        from bloomerp.signals.activity_log import before_save_of_object  # noqa: F401
-        from bloomerp.signals.activity_log import after_save_of_object
-        from bloomerp.signals.activity_log import before_delete_of_object  # noqa: F401
-        from bloomerp.signals.activity_log import after_delete_of_object  # noqa: F401
+        from bloomerp.signals.activity_log_signals import before_save_of_object  # noqa: F401
+        from bloomerp.signals.activity_log_signals import after_save_of_object
+        from bloomerp.signals.activity_log_signals import before_delete_of_object  # noqa: F401
+        from bloomerp.signals.activity_log_signals import after_delete_of_object  # noqa: F401
         
         configure_bloomerp_allauth_settings()
         post_migrate.connect(
@@ -35,6 +37,15 @@ class BloomerpApp(AppConfig):
             sender=self,
             dispatch_uid="bloomerp.ensure_bloomerp_model_permissions",
         )
+        post_migrate.connect(
+            ensure_inbox_source_schedules,
+            sender=self,
+            dispatch_uid="bloomerp.ensure_inbox_source_schedules",
+        )
+
+        InboxSourceRegistry.load_defaults()
+        InboxSourceRegistry.validate()
+        InboxSourceRegistry.connect_signals()
 
         try:
             setup_automation_signals()

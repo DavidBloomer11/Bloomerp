@@ -100,13 +100,13 @@ class WorkflowNodeType(Enum):
         name=_("Action"),
         description=_("An action to perform"),
         types=[
-            # NodeSubTypeDefinition( 
-            #     id="SEND_EMAIL",
-            #     name="Send Email",
-            #     description="Sends an email to specified recipients",
-            #     executor_cls=SendEmailExecutor,
-            #     icon="fa-solid fa-envelope"
-            # ),
+            NodeSubTypeDefinition( 
+                id="SEND_EMAIL",
+                name="Send Email",
+                description="Sends an email to specified recipients",
+                executor_cls=SendEmailExecutor,
+                icon="fa-solid fa-envelope"
+            ),
             NodeSubTypeDefinition(
                 id="GET_OBJECT",
                 name="Get Object",

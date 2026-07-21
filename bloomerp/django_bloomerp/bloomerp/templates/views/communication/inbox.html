@@ -1,0 +1,162 @@
+{% load crispy_forms_tags %}
+
+{% if inbox_preference.selected_inbox %}
+<div 
+    bloomerp-component="inbox" 
+    data-inbox-folder-items-component-url="{% url 'components_render_inbox_folder_items' folder_id='REPLACE_WITH_ID' %}"
+    data-render-inbox-item-url="{% url 'components_render_inbox_item' item_id='REPLACE_WITH_ID' %}"
+    data-render-inbox-item-target="#inbox-item-render-target"
+    data-execute-inbox-action-url="{% url 'components_execute_inbox_action' level='REPLACE_LEVEL' item_id='REPLACE_WITH_ID' action_key='REPLACE_ACTION_KEY' %}"
+    data-add-folder-component-url="{% url 'components_add_inbox_folder' inbox_id=inbox_preference.selected_inbox.id %}"
+
+    data-inbox-id="{{ inbox_preference.selected_inbox.pk }}"
+    data-inbox-folder-id="{{ inbox_preference.selected_inbox_folder.pk }}"
+    data-inbox-preference-id="{{ inbox_preference.pk }}"
+
+    class="flex h-[calc(100vh-4rem)] min-h-[44rem] overflow-hidden" 
+    data-detail-view-grid
+    >
+    <aside class="flex min-w-[20rem] flex-1 flex-col border-r border-gray-200 bg-white">
+        <header class="flex h-14 shrink-0 items-center justify-between border-b border-gray-200 px-5">
+            <c-ui.dropdown.body
+                id="select-folder-dropdown"
+                :trigger_text="inbox_preference.selected_inbox_folder.name"
+                position="left"
+                >
+
+                {% for folder_option in folder_options %}
+                    {% if folder_option.subfolders %}
+                        <c-ui.dropdown.submenu
+                            text="{{ folder_option.folder.name }}"
+                            icon="{{ folder_option.folder.icon }}"
+                            id="folder-menu-{{ folder_option.folder.id }}">
+                            <c-ui.dropdown.item text="{{ folder_option.folder.name }}" icon="{{ folder_option.folder.icon }}" id="select-folder-{{ folder_option.folder.id }}" />
+                            <c-ui.dropdown.item type="divider" />
+                            {% for subfolder in folder_option.subfolders %}
+                                <button
+                                    id="select-subfolder-{{ folder_option.folder.id }}-{{ forloop.counter }}"
+                                    type="button"
+                                    class="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-150 hover:bg-gray-100 hover:text-primary-800"
+                                    role="menuitem"
+                                    data-inbox-subfolder
+                                    data-inbox-subfolder-folder-id="{{ folder_option.folder.id }}"
+                                    data-inbox-subfolder-key="{{ subfolder.key }}"
+                                    data-inbox-subfolder-filters='{{ subfolder.filters_json }}'
+                                    @click="$dispatch('dropdown-close')"
+                                >
+                                    <i class="fa fa-folder mr-3 h-4 w-4 flex-shrink-0"></i>
+                                    <span class="truncate">{{ subfolder.name }}</span>
+                                </button>
+                            {% endfor %}
+                        </c-ui.dropdown.submenu>
+                    {% else %}
+                        <c-ui.dropdown.item text="{{ folder_option.folder.name }}" icon="{{ folder_option.folder.icon }}" id="select-folder-{{ folder_option.folder.id }}"/>
+                    {% endif %}
+                {% endfor %}
+
+                <c-ui.dropdown.item text="Add folder" icon="fa fa-plus" id="add-folder-btn" />
+
+            </c-ui.dropdown.body>
+
+            <div class="flex items-center gap-3 text-gray-500">
+                {% for action in primary_actions %}
+                    <c-ui.tooltip 
+                        title="{{ action.name }}" position="bottom">
+                        <button
+                            type="button"
+                            data-inbox-action
+                            data-inbox-action-level="folder"
+                            data-inbox-action-item-id="{{ inbox_preference.selected_inbox_folder.pk }}"
+                            data-inbox-action-key="{{ action.key }}"
+                            data-inbox-action-method="{{ action.http_method }}"
+                            data-inbox-action-target="{{ action.target }}"
+                        >
+                            <i class="{{ action.icon }}"></i>
+                        </button>
+                    </c-ui.tooltip>
+                {% endfor %}
+
+                {% if secondary_actions %}
+                <c-ui.dropdown.body 
+                    trigger_icon_class="fa fa-ellipsis"
+                >
+                    {% for action in secondary_actions %}
+                        <button
+                            type="button"
+                            class="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-150 hover:bg-gray-100 hover:text-primary-800"
+                            role="menuitem"
+                            data-inbox-action
+                            data-inbox-action-level="folder"
+                            data-inbox-action-item-id="{{ inbox_preference.selected_inbox_folder.pk }}"
+                            data-inbox-action-key="{{ action.key }}"
+                            data-inbox-action-method="{{ action.http_method }}"
+                            data-inbox-action-target="{{ action.target }}"
+                            @click="$dispatch('dropdown-close')"
+                        >
+                            {% if action.icon %}
+                                <i class="{{ action.icon }} mr-3 h-4 w-4 flex-shrink-0"></i>
+                            {% endif %}
+                            {{ action.name }}
+                        </button>
+                    {% empty %}
+                        <c-ui.dropdown.item text="No actions" disabled=True />
+                    {% endfor %}
+                </c-ui.dropdown.body>
+                {% endif %}
+                <c-ui.dropdown.body 
+                    trigger_icon_class="fa fa-filter"
+                >
+                    
+                </c-ui.dropdown.body>
+            </div>
+        </header>
+
+        <div class="shrink-0 space-y-4 border-b border-gray-200 p-4">
+            <label
+                class="flex h-11 items-center gap-3 rounded-xl border border-gray-200 bg-white px-3 text-gray-500 shadow-xs">
+                <i class="fa fa-search text-sm"></i>
+                <input
+                    class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-gray-900 placeholder:text-gray-500 focus:ring-0"
+                    placeholder="Search"
+                    id="inbox-search-input"
+                    >
+            </label>
+        </div>
+
+        <div class="min-h-0 flex-1 overflow-y-auto" id="inbox-items">
+            
+        </div>
+    </aside>
+
+    <c-ui.resizable_div id="inbox-resizable" start_width="calc(100% - 27.5rem)" fit_to_main_bottom="true"
+        class="min-w-0 shrink-0 bg-white">
+        <section
+            id="inbox-item-render-target"
+            class="flex h-full min-w-0 flex-col overflow-hidden"
+            data-resizable-div-panel
+        >
+            
+        </section>
+    </c-ui.resizable_div>
+</div>
+{% else %}
+
+<c-ui.center_page_element class="" icon="fa fa-envelope" title="Create Inbox"
+    text="Create and setup your inbox to start receiving emails, messages and notifications.">
+    <div id="create-inbox-panel" class="flex flex-col items-center gap-4">
+
+        <button class="btn btn-primary" hx-post="{% url 'components_create_inbox' %}" hx-target="this"
+            hx-swap="innerHTML" hx-vals='{"csrfmiddlewaretoken": "{{ csrf_token }}", "create_default": "true"}'>Create
+            default</button>
+
+        <button class="btn btn-secondary" type="button" hx-get="{% url 'components_create_inbox' %}"
+            hx-target="#create-custom-inbox-modal-body" bloomerp-open-modal="create-custom-inbox-modal"
+            hx-swap="innerHTML" hx-animation>
+            Create custom
+        </button>
+    </div>
+</c-ui.center_page_element>
+{% endif %}
+
+<c-ui.modal id="create-custom-inbox-modal" />
+<div id="inbox-message-target"></div>

@@ -1,12 +1,9 @@
-from bloomerp.utils.realtime import send_user_message
-from bloomerp.widgets.foreign_field_widget import ForeignFieldWidget
+from bloomerp.communication.inbox_sources import publish_event
 
 from bloomerp.automation.base_executor import BaseExecutor
-from bloomerp.automation.schema import WorkflowInputRequirement, WorkflowIOSchema, WorkflowValueField, WorkflowValueType
+from bloomerp.automation.schema import WorkflowInputRequirement, WorkflowIOSchema, WorkflowValueType
 from django.forms import Form
 from django import forms
-from django.contrib.contenttypes.models import ContentType
-
 
 # TODO: Choices should be defined in a central place
 class SendUserMessageForm(Form):
@@ -38,15 +35,17 @@ class SendUserMessage(BaseExecutor):
     def execute(self, input_data: dict) -> dict:
         params = self.resolve_config(input_data)
         user_id = params.get("user_id")
-        send_user_message(
-            user_id,
-            payload={
-                "type": "toast", 
-                "message": str(params.get("message")), 
-                "level": params.get("message_type", "success")
-            }
+        
+        publish_event(
+            key="system.message",
+            user_ids=[user_id],
+            system_message_type="general",
+            data={
+                "message": str(params.get("message")),
+                "severity": params.get("message_type") or "info",
+            },
         )
         
         
         
-
+        

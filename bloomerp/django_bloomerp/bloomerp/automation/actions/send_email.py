@@ -1,3 +1,7 @@
+from bloomerp.communication.emails.email_providers import EmailProvider, EmailProviderDefinition
+from bloomerp.models.communication.email_account import EmailAccount
+from bloomerp.widgets.foreign_field_widget import ForeignFieldWidget
+
 from ..base_executor import BaseExecutor
 from bloomerp.automation.schema import (
     WorkflowInputRequirement,
@@ -10,6 +14,15 @@ from django.forms import Form
 from django import forms
 
 class SendEmailForm(Form):
+    from_account = forms.CharField(
+        label="From Account",
+        widget=ForeignFieldWidget(
+            model=EmailAccount,
+            attrs={
+                "class" : "input w-full"
+            }
+        )
+    )
     recipient = forms.CharField(
         label="Recipient Email",
         help_text="Use a literal email or a value reference like {{ input.instance.email }}.",
@@ -66,7 +79,24 @@ class SendEmailExecutor(BaseExecutor):
         recipient = stringify_value(params.get("recipient"))
         subject = stringify_value(params.get("subject"))
         body = stringify_value(params.get("body"))
-        send_email(recipient, subject, body)
+        from_email = params.get("from_account")
+        
+        # Get the email account
+        email_account = EmailAccount.objects.get(id=from_email)
+        provider : EmailProviderDefinition = EmailProvider.from_key(email_account.provider).value
+        adapter = provider.adapter_class(
+            email_account
+        )
+        
+        # Send the email using the adapter
+        adapter.send_email(
+            to=[recipient],
+            subject=subject,
+            body_text=body,
+            body_html=None,
+        )
+        
+        
         output_data = input_data if isinstance(input_data, dict) else {"input": input_data}
         return {
             **output_data,
@@ -78,6 +108,3 @@ class SendEmailExecutor(BaseExecutor):
             },
         }
 
-
-def send_email(recipient: str, subject: str, body: str) -> None:
-    print(f"Email sent\nTo: {recipient}\nSubject: {subject}\nBody: {body}")

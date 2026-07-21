@@ -1,0 +1,103 @@
+<div
+    bloomerp-component="inbox-item"
+    data-inbox-item-id="{{ item.id }}"
+    data-inbox-item-detail="true"
+    class="flex h-full min-w-0 flex-col overflow-hidden"
+>
+    <header class="flex h-14 shrink-0 items-center justify-between border-b border-gray-200 px-5">
+        <div class="flex min-w-0 items-center gap-4">
+            <button class="inline-flex size-8 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100">
+                <i class="fa fa-times"></i>
+            </button>
+            <div class="flex min-w-0 items-center gap-2">
+                <span class="inline-flex size-6 items-center justify-center rounded-md bg-primary-500 text-xs text-white">
+                    <i class="{{ item.icon }}"></i>
+                </span>
+                <span class="truncate text-sm font-medium text-gray-950">{{ item.title }}</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-3 text-gray-500">
+            {% for action in primary_actions %}
+                <c-ui.tooltip title="{{ action.name }}" position="bottom">
+                    <button
+                        type="button"
+                        data-inbox-action
+                        data-inbox-action-level="item"
+                        data-inbox-action-item-id="{{ item.id }}"
+                        data-inbox-action-key="{{ action.key }}"
+                        data-inbox-action-method="{{ action.http_method }}"
+                        data-inbox-action-target="{{ action.target }}"
+                    >
+                        <i class="{{ action.icon }}"></i>
+                    </button>
+                </c-ui.tooltip>
+            {% endfor %}
+
+            <c-ui.dropdown.body trigger_icon_class="fa fa-ellipsis">
+                {% for action in secondary_actions %}
+                    <button
+                        type="button"
+                        class="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-150 hover:bg-gray-100 hover:text-primary-800"
+                        role="menuitem"
+                        data-inbox-action
+                        data-inbox-action-level="item"
+                        data-inbox-action-item-id="{{ item.id }}"
+                        data-inbox-action-key="{{ action.key }}"
+                        data-inbox-action-method="{{ action.http_method }}"
+                        data-inbox-action-target="{{ action.target }}"
+                        @click="$dispatch('dropdown-close')"
+                    >
+                        {% if action.icon %}
+                            <i class="{{ action.icon }} mr-3 h-4 w-4 flex-shrink-0"></i>
+                        {% endif %}
+                        {{ action.name }}
+                    </button>
+                {% empty %}
+                    <c-ui.dropdown.item text="No actions" disabled=True />
+                {% endfor %}
+            </c-ui.dropdown.body>
+        </div>
+    </header>
+
+    <div class="min-h-0 flex-1 overflow-y-auto">
+        <div class="mx-auto max-w-5xl px-8 py-6">
+            <div class="flex items-start gap-3">
+                <span class="mt-0.5 inline-flex size-7 items-center justify-center rounded-lg bg-primary-500 text-sm text-white">
+                    <i class="{{ item.icon }}"></i>
+                </span>
+                <div class="min-w-0">
+                    <h1 class="truncate text-2xl font-semibold tracking-normal text-gray-950">{{ item.title }}</h1>
+                    {% if item.actor %}
+                        <p class="mt-1 text-base text-gray-600">{{ item.actor }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="mt-8 border-t border-gray-200 pt-4">
+                {% if error_message %}
+                    <div class="rounded-lg border border-danger-light bg-danger-light/20 p-4 text-danger-dark">
+                        {{ error_message }}
+                    </div>
+                {% elif content %}
+                    <iframe
+                        class="h-[70vh] w-full"
+                        sandbox="allow-popups allow-popups-to-escape-sandbox"
+                        srcdoc="{{ content|force_escape }}"
+                    ></iframe>
+                {% elif item.snippet %}
+                    <p class="text-base leading-7 text-gray-700">{{ item.snippet }}</p>
+                {% else %}
+                    <c-ui.text.muted>No preview is available for this item.</c-ui.text.muted>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<c-features.communication.inbox_item 
+    :item="item"
+    :hx_swap_oob="True"    
+/>
+
+

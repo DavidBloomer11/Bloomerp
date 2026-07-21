@@ -25,6 +25,7 @@ Parameters:
 {% if icon %}{% endif %}
 
 <div class="relative inline-block text-left {% if wrapper_class %}{{ wrapper_class }}{% endif %}"
+    id="{{ id }}"
     x-data="{
         open: false,
         wasOpen: false,

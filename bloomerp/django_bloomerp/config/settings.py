@@ -184,6 +184,7 @@ CHANNEL_LAYERS = {
 }
 
 BLOOMERP_CONFIG = BloomerpConfig(
-    auto_generate_api_endpoints=True
+    auto_generate_api_endpoints=True,
+    email_secret_key="GqUtCcrykNhXgKQzF2XA9uTHTkqoB8wqpuZ6WfrBJbKrQhWUzG"
 )
 
