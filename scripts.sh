@@ -20,6 +20,8 @@ update-internal-sdk() {
             --app bloomerp \
             "$@"
     )
+}
+
 reset-test-data() {
   local script_dir
   script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -279,23 +281,17 @@ case "${1:-}" in
     document-cotton-components "$@"
     ;;
   ""|-h|--help|help)
-        echo "Usage: ./scripts.sh update-internal-sdk [create_sdk options]"
-        echo "       ./scripts.sh document-cotton-components"
-    ;;
-  *)
-    echo "Unknown command: $1" >&2
-        echo "Usage: ./scripts.sh update-internal-sdk [create_sdk options]" >&2
-        echo "       ./scripts.sh document-cotton-components" >&2
-    echo "Usage: ./scripts.sh <command>"
-    echo
-    echo "Commands:"
-    echo "  reset-test-data"
-    echo "  document-cotton-components"
+        echo "Usage: ./scripts.sh <command>"
+        echo
+        echo "Commands:"
+        echo "  update-internal-sdk [create_sdk options]"
+        echo "  reset-test-data"
+        echo "  document-cotton-components"
     ;;
   *)
     echo "Unknown command: $1" >&2
     echo "Usage: ./scripts.sh <command>" >&2
-    echo "Commands: reset-test-data, document-cotton-components" >&2
+        echo "Commands: update-internal-sdk, reset-test-data, document-cotton-components" >&2
     exit 1
     ;;
 esac
