@@ -9,7 +9,7 @@ from bloomerp.components.communication.emails.reply_to_email import reply_to_ema
 from bloomerp.components.communication.emails.sync_emails import sync_emails
 from bloomerp.utils.base_type_definition import BaseTypeDefinition
 
-from bloomerp.utils.requests import parse_bool_parameter, render_message, render_message_and_refresh
+from bloomerp.utils.requests import parse_bool_parameter, render_message, render_page_refresh_with_message
 
 if TYPE_CHECKING:
     from bloomerp.models.communication.inbox.inbox_item import InboxItem
@@ -218,7 +218,7 @@ DELETE_INBOX_ITEM_ACTION = InboxActionDefinition(
     http_method="post",
     execution_func=lambda request, item: (
         item.get_inbox_item_type().on_delete(item, request),
-        render_message_and_refresh(request, "Item deleted successfully", "success")
+        render_page_refresh_with_message(request, "Item deleted successfully", "success")
     )[-1]
 )
 
@@ -237,7 +237,7 @@ DELETE_INBOX_FOLDER_ACTION = InboxActionDefinition(
     is_primary_action=False,
     execution_func=lambda request, folder: (
         folder.delete(), 
-        render_message_and_refresh(request, "Inbox folder deleted successfully", "success")
+        render_page_refresh_with_message(request, "Inbox folder deleted successfully", "success")
     )[-1]
 )
     
