@@ -100,6 +100,10 @@ class Migration(migrations.Migration):
             consolidate_email_message_ids,
             migrations.RunPython.noop,
         ),
+        migrations.RunSQL(
+            sql="SET CONSTRAINTS ALL IMMEDIATE",
+            reverse_sql=migrations.RunSQL.noop,
+        ),
         migrations.AddConstraint(
             model_name="inboxitem",
             constraint=models.UniqueConstraint(
