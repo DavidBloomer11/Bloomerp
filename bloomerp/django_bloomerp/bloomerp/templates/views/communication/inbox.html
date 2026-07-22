@@ -105,8 +105,25 @@
                 {% endif %}
                 <c-ui.dropdown.body 
                     trigger_icon_class="fa fa-filter"
+                    id="select-filter-dropdown"
                 >
-                    
+                    {% for filter in filters %}
+                        <button
+                            type="button"
+                            class="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 transition-colors duration-150 hover:bg-gray-100 hover:text-primary-800"
+                            role="menuitem"
+                            data-inbox-filter-key="{{ filter.key }}"
+                            data-inbox-filter-filters='{{ filter.filters_json }}'
+                            @click="$dispatch('dropdown-close')"
+                        >
+                            {% if filter.icon %}
+                                <i class="{{ filter.icon }} mr-3 h-4 w-4 flex-shrink-0"></i>
+                            {% endif %}
+                            {{ filter.name }}
+                        </button>
+                    {% empty %}
+                        <c-ui.dropdown.item text="No filters" disabled=True />
+                    {% endfor %}
                 </c-ui.dropdown.body>
             </div>
         </header>

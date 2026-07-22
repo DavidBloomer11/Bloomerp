@@ -239,7 +239,7 @@ class CreateEmailAccountView(WizardMixin, BaseBloomerpView, TemplateView):
             with transaction.atomic():
                 email_account = EmailAccount(
                     provider=provider.value.key,
-                    status=EmailAccount.Status.DRAFT,
+                    status=EmailAccount.Status.ACTIVE,
                     created_by=self.request.user,
                     updated_by=self.request.user,
                     **settings,

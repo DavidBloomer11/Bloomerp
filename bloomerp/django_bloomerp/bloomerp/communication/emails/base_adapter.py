@@ -7,13 +7,19 @@ if TYPE_CHECKING:
     from bloomerp.models.communication.email_account import EmailAccount
 
 
+class EmailAttachmentMetadata(BaseModel):
+    """Provider-backed reference to an inbound email attachment."""
+
+    id: str
+    filename: str
+    content_type: str = "application/octet-stream"
+    size: int = 0
+
+
 class BloomerpEmail(BaseModel):
     """
     Lightweight provider-neutral email index data.
 
-    This intentionally excludes full bodies and attachments. InboxItem rows
-    should store enough metadata to list and retrieve an email, while full
-    content remains provider-backed and fetch-time.
     """
     provider: str
     provider_message_id: str
@@ -29,6 +35,7 @@ class BloomerpEmail(BaseModel):
     flags: list[str] = Field(default_factory=list)
     snippet: str = ""
     raw: dict[str, Any] = Field(default_factory=dict)
+    attachments: list[EmailAttachmentMetadata] = Field(default_factory=list)
 
     def retrieval_metadata(self) -> dict[str, Any]:
         return self.model_dump(
@@ -44,6 +51,7 @@ class BloomerpEmail(BaseModel):
                 "cc",
                 "flags",
                 "raw",
+                "attachments",
             },
             exclude_none=True,
         )
@@ -106,6 +114,16 @@ class BaseEmailAdapter:
         Fetch the content of an email from the external service.
         This method should be implemented by subclasses.
         """
+        raise NotImplementedError("Subclasses must implement this method.")
+
+    def fetch_email_attachment(
+        self,
+        email_id: str,
+        attachment_id: str,
+        *,
+        mailbox: str = "INBOX",
+    ) -> EmailAttachment | None:
+        """Fetch one attachment by the reference returned in its metadata."""
         raise NotImplementedError("Subclasses must implement this method.")
     
     

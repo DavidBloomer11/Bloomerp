@@ -32,6 +32,7 @@ class BloomerpApp(AppConfig):
         from bloomerp.signals.activity_log_signals import after_delete_of_object  # noqa: F401
         
         configure_bloomerp_allauth_settings()
+        
         post_migrate.connect(
             ensure_bloomerp_model_permissions,
             sender=self,

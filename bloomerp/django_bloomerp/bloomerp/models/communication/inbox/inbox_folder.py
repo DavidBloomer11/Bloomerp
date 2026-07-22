@@ -2,6 +2,7 @@ from typing import Type
 
 from django.db import models
 from django.db.models import Q
+from numpy import isin
 from bloomerp.communication.inbox_folder_definition import InboxFolderType, InboxFolderTypeDefinition
 from bloomerp.models.base_bloomerp_model import BloomerpModel
 from bloomerp.models.communication.inbox.inbox_item import InboxItem
@@ -99,4 +100,32 @@ class InboxFolder(BloomerpModel):
         recipient_ids = self.inbox.members.values_list("pk", flat=True)
         return get_user_model().objects.filter(
             Q(pk=self.inbox.owner_id) | Q(pk__in=recipient_ids)
+        ).distinct()
+
+    
+    @staticmethod
+    def get_folders_by_users_and_type(
+        users: list[AbstractBloomerpUser] | list[int] | int | AbstractBloomerpUser,
+        folder_type: InboxFolderType | str,
+    ) -> QuerySet["InboxFolder"]:
+        """
+        Returns a queryset of InboxFolder instances for the given users and folder type.
+        """
+        if isinstance(users, int):
+            user_ids = [users]
+        
+        elif isinstance(users, AbstractBloomerpUser):
+            user_ids = [users.pk]
+            
+        elif isinstance(users, list):
+            user_ids = [
+                user.pk if isinstance(user, AbstractBloomerpUser) else user
+                for user in users
+            ]
+        else:
+            raise ValueError("Invalid type for users parameter.")
+        
+        return InboxFolder.objects.filter(
+            Q(inbox__owner_id__in=user_ids) | Q(inbox__members__id__in=user_ids),
+            type=folder_type.value.key if isinstance(folder_type, InboxFolderType) else folder_type,
         ).distinct()

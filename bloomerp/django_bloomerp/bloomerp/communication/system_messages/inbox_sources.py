@@ -24,7 +24,10 @@ def handle_system_message(
     data: dict,
     **kwargs,
 ):
-    from bloomerp.communication.inbox_sources import InboxSourceDelivery
+    from bloomerp.communication.inbox_sources import (
+        InboxSourceDelivery,
+        InboxSourceExecutionResult,
+    )
 
     deliveries = []
     for folder in folders:
@@ -34,4 +37,4 @@ def handle_system_message(
             data=data,
         )
         deliveries.append(InboxSourceDelivery(folder=folder, items=(item,)))
-    return tuple(deliveries)
+    return InboxSourceExecutionResult(deliveries=tuple(deliveries))

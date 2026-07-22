@@ -1,3 +1,5 @@
+import json
+
 import bleach
 from django import template
 from django.db.models.manager import Manager
@@ -83,6 +85,16 @@ def dump_layout_json_filter(layout):
     {{ layout|dump_layout_json }}
     """
     return dump_layout_json_service(layout)
+
+@register.filter(name="dump_json")
+def dump_json_filter(data):
+    """
+    Serialize a Python object to JSON for use in `data-*` attributes.
+
+    Example usage:
+    {{ data|dump_json }}
+    """
+    return json.dumps(data)
 
 @register.filter(name='get_dict_value')
 def get_dict_value(dictionary:dict, key:str):

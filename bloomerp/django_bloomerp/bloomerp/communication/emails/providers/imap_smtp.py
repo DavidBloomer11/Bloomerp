@@ -1,4 +1,5 @@
 
+from collections.abc import Iterator
 from datetime import date, datetime, timedelta
 from email import message_from_bytes
 from email.header import decode_header, make_header
@@ -21,6 +22,7 @@ from django.core.exceptions import ValidationError
 from bloomerp.communication.emails.base_adapter import BloomerpEmail
 from bloomerp.communication.emails.base_adapter import BaseEmailAdapter
 from bloomerp.communication.emails.base_adapter import EmailAttachment
+from bloomerp.communication.emails.base_adapter import EmailAttachmentMetadata
 
 if TYPE_CHECKING:
     from bloomerp.models.communication.email_account import EmailAccount
@@ -185,17 +187,43 @@ class ImapSmtpAdapter(BaseEmailAdapter):
         return message_id
 
     def fetch_email_content(self, email_id: str, *, mailbox: str = "INBOX") -> str:
+        message = self._fetch_message(email_id, mailbox=mailbox)
+        if message is None:
+            return ""
+        return self._extract_display_body(message)
+
+    def fetch_email_attachment(
+        self,
+        email_id: str,
+        attachment_id: str,
+        *,
+        mailbox: str = "INBOX",
+    ) -> EmailAttachment | None:
+        message = self._fetch_message(email_id, mailbox=mailbox)
+        if message is None:
+            return None
+
+        for part_id, part in self._iter_leaf_parts(message):
+            if part_id != attachment_id or not self._is_attachment(part):
+                continue
+            return EmailAttachment(
+                filename=self._attachment_filename(part),
+                content=part.get_payload(decode=True) or b"",
+                content_type=part.get_content_type() or "application/octet-stream",
+            )
+        return None
+
+    def _fetch_message(self, email_id: str, *, mailbox: str) -> Message | None:
         connection = self.connect()
         self._select_mailbox(mailbox, readonly=True)
         status, data = connection.uid("FETCH", email_id, "(BODY.PEEK[])")
         if status != "OK":
-            return ""
+            return None
 
         for item in data:
             if isinstance(item, tuple) and isinstance(item[1], bytes):
-                message = message_from_bytes(item[1], policy=default)
-                return self._extract_display_body(message)
-        return ""
+                return message_from_bytes(item[1], policy=default)
+        return None
 
     def search_emails(
         self,
@@ -313,21 +341,21 @@ class ImapSmtpAdapter(BaseEmailAdapter):
 
     def _fetch_email_index(self, uid: str, *, mailbox: str) -> BloomerpEmail | None:
         connection = self.connect()
-        status, data = connection.uid("FETCH", uid, "(UID FLAGS BODY.PEEK[HEADER])")
+        status, data = connection.uid("FETCH", uid, "(UID FLAGS BODY.PEEK[])")
         if status != "OK":
             return None
 
         response_meta = b""
-        header_bytes = b""
+        message_bytes = b""
         for item in data:
             if not isinstance(item, tuple):
                 continue
             if isinstance(item[0], bytes):
                 response_meta += item[0]
             if isinstance(item[1], bytes):
-                header_bytes += item[1]
+                message_bytes += item[1]
 
-        message = message_from_bytes(header_bytes, policy=default)
+        message = message_from_bytes(message_bytes, policy=default)
         flags = self._parse_flags(response_meta)
         provider_message_id = self._parse_uid(response_meta) or uid
 
@@ -347,6 +375,7 @@ class ImapSmtpAdapter(BaseEmailAdapter):
             raw={
                 "imap_uid": provider_message_id,
             },
+            attachments=self._extract_attachment_metadata(message),
         )
 
     def _parse_uid(self, response_meta: bytes) -> str | None:
@@ -434,6 +463,47 @@ class ImapSmtpAdapter(BaseEmailAdapter):
             )
 
         return ""
+
+    def _extract_attachment_metadata(
+        self,
+        message: Message,
+    ) -> list[EmailAttachmentMetadata]:
+        attachments = []
+        for part_id, part in self._iter_leaf_parts(message):
+            if not self._is_attachment(part):
+                continue
+            attachments.append(
+                EmailAttachmentMetadata(
+                    id=part_id,
+                    filename=self._attachment_filename(part),
+                    content_type=part.get_content_type() or "application/octet-stream",
+                    size=len(part.get_payload(decode=True) or b""),
+                )
+            )
+        return attachments
+
+    def _iter_leaf_parts(
+        self,
+        message: Message,
+        prefix: str = "",
+    ) -> Iterator[tuple[str, Message]]:
+        if not message.is_multipart():
+            yield prefix or "1", message
+            return
+
+        payload = message.get_payload()
+        if not isinstance(payload, list):
+            return
+        for index, part in enumerate(payload, start=1):
+            part_id = f"{prefix}.{index}" if prefix else str(index)
+            yield from self._iter_leaf_parts(part, part_id)
+
+    def _is_attachment(self, part: Message) -> bool:
+        return part.get_content_disposition() == "attachment"
+
+    def _attachment_filename(self, part: Message) -> str:
+        filename = part.get_filename() or "attachment"
+        return self._decode_header_value(str(filename))
 
     def _find_message_part(self, message: Message, content_type: str) -> str:
         if message.is_multipart():

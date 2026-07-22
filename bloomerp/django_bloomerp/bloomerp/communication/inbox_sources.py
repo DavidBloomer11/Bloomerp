@@ -1,16 +1,17 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import partial
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Iterable, Literal, Protocol
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Literal, Mapping, Protocol
+from uuid import UUID, uuid4
 
 from django.apps import apps
 from django.db import transaction
 from django.db.models import Model, QuerySet
 from django.utils.module_loading import import_string
 
-from bloomerp.celery.utils import parse_cron_schedule
+from bloomerp.celery.utils import is_celery_available, parse_cron_schedule
 from bloomerp.utils.json_serialization import make_json_safe
 from bloomerp.utils.realtime import send_user_message
 
@@ -31,7 +32,7 @@ class InboxSourceHandler(Protocol):
         folders: QuerySet["InboxFolder"],
         *args,
         **kwargs,
-    ) -> Iterable["InboxSourceDelivery"]: ...
+    ) -> "InboxSourceExecutionResult": ...
 
 
 CallableReference = Callable[..., Any] | str
@@ -57,6 +58,30 @@ def resolve_callable(
 class InboxSourceDelivery:
     folder: "InboxFolder"
     items: tuple["InboxItem", ...]
+
+
+@dataclass(frozen=True, kw_only=True)
+class InboxSourceExecutionResult:
+    outcome: Literal["completed", "skipped"] = "completed"
+    deliveries: tuple[InboxSourceDelivery, ...] = ()
+    reason: str | None = None
+    metrics: Mapping[str, int | float | str] = field(default_factory=dict)
+
+    @property
+    def delivery_count(self) -> int:
+        return len(self.deliveries)
+
+    @property
+    def item_count(self) -> int:
+        return sum(len(delivery.items) for delivery in self.deliveries)
+
+
+@dataclass(frozen=True, kw_only=True)
+class InboxSourceReceipt:
+    source_key: str
+    execution_id: UUID
+    state: Literal["scheduled", "completed"]
+    result: InboxSourceExecutionResult | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -277,98 +302,123 @@ def _deserialize_source_value(value: Any) -> Any:
     return value
 
 
-def _normalize_deliveries(
-    deliveries: Iterable[InboxSourceDelivery] | None,
-) -> tuple[InboxSourceDelivery, ...]:
-    normalized = tuple(deliveries or ())
-    for delivery in normalized:
-        if not isinstance(delivery, InboxSourceDelivery):
-            raise TypeError("Inbox source handlers must return InboxSourceDelivery values.")
-    return normalized
-
-
-def deliver_source_results(deliveries: Iterable[InboxSourceDelivery]) -> None:
-    recipient_items: dict[int, list["InboxItem"]] = {}
-    for delivery in deliveries:
-        if not delivery.items:
-            continue
-        for recipient in delivery.folder.get_recipients():
-            recipient_items.setdefault(recipient.pk, []).extend(delivery.items)
-
-    for recipient_id, items in recipient_items.items():
-        if len(items) == 1:
-            message = items[0].snippet or items[0].title
-        else:
-            message = f"You have {len(items)} new inbox items."
-
-        send_user_message(
-            recipient_id,
-            payload={
-                "type": "toast",
-                "message": message,
-                "level": "info",
-            },
-        )
-
-
 def execute_registered_source(
     key: str,
     *args,
     **kwargs,
-) -> tuple[InboxSourceDelivery, ...]:
+) -> InboxSourceExecutionResult:
+    """Executes a registered source
+
+    Args:
+        key (str): source key
+        *args: positional arguments to pass to the source handler
+        **kwargs: keyword arguments to pass to the source handler
+        
+        
+    Raises:
+        TypeError: if the handler does not return an InboxSourceExecutionResult
+        TypeError: if the handler returns an invalid delivery
+
+    Returns:
+        InboxSourceExecutionResult: Execution result of the source handler
+    """
     registered = InboxSourceRegistry.get_by_key(key)
     source = registered.source
     folders = source.resolve_folder_qs_resolver()(*args, **kwargs)
-    deliveries = _normalize_deliveries(
-        source.resolve_handler()(folders, *args, **kwargs)
-    )
-    deliver_source_results(deliveries)
-    return deliveries
+    result = source.resolve_handler()(folders, *args, **kwargs)
+    if not isinstance(result, InboxSourceExecutionResult):
+        raise TypeError(
+            f"Handler for inbox source {key!r} must return "
+            "InboxSourceExecutionResult."
+        )
 
+    recipient_items: dict[int, list["InboxItem"]] = {}
+    for delivery in result.deliveries:
+        if not isinstance(delivery, InboxSourceDelivery):
+            raise TypeError(
+                f"Handler for inbox source {key!r} returned an invalid delivery."
+            )
+        for recipient in delivery.folder.get_recipients():
+            recipient_items.setdefault(recipient.pk, []).extend(delivery.items)
 
-def execute_serialized_source(
-    key: str,
-    serialized_args: list[Any] | None = None,
-    serialized_kwargs: dict[str, Any] | None = None,
-) -> tuple[InboxSourceDelivery, ...]:
-    args = _deserialize_source_value(serialized_args or [])
-    kwargs = _deserialize_source_value(serialized_kwargs or {})
-    return execute_registered_source(key, *args, **kwargs)
+    for recipient_id, items in recipient_items.items():
+        send_user_message(
+            recipient_id,
+            payload={
+                "type": "toast",
+                "message": (
+                    items[0].snippet or items[0].title
+                    if len(items) == 1
+                    else f"You have {len(items)} new inbox items."
+                ),
+                "level": "info",
+            },
+        )
 
-
-def _enqueue_source(key: str, args: tuple[Any, ...], kwargs: dict[str, Any]) -> None:
-    """Queues a source by key
-
-    Args:
-        key (str): the source key
-        args (tuple[Any, ...]): args
-        kwargs (dict[str, Any]): keyword arguments
-    """
-    from bloomerp.celery.tasks.inbox_source_task import execute_inbox_source_task
-
-    execute_inbox_source_task.delay(
-        key,
-        _serialize_source_value(args),
-        _serialize_source_value(kwargs),
-    )
+    return result
 
 
 def _dispatch_source(
     source: InboxEventSource | InboxSignalSource,
     *args,
     **kwargs,
-) -> tuple[InboxSourceDelivery, ...] | None:
-    if source.run_async:
-        transaction.on_commit(partial(_enqueue_source, source.key, args, kwargs))
-        return None
-    return execute_registered_source(source.key, *args, **kwargs)
+) -> InboxSourceReceipt:
+    """Dispatches the source by executing it
+
+    Args:
+        source (InboxEventSource | InboxSignalSource): the registered inbox source
+
+    Returns:
+        InboxSourceReceipt: the result
+    """
+    execution_id = uuid4()
+    if source.run_async and is_celery_available():
+        from bloomerp.celery.tasks.inbox_source_task import execute_inbox_source_task
+
+        serialized_args = _serialize_source_value(args)
+        serialized_kwargs = _serialize_source_value(kwargs)
+        transaction.on_commit(
+            partial(
+                execute_inbox_source_task.apply_async,
+                args=[
+                    source.key,
+                    serialized_args,
+                    serialized_kwargs,
+                    str(execution_id),
+                ],
+                task_id=str(execution_id),
+            )
+        )
+        return InboxSourceReceipt(
+            source_key=source.key,
+            execution_id=execution_id,
+            state="scheduled",
+        )
+    else:
+        return InboxSourceReceipt(
+            source_key=source.key,
+            execution_id=execution_id,
+            state="completed",
+            result=execute_registered_source(source.key, *args, **kwargs),
+        )
 
 
 def publish_event(
     key: str,
     *args,
     **kwargs,
-) -> tuple[InboxSourceDelivery, ...] | None:
+) -> InboxSourceReceipt:
+    """Publishes an event
+
+    Args:
+        key (str): the event source key
+
+    Raises:
+        TypeError: inbox source key not an event
+
+    Returns:
+        InboxSourceReceipt: the event receipt
+    """
     registered = InboxSourceRegistry.get_by_key(key)
     source = registered.source
     if not isinstance(source, InboxEventSource):

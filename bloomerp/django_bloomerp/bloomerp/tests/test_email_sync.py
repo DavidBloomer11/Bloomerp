@@ -3,12 +3,17 @@ import imaplib
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, TestCase
 
 from bloomerp.communication.emails.providers.imap_smtp import ImapSmtpAdapter
+from bloomerp.communication.inbox_folder_definition import InboxFolderType
 from bloomerp.communication.emails.sync import handle_email_account_sync
 from bloomerp.components.communication.emails.sync_emails import SyncEmailsForm
+from bloomerp.models.communication.email_account import EmailAccount
+from bloomerp.models.communication.inbox.inbox import Inbox
+from bloomerp.models.communication.inbox.inbox_folder import InboxFolder
 
 
 class SyncEmailsFormTests(SimpleTestCase):
@@ -77,37 +82,57 @@ class ImapMailboxDiscoveryTests(SimpleTestCase):
             adapter._select_mailbox("[Gmail]/All Mail", readonly=True)
 
 
-class EmailSyncSourceTests(SimpleTestCase):
-    @patch("bloomerp.communication.emails.sync.EmailAccount.objects.get")
-    @patch("bloomerp.communication.emails.actions._upsert_new_emails_to_folder")
-    @patch("bloomerp.communication.emails.actions._fetch_synced_emails_for_account")
+class EmailSyncSourceTests(TestCase):
+    def setUp(self):
+        user = get_user_model().objects.create_user(
+            username="email-filter-user",
+            email="email-filter-user@example.com",
+            password="password",
+        )
+        inbox = Inbox.objects.create(owner=user, name="Email inbox")
+        self.email_account = EmailAccount.objects.create(
+            email_address="email-filter-account@example.com",
+            status=EmailAccount.Status.ACTIVE,
+            sync_enabled=True,
+            mailboxes=["INBOX"],
+        )
+        self.folder = InboxFolder.objects.create(
+            inbox=inbox,
+            type=InboxFolderType.EMAIL.value.key,
+            related_object_id=str(self.email_account.pk),
+        )
+
+    @patch(
+        "bloomerp.communication.emails.sync._resolve_email_adapter_for_account"
+    )
     def test_account_sync_forwards_action_filters(
         self,
-        fetch_synced_emails,
-        upsert_new_emails,
-        get_email_account,
+        resolve_adapter,
     ):
-        email_account = SimpleNamespace(mailboxes=["INBOX"])
-        folder = object()
+        """
+        Use case: A manual account sync supplies mailbox, date, and limit filters.
+        Expected result: The registered provider receives those filters unchanged.
+        """
+        # 1. Execute the account source with explicit sync filters.
         start_date = datetime.date(2026, 7, 1)
         end_date = datetime.date(2026, 7, 21)
-        get_email_account.return_value = email_account
-        fetch_synced_emails.return_value = []
-        upsert_new_emails.return_value = ()
-
-        handle_email_account_sync(
-            [folder],
-            email_account_id="account-id",
+        adapter = resolve_adapter.return_value
+        adapter.sync_emails.return_value = []
+        result = handle_email_account_sync(
+            InboxFolder.objects.filter(pk=self.folder.pk),
+            email_account_id=str(self.email_account.pk),
             from_date=start_date,
             to_date=end_date,
             limit=25,
             mailboxes=["INBOX"],
         )
 
-        fetch_synced_emails.assert_called_once_with(
-            email_account,
+        # 2. Verify the provider call and the descriptive source result.
+        adapter.sync_emails.assert_called_once_with(
             from_date=start_date,
             to_date=end_date,
             limit=25,
             mailbox="INBOX",
         )
+        self.assertEqual(result.outcome, "completed")
+        self.assertEqual(result.metrics["fetched_messages"], 0)

@@ -1,18 +1,6 @@
-{% load static %}
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="{% static 'bloomerp/js/dist/main.css' %}" rel="stylesheet">
-    <link href="{% static 'bloomerp/css/dist/styles.css' %}" rel="stylesheet">
-</head>
-<body class="bg-white p-1 text-dark">
-    <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-xs">
-        <p class="mb-2 text-xs font-semibold uppercase tracking-wide {% if severity == 'success' %}text-success-dark{% elif severity == 'warning' %}text-warning-dark{% elif severity == 'error' %}text-danger-dark{% else %}text-primary-700{% endif %}">
-            {{ severity }}
-        </p>
-        <p class="whitespace-pre-wrap text-sm leading-6 text-dark">{{ item.snippet }}</p>
-    </section>
-</body>
-</html>
+<section class="rounded-xl border border-gray-200 bg-white p-5 shadow-xs">
+    <p class="mb-2 text-xs font-semibold uppercase tracking-wide {% if severity == 'success' %}text-success-dark{% elif severity == 'warning' %}text-warning-dark{% elif severity == 'error' %}text-danger-dark{% else %}text-primary-700{% endif %}">
+        {{ severity }}
+    </p>
+    <p class="whitespace-pre-wrap text-sm leading-6 text-dark">{{ item.snippet }}</p>
+</section>

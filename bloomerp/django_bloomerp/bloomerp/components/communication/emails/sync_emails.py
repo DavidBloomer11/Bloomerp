@@ -113,7 +113,7 @@ def sync_emails(request: HttpRequest, folder: "str | InboxFolder") -> HttpRespon
             mailboxes = form.cleaned_data.get("mailboxes")
             
             try:
-                result = publish_event(
+                receipt = publish_event(
                     key="email.sync.account",
                     email_account_id=email_account.id,
                     from_date=start_date,
@@ -128,17 +128,14 @@ def sync_emails(request: HttpRequest, folder: "str | InboxFolder") -> HttpRespon
                     type="danger",
                 )
 
-            if result is None:
+            if receipt.state == "scheduled":
                 return render_message(
                     request=request,
                     message="Email synchronization has been initiated asynchronously. You will be notified once the process is complete.",
                     type="info"
                 )
 
-            synced_count = max(
-                (len(delivery.items) for delivery in result),
-                default=0,
-            )
+            synced_count = receipt.result.item_count if receipt.result else 0
             return HttpResponse(
                 f"Synced {synced_count} emails from {start_date} to {end_date}"
             )

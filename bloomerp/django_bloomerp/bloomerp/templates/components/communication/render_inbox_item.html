@@ -79,11 +79,7 @@
                         {{ error_message }}
                     </div>
                 {% elif content %}
-                    <iframe
-                        class="h-[70vh] w-full"
-                        sandbox="allow-popups allow-popups-to-escape-sandbox"
-                        srcdoc="{{ content|force_escape }}"
-                    ></iframe>
+                    {{ content|safe }}
                 {% elif item.snippet %}
                     <p class="text-base leading-7 text-gray-700">{{ item.snippet }}</p>
                 {% else %}
@@ -99,5 +95,3 @@
     :item="item"
     :hx_swap_oob="True"    
 />
-
-

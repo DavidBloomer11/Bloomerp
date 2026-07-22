@@ -232,7 +232,7 @@ wheels = [
 
 [[package]]
 name = "bloomerp"
-version = "1.12.0b5"
+version = "1.12.0b7"
 source = { editable = "." }
 dependencies = [
     { name = "annotated-types" },

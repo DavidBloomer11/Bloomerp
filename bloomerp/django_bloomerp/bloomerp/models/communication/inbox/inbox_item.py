@@ -1,15 +1,31 @@
 from typing import Type
 
 from django.db import models
+from django.db.models import Q
 from django.http import HttpRequest
 from bloomerp.communication.inbox_folder_definition import InboxItemTypeDefinition, InboxFolderType
 from bloomerp.models.base_bloomerp_model import BloomerpModel
+from bloomerp.models.definition import BloomerpModelConfig
 
 class InboxItem(BloomerpModel):
     class Meta:
         verbose_name = "Inbox Item"
         verbose_name_plural = "Inbox Items"
         db_table = "bloomerp_inbox_item"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["folder", "item_type", "related_item_id"],
+                condition=Q(
+                    item_type="email",
+                    related_item_id__isnull=False,
+                ),
+                name="uniq_email_item_identity",
+            ),
+        ]
+    
+    bloomerp_config = BloomerpModelConfig(
+        record_activity_log=False,
+    )
     
     item_type = models.CharField(
         max_length=50,
@@ -18,7 +34,7 @@ class InboxItem(BloomerpModel):
     
     # Type related fields
     related_item_id = models.CharField(
-        max_length=255, 
+        max_length=1000,
         null=True, 
         blank=True,
         help_text="Optional reference to the source item's ID, if applicable."

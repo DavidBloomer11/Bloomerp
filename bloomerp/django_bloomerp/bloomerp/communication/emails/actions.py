@@ -1,16 +1,15 @@
-import datetime
 from typing import TYPE_CHECKING
 
 from django.db import transaction
 from django.db.models import Q, QuerySet
-from django.http import HttpRequest
+from django.http import Http404, HttpRequest
 from django.shortcuts import get_object_or_404
-from django.utils import timezone
+from django.template.loader import render_to_string
+from django.urls import reverse
 
-from bloomerp.communication.emails.base_adapter import BloomerpEmail
+from bloomerp.communication.emails.base_adapter import BloomerpEmail, EmailAttachment
 from bloomerp.communication.emails.email_providers import EmailProvider, EmailProviderDefinition
 from bloomerp.models.communication.email_account import EmailAccount
-
 
 if TYPE_CHECKING:
     from bloomerp.models.communication.inbox.inbox_folder import InboxFolder
@@ -33,35 +32,38 @@ def _resolve_email_adapter_for_account(email_account: EmailAccount) -> "BaseEmai
     return provider.adapter_class(email_account=email_account)
 
 
-def _resolve_email_account_from_item(inbox_item: "InboxItem") -> EmailAccount:
-    raw_meta_data = inbox_item.raw_meta_data or {}
-    email_account_id = raw_meta_data.get("email_account_id")
-    if email_account_id:
-        return get_object_or_404(EmailAccount, id=email_account_id)
-
-    email_folder = inbox_item.folder
-    if email_folder:
-        return get_object_or_404(EmailAccount, id=email_folder.related_object_id)
-
-    raise EmailAccount.DoesNotExist("Unable to resolve email account for inbox item.")
-
-
 def _resolve_email_account_from_folder(folder: "InboxFolder") -> EmailAccount:
     if not folder.related_object_id:
         raise EmailAccount.DoesNotExist("Email inbox folder is not connected to an email account.")
     return get_object_or_404(EmailAccount, id=folder.related_object_id)
 
 
-def _resolve_email_adapter(inbox_item:"InboxItem", request: HttpRequest) -> "BaseEmailAdapter":
-    """
-    Resolve the appropriate email adapter for the given inbox item.
+def _resolve_email_access(
+    inbox_item: "InboxItem",
+) -> tuple["BaseEmailAdapter", str, str]:
+    metadata = inbox_item.raw_meta_data or {}
+    locations = metadata.get("locations") or {}
+    location = locations.get(DEFAULT_MAILBOX)
+    if location is None and locations:
+        location = next(iter(locations.values()))
 
-    Args:
-        inbox_item (InboxItem): The inbox item for which to resolve the email adapter.
-        request (HttpRequest): The HTTP request object.
-    """
-    email_account = _resolve_email_account_from_item(inbox_item)
-    return _resolve_email_adapter_for_account(email_account)
+    email_account_id = metadata.get("email_account_id")
+    if not email_account_id:
+        email_account_id = inbox_item.folder.related_object_id
+    email_account = get_object_or_404(EmailAccount, id=email_account_id)
+
+    if location is not None:
+        return (
+            _resolve_email_adapter_for_account(email_account),
+            str(location["provider_message_id"]),
+            str(location["mailbox"]),
+        )
+
+    return (
+        _resolve_email_adapter_for_account(email_account),
+        str(metadata.get("provider_message_id") or inbox_item.related_item_id),
+        str(metadata.get("mailbox") or DEFAULT_MAILBOX),
+    )
 
 
 def render_email(inbox_item:"InboxItem", request: HttpRequest) -> str:
@@ -74,28 +76,98 @@ def render_email(inbox_item:"InboxItem", request: HttpRequest) -> str:
     Returns:
         str: _description_
     """
-    adapter = _resolve_email_adapter(inbox_item, request)
-    mailbox = (inbox_item.raw_meta_data or {}).get("mailbox") or DEFAULT_MAILBOX
+    adapter, provider_message_id, mailbox = _resolve_email_access(inbox_item)
     try:
-        return adapter.fetch_email_content(email_id=inbox_item.related_item_id, mailbox=mailbox)
+        content = adapter.fetch_email_content(
+            email_id=provider_message_id,
+            mailbox=mailbox,
+        )
+        attachment_metadata = (inbox_item.raw_meta_data or {}).get("attachments") or []
+        files = [
+            {
+                **attachment,
+                "download_url": reverse(
+                    "components_emails_download_attachment",
+                    kwargs={
+                        "inbox_item_id": inbox_item.pk,
+                        "attachment_id": attachment["id"],
+                    },
+                ),
+            }
+            for attachment in attachment_metadata
+        ]
+        return render_to_string(
+            "inbox_items/email.html",
+            {
+                "content": content,
+                "files": files,
+            },
+            request=request,
+        )
     finally:
         close = getattr(adapter, "close", None)
         if callable(close):
             close()
 
 
+def fetch_email_attachment(
+    inbox_item: "InboxItem",
+    attachment_id: str,
+) -> EmailAttachment:
+    """Fetch a referenced attachment without persisting its binary content."""
+    attachments = (inbox_item.raw_meta_data or {}).get("attachments") or []
+    attachment_metadata = next(
+        (
+            attachment
+            for attachment in attachments
+            if str(attachment.get("id")) == attachment_id
+        ),
+        None,
+    )
+    if attachment_metadata is None:
+        raise Http404("Attachment not found.")
+
+    adapter, provider_message_id, mailbox = _resolve_email_access(inbox_item)
+    try:
+        attachment = adapter.fetch_email_attachment(
+            email_id=provider_message_id,
+            attachment_id=attachment_id,
+            mailbox=mailbox,
+        )
+    finally:
+        close = getattr(adapter, "close", None)
+        if callable(close):
+            close()
+
+    if attachment is None:
+        raise Http404("Attachment not found.")
+    return EmailAttachment(
+        filename=str(attachment_metadata.get("filename") or attachment.filename),
+        content=attachment.content,
+        content_type=attachment.content_type,
+    )
+
+
 def mark_email_as_read(inbox_item:"InboxItem", request: HttpRequest):
-    adapter = _resolve_email_adapter(inbox_item, request)
-    mailbox = (inbox_item.raw_meta_data or {}).get("mailbox") or DEFAULT_MAILBOX
-    adapter.mark_as_read(email_id=inbox_item.related_item_id, mailbox=mailbox)
+    adapter, provider_message_id, mailbox = _resolve_email_access(inbox_item)
+    try:
+        adapter.mark_as_read(email_id=provider_message_id, mailbox=mailbox)
+    finally:
+        close = getattr(adapter, "close", None)
+        if callable(close):
+            close()
     inbox_item.is_read = True
     inbox_item.save(update_fields=["is_read"])
 
 
 def delete_email(inbox_item:"InboxItem", request: HttpRequest):
-    adapter = _resolve_email_adapter(inbox_item, request)
-    mailbox = (inbox_item.raw_meta_data or {}).get("mailbox") or DEFAULT_MAILBOX
-    adapter.delete_email(email_id=inbox_item.related_item_id, mailbox=mailbox)
+    adapter, provider_message_id, mailbox = _resolve_email_access(inbox_item)
+    try:
+        adapter.delete_email(email_id=provider_message_id, mailbox=mailbox)
+    finally:
+        close = getattr(adapter, "close", None)
+        if callable(close):
+            close()
 
 
 def _query_local_email_items(
@@ -120,7 +192,14 @@ def _query_local_email_items(
 
     mailbox = (filters or {}).get("mailbox")
     if mailbox:
-        queryset = queryset.filter(raw_meta_data__mailbox=mailbox)
+        location_lookup = (
+            f"raw_meta_data__locations__{mailbox}__"
+            "provider_message_id__isnull"
+        )
+        queryset = queryset.filter(
+            Q(**{location_lookup: False})
+            | Q(raw_meta_data__mailbox=mailbox)
+        )
 
     is_read_filter = (filters or {}).get("is_read")
     if is_read_filter is not None:
@@ -138,34 +217,44 @@ def _upsert_email_inbox_item_result(
     from bloomerp.communication.inbox_folder_definition import InboxFolderType
     from bloomerp.models.communication.inbox.inbox_item import InboxItem
 
-    item_type = InboxFolderType.EMAIL.value.item_type.key
-    inbox_item = (
-        InboxItem.objects
-        .filter(
-            item_type=item_type,
-            folder=folder,
-            related_item_id=email.provider_message_id,
-            raw_meta_data__email_account_id=email.email_account_id,
-            raw_meta_data__mailbox=email.mailbox,
-        )
-        .first()
+    related_item_id = (
+        email.message_id.strip()
+        if email.message_id and email.message_id.strip()
+        else f"{email.provider}:{email.mailbox}:{email.provider_message_id}"
     )
+    provider_metadata = email.retrieval_metadata()
 
-    created = inbox_item is None
-    if created:
-        inbox_item = InboxItem(
-            item_type=item_type,
-            related_item_id=email.provider_message_id,
+    with transaction.atomic():
+        inbox_item, created = InboxItem.objects.get_or_create(
+            item_type=InboxFolderType.EMAIL.value.item_type.key,
+            folder=folder,
+            related_item_id=related_item_id,
+            defaults={"title": email.subject or "(No subject)"},
         )
+        if not created:
+            inbox_item = InboxItem.objects.select_for_update().get(pk=inbox_item.pk)
 
-    inbox_item.title = email.subject or "(No subject)"
-    inbox_item.snippet = email.snippet
-    inbox_item.actor = email.sender
-    inbox_item.is_read = email.is_read
-    inbox_item.raw_meta_data = email.retrieval_metadata()
-    inbox_item.folder = folder
-    inbox_item.datetime_received = email.date
-    inbox_item.save()
+        metadata = dict(inbox_item.raw_meta_data or {})
+        locations = dict(metadata.get("locations") or {})
+        locations[email.mailbox] = {
+            "mailbox": email.mailbox,
+            "provider_message_id": email.provider_message_id,
+            "flags": provider_metadata.get("flags") or [],
+            "raw": provider_metadata.get("raw") or {},
+        }
+        for location_field in ("provider_message_id", "mailbox", "flags", "raw"):
+            provider_metadata.pop(location_field, None)
+
+        inbox_item.title = email.subject or "(No subject)"
+        inbox_item.snippet = email.snippet
+        inbox_item.actor = email.sender
+        inbox_item.is_read = email.is_read
+        inbox_item.raw_meta_data = {
+            **provider_metadata,
+            "locations": locations,
+        }
+        inbox_item.datetime_received = email.date
+        inbox_item.save()
     return inbox_item, created
 
 
@@ -218,79 +307,6 @@ def query_emails(
     return local_queryset
         
 
-def _fetch_synced_emails_for_account(
-    email_account: EmailAccount,
-    *,
-    from_date: datetime.date | datetime.datetime | None = None,
-    to_date: datetime.date | datetime.datetime | None = None,
-    limit: int = 50,
-    mailbox: str = DEFAULT_MAILBOX,
-) -> list[BloomerpEmail]:
-    adapter = _resolve_email_adapter_for_account(email_account)
-    try:
-        return adapter.sync_emails(
-            from_date=from_date,
-            to_date=to_date,
-            limit=limit,
-            mailbox=mailbox,
-        )
-    finally:
-        close = getattr(adapter, "close", None)
-        if callable(close):
-            close()
-
-
-def _upsert_emails_to_folder(emails: list[BloomerpEmail], folder: "InboxFolder") -> int:
-    with transaction.atomic():
-        for email in emails:
-            _upsert_email_inbox_item(email, folder)
-
-    return len(emails)
-
-
-def _upsert_new_emails_to_folder(
-    emails: list[BloomerpEmail],
-    folder: "InboxFolder",
-) -> tuple["InboxItem", ...]:
-    created_items = []
-    with transaction.atomic():
-        for email in emails:
-            inbox_item, created = _upsert_email_inbox_item_result(email, folder)
-            if created:
-                created_items.append(inbox_item)
-    return tuple(created_items)
-
-
-def _sync_email_account_to_folder(
-    email_account: EmailAccount,
-    folder: "InboxFolder",
-    *,
-    from_date: datetime.date | datetime.datetime | None = None,
-    to_date: datetime.date | datetime.datetime | None = None,
-    limit: int = 50,
-    mailboxes: list[str] | None = None,
-) -> int:
-    emails: list[BloomerpEmail] = []
-    for mailbox in _normalize_mailboxes(mailboxes, email_account):
-        emails.extend(
-            _fetch_synced_emails_for_account(
-                email_account,
-                from_date=from_date,
-                to_date=to_date,
-                limit=limit,
-                mailbox=mailbox,
-            )
-        )
-    return _upsert_emails_to_folder(emails, folder)
-
-
-def _normalize_mailboxes(mailboxes: list[str] | tuple[str, ...] | None, email_account: EmailAccount) -> list[str]:
-    selected_mailboxes = [mailbox for mailbox in (mailboxes or []) if mailbox]
-    if selected_mailboxes:
-        return selected_mailboxes
-    cached_mailboxes = [mailbox for mailbox in (email_account.mailboxes or []) if mailbox]
-    return cached_mailboxes or [DEFAULT_MAILBOX]
-
 def get_mailboxes_for_account(email_account: EmailAccount) -> list[str]:
     """Syncs the email account's mailboxes with the local database.
 
@@ -316,94 +332,3 @@ def refresh_mailboxes_for_account(email_account: EmailAccount, *, save: bool = T
     if save:
         email_account.save(update_fields=["mailboxes", "datetime_updated"])
     return mailboxes
-
-
-def sync_emails_for_account(
-    email_account: EmailAccount,
-    *,
-    from_date: datetime.date | datetime.datetime | None = None,
-    to_date: datetime.date | datetime.datetime | None = None,
-    limit: int = 50,
-    mailboxes: list[str] | None = None,
-) -> int:
-    """
-    Sync emails for every inbox folder connected to the email account.
-    """
-    from bloomerp.communication.inbox_folder_definition import InboxFolderType
-    from bloomerp.models.communication.inbox.inbox_folder import InboxFolder
-
-    folders = InboxFolder.objects.filter(
-        type=InboxFolderType.EMAIL.value.key,
-        related_object_id=str(email_account.pk),
-    )
-
-    folders = list(folders)
-    if not folders:
-        return 0
-
-    emails: list[BloomerpEmail] = []
-    for mailbox in _normalize_mailboxes(mailboxes, email_account):
-        emails.extend(
-            _fetch_synced_emails_for_account(
-                email_account,
-                from_date=from_date,
-                to_date=to_date,
-                limit=limit,
-                mailbox=mailbox,
-            )
-        )
-
-    for folder in folders:
-        _upsert_emails_to_folder(emails, folder)
-    return len(emails)
-
-
-def sync_emails_for_folder(
-    folder: "InboxFolder",
-    from_date: datetime.date | datetime.datetime | None = None,
-    to_date: datetime.date | datetime.datetime | None = None,
-    limit: int = 50,
-    mailboxes: list[str] | None = None,
-) -> int:
-    """
-    Sync emails for the given inbox folder.
-
-    Args:
-        folder (InboxFolder): The email inbox folder to sync.
-        from_date (datetime | None): The start date for email synchronization.
-        to_date (datetime | None): The end date for email synchronization.
-        limit (int): The maximum number of emails to sync.
-    """
-    email_account = _resolve_email_account_from_folder(folder)
-    started_at = timezone.now()
-    email_account.last_sync_started_at = started_at
-    email_account.last_sync_error = ""
-    email_account.save(update_fields=["last_sync_started_at", "last_sync_error", "datetime_updated"])
-
-    try:
-        synced_count = _sync_email_account_to_folder(
-            email_account,
-            folder,
-            from_date=from_date,
-            to_date=to_date,
-            limit=limit,
-            mailboxes=mailboxes,
-        )
-        available_mailboxes = refresh_mailboxes_for_account(email_account, save=False)
-    except Exception as exc:
-        email_account.last_sync_error = str(exc)
-        email_account.save(update_fields=["last_sync_error", "datetime_updated"])
-        raise
-
-    email_account.last_sync_finished_at = timezone.now()
-    email_account.last_sync_error = ""
-    email_account.mailboxes = available_mailboxes
-    email_account.save(
-        update_fields=[
-            "last_sync_finished_at",
-            "last_sync_error",
-            "datetime_updated",
-            "mailboxes",
-        ]
-    )
-    return synced_count

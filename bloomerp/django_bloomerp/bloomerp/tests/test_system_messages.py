@@ -1,6 +1,4 @@
-import re
 from datetime import timedelta
-from html import unescape
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
@@ -132,19 +130,14 @@ class WorkflowSystemMessageTests(TestCase):
         self.assertIn("original workflow-run record is no longer available", rendered)
         self.assertIn("workflow-notification-user", rendered)
 
-        # 5. Verify that the component safely embeds the rendered HTML in srcdoc.
+        # 5. Verify that trusted system-message content renders directly.
         self.client.force_login(self.user)
         response = self.client.get(
             reverse("components_render_inbox_item", kwargs={"item_id": item.pk})
         )
         self.assertEqual(response.status_code, 200)
-        iframe_match = re.search(
-            rb'<iframe[^>]+srcdoc="([^"]*)"',
-            response.content,
-        )
-        self.assertIsNotNone(iframe_match)
-        iframe_html = unescape(iframe_match.group(1).decode())
-        self.assertIn("Execution graph", iframe_html)
+        self.assertContains(response, "Execution graph")
+        self.assertNotContains(response, "<iframe")
 
     def test_invalid_system_message_type_is_rejected(self):
         """

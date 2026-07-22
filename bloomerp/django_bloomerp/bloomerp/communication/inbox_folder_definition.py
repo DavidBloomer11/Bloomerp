@@ -6,6 +6,7 @@ from django.db.models import Model
 from bloomerp.communication.emails.actions import delete_email, mark_email_as_read, query_emails, render_email
 from bloomerp.communication.inbox_sources import InboxEventSource, InboxJobSource, InboxSignalSource
 from bloomerp.communication.system_messages.base import SystemMessage
+from bloomerp.components.communication.emails.download_attachment import download_attachment  # noqa: F401
 from bloomerp.components.communication.emails.new_email import new_email
 from bloomerp.components.communication.emails.reply_to_email import reply_to_email
 from bloomerp.components.communication.emails.sync_emails import sync_emails
@@ -34,14 +35,17 @@ def on_query_default(filters: dict[str, str] | None, folder: "InboxFolder", _: b
         QuerySet[InboxItem]: A QuerySet of filtered InboxItem objects.
     """
     from bloomerp.models.communication.inbox.inbox_item import InboxItem
-
     queryset = InboxItem.objects.filter(folder=folder)
-    search_query = (filters or {}).get("q")
+    
+    filters = filters.copy() if filters else {}
+    search_query = filters.pop("q", None)
+    
     if search_query:
         queryset = queryset.filter(
             Q(title__icontains=search_query) | Q(snippet__icontains=search_query)
         )
-    return queryset.order_by("-datetime_received", "-datetime_created")
+    
+    return queryset.order_by("-datetime_received", "-datetime_created").filter(**filters)
 
 
 def on_query_all(filters: dict[str, str] | None, folder: "InboxFolder", _: bool) -> QuerySet["InboxItem"]:
@@ -196,7 +200,7 @@ class InboxFolderTypeDefinition:
         """
         return self.item_type
     
-    
+# Define common actions for inbox items and folders
 MARK_ALL_AS_READ_ACTION = InboxActionDefinition(
     key="mark_all_as_read",
     name="Mark All as Read",
@@ -244,7 +248,20 @@ DELETE_INBOX_FOLDER_ACTION = InboxActionDefinition(
         render_page_refresh_with_message(request, "Inbox folder deleted successfully", "success")
     )[-1]
 )
-    
+
+# Define common filters
+IS_READ_FILTER = InboxFolderTypeFilterDefinition(
+    key="is_read",
+    name="Read",
+    filters={"is_read": "true"}
+)
+UNREAD_FILTER = InboxFolderTypeFilterDefinition(
+    key="unread",
+    name="Unread",
+    filters={"is_read": "false"}
+)
+
+
 class InboxFolderType(BaseTypeDefinition):
     ALL = InboxFolderTypeDefinition(
         key="all",
@@ -289,14 +306,8 @@ class InboxFolderType(BaseTypeDefinition):
         default_sources=[
             InboxEventSource(
                 key="workflow.result",
-                folder_qs_resolver=(
-                    "bloomerp.automation.inbox_sources."
-                    "resolve_workflow_notification_folders"
-                ),
-                handler=(
-                    "bloomerp.automation.inbox_sources."
-                    "handle_workflow_result"
-                ),
+                folder_qs_resolver="bloomerp.communication.system_messages.workflow.resolve_workflow_notification_folders",
+                handler="bloomerp.communication.system_messages.workflow.handle_workflow_result",
                 run_async=False,
             ),
             InboxEventSource(
@@ -311,6 +322,39 @@ class InboxFolderType(BaseTypeDefinition):
                 ),
                 run_async=False,
             ),
+            InboxSignalSource(
+                key="form.submission.created",
+                signal="django.db.models.signals.post_save",
+                sender="bloomerp.models.forms.form_submission.FormSubmission",
+                dispatch_uid="bloomerp.inbox.form_submission.created",
+                predicate=(
+                    "bloomerp.communication.system_messages.form_submission."
+                    "should_notify_form_submission"
+                ),
+                folder_qs_resolver=(
+                    "bloomerp.communication.system_messages.form_submission."
+                    "resolve_form_submission_folders"
+                ),
+                handler=(
+                    "bloomerp.communication.system_messages.form_submission."
+                    "handle_form_submission"
+                ),
+                run_async=False,
+            ),
+        ],
+        filters=lambda _: [
+            UNREAD_FILTER,
+            IS_READ_FILTER,
+            *(
+                [
+                    InboxFolderTypeFilterDefinition(
+                        key="type_" + message_type.value.key,
+                        name=message_type.value.name,
+                        filters={"raw_meta_data__system_message_type": message_type.value.key},
+                    )
+                    for message_type in SystemMessage
+                ]
+            )
         ]
     )
     
@@ -342,16 +386,9 @@ class InboxFolderType(BaseTypeDefinition):
         ],
         filters=lambda folder: [
             # Regular filters
-            InboxFolderTypeFilterDefinition(
-                key="unread",
-                name="Unread",
-                filters={"is_read": "false"}
-            ),
-            InboxFolderTypeFilterDefinition(
-                key="read",
-                name="Read",
-                filters={"is_read": "true"}
-            ),
+            UNREAD_FILTER,
+            IS_READ_FILTER,
+            # Dynamic filters based on the related email account's mailboxes
             *(
                 [
                     InboxFolderTypeFilterDefinition(
@@ -380,25 +417,15 @@ class InboxFolderType(BaseTypeDefinition):
         default_sources=[
             InboxJobSource(
                 key="email.sync.dispatch",
-                folder_qs_resolver=(
-                    "bloomerp.communication.emails.sync.resolve_email_folders"
-                ),
-                handler=(
-                    "bloomerp.communication.emails.sync."
-                    "dispatch_due_email_syncs_source"
-                ),
+                folder_qs_resolver="bloomerp.communication.emails.sync.resolve_email_folders",
+                handler="bloomerp.communication.emails.sync.dispatch_due_email_syncs_source",
                 schedule="*/2 * * * *",
             ),
             InboxEventSource(
                 key="email.sync.account",
-                folder_qs_resolver=(
-                    "bloomerp.communication.emails.sync.resolve_email_folders"
-                ),
-                handler=(
-                    "bloomerp.communication.emails.sync."
-                    "handle_email_account_sync"
-                ),
-                run_async=False,
+                folder_qs_resolver="bloomerp.communication.emails.sync.resolve_email_folders",
+                handler="bloomerp.communication.emails.sync.handle_email_account_sync",
+                run_async=True,
             ),
         ]
     )

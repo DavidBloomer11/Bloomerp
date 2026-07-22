@@ -3,21 +3,33 @@ from typing import Any
 from celery import shared_task
 
 
-@shared_task
+@shared_task(bind=True, max_retries=3)
 def execute_inbox_source_task(
+    self,
     key: str,
     serialized_args: list[Any] | None = None,
     serialized_kwargs: dict[str, Any] | None = None,
-) -> dict[str, int | str]:
-    from bloomerp.communication.inbox_sources import execute_serialized_source
-
-    deliveries = execute_serialized_source(
-        key,
-        serialized_args=serialized_args,
-        serialized_kwargs=serialized_kwargs,
+    execution_id: str | None = None,
+) -> dict[str, Any]:
+    from bloomerp.communication.inbox_sources import (
+        _deserialize_source_value,
+        execute_registered_source,
     )
-    return {
-        "source_key": key,
-        "delivery_count": len(deliveries),
-        "item_count": sum(len(delivery.items) for delivery in deliveries),
-    }
+
+    try:
+        result = execute_registered_source(
+            key,
+            *_deserialize_source_value(serialized_args or []),
+            **_deserialize_source_value(serialized_kwargs or {}),
+        )
+        return {
+            "execution_id": execution_id or self.request.id,
+            "source_key": key,
+            "outcome": result.outcome,
+            "reason": result.reason,
+            "delivery_count": result.delivery_count,
+            "item_count": result.item_count,
+            "metrics": dict(result.metrics),
+        }
+    except Exception as exc:
+        raise self.retry(exc=exc, countdown=60)

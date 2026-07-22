@@ -12,6 +12,7 @@ export class Inbox extends BaseComponent {
     private searchDebounceTimer: number | null = null;
     private inboxActionClickHandler: ((event: Event) => void) | null = null;
     private subfolderClickHandler: ((event: Event) => void) | null = null;
+    private filterClickHandler: ((event: Event) => void) | null = null;
 
     public initialize(): void {
         if (!this.element) return;
@@ -23,6 +24,7 @@ export class Inbox extends BaseComponent {
         this.setupAddFolderBtnListener();
         this.setupSelectFolderListener();
         this.setupSubfolderFilterListener();
+        this.setupFilterListener();
         this.setupSearchInputListener();
         this.setupInboxActionListener();
         
@@ -120,6 +122,34 @@ export class Inbox extends BaseComponent {
 
             this.searchInput.addEventListener('input', this.searchInputHandler);
         }
+    }
+
+    private setupFilterListener() {
+        if (!this.element) return;
+
+        this.filterClickHandler = (event: Event) => {
+            const trigger = (event.target as HTMLElement | null)?.closest<HTMLElement>('[data-inbox-filter-key]');
+            if (!trigger || !this.element?.contains(trigger)) return;
+
+            event.preventDefault();
+            const rawFilters = trigger.dataset.inboxFilterFilters || '{}';
+            let filters: Record<string, unknown>;
+            try {
+                filters = JSON.parse(rawFilters);
+            } catch {
+                return;
+            }
+
+            const queryMap = new Map<string, string>();
+            Object.entries(filters).forEach(([key, value]) => {
+                if (value !== null && value !== undefined) {
+                    queryMap.set(key, String(value));
+                }
+            });
+            this.queryInbox(queryMap);
+        };
+
+        this.element.addEventListener('click', this.filterClickHandler);
     }
 
     private setupSubfolderFilterListener() {
@@ -262,6 +292,9 @@ export class Inbox extends BaseComponent {
         if (this.element && this.subfolderClickHandler) {
             this.element.removeEventListener('click', this.subfolderClickHandler);
         }
+        if (this.element && this.filterClickHandler) {
+            this.element.removeEventListener('click', this.filterClickHandler);
+        }
         if (this.searchInput && this.searchInputHandler) {
             this.searchInput.removeEventListener('input', this.searchInputHandler);
         }
@@ -273,5 +306,6 @@ export class Inbox extends BaseComponent {
         this.searchDebounceTimer = null;
         this.inboxActionClickHandler = null;
         this.subfolderClickHandler = null;
+        this.filterClickHandler = null;
     }
 }

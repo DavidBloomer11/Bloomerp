@@ -5,7 +5,6 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from django.http import HttpRequest
-
 from bloomerp.utils.base_type_definition import BaseTypeDefinition
 
 if TYPE_CHECKING:
@@ -52,6 +51,7 @@ class SystemMessageDefinition:
 # Import concrete implementations only after the base contract is defined.
 from bloomerp.communication.system_messages.general import GeneralSystemMessage  # noqa: E402
 from bloomerp.communication.system_messages.workflow import WorkflowSystemMessage  # noqa: E402
+from bloomerp.communication.system_messages.form_submission import FormSubmissionMessage
 
 
 class SystemMessage(BaseTypeDefinition):
@@ -65,7 +65,12 @@ class SystemMessage(BaseTypeDefinition):
         name="Workflow",
         cls=WorkflowSystemMessage,
     )
-
+    FORM_SUBMISSION = SystemMessageDefinition(
+        key="form_submission",
+        name="Form Submission",
+        cls=FormSubmissionMessage,
+    )
+    
     @classmethod
     def get_definition(cls, message_type: str) -> SystemMessageDefinition:
         resolved = cls.from_key(message_type)

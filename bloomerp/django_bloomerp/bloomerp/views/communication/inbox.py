@@ -36,7 +36,11 @@ class InboxView(BaseBloomerpView, TemplateView):
                 }
                 for folder in folders
             ]
-            ctx["filters"] = [filter_definition for filter_definition in filters if not filter_definition.is_subfolder]
+            ctx["filters"] = [
+                self._serialize_filter_option(filter_definition)
+                for filter_definition in filters
+                if not filter_definition.is_subfolder
+            ]
             actions = folder_type.actions or []
             ctx["actions"] = actions
             ctx["primary_actions"] = [action for action in actions if action.is_primary_action]
@@ -53,14 +57,21 @@ class InboxView(BaseBloomerpView, TemplateView):
 
     def get_subfolder_filter_options(self, folder):
         return [
-            {
-                "key": filter_definition.key,
-                "name": filter_definition.name,
-                "filters_json": json.dumps(filter_definition.filters or {}),
-            }
+            self._serialize_filter_option(filter_definition)
             for filter_definition in folder.inbox_folder_type().resolve_filters(folder)
             if filter_definition.is_subfolder
         ]
+
+    def _serialize_filter_option(self, filter_definition) -> dict[str, object]:
+        """Serialize one inbox filter for safe use in a data attribute."""
+        return {
+            "key": filter_definition.key,
+            "name": filter_definition.name,
+            "filters_json": json.dumps(
+                filter_definition.filters or {},
+                separators=(",", ":"),
+            ),
+        }
     
     def get_inbox_preference(self) -> UserInboxPreference | None:
         preference = (
