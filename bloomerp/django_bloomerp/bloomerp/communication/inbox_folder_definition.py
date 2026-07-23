@@ -341,6 +341,16 @@ class InboxFolderType(BaseTypeDefinition):
                 ),
                 run_async=False,
             ),
+            InboxSignalSource(
+                key="workflow.approval_required",
+                signal="django.db.models.signals.post_save",
+                sender="bloomerp.models.automation.workflow_run_step.WorkflowRunStep",
+                folder_qs_resolver="bloomerp.communication.system_messages.signals.workflow_approval_required.resolve",
+                handler="bloomerp.communication.system_messages.signals.workflow_approval_required.handle",
+                predicate="bloomerp.communication.system_messages.signals.workflow_approval_required.predicate",
+                dispatch_uid="workflow.approval_required",
+                run_async=False,
+            )
         ],
         filters=lambda _: [
             UNREAD_FILTER,

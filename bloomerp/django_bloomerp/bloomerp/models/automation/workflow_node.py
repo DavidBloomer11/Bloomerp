@@ -22,7 +22,7 @@ class WorkflowNode(
         db_table = "bloomerp_workflow_node"
         verbose_name = _("Workflow Node")
         verbose_name_plural = _("Workflow Nodes")
-        
+            
     # TODO: Integrate name with builder
     name = models.CharField(
         max_length=255,

@@ -22,9 +22,11 @@ def get_auto_api_models() -> list[type[Model]]:
             continue
 
         config = get_model_config(model)
-        if config and config.should_enable_api_auto_generation():
-            api_models.append(model)
-
+        if config and not config.should_enable_api_auto_generation():
+            continue
+        # Only if disabled don't auto generate API
+        api_models.append(model)
+        
     return api_models
 
 

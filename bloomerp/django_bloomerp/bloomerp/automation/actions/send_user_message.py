@@ -5,9 +5,21 @@ from bloomerp.automation.schema import WorkflowInputRequirement, WorkflowIOSchem
 from django.forms import Form
 from django import forms
 
+from bloomerp.widgets.foreign_field_widget import ForeignFieldWidget
+from django.contrib.auth import get_user_model
+
 # TODO: Choices should be defined in a central place
 class SendUserMessageForm(Form):
-    user_id = forms.CharField(
+    users = forms.ModelMultipleChoiceField(
+        queryset=None,
+        widget=ForeignFieldWidget(
+            model=get_user_model(),
+            attrs={
+                "is_m2m" : True,
+                "class" : "input w-full"
+            }    
+        ),
+        
         help_text="Use a literal user id or a value reference like {{ input.id }}.",
     )
     message = forms.CharField(widget=forms.Textarea)
@@ -34,17 +46,19 @@ class SendUserMessage(BaseExecutor):
     
     def execute(self, input_data: dict) -> dict:
         params = self.resolve_config(input_data)
-        user_id = params.get("user_id")
+        users = params.get("users", [])
         
         publish_event(
             key="system.message",
-            user_ids=[user_id],
+            user_ids=users,
             system_message_type="general",
             data={
                 "message": str(params.get("message")),
                 "severity": params.get("message_type") or "info",
             },
         )
+        
+        
         
         
         

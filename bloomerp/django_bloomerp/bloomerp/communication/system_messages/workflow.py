@@ -159,7 +159,7 @@ class WorkflowSystemMessage(BaseSystemMessageType):
         snapshot = {
             "workflow_run_id": workflow_run_id,
             "workflow_name": workflow.name,
-            "status": "completed" if successful else "failed",
+            "status": status,
             "status_label": status_label,
             "started_at": started_at.isoformat(),
             "finished_at": finished_at.isoformat(),

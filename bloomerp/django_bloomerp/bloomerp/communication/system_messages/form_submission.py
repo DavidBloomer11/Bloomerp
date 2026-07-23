@@ -79,7 +79,6 @@ def handle_form_submission(folders, *, instance, **kwargs):
     """
     from bloomerp.communication.system_messages.base import SystemMessage
 
-
     deliveries = []
 
     for folder in folders:

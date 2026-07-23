@@ -128,7 +128,6 @@ class BaseBloomerpDetailView(BaseBloomerpView, BloomerpModelContextMixin, Detail
         context["tabs"] = [
             item for item in context["tab_items"] if not item["is_folder"]
         ]
-        context["extra_buttons"] = self.get_extra_buttons()
         context["object_actions"] = self.get_object_actions()
         return context
 
@@ -150,17 +149,6 @@ class BaseBloomerpDetailView(BaseBloomerpView, BloomerpModelContextMixin, Detail
                 )
         return tabs
     
-    def get_extra_buttons(self) -> list[ObjectHTML]:
-        """Returns the extra buttons
-
-        Returns:
-            list[ObjectHTML]: the buttons
-        """
-        config = get_model_config(self.model)
-        if config and config.detail_view_settings:
-            return config.detail_view_settings.extra_buttons if config.detail_view_settings.extra_buttons else []
-        
-        return []
 
     def get_object_actions(self):
         config = get_model_config(self.model)
@@ -168,5 +156,8 @@ class BaseBloomerpDetailView(BaseBloomerpView, BloomerpModelContextMixin, Detail
             return config.object_actions
 
         return []
+    
+    
+    
 
         
