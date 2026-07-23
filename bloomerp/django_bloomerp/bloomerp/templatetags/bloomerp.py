@@ -5,7 +5,7 @@ from django import template
 from django.db.models.manager import Manager
 from django.db.models import Model
 from django.http import HttpRequest, HttpResponse
-from bloomerp.models.definition import ObjectAction, ObjectHTML
+from bloomerp.models.definition import ObjectAction, ObjectHTML, ObjectModalAction
 from bloomerp.models.users.base_preference import BasePreference
 from bloomerp.services.preference_services import PreferenceManager
 from bloomerp.utils.models import get_initials, get_detail_view_url, get_delete_view_url
@@ -520,6 +520,24 @@ def render_object_action(
                 },
                 request=request,
             )
+        )
+    
+    if isinstance(action, ObjectModalAction):
+        return format_html(
+            (
+                '<button class="btn btn-xs btn-{style}" '
+                'hx-get="{url}" '
+                'hx-target="#bloomerp-general-use-modal-body" '
+                'bloomerp-set-modal-title-for="bloomerp-general-use-modal"'
+                'bloomerp-set-modal-title-to="{title}"'
+                'bloomerp-open-modal="bloomerp-general-use-modal">'
+                '{label}'
+                '</button>'
+            ),
+            style=action.style,
+            url=action.endpoint(object),
+            label=action.label,
+            title=action.modal_title,
         )
 
     if content_type_id is None:

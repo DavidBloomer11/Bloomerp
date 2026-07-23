@@ -341,7 +341,7 @@ export default class Workflow extends BaseComponent {
             console.error('Invalid workflow JSON', error);
             return;
         }
-
+        
         this.workflowId = workflow.workflow_id?.toString() || this.workflowId;
         this.workflowName = workflow.name || this.workflowName;
         const nodeIdMap = new Map<string, number>();
@@ -361,7 +361,7 @@ export default class Workflow extends BaseComponent {
                 config: node.config || { sub_type: nodeSubType, parameters: {} },
             };
             const inputs = node.type === 'TRIGGER' ? 0 : 1;
-
+            
             const addedNodeId = Number(this.drawflow.addNode(
                 node.type,
                 inputs,
@@ -1447,10 +1447,25 @@ export default class Workflow extends BaseComponent {
 
         const formData = new FormData(form);
         const parameters: Record<string, any> = {};
+        const multiValueFieldNames = new Set(
+            Array.from(form.querySelectorAll<HTMLElement>(
+                'select[multiple][name], [bloomerp-component="foreign-field-widget"][data-is-m2m="true"][data-field-name]',
+            )).map((field) => field.getAttribute('name') || field.dataset.fieldName || ''),
+        );
 
         formData.forEach((value, key) => {
             if (key === 'csrfmiddlewaretoken') return;
-            parameters[key] = this.parseFormValue(String(value));
+            const parsedValue = this.parseFormValue(String(value));
+
+            if (!(key in parameters)) {
+                parameters[key] = multiValueFieldNames.has(key) ? [parsedValue] : parsedValue;
+                return;
+            }
+
+            const currentValue = parameters[key];
+            parameters[key] = Array.isArray(currentValue)
+                ? [...currentValue, parsedValue]
+                : [currentValue, parsedValue];
         });
 
         return parameters;
@@ -1475,28 +1490,4 @@ export default class Workflow extends BaseComponent {
 
         return value;
     }
-
-
-    /**
-     * Opens a node editor/configuration panel
-     * This is a placeholder that should be replaced with your actual implementation
-     */
-    private openNodeEditor(nodeId: number, nodeType: string, nodeSubType: string, data: any): void {
-        // TODO: Implement the actual node editor
-        // This could be a modal, a sidebar panel, or navigate to a different page
-        
-        console.log('Opening node editor for:', { nodeId, nodeType, nodeSubType, data });
-        
-        // Placeholder: show an alert for now
-        alert(`Node Editor\n\nNode ID: ${nodeId}\nType: ${nodeType}\nSubtype: ${nodeSubType}\n\nDouble-click handler working!`);
-        
-        // Example: You might want to:
-        // 1. Open a modal with a form for this node type
-        // 2. Make an HTMX request to load a configuration panel
-        // 3. Dispatch a custom event that another component can listen to
-        // 4. Update the node's data property with new configuration
-    }
-
-
-
 }

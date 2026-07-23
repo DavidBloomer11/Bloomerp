@@ -77,6 +77,11 @@ def consolidate_email_message_ids(apps, schema_editor):
         item.delete()
 
 
+def set_constraints_immediate_on_postgresql(apps, schema_editor):
+    if schema_editor.connection.vendor == "postgresql":
+        schema_editor.execute("SET CONSTRAINTS ALL IMMEDIATE")
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -100,9 +105,9 @@ class Migration(migrations.Migration):
             consolidate_email_message_ids,
             migrations.RunPython.noop,
         ),
-        migrations.RunSQL(
-            sql="SET CONSTRAINTS ALL IMMEDIATE",
-            reverse_sql=migrations.RunSQL.noop,
+        migrations.RunPython(
+            set_constraints_immediate_on_postgresql,
+            migrations.RunPython.noop,
         ),
         migrations.AddConstraint(
             model_name="inboxitem",

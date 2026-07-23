@@ -153,9 +153,6 @@
 							<c-i18n.blocktrans>Create Todo</c-i18n.blocktrans>
 						</button>
 						{% endif %}
-						{% for button in extra_buttons %}
-							{% render_object_action action=button object=object request=request content_type_id=content_type_id %}
-						{% endfor %}
 						{% for action in object_actions %}
 							{% render_object_action action=action object=object request=request content_type_id=content_type_id %}
 						{% endfor %}
