@@ -7,6 +7,7 @@ from django import forms
 from django.forms import BoundField
 from django.db.models import Model
 
+from bloomerp.field_types.types import FieldType
 from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.permissions.manager import UserPolicyManager
@@ -122,9 +123,6 @@ def get_model_field_layout(model: Type[Model]) -> FieldLayout | None:
         return normalize_layout_payload(legacy_layout)
 
     return None
-
-
-
 
 
 def get_object_field_value(*, obj: Model, application_field: ApplicationField) -> Any:
@@ -421,6 +419,7 @@ def create_default_layout(
         items = [
             LayoutItem(id=application_field.pk, colspan=1)
             for application_field in application_fields
+            if application_field.field_type_enum != FieldType.ONE_TO_MANY_FIELD
         ]
         return FieldLayout(
             rows=[

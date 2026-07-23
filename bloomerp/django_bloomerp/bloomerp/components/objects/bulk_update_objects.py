@@ -1,7 +1,7 @@
 from bloomerp.router import router
 from django.shortcuts import render
 from django.http import HttpResponse, HttpRequest
-from bloomerp.forms.core import BloomerpModelForm
+from bloomerp.forms.model_form import BloomerpModelForm
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.decorators import login_required
 from django.forms.models import modelform_factory
@@ -67,7 +67,12 @@ def bulk_update_objects(request:HttpRequest) -> HttpResponse:
             # Loop through the objects and update them
             
             for obj in objects:
-                form = Form(data=request.POST, files=request.FILES, prefix=form_prefix, instance=obj, model=model, user=user)
+                form = Form(
+                    data=request.POST,
+                    files=request.FILES,
+                    prefix=form_prefix,
+                    instance=obj,
+                )
                 if form.is_valid():
                     form.save()
                 else:

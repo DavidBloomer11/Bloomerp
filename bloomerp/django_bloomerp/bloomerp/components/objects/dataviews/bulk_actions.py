@@ -16,6 +16,7 @@ from bloomerp.models import ApplicationField
 from bloomerp.router import router
 from bloomerp.services.object_services import string_search_on_queryset
 from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
+from bloomerp.services.preference_services import PreferenceManager
 from bloomerp.services.user_services import get_data_view_fields
 from bloomerp.models.users.user_list_view_preference import UserListViewPreference
 from bloomerp.utils.filters import filter_model
@@ -87,7 +88,12 @@ def _bulk_permission(model: type[models.Model]) -> str:
 def _editable_fields(request: HttpRequest, model: type[models.Model], content_type: ContentType) -> list[ApplicationField]:
     permission_manager = UserPermissionManager(request.user)
     dataview_fields = get_data_view_fields(
-        UserListViewPreference.get_or_create_for_user(request.user, content_type)
+        PreferenceManager(request.user).get_or_create_selected(
+            UserListViewPreference,
+            scope={
+                "content_type_id" : content_type.id
+            }
+        )
     )
     accessible_fields = [field for field, _is_visible in dataview_fields.accessible_fields]
     change_permission = create_permission_str(model, "change")
@@ -150,7 +156,12 @@ def _build_bulk_action_state(request: HttpRequest, content_type_id: int) -> Bulk
     model, content_type = get_model_and_content_type_or_404(content_type_id)
     permission_manager = UserPermissionManager(request.user)
     permission_str = _bulk_permission(model)
-    preference = UserListViewPreference.get_or_create_for_user(request.user, content_type)
+    preference = PreferenceManager(request.user).get_or_create_selected(
+        UserListViewPreference,
+        scope={
+            "content_type_id":content_type.id
+        }
+    )
 
     if not permission_manager.has_global_permission(model, permission_str):
         return render(request, "403.html", status=403)

@@ -17,19 +17,13 @@ def execute_persist(request:HttpRequest, obj:"FormSubmission") -> HttpResponse:
     
     
     manager = FormManager(obj.form)
-    try:
-        manager.persist_form_submission(obj, request)
-        return render_message(
-            request,
-            "Form persisted succesfully",
-            "success"
-        )
-    except Exception as e:
-        return render_message(
-            request,
-            "An error occurred.",
-            "error"
-        )
+    manager.persist_form_submission(obj, request)
+    return render_message(
+        request,
+        "Form persisted succesfully",
+        "success"
+    )
+    
 
 
 class FormSubmission(BloomerpModel):

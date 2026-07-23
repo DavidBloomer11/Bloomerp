@@ -8,7 +8,7 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 
-from bloomerp.forms.core import BloomerpModelForm
+from bloomerp.forms.model_form import BloomerpModelForm
 from bloomerp.models import ApplicationField
 from bloomerp.models.document_templates.document_template import DocumentTemplate, FreeVariableConfig
 from bloomerp.router import router

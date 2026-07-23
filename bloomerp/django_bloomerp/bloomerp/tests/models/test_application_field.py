@@ -838,7 +838,6 @@ class TestApplicationField(BaseBloomerpModelTestCase):
             data={"first_name": customer.first_name},
             files=MultiValueDict({"files": [uploaded_file]}),
             instance=customer,
-            user=self.admin_user,
         )
 
         self.assertTrue(form.is_valid(), form.errors)
@@ -861,6 +860,110 @@ class TestApplicationField(BaseBloomerpModelTestCase):
         cleaned_data = form.deserialize_cleaned_data({"age": "44"})
 
         self.assertEqual(cleaned_data, {"age": 44})
+
+    def test_model_form_round_trips_serialized_cleaned_data(self):
+        customer = self.create_customer("Round", "Trip", 43)
+        form_class = bloomerp_modelform_factory(
+            self.CustomerModel,
+            fields=["first_name", "last_name", "age"],
+        )
+        source_form = form_class(
+            data={
+                "first_name": "Serialized",
+                "last_name": "Customer",
+                "age": "44",
+            },
+            instance=customer,
+        )
+
+        self.assertTrue(source_form.is_valid(), source_form.errors)
+
+        restored_form = form_class.from_deserialized_data(
+            source_form.serialize_cleaned_data(),
+            instance=customer,
+        )
+
+        self.assertTrue(restored_form.is_bound)
+        self.assertTrue(restored_form.is_valid(), restored_form.errors)
+        self.assertEqual(
+            restored_form.cleaned_data,
+            source_form.cleaned_data,
+        )
+        self.assertEqual(restored_form["first_name"].value(), "Serialized")
+        self.assertEqual(restored_form["age"].value(), 44)
+        self.assertEqual(restored_form.instance.first_name, "Serialized")
+        self.assertEqual(restored_form.instance.age, 44)
+
+    def test_model_form_from_deserialized_data_preserves_validation_errors(self):
+        form_class = bloomerp_modelform_factory(
+            self.CustomerModel,
+            fields=["first_name", "last_name", "age"],
+        )
+
+        restored_form = form_class.from_deserialized_data(
+            {
+                "first_name": "Invalid",
+                "last_name": "Customer",
+                "age": "not-an-integer",
+            }
+        )
+
+        self.assertFalse(restored_form.is_valid())
+        self.assertIn("age", restored_form.errors)
+
+    def test_model_form_uses_initial_file_objects_for_deserialized_display(self):
+        form_class = bloomerp_modelform_factory(
+            self.CustomerModel,
+            fields=["files"],
+        )
+        displayed_file = object()
+
+        restored_form = form_class.from_deserialized_data(
+            {"files": ["submitted.pdf"]},
+            initial={"files": [displayed_file]},
+        )
+
+        self.assertEqual(restored_form["files"].value(), [displayed_file])
+
+    def test_model_form_round_trips_structured_one_to_many_data(self):
+        form_class = bloomerp_modelform_factory(
+            self.CustomerModel,
+            fields=["first_name", "last_name", "age", "lines"],
+        )
+        source_form = form_class(
+            data={
+                "first_name": "Structured",
+                "last_name": "Customer",
+                "age": "45",
+                "lines__0__id": "",
+                "lines__0__description": "Restored line",
+                "lines__0__hours": "2.50",
+            }
+        )
+
+        self.assertTrue(source_form.is_valid(), source_form.errors)
+
+        restored_form = form_class.from_deserialized_data(
+            source_form.serialize_cleaned_data()
+        )
+
+        self.assertTrue(restored_form.is_valid(), restored_form.errors)
+        restored_lines = restored_form.cleaned_data["lines"]
+        self.assertIsInstance(restored_lines, OneToManyCleanedData)
+        self.assertEqual(restored_lines.to_save[0].description, "Restored line")
+        self.assertEqual(
+            restored_form["lines"].value()[0]["description"],
+            "Restored line",
+        )
+
+        customer = restored_form.save()
+        self.assertTrue(
+            self.CustomerLineModel.objects.filter(
+                customer=customer,
+                description="Restored line",
+                hours="2.50",
+            ).exists()
+        )
 
     def test_model_form_prepares_omitted_values_for_partial_update(self):
         customer = self.create_customer("Partial", "Update", 44)
@@ -1062,46 +1165,71 @@ class TestApplicationField(BaseBloomerpModelTestCase):
                 ]
             ).model_dump(),
         )
+        uploaded_files = [
+            SimpleUploadedFile(
+                "submitted.pdf",
+                b"submitted content",
+                content_type="application/pdf",
+            ),
+            SimpleUploadedFile(
+                "supporting.png",
+                b"supporting content",
+                content_type="image/png",
+            ),
+        ]
         request = type(
             "Request",
             (),
             {
                 "user": self.admin_user,
                 "POST": {},
-                "FILES": MultiValueDict(
-                    {
-                        "files": [
-                            SimpleUploadedFile("submitted.pdf", b"submitted content", content_type="application/pdf")
-                        ]
-                    }
-                ),
             },
         )()
-
-        response = FormManager(form_object).register_submission(
-            {
+        manager = FormManager(form_object)
+        form_class = manager.layout_form_cls()
+        submitted_form = form_class(
+            data={
                 "first_name": "Reviewed",
                 "last_name": "Customer",
                 "age": "42",
             },
+            files=MultiValueDict({"files": uploaded_files}),
+        )
+        self.assertTrue(submitted_form.is_valid(), submitted_form.errors)
+
+        response = manager.register_submission(
+            submitted_form,
             request=request,
         )
 
         self.assertTrue(response.submitted)
         submission = response.form_submission
         submission.refresh_from_db()
-        attached_file = File.objects.get(name="submitted.pdf")
-        self.assertEqual(attached_file.content_type, form_submission_content_type)
-        self.assertEqual(attached_file.object_id, str(submission.pk))
-        self.assertEqual(submission.data["files"], [str(attached_file.id)])
+        attached_files = list(File.objects.filter(object_id=str(submission.pk)))
+        self.assertEqual(len(attached_files), 2)
+        self.assertEqual(
+            {attached_file.name for attached_file in attached_files},
+            {"submitted.pdf", "supporting.png"},
+        )
+        self.assertTrue(
+            all(
+                attached_file.content_type == form_submission_content_type
+                for attached_file in attached_files
+            )
+        )
+        self.assertEqual(
+            submission.data["files"],
+            ["submitted.pdf", "supporting.png"],
+        )
 
-        FormManager(form_object).persist_form_submission(submission, request=request)
+        manager.persist_form_submission(submission, request=request)
 
-        attached_file.refresh_from_db()
         customer = self.CustomerModel.objects.get(first_name="Reviewed")
-        self.assertEqual(attached_file.content_type, parent_content_type)
-        self.assertEqual(attached_file.object_id, str(customer.pk))
-        self.assertTrue(attached_file.persisted)
+        for attached_file in attached_files:
+            attached_file.refresh_from_db()
+            self.assertEqual(attached_file.content_type, parent_content_type)
+            self.assertEqual(attached_file.object_id, str(customer.pk))
+            self.assertTrue(attached_file.persisted)
 
     def test_form_submission_without_review_moves_files_to_persisted_object_immediately(self):
         parent_content_type = ContentType.objects.get_for_model(self.CustomerModel)

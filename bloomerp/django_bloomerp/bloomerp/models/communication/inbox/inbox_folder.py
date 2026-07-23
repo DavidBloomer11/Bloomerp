@@ -95,11 +95,18 @@ class InboxFolder(BloomerpModel):
 
     def get_recipients(self) -> QuerySet[AbstractBloomerpUser]:
         from django.contrib.auth import get_user_model
-
+        
+        # Protect from initial default inboxes
+        if self.inbox.initial_default:
+            return get_user_model().objects.filter(
+                id=self.inbox.user_id
+            )
+        
         return get_user_model().objects.filter(
             Q(pk=self.inbox.user_id)
             | Q(shared_inbox_preferences=self.inbox)
             | Q(groups__shared_inbox_preferences=self.inbox)
+            
         ).distinct()
 
     

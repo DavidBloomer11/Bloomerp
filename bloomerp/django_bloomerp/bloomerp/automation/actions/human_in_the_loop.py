@@ -19,7 +19,6 @@ class HumanInTheLoopForm(BaseWorkflowNodeForm):
     approver_users = forms.MultipleChoiceField(
         label="Approver Users",
         widget=ForeignFieldWidget(
-            model=get_user_model(),
             attrs={
                 "is_m2m": True,
                 "class" : "input w-full"
@@ -39,6 +38,10 @@ class HumanInTheLoopForm(BaseWorkflowNodeForm):
         help_text="Users belonging to groups that can approve this workflow",
         required=False
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["approver_users"].widget.model = get_user_model()
     
 
 class HumanInTheLoopExecutor(BaseExecutor):
