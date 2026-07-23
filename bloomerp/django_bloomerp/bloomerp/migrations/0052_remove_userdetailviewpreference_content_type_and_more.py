@@ -10,6 +10,14 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RemoveConstraint(
+            model_name='userdetailviewpreference',
+            name='unique_selected_detail_view_preference',
+        ),
+        migrations.RemoveConstraint(
+            model_name='userdetailviewpreference',
+            name='unique_detail_view_preference_reference',
+        ),
         migrations.RemoveField(
             model_name='userdetailviewpreference',
             name='content_type',

@@ -420,6 +420,15 @@ def create_default_layout(
             LayoutItem(id=application_field.pk, colspan=1)
             for application_field in application_fields
             if application_field.field_type_enum != FieldType.ONE_TO_MANY_FIELD
+            and application_field.field not in [
+                "id", 
+                "pk", 
+                "updated_by", 
+                "created_by",
+                "datetime_created",
+                "datetime_updated",
+                "comments"
+            ]
         ]
         return FieldLayout(
             rows=[

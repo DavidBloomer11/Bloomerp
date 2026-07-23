@@ -1909,115 +1909,6 @@ export class UserApi extends ModelApi<User, UserId, UserCreate, UserUpdate, User
   }
 }
 
-export interface UserCreateViewPreference {
-  content_type: number;
-  id: number;
-  initial_default: boolean;
-  layout: unknown;
-  name: string;
-  selected: boolean;
-  shared_with_groups: Array<number>;
-  shared_with_users: Array<number>;
-  source_object: number | null;
-  user: number;
-}
-
-export type UserCreateViewPreferenceId = number;
-export type UserCreateViewPreferenceFieldName = "content_type" | "id" | "initial_default" | "layout" | "name" | "selected" | "shared_with_groups" | "shared_with_users" | "source_object" | "user";
-
-export interface UserCreateViewPreferenceCreate {
-  content_type: number;
-  initial_default?: boolean;
-  layout?: unknown;
-  name?: string;
-  selected?: boolean;
-  shared_with_groups?: Array<number>;
-  shared_with_users?: Array<number>;
-  source_object?: number | null;
-  user: number;
-}
-
-export type UserCreateViewPreferenceUpdate = Partial<UserCreateViewPreferenceCreate>;
-export type UserCreateViewPreferenceQuery = Partial<Record<UserCreateViewPreferenceFieldName | `${UserCreateViewPreferenceFieldName}__${string}`, QueryValue | QueryValue[]>>;
-
-export const userCreateViewPreferencesFields: Record<UserCreateViewPreferenceFieldName, BloomerpFieldMetadata> = {
-  "content_type": {"name": "content_type", "title": "Content Type", "fieldType": "ForeignKey", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": "ContentType", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
-  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
-  "initial_default": {"name": "initial_default", "title": "Initial Default", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
-  "layout": {"name": "layout", "title": "Layout", "fieldType": "JSONField", "dbFieldType": "text", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "unknown", "choices": null},
-  "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
-  "selected": {"name": "selected", "title": "Selected", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
-  "shared_with_groups": {"name": "shared_with_groups", "title": "Shared With Groups", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "Group", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
-  "shared_with_users": {"name": "shared_with_users", "title": "Shared With Users", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
-  "source_object": {"name": "source_object", "title": "Source Object", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "UserCreateViewPreference", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
-  "user": {"name": "user", "title": "User", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": false, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
-} as const;
-
-export const userCreateViewPreferencesCapabilities: BloomerpModelCapabilities = {"list": true, "retrieve": true, "create": true, "createMany": true, "update": true, "partialUpdate": true, "destroy": true} as const;
-export const userCreateViewPreferencesPublicAccess: BloomerpModelPublicAccessMetadata = {"listAllowed": false, "readAllowed": false, "listFields": [], "readFields": [], "nesting": [], "authenticatedFallbackEnabled": true} as const;
-
-export class UserCreateViewPreferenceApi extends ModelApi<UserCreateViewPreference, UserCreateViewPreferenceId, UserCreateViewPreferenceCreate, UserCreateViewPreferenceUpdate, UserCreateViewPreferenceQuery, UserCreateViewPreferenceFieldName> {
-  constructor(client: BloomerpHttpClient) {
-    super(client, "/api/user_create_view_preferences/");
-  }
-}
-
-export interface UserDetailViewPreference {
-  content_type: number;
-  id: number;
-  initial_default: boolean;
-  layout: unknown;
-  name: string;
-  selected: boolean;
-  shared_with_groups: Array<number>;
-  shared_with_users: Array<number>;
-  source_object: number | null;
-  tab_state: unknown;
-  user: number;
-}
-
-export type UserDetailViewPreferenceId = number;
-export type UserDetailViewPreferenceFieldName = "content_type" | "id" | "initial_default" | "layout" | "name" | "selected" | "shared_with_groups" | "shared_with_users" | "source_object" | "tab_state" | "user";
-
-export interface UserDetailViewPreferenceCreate {
-  content_type: number;
-  initial_default?: boolean;
-  layout?: unknown;
-  name?: string;
-  selected?: boolean;
-  shared_with_groups?: Array<number>;
-  shared_with_users?: Array<number>;
-  source_object?: number | null;
-  tab_state?: unknown;
-  user: number;
-}
-
-export type UserDetailViewPreferenceUpdate = Partial<UserDetailViewPreferenceCreate>;
-export type UserDetailViewPreferenceQuery = Partial<Record<UserDetailViewPreferenceFieldName | `${UserDetailViewPreferenceFieldName}__${string}`, QueryValue | QueryValue[]>>;
-
-export const userDetailViewPreferencesFields: Record<UserDetailViewPreferenceFieldName, BloomerpFieldMetadata> = {
-  "content_type": {"name": "content_type", "title": "Content Type", "fieldType": "ForeignKey", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": "ContentType", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
-  "id": {"name": "id", "title": "Id", "fieldType": "BigAutoField", "dbFieldType": "integer", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "number", "choices": null},
-  "initial_default": {"name": "initial_default", "title": "Initial Default", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
-  "layout": {"name": "layout", "title": "Layout", "fieldType": "JSONField", "dbFieldType": "text", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "unknown", "choices": null},
-  "name": {"name": "name", "title": "Name", "fieldType": "CharField", "dbFieldType": "varchar(255)", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "string", "choices": null},
-  "selected": {"name": "selected", "title": "Selected", "fieldType": "BooleanField", "dbFieldType": "bool", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "boolean", "choices": null},
-  "shared_with_groups": {"name": "shared_with_groups", "title": "Shared With Groups", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "Group", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
-  "shared_with_users": {"name": "shared_with_users", "title": "Shared With Users", "fieldType": "ManyToManyField", "dbFieldType": null, "nullable": false, "many": true, "relatedModel": "User", "editable": true, "requiredOnCreate": false, "tsType": "Array<number>", "choices": null},
-  "source_object": {"name": "source_object", "title": "Source Object", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": true, "many": false, "relatedModel": "UserDetailViewPreference", "editable": true, "requiredOnCreate": false, "tsType": "number | null", "choices": null},
-  "tab_state": {"name": "tab_state", "title": "Tab State", "fieldType": "JSONField", "dbFieldType": "text", "nullable": false, "many": false, "relatedModel": null, "editable": true, "requiredOnCreate": false, "tsType": "unknown", "choices": null},
-  "user": {"name": "user", "title": "User", "fieldType": "ForeignKey", "dbFieldType": "bigint", "nullable": false, "many": false, "relatedModel": "User", "editable": true, "requiredOnCreate": true, "tsType": "number", "choices": null},
-} as const;
-
-export const userDetailViewPreferencesCapabilities: BloomerpModelCapabilities = {"list": true, "retrieve": true, "create": true, "createMany": true, "update": true, "partialUpdate": true, "destroy": true} as const;
-export const userDetailViewPreferencesPublicAccess: BloomerpModelPublicAccessMetadata = {"listAllowed": false, "readAllowed": false, "listFields": [], "readFields": [], "nesting": [], "authenticatedFallbackEnabled": true} as const;
-
-export class UserDetailViewPreferenceApi extends ModelApi<UserDetailViewPreference, UserDetailViewPreferenceId, UserDetailViewPreferenceCreate, UserDetailViewPreferenceUpdate, UserDetailViewPreferenceQuery, UserDetailViewPreferenceFieldName> {
-  constructor(client: BloomerpHttpClient) {
-    super(client, "/api/user_detail_view_preferences/");
-  }
-}
-
 export interface UserDetailViewTabsPreference {
   content_type: number;
   id: number;
@@ -2678,18 +2569,6 @@ export class BloomerpSdk {
         publicAccess: usersPublicAccess,
         fields: usersFields,
       },
-      userCreateViewPreferences: {
-        endpoint: "/api/user_create_view_preferences/",
-        capabilities: userCreateViewPreferencesCapabilities,
-        publicAccess: userCreateViewPreferencesPublicAccess,
-        fields: userCreateViewPreferencesFields,
-      },
-      userDetailViewPreferences: {
-        endpoint: "/api/user_detail_view_preferences/",
-        capabilities: userDetailViewPreferencesCapabilities,
-        publicAccess: userDetailViewPreferencesPublicAccess,
-        fields: userDetailViewPreferencesFields,
-      },
       userDetailViewTabsPreferences: {
         endpoint: "/api/user_detail_view_tabs_preferences/",
         capabilities: userDetailViewTabsPreferencesCapabilities,
@@ -2780,8 +2659,6 @@ export class BloomerpSdk {
   public readonly todos: TodoApi;
   public readonly todoLabels: TodoLabelApi;
   public readonly users: UserApi;
-  public readonly userCreateViewPreferences: UserCreateViewPreferenceApi;
-  public readonly userDetailViewPreferences: UserDetailViewPreferenceApi;
   public readonly userDetailViewTabsPreferences: UserDetailViewTabsPreferenceApi;
   public readonly userInboxPreferences: UserInboxPreferenceApi;
   public readonly userListViewPreferences: UserListViewPreferenceApi;
@@ -2824,8 +2701,6 @@ export class BloomerpSdk {
     this.todos = new TodoApi(this.client);
     this.todoLabels = new TodoLabelApi(this.client);
     this.users = new UserApi(this.client);
-    this.userCreateViewPreferences = new UserCreateViewPreferenceApi(this.client);
-    this.userDetailViewPreferences = new UserDetailViewPreferenceApi(this.client);
     this.userDetailViewTabsPreferences = new UserDetailViewTabsPreferenceApi(this.client);
     this.userInboxPreferences = new UserInboxPreferenceApi(this.client);
     this.userListViewPreferences = new UserListViewPreferenceApi(this.client);
