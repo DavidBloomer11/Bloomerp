@@ -182,7 +182,10 @@ def _select_related_rendered_relations(
         except FieldDoesNotExist:
             continue
 
-        if model_field.many_to_one or model_field.one_to_one:
+        if (
+            getattr(model_field, "concrete", False)
+            and (model_field.many_to_one or model_field.one_to_one)
+        ):
             relation_names.append(model_field.name)
 
     if not relation_names:
@@ -458,4 +461,3 @@ def dataview_action(request: HttpRequest, content_type_id: int, action: str) -> 
 
     return definition.renderer_cls.handle_action(action, request, state)
     
-

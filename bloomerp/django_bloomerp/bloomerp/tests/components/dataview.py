@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import Permission
 from bloomerp.tests.base import BaseBloomerpModelTestCase
-from bloomerp.models import ApplicationField
+from bloomerp.models import ApplicationField, Todo
 from bloomerp.models import Policy, FieldPolicy, RowPolicy, RowPolicyRule
 from bloomerp.models.users.user_list_view_preference import UserListViewPreference
 from bloomerp.services.user_services import get_data_view_fields, get_user_list_view_preference
@@ -315,6 +315,46 @@ class TestDataView(BaseBloomerpModelTestCase):
         self.assertLess(content.index("Alice"), content.index("Bob"))
         self.assertLess(content.index("Bob"), content.index("Charlie"))
         self.assertContains(response, 'aria-sort="ascending"', html=False)
+
+    def test_table_dataview_ignores_sorting_by_generic_foreign_key(self):
+        """
+        Use case: A content object field is added to a user's table preference.
+        Expected result: The table renders the linked object without ordering by
+        the virtual field.
+        """
+        # 1. Create a todo linked to a model object through its GenericForeignKey.
+        customer = self.create_customer("Generic", "Relation", 30)
+        Todo.objects.create(title="Linked todo", content_object=customer)
+
+        # 2. Make content_object the visible field in the selected Todo preference.
+        self.client.force_login(self.admin_user)
+        content_type = ContentType.objects.get_for_model(Todo)
+        content_object_field = ApplicationField.get_by_field(Todo, "content_object")
+        preference = get_user_list_view_preference(self.admin_user, content_type)
+        preference.display_fields = {
+            **preference.display_fields,
+            "table": [content_object_field.id],
+        }
+        preference.save(update_fields=["display_fields"])
+
+        # 3. Request the table after adding the virtual field to the preference.
+        dataview_url = reverse(
+            viewname="components_dataview",
+            kwargs={"content_type_id": content_type.id},
+        )
+        response = self.client.get(dataview_url, HTTP_HX_REQUEST="true")
+
+        # 4. Confirm the virtual field does not break rendering and shows its value.
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Generic Relation")
+
+        # 5. Confirm a stale or manually supplied sort query cannot break the table.
+        sorted_response = self.client.get(
+            f"{dataview_url}?sort=content_object&direction=asc",
+            HTTP_HX_REQUEST="true",
+        )
+        self.assertEqual(sorted_response.status_code, 200)
+        self.assertContains(sorted_response, "Generic Relation")
 
     def test_table_sort_links_preserve_filters_and_reset_page(self):
         self.client.force_login(self.admin_user)
