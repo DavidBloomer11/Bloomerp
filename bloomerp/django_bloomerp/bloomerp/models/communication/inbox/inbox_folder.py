@@ -2,7 +2,6 @@ from typing import Type
 
 from django.db import models
 from django.db.models import Q
-from numpy import isin
 from bloomerp.communication.inbox_folder_definition import InboxFolderType, InboxFolderTypeDefinition
 from bloomerp.models.base_bloomerp_model import BloomerpModel
 from bloomerp.models.communication.inbox.inbox_item import InboxItem
@@ -97,9 +96,10 @@ class InboxFolder(BloomerpModel):
     def get_recipients(self) -> QuerySet[AbstractBloomerpUser]:
         from django.contrib.auth import get_user_model
 
-        recipient_ids = self.inbox.members.values_list("pk", flat=True)
         return get_user_model().objects.filter(
-            Q(pk=self.inbox.owner_id) | Q(pk__in=recipient_ids)
+            Q(pk=self.inbox.user_id)
+            | Q(shared_inbox_preferences=self.inbox)
+            | Q(groups__shared_inbox_preferences=self.inbox)
         ).distinct()
 
     
@@ -126,6 +126,9 @@ class InboxFolder(BloomerpModel):
             raise ValueError("Invalid type for users parameter.")
         
         return InboxFolder.objects.filter(
-            Q(inbox__owner_id__in=user_ids) | Q(inbox__members__id__in=user_ids),
+            Q(inbox__user_id__in=user_ids)
+            | Q(inbox__shared_with_users__id__in=user_ids)
+            | Q(inbox__shared_with_groups__user__id__in=user_ids),
+            inbox__source_object__isnull=True,
             type=folder_type.value.key if isinstance(folder_type, InboxFolderType) else folder_type,
         ).distinct()

@@ -242,7 +242,10 @@ def resolve_workflow_notification_folders(
         return InboxFolder.objects.none()
 
     return InboxFolder.objects.filter(
-        Q(inbox__owner_id=recipient_id) | Q(inbox__members__id=recipient_id),
+        Q(inbox__user_id=recipient_id)
+        | Q(inbox__shared_with_users__id=recipient_id)
+        | Q(inbox__shared_with_groups__user__id=recipient_id),
+        inbox__source_object__isnull=True,
         type=InboxFolderType.IN_APP_NOTIFICATIONS.value.key,
     ).distinct()
 

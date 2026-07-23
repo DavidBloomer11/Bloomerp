@@ -2230,7 +2230,7 @@ class TestAutomation(TransactionTestCase):
         send_message = WorkflowNode.objects.create(
             workflow=workflow,
             config={
-                "sub_type": "SEND_USER_MESSAGE",
+                "sub_type": "SEND_USER_INBOX_MESSAGE",
                 "parameters": {
                     "user_id": str(self.user.id),
                     "message": (
@@ -2249,7 +2249,7 @@ class TestAutomation(TransactionTestCase):
         workflow.connect_nodes(trigger, merge_branch)
         workflow.connect_nodes(merge_branch, send_message)
 
-        with patch("bloomerp.automation.actions.send_user_message.publish_event") as send_message_mock:
+        with patch("bloomerp.automation.actions.send_user_inbox_message.publish_event") as send_message_mock:
             workflow_run = run_workflow(workflow, {})
 
         self.assertEqual(send_message_mock.call_count, 2)
@@ -2262,7 +2262,7 @@ class TestAutomation(TransactionTestCase):
         send_message_entries = [
             entry
             for entry in workflow_run.execution_trace
-            if entry["node_sub_type"] == "SEND_USER_MESSAGE"
+            if entry["node_sub_type"] == "SEND_USER_INBOX_MESSAGE"
         ]
         self.assertEqual(len(send_message_entries), 2)
         

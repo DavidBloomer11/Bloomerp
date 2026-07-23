@@ -1,11 +1,11 @@
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.utils.translation import gettext as _
 from typing import TYPE_CHECKING
 
 from bloomerp.router import router
+from bloomerp.communication.utils.permissions import accessible_inbox_items
 from bloomerp.utils.requests import render_message
 
 if TYPE_CHECKING:
@@ -32,10 +32,7 @@ def resolve_inbox_item(request: HttpRequest, inbox_item_or_id: "InboxItem | str 
         return None
 
     return get_object_or_404(
-        InboxItem.objects.filter(
-            Q(folder__inbox__owner=request.user) | Q(folder__inbox__members=request.user),
-            item_type="email",
-        ).distinct(),
+        accessible_inbox_items(request.user).filter(item_type="email"),
         id=item_id,
     )
 

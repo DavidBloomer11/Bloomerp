@@ -21,15 +21,22 @@ class RenderInboxFolderItemsTests(SimpleTestCase):
     @patch(
         "bloomerp.components.communication.render_inbox_folder_items.get_object_or_404"
     )
+    @patch(
+        "bloomerp.components.communication.render_inbox_folder_items."
+        "accessible_inbox_folders"
+    )
     def test_returns_at_most_one_hundred_items_per_page(
         self,
+        accessible_inbox_folders,
         get_object_or_404,
         render,
     ):
+        accessible_inbox_folders.return_value = Mock()
         get_object_or_404.return_value = self.folder
         render.return_value = HttpResponse()
 
         request = self.request_factory.get("/inbox-items/", {"page": 2})
+        request.user = Mock(is_authenticated=True)
         render_inbox_folder(request, "folder-id")
 
         context = render.call_args.args[2]
@@ -44,11 +51,17 @@ class RenderInboxFolderItemsTests(SimpleTestCase):
     @patch(
         "bloomerp.components.communication.render_inbox_folder_items.get_object_or_404"
     )
+    @patch(
+        "bloomerp.components.communication.render_inbox_folder_items."
+        "accessible_inbox_folders"
+    )
     def test_last_page_contains_remaining_items_and_preserves_filters(
         self,
+        accessible_inbox_folders,
         get_object_or_404,
         render,
     ):
+        accessible_inbox_folders.return_value = Mock()
         get_object_or_404.return_value = self.folder
         render.return_value = HttpResponse()
 
@@ -56,6 +69,7 @@ class RenderInboxFolderItemsTests(SimpleTestCase):
             "/inbox-items/",
             {"page": 3, "q": "invoice", "status": "unread"},
         )
+        request.user = Mock(is_authenticated=True)
         render_inbox_folder(request, "folder-id")
 
         context = render.call_args.args[2]
@@ -65,4 +79,3 @@ class RenderInboxFolderItemsTests(SimpleTestCase):
             context["pagination_querystring"],
             "q=invoice&status=unread",
         )
-

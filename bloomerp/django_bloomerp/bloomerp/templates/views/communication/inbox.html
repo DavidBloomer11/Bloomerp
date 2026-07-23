@@ -1,23 +1,24 @@
 {% load crispy_forms_tags %}
 
-{% if inbox_preference.selected_inbox %}
+{% if inbox %}
 <div 
     bloomerp-component="inbox" 
     data-inbox-folder-items-component-url="{% url 'components_render_inbox_folder_items' folder_id='REPLACE_WITH_ID' %}"
     data-render-inbox-item-url="{% url 'components_render_inbox_item' item_id='REPLACE_WITH_ID' %}"
     data-render-inbox-item-target="#inbox-item-render-target"
     data-execute-inbox-action-url="{% url 'components_execute_inbox_action' level='REPLACE_LEVEL' item_id='REPLACE_WITH_ID' action_key='REPLACE_ACTION_KEY' %}"
-    data-add-folder-component-url="{% url 'components_add_inbox_folder' inbox_id=inbox_preference.selected_inbox.id %}"
+    data-add-folder-component-url="{% url 'components_add_inbox_folder' inbox_id=inbox.id %}"
+    data-select-inbox-folder-url="{% url 'components_select_inbox_folder' folder_id='REPLACE_WITH_ID' %}"
 
-    data-inbox-id="{{ inbox_preference.selected_inbox.pk }}"
+    data-inbox-id="{{ inbox.pk }}"
     data-inbox-folder-id="{{ inbox_preference.selected_inbox_folder.pk }}"
-    data-inbox-preference-id="{{ inbox_preference.pk }}"
 
     class="flex h-[calc(100vh-4rem)] min-h-[44rem] overflow-hidden" 
     data-detail-view-grid
     >
     <aside class="flex min-w-[20rem] flex-1 flex-col border-r border-gray-200 bg-white">
         <header class="flex h-14 shrink-0 items-center justify-between border-b border-gray-200 px-5">
+            <div class="flex min-w-0 items-center gap-2">
             <c-ui.dropdown.body
                 id="select-folder-dropdown"
                 :trigger_text="inbox_preference.selected_inbox_folder.name"
@@ -54,9 +55,33 @@
                     {% endif %}
                 {% endfor %}
 
-                <c-ui.dropdown.item text="Add folder" icon="fa fa-plus" id="add-folder-btn" />
+                {% if can_manage_inbox %}
+                    <c-ui.dropdown.item text="Add folder" icon="fa fa-plus" id="add-folder-btn" />
+                {% endif %}
+                <c-ui.dropdown.divider />
+                
+                <c-ui.dropdown.submenu 
+                    id="" 
+                    class="" icon="" 
+                    text="Select Inbox" 
+                    width="w-72"
+                    >
+                    <div
+                        id="select-preference-dropdown-Inbox"
+                        hx-get="{% url 'components_select_preference' model='Inbox'%}?{% if args %}{% for key, value in args.items %}{{ key }}={{ value }}&{% endfor %}{% endif %}"
+                        hx-trigger="revealed once"
+                        hx-target="this"
+                        hx-swap="innerHTML"
+                        hx-push-url="false"
+                    >
+                        <div class="px-4 py-3 text-sm text-gray-500">
+                            Loading preferences...
+                        </div>
+                    </div>
+                </c-ui.dropdown.submenu>
 
             </c-ui.dropdown.body>
+            </div>
 
             <div class="flex items-center gap-3 text-gray-500">
                 {% for action in primary_actions %}
@@ -101,6 +126,7 @@
                     {% empty %}
                         <c-ui.dropdown.item text="No actions" disabled=True />
                     {% endfor %}
+                        
                 </c-ui.dropdown.body>
                 {% endif %}
                 <c-ui.dropdown.body 
@@ -159,8 +185,14 @@
 {% else %}
 
 <c-ui.center_page_element class="" icon="fa fa-envelope" title="Create Inbox"
-    text="Create and setup your inbox to start receiving emails, messages and notifications.">
+    text="Create an inbox or select one that has been shared with you.">
     <div id="create-inbox-panel" class="flex flex-col items-center gap-4">
+
+        <c-features.preferences.select_preference_button
+            model="Inbox"
+            selected_preference_name="Select shared inbox"
+            trigger_icon_class="fa fa-inbox"
+        />
 
         <button class="btn btn-primary" hx-post="{% url 'components_create_inbox' %}" hx-target="this"
             hx-swap="innerHTML" hx-vals='{"csrfmiddlewaretoken": "{{ csrf_token }}", "create_default": "true"}'>Create

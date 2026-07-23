@@ -3,9 +3,9 @@ import json
 from bloomerp.communication.inbox_folder_definition import INBOX_ITEM_RENDER_TARGET, INBOX_ITEMS_TARGET, INBOX_MESSAGE_TARGET, InboxFolderType
 from bloomerp.models.communication.inbox.inbox import Inbox
 from bloomerp.models.communication.inbox.user_inbox_preference import UserInboxPreference
+from bloomerp.services.preference_services import PreferenceManager
 from bloomerp.views.base import BaseBloomerpView
 from bloomerp.router import router
-from django.db.models import Q
 from django.views.generic import TemplateView
 
 @router.register(
@@ -20,12 +20,21 @@ class InboxView(BaseBloomerpView, TemplateView):
     
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        inbox_preference = self.get_inbox_preference()
+        preference_manager = PreferenceManager(self.request.user)
+        inbox = preference_manager.get_or_create_selected(
+            Inbox,
+            force_create=False,
+        )
+        inbox_preference = self.get_inbox_preference(inbox)
         ctx["inbox_types"] = [i.value for i in InboxFolderType if not i.value.source_model]
+        ctx["inbox"] = inbox
         ctx["inbox_preference"] = inbox_preference
+        ctx["can_manage_inbox"] = bool(
+            inbox and preference_manager.can_manage(inbox)
+        )
         
-        if inbox_preference and inbox_preference.selected_inbox_folder:
-            folders = inbox_preference.selected_inbox.folders.all()
+        if inbox and inbox_preference and inbox_preference.selected_inbox_folder:
+            folders = inbox.folders.all()
             selected_folder = inbox_preference.selected_inbox_folder
             folder_type = selected_folder.inbox_folder_type()
             filters = folder_type.resolve_filters(selected_folder)
@@ -73,21 +82,23 @@ class InboxView(BaseBloomerpView, TemplateView):
             ),
         }
     
-    def get_inbox_preference(self) -> UserInboxPreference | None:
-        preference = (
-            UserInboxPreference.objects
-            .select_related("selected_inbox", "selected_inbox_folder")
-            .filter(user=self.request.user)
-            .first()
-        )
-        selected_inbox = preference.selected_inbox if preference else None
-        if not selected_inbox:
+    def get_inbox_preference(
+        self,
+        inbox: Inbox | None,
+    ) -> UserInboxPreference | None:
+        if inbox is None:
             return None
 
-        has_access = Inbox.objects.filter(
-            Q(owner=self.request.user) | Q(members=self.request.user),
-            pk=selected_inbox.pk,
-        ).exists()
-        return preference if has_access else None
+        preference = UserInboxPreference.get_for_user(self.request.user)
+        selected_folder = (
+            inbox.folders.filter(pk=preference.selected_inbox_folder_id).first()
+            if preference.selected_inbox_folder_id
+            else None
+        )
+        if selected_folder is None:
+            selected_folder = inbox.folders.order_by("pk").first()
+            preference.selected_inbox_folder = selected_folder
+            preference.save(update_fields=["selected_inbox_folder"])
+        return preference
     
     

@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from bloomerp.celery.utils import is_celery_available
 from bloomerp.communication.emails.actions import refresh_mailboxes_for_account
 from bloomerp.communication.inbox_sources import publish_event
+from bloomerp.communication.utils.permissions import accessible_inbox_folders
 from bloomerp.router import router
 from bloomerp.utils.requests import render_blank_form, render_message
 from django import forms
@@ -59,10 +60,12 @@ class SyncEmailsForm(forms.Form):
 )
 @login_required
 def sync_emails(request: HttpRequest, folder: "str | InboxFolder") -> HttpResponse:
-    from bloomerp.communication.utils.resolver import resolve_item
     from bloomerp.models.communication.inbox.inbox_folder import InboxFolder
-    
-    folder = resolve_item(folder, target=InboxFolder)
+
+    folder_id = folder.pk if isinstance(folder, InboxFolder) else folder
+    folder = accessible_inbox_folders(request.user).filter(pk=folder_id).first()
+    if folder is None:
+        return HttpResponse("Inbox folder not found.", status=404)
     email_account = folder.related_object()
     if not email_account:
         return render_message(

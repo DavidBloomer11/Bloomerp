@@ -114,7 +114,7 @@ class EmailAttachmentComponentTests(TestCase):
             email="attachment-outsider@example.com",
             password="password",
         )
-        inbox = Inbox.objects.create(owner=self.user, name="Email inbox")
+        inbox = Inbox.objects.create(user=self.user, name="Email inbox")
         self.email_account = EmailAccount.objects.create(
             email_address="attachments@example.com",
         )

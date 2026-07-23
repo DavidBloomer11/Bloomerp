@@ -1,12 +1,11 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
-from django.db.models import Q
 from django.http import HttpRequest
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
-from bloomerp.models.communication.inbox.inbox_item import InboxItem
+from bloomerp.communication.utils.permissions import accessible_inbox_items
+from bloomerp.models.communication.inbox.inbox import Inbox
 from bloomerp.router import router
-from django.db import transaction
 
 @router.register(
     path="components/communication/render_inbox_item/<str:item_id>",
@@ -22,10 +21,7 @@ def render_inbox_item(request: HttpRequest, item_id: str) -> HttpResponse:
         item_id (str): The ID of the inbox item to be rendered.
     """
     inbox_item = get_object_or_404(
-        InboxItem.objects.filter(
-            Q(folder__inbox__owner=request.user)
-            | Q(folder__inbox__members=request.user)
-        ).distinct(),
+        accessible_inbox_items(request.user),
         id=item_id,
     )
     
@@ -50,5 +46,6 @@ def render_inbox_item(request: HttpRequest, item_id: str) -> HttpResponse:
             "item": inbox_item,
             "primary_actions": [action for action in actions if action.is_primary_action],
             "secondary_actions": [action for action in actions if not action.is_primary_action],
+            "notification_count":Inbox.get_unread_count_for_user(request.user)
         }
     )

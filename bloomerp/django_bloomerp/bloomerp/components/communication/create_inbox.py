@@ -89,17 +89,16 @@ def create_inbox(request: HttpRequest) -> HttpResponse:
         if form.is_valid():
             with transaction.atomic():
                 inbox = form.save(commit=False)
-                inbox.owner = request.user
+                inbox.user = request.user
+                inbox.selected = True
                 inbox.save()
-                inbox.members.add(request.user)
 
                 default_folders = _create_default_folders(inbox) if create_default else []
                 selected_folder = default_folders[0] if default_folders else None
 
-                preference, _ = UserInboxPreference.objects.get_or_create(user=request.user)
-                preference.selected_inbox = inbox
+                preference = UserInboxPreference.get_for_user(request.user)
                 preference.selected_inbox_folder = selected_folder
-                preference.save(update_fields=["selected_inbox", "selected_inbox_folder"])
+                preference.save(update_fields=["selected_inbox_folder"])
 
             redirect_url = reverse("inbox")
             if request.htmx:
