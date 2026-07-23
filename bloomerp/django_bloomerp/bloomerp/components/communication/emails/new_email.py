@@ -1,7 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
-from django.db.models import Q
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
@@ -11,6 +10,7 @@ from typing import TYPE_CHECKING
 
 from bloomerp.communication.emails.base_adapter import EmailAttachment
 from bloomerp.communication.emails.email_providers import EmailProvider
+from bloomerp.communication.utils.permissions import accessible_inbox_folders
 from bloomerp.router import router
 from bloomerp.utils.requests import render_message
 
@@ -42,10 +42,7 @@ def resolve_inbox_folder(request: HttpRequest, inbox_folder_or_id: "InboxFolder 
 
     # TODO: Reusable 
     return get_object_or_404(
-        InboxFolder.objects.filter(
-            Q(inbox__owner=request.user) | Q(inbox__members=request.user),
-            type="email",
-        ).distinct(),
+        accessible_inbox_folders(request.user).filter(type="email"),
         id=folder_id,
     )
 

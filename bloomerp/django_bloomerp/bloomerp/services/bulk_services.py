@@ -28,6 +28,7 @@ from bloomerp.models.files import File
 from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
 from bloomerp.celery.utils import is_celery_available
 from bloomerp.utils.model_io import BloomerpModelIO
+from bloomerp.utils.realtime import ToastPayload, send_toast_message
 
 
 DEFAULT_REVIEW_PAGE_SIZE = 50
@@ -522,16 +523,12 @@ class BulkCrudService:
 
     def _send_completion_message(self, *, created_count: int) -> None:
         """Notify the initiating user that a bulk upload finished."""
-
-        from bloomerp.utils.realtime import send_user_message
-
-        send_user_message(
+        send_toast_message(
             self.user.pk,
-            payload={
-                "type": "toast",
-                "message": f"Bulk upload completed. Created {created_count} object(s).",
-                "level": "success",
-            },
+            payload=ToastPayload(
+                message_type="success",
+                message=f"Bulk upload completed. Created {created_count} object(s)."
+            )
         )
 
     def get_review_model_form_class(self, *, fields: list[str]):

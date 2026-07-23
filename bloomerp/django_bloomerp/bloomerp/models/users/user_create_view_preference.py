@@ -48,6 +48,23 @@ class UserCreateViewPreference(ContentLayoutModelMixin, BaseViewPreference):
             layout=create_default_layout(model).model_dump(),
         )
 
+    @classmethod
+    def copy_preference_for_user(
+        cls,
+        *,
+        user: AbstractBloomerpUser,
+        source: "UserCreateViewPreference",
+        name: str,
+        scope: dict | None = None,
+    ) -> "UserCreateViewPreference":
+        """Copy a create-view preference and its serialized layout."""
+        return cls._create_preference_copy(
+            user=user,
+            source=source,
+            name=name,
+            scope=scope,
+        )
+
     def ensure_default_state(self, *, user, content_type: ContentType) -> None:
         if not self.layout_obj.rows or not any(row.items for row in self.layout_obj.rows):
             from bloomerp.services.sectioned_layout_services import create_default_layout

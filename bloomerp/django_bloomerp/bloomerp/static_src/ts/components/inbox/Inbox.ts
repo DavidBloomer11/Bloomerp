@@ -2,7 +2,6 @@ import htmx from "htmx.org";
 import BaseComponent from "../BaseComponent";
 import { InboxItem } from "./InboxItem";
 import getGeneralModal from "@/utils/modals";
-import getSdk from "@/sdk/getSdk";
 import { insertSkeleton } from "@/utils/animations";
 import { getCsrfToken } from "@/utils/cookies";
 
@@ -84,17 +83,16 @@ export class Inbox extends BaseComponent {
         folderItems?.forEach((item) => {
             item.addEventListener('click', () => {
                 const folderId = item.id.replace('select-folder-', '');
-                const sdk = getSdk();
-                sdk.userInboxPreferences.partialUpdate(
-                    this.getDataAttribute('inboxPreferenceId') || '',
-                    {
-                        selected_inbox_folder: folderId
-                    }
-                ).then(()=> {
-                    // Reload the window
-                    window.location.reload();
-                })
-                
+                const url = (this.getDataAttribute('selectInboxFolderUrl') || '')
+                    .replace('REPLACE_WITH_ID', encodeURIComponent(folderId));
+                if (!url) return;
+
+                const values: Record<string, string> = {};
+                const csrfToken = getCsrfToken();
+                if (csrfToken) {
+                    values.csrfmiddlewaretoken = csrfToken;
+                }
+                htmx.ajax('post', url, { values });
             });
         });
     }

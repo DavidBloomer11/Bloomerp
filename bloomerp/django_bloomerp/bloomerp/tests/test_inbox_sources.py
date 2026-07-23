@@ -71,8 +71,7 @@ class EmailInboxSourceTests(TestCase):
             email="email-source-user@example.com",
             password="password",
         )
-        self.inbox = Inbox.objects.create(owner=self.user, name="Email inbox")
-        self.inbox.members.add(self.user)
+        self.inbox = Inbox.objects.create(user=self.user, name="Email inbox")
         self.email_account = EmailAccount.objects.create(
             name="Support",
             email_address="support-source@example.com",
@@ -108,10 +107,10 @@ class EmailInboxSourceTests(TestCase):
             snippet="Inbox source delivery",
         )
 
-    @patch("bloomerp.communication.inbox_sources.send_user_message")
+    @patch("bloomerp.communication.inbox_sources.send_user_inbox_message")
     def test_event_source_resolves_folders_and_forwards_keyword_payload(
         self,
-        send_user_message,
+        send_user_inbox_message,
     ):
         """
         Use case: A system message event targets a specific user.
@@ -132,7 +131,7 @@ class EmailInboxSourceTests(TestCase):
         item = receipt.result.deliveries[0].items[0]
         self.assertEqual(item.folder, self.notification_folder)
         self.assertEqual(item.snippet, "Persistent message")
-        send_user_message.assert_called_once()
+        send_user_inbox_message.assert_called_once()
 
     def test_async_event_returns_a_correlatable_scheduled_receipt(self):
         """
@@ -168,14 +167,14 @@ class EmailInboxSourceTests(TestCase):
             "email.sync.account",
         )
 
-    @patch("bloomerp.communication.inbox_sources.send_user_message")
+    @patch("bloomerp.communication.inbox_sources.send_user_inbox_message")
     @patch(
         "bloomerp.communication.emails.sync._resolve_email_adapter_for_account"
     )
     def test_account_source_creates_and_delivers_only_new_items(
         self,
         resolve_adapter,
-        send_user_message,
+        send_user_inbox_message,
     ):
         """
         Use case: The same provider email is returned by consecutive syncs.
@@ -199,16 +198,16 @@ class EmailInboxSourceTests(TestCase):
         self.assertEqual(first_result.item_count, 1)
         self.assertEqual(second_result.deliveries, ())
         self.assertEqual(InboxItem.objects.filter(folder=self.folder).count(), 1)
-        send_user_message.assert_called_once()
+        send_user_inbox_message.assert_called_once()
 
-    @patch("bloomerp.communication.inbox_sources.send_user_message")
+    @patch("bloomerp.communication.inbox_sources.send_user_inbox_message")
     @patch(
         "bloomerp.communication.emails.sync._resolve_email_adapter_for_account"
     )
     def test_same_message_in_multiple_mailboxes_has_one_inbox_item(
         self,
         resolve_adapter,
-        send_user_message,
+        send_user_inbox_message,
     ):
         """
         Use case: IMAP exposes one Message-ID under INBOX and All Mail UIDs.
@@ -274,7 +273,7 @@ class EmailInboxSourceTests(TestCase):
             ).get(),
             item,
         )
-        send_user_message.assert_called_once()
+        send_user_inbox_message.assert_called_once()
 
         # 4. Verify content retrieval uses the preferred INBOX UID.
         with patch(
@@ -357,14 +356,14 @@ class EmailInboxSourceTests(TestCase):
             email_account_id=str(self.email_account.id),
         )
 
-    @patch("bloomerp.communication.inbox_sources.send_user_message")
+    @patch("bloomerp.communication.inbox_sources.send_user_inbox_message")
     @patch(
         "bloomerp.communication.emails.sync._resolve_email_adapter_for_account"
     )
     def test_account_task_executes_registered_inbox_source(
         self,
         resolve_adapter,
-        send_user_message,
+        send_user_inbox_message,
     ):
         """
         Use case: Celery executes an email account synchronization.

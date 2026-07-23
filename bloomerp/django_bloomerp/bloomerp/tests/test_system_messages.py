@@ -24,7 +24,7 @@ class WorkflowSystemMessageTests(TestCase):
             email="workflow-notification@example.com",
             password="password",
         )
-        inbox = Inbox.objects.create(owner=self.user, name="Notifications")
+        inbox = Inbox.objects.create(user=self.user, name="Notifications")
         self.folder = InboxFolder.objects.create(
             inbox=inbox,
             type=InboxFolderType.IN_APP_NOTIFICATIONS.value.key,
@@ -152,10 +152,10 @@ class WorkflowSystemMessageTests(TestCase):
                 data={},
             )
 
-    @patch("bloomerp.communication.inbox_sources.send_user_message")
+    @patch("bloomerp.communication.inbox_sources.send_user_inbox_message")
     def test_workflow_execution_publishes_a_workflow_result_message(
         self,
-        send_user_message,
+        send_user_inbox_message,
     ):
         """
         Use case: A workflow finishes successfully.
@@ -172,4 +172,4 @@ class WorkflowSystemMessageTests(TestCase):
         self.assertEqual(item.raw_meta_data["system_message_type"], "workflow")
         self.assertEqual(item.raw_meta_data["workflow"]["status"], "completed")
         self.assertEqual(item.raw_meta_data["workflow"]["step_count"], 2)
-        send_user_message.assert_called_once()
+        send_user_inbox_message.assert_called_once()

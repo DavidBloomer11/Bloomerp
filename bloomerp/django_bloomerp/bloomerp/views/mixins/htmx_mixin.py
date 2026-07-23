@@ -1,3 +1,4 @@
+from bloomerp.models.communication.inbox.inbox import Inbox
 from bloomerp.models.workspaces.sidebar import Sidebar
 from bloomerp.modules.definition import ModuleConfig, module_registry
 from bloomerp.router import RouteType, router
@@ -177,6 +178,9 @@ class HtmxMixin(GetPreferenceMixin):
             
             # Add sidebar 
             context["sidebar"] = self.get_preference(Sidebar)
+            
+            # Add notification count
+            context["notification_count"] = Inbox.get_unread_count_for_user(self.request.user)
 
         # ---------------------
         # HTMX REQUEST

@@ -1,11 +1,11 @@
 from io import BytesIO
 
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
 from django.http import FileResponse, HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404
 
 from bloomerp.communication.emails.actions import fetch_email_attachment
+from bloomerp.communication.utils.permissions import accessible_inbox_items
 from bloomerp.router import router
 
 
@@ -32,11 +32,7 @@ def download_attachment(
     from bloomerp.models.communication.inbox.inbox_item import InboxItem
 
     item = get_object_or_404(
-        InboxItem.objects.filter(
-            Q(folder__inbox__owner=request.user)
-            | Q(folder__inbox__members=request.user),
-            item_type="email",
-        ).distinct(),
+        accessible_inbox_items(request.user).filter(item_type="email"),
         id=inbox_item_id,
     )
     attachment = fetch_email_attachment(item, attachment_id)

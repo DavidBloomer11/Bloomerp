@@ -18,6 +18,7 @@ from bloomerp.models.workspaces.sidebar_item import (
     DEFAULT_FOLDER_ICON,
     DEFAULT_LINK_ICON,
 )
+from bloomerp.services.preference_services import PreferenceManager
 
 
 class SidebarSelectionComponentTests(TestCase):
@@ -71,6 +72,39 @@ class SidebarSelectionComponentTests(TestCase):
         self.assertIn("Child", html)
         self.assertIn("Nested link", html)
         self.assertIn("Root link", html)
+
+    def test_named_sidebar_copy_preserves_nested_item_tree(self) -> None:
+        parent = SidebarItem.create_folder(
+            self.primary_sidebar,
+            "Parent",
+            position=0,
+        )
+        child = SidebarItem.create_folder(
+            self.primary_sidebar,
+            "Child",
+            parent=parent,
+            position=0,
+        )
+        SidebarItem.create_link(
+            self.primary_sidebar,
+            "Nested link",
+            "/nested/",
+            parent=child,
+            position=0,
+        )
+
+        copied = PreferenceManager(self.user).create(
+            Sidebar,
+            name="Copied sidebar",
+        )
+
+        copied_parent = copied.items.get(name="Parent")
+        copied_child = copied.items.get(name="Child")
+        copied_link = copied.items.get(name="Nested link")
+        self.assertEqual(copied.name, "Copied sidebar")
+        self.assertIsNone(copied_parent.parent_id)
+        self.assertEqual(copied_child.parent, copied_parent)
+        self.assertEqual(copied_link.parent, copied_child)
 
     def test_sidebar_create_folder_get_renders_small_form(self) -> None:
         request = self.factory.get(f"/components/workspaces/sidebar/{self.primary_sidebar.id}/folders/create/")

@@ -50,15 +50,23 @@
                     type="button" 
                     aria-haspopup="dialog" 
                     aria-controls="global-search-modal"
-                    class="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-xl hover:cursor-pointer focus:outline-none w-full hover:bg-gray-200"
+                    class="flex items-center justify-between gap-2 bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-xl hover:cursor-pointer focus:outline-none w-full hover:bg-gray-200"
                     hx-get="{% url 'inbox' %}"
                     hx-target="#main-content"
                     hx-swap="innerHTML"
                     hx-push-url="true"
                     hx-animation
                     >
-                    <i class="fa fa-inbox text-gray-500"></i>
-                    <span class="text-sm text-gray-600">Inbox</span>
+                    <div class="flex gap-2">
+                        <i class="fa fa-inbox text-gray-500"></i>
+                        <span class="text-sm text-gray-600">Inbox</span>
+                    </div>
+                    
+                    <div id="inbox-notification-count" class="text-sm text-primary font-bold px-1">
+                        {% if notification_count > 0 %}
+                            {{ notification_count }}
+                        {% endif %}
+                    </div>
                 </button>
             </div>
         </c-ui.shortcut_tooltip>

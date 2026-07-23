@@ -89,7 +89,7 @@ class EmailSyncSourceTests(TestCase):
             email="email-filter-user@example.com",
             password="password",
         )
-        inbox = Inbox.objects.create(owner=user, name="Email inbox")
+        inbox = Inbox.objects.create(user=user, name="Email inbox")
         self.email_account = EmailAccount.objects.create(
             email_address="email-filter-account@example.com",
             status=EmailAccount.Status.ACTIVE,

@@ -49,6 +49,23 @@ class UserDetailViewPreference(ContentLayoutModelMixin, BaseViewPreference):
         from bloomerp.services.detail_view_services import create_default_detail_view_preference
         return create_default_detail_view_preference(content_type=content_type, user=user)
 
+    @classmethod
+    def copy_preference_for_user(
+        cls,
+        *,
+        user: AbstractBloomerpUser,
+        source: "UserDetailViewPreference",
+        name: str,
+        scope: dict | None = None,
+    ) -> "UserDetailViewPreference":
+        """Copy a detail-view preference and its serialized state."""
+        return cls._create_preference_copy(
+            user=user,
+            source=source,
+            name=name,
+            scope=scope,
+        )
+
     def ensure_default_state(self, *, user, content_type: ContentType) -> None:
         update_fields: list[str] = []
 

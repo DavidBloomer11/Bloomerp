@@ -26,6 +26,23 @@ class UserObjectLayoutPreference(ContentLayoutModelMixin, BaseViewPreference):
             layout=create_default_layout(model).model_dump(),
         )
 
+    @classmethod
+    def copy_preference_for_user(
+        cls,
+        *,
+        user,
+        source: "UserObjectLayoutPreference",
+        name: str,
+        scope: dict | None = None,
+    ) -> "UserObjectLayoutPreference":
+        """Copy an object-layout preference."""
+        return cls._create_preference_copy(
+            user=user,
+            source=source,
+            name=name,
+            scope=scope,
+        )
+
     def ensure_default_state(self, *, user, content_type: ContentType) -> None:
         if self.layout_obj.rows and any(row.items for row in self.layout_obj.rows):
             return

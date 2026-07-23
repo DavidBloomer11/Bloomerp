@@ -1,9 +1,11 @@
 from bloomerp.communication.inbox_folder_definition import InboxFolderType, InboxFolderTypeDefinition
 from bloomerp.models.communication.inbox.inbox import Inbox
 from bloomerp.models.communication.inbox.inbox_folder import InboxFolder
+from bloomerp.communication.utils.permissions import manageable_inboxes
 from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
 from bloomerp.views.base import BaseBloomerpView
 from bloomerp.views.mixins.wizard_mixin import WizardError, WizardMixin, WizardStep
+from django.http import HttpResponse
 from django.views.generic import TemplateView
 from bloomerp.router import router
 from django_htmx.http import HttpResponseClientRefresh
@@ -19,7 +21,13 @@ class AddInboxFolder(WizardMixin, BaseBloomerpView, TemplateView):
     
     def dispatch(self, request, *args, **kwargs):
         self.inbox_id = kwargs.get("inbox_id")
-        
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+        if not manageable_inboxes(request.user).filter(pk=self.inbox_id).exists():
+            return HttpResponse(
+                "Only the inbox owner can add folders.",
+                status=403,
+            )
         return super().dispatch(request, *args, **kwargs)
     
     def get_folder_type(self) -> InboxFolderTypeDefinition:
@@ -96,11 +104,12 @@ class AddInboxFolder(WizardMixin, BaseBloomerpView, TemplateView):
             )
     
     def get_inbox(self) -> Inbox:
-        from bloomerp.models.communication.inbox.inbox import Inbox
         try:
-            return Inbox.objects.get(pk=self.inbox_id)
+            return manageable_inboxes(self.request.user).get(pk=self.inbox_id)
         except Inbox.DoesNotExist:
-            raise ValueError(f"Inbox with id {self.inbox_id} does not exist")    
+            raise ValueError(
+                f"Inbox with id {self.inbox_id} does not exist or cannot be managed"
+            )
         
     def done(self):
         # Get the data

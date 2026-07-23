@@ -1,9 +1,10 @@
+from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
 
-from bloomerp.models.communication.inbox.inbox_folder import InboxFolder
+from bloomerp.communication.utils.permissions import accessible_inbox_folders
 from bloomerp.router import router
 
 INBOX_PAGE_SIZE = 100
@@ -13,6 +14,7 @@ INBOX_PAGE_SIZE = 100
     path="components/communication/render_inbox_folder/<str:folder_id>/",
     url_name="components_render_inbox_folder_items"
 )
+@login_required
 def render_inbox_folder(request: HttpRequest, folder_id: str) -> HttpResponse:
     """
     Renders the inbox items for a given user and inbox type.
@@ -20,7 +22,10 @@ def render_inbox_folder(request: HttpRequest, folder_id: str) -> HttpResponse:
     Args:
         request (HttpRequest): The HTTP request object containing GET parameters.
     """
-    inbox_folder = get_object_or_404(InboxFolder, id=folder_id)
+    inbox_folder = get_object_or_404(
+        accessible_inbox_folders(request.user),
+        id=folder_id,
+    )
     error_message = None
     page_obj = None
 
@@ -49,4 +54,3 @@ def render_inbox_folder(request: HttpRequest, folder_id: str) -> HttpResponse:
             "pagination_querystring": pagination_params.urlencode(),
         }
     )
-

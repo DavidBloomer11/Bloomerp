@@ -95,3 +95,9 @@
     :item="item"
     :hx_swap_oob="True"    
 />
+
+<div id="inbox-notification-count" hx-swap-oob="innerHTML">
+    {% if notification_count > 0 %}
+        {{ notification_count }}
+    {% endif %}
+</div>

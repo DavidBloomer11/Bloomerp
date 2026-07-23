@@ -70,26 +70,6 @@ class BaseViewPreference(BasePreference):
         preference.ensure_default_state(user=user, content_type=content_type)
         return preference
 
-    @classmethod
-    def create_default_for_user(
-        cls,
-        user,
-        **scope,
-    ) -> "BaseViewPreference":
-        """Create a default view preference from ``content_type_id``.
-
-        Concrete view-preference models implement this normalized factory
-        contract. The generic preference manager therefore does not need to
-        understand content types.
-
-        Example:
-            preference = ViewPreference.create_default_for_user(
-                user,
-                content_type_id=content_type.pk,
-            )
-        """
-        raise NotImplementedError
-
     def ensure_default_state(self, *, user, content_type: ContentType) -> None:
         """Allow subclasses to repair invalid or empty stored state."""
 
