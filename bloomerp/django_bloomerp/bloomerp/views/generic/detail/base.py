@@ -10,7 +10,6 @@ from bloomerp.views.mixins.model_context_mixin import BloomerpModelContextMixin
 from bloomerp.router import router
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import FieldDoesNotExist
-from bloomerp.models.users.user_detail_view_preference import UserDetailViewPreference
 from bloomerp.models.users.user_detail_view_tabs_preference import (
     UserDetailViewTabsPreference,
 )
@@ -24,16 +23,7 @@ class BaseBloomerpDetailView(BaseBloomerpView, BloomerpModelContextMixin, Detail
     permissions : list[str] = ["view"]
     permission_fields : list[tuple[str, str]] = []
     htmx_include_addendum_padding = False
-
-    @cached_property
-    def detail_view_preference(self) -> UserDetailViewPreference:
-        """Resolve this request's effective detail preference exactly once."""
-        content_type = ContentType.objects.get_for_model(self.model)
-        return PreferenceManager(self.request.user).get_or_create_selected(
-            UserDetailViewPreference,
-            scope={"content_type_id": content_type.pk},
-        )
-
+    
     @cached_property
     def detail_tabs_preference(self) -> UserDetailViewTabsPreference:
         """Resolve the selected tab layout independently from the field layout."""

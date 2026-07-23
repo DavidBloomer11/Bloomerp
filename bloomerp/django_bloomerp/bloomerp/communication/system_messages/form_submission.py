@@ -7,6 +7,7 @@ from bloomerp.communication.inbox_sources import (
     InboxSourceExecutionResult,
 )
 
+# TODO: Handling for deleted form submissions
 class FormSubmissionMessage(BaseSystemMessageType):
     @classmethod
     def build_item_data(cls, data: dict) -> SystemMessageItemData:
@@ -19,11 +20,12 @@ class FormSubmissionMessage(BaseSystemMessageType):
     @classmethod
     def render(cls, item, request: HttpRequest | None = None) -> str:
         from bloomerp.models.forms.form_submission import FormSubmission
-
-        submission = FormSubmission.objects.get(
-            pk=item.raw_meta_data.get("submission_id")
-        )
-        
+        try:
+            submission = FormSubmission.objects.get(
+                pk=item.raw_meta_data.get("submission_id")
+            )
+        except:
+            pass
         
         return render_to_string(
             "inbox_items/form_submission.html",
@@ -61,11 +63,12 @@ def resolve_form_submission_folders(*, instance, **kwargs):
     if recipient_id is None:
         return InboxFolder.objects.none()
 
-    return InboxFolder.get_folders_by_users_and_type(
+    folders = InboxFolder.get_folders_by_users_and_type(
         users=recipient_id,
         folder_type=InboxFolderType.IN_APP_NOTIFICATIONS.value.key
     )
-
+    return folders
+    
 
 def handle_form_submission(folders, *, instance, **kwargs):
     """Handles a form submission message

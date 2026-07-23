@@ -1,4 +1,4 @@
-from bloomerp.forms.core import BloomerpModelForm
+from bloomerp.forms.model_form import BloomerpModelForm
 from bloomerp.forms.model_form import bloomerp_modelform_factory
 
 

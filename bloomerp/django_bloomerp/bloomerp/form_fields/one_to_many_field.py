@@ -48,7 +48,11 @@ class OneToManyCleanedData(StructuredFormValue):
                 key: serialize_form_value(value)
                 for key, value in child_form.cleaned_data.items()
             }
-            row[ROW_ID_KEY] = str(instance.pk) if instance.pk else ""
+            row[ROW_ID_KEY] = (
+                str(instance.pk)
+                if instance.pk and not instance._state.adding
+                else ""
+            )
             rows.append(row)
         rows.extend(
             {

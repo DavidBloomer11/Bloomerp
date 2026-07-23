@@ -341,16 +341,15 @@ def execute_registered_source(
             )
         for recipient in delivery.folder.get_recipients():
             recipient_items.setdefault(recipient.pk, []).extend(delivery.items)
-
+    
     notification_counts = Inbox.get_unread_count_for_users(
         list(recipient_items.keys())
     )
-    
     for recipient_id, items in recipient_items.items():
         send_user_inbox_message(
             recipient_id,
             payload=NotificationPayload(
-                notification_count=notification_counts.get(recipient_id, 0),
+                notification_count=notification_counts.get(str(recipient_id), 0),
                 toast_payload=ToastPayload(
                     message_type="info",
                     message=(

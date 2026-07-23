@@ -1,6 +1,13 @@
-<c-ui.text.title>New form submission</c-ui.text.title>
-
-{{ submission }}
-
-
-{{ submission.data }}
+<c-ui.text.text class="">
+    Hi,
+    </br>
+    </br>
+    There is a new form submission for the form <a 
+        class="text-primary"
+        hx-get="{{ submission.form.absolute_url }}"
+        hx-target="#main-content"
+        >{{ submission.form.name }}</a>. Please click the link below to view the submission details.
+    </br>
+    </br>
+    <a hx-get="{{ submission.get_absolute_url }}" hx-target="#main-content" class="text-primary font-bold">View Submission</a>
+</c-ui.text.text>

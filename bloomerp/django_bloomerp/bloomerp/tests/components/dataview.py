@@ -6,11 +6,12 @@ from django.urls import reverse
 from django.utils import timezone
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import Permission
+from bloomerp.services.preference_services import PreferenceManager
 from bloomerp.tests.base import BaseBloomerpModelTestCase
 from bloomerp.models import ApplicationField, Todo
 from bloomerp.models import Policy, FieldPolicy, RowPolicy, RowPolicyRule
 from bloomerp.models.users.user_list_view_preference import UserListViewPreference
-from bloomerp.services.user_services import get_data_view_fields, get_user_list_view_preference
+from bloomerp.services.user_services import get_data_view_fields
 from bloomerp.components.objects.dataviews.dataview import _select_related_rendered_relations
 from bloomerp.tests.utils.dynamic_models import create_test_models
 
@@ -245,28 +246,7 @@ class TestDataView(BaseBloomerpModelTestCase):
         preference.refresh_from_db()
         self.assertEqual(preference.get_visible_field_ids("table"), [first_name_field.id])
 
-    def test_get_user_list_view_preference_returns_selected_saved_view(self):
-        content_type = ContentType.objects.get_for_model(self.CustomerModel)
-        first = UserListViewPreference.objects.create(
-            user=self.admin_user,
-            content_type=content_type,
-            name="Default",
-        )
-        second = UserListViewPreference.objects.create(
-            user=self.admin_user,
-            content_type=content_type,
-            name="Compact",
-            selected=True,
-        )
-
-        resolved = get_user_list_view_preference(self.admin_user, content_type)
-
-        first.refresh_from_db()
-        second.refresh_from_db()
-
-        self.assertEqual(resolved.pk, second.pk)
-        self.assertFalse(first.selected)
-        self.assertTrue(second.selected)
+    
         
     def test_filter_dataview_with_string_field(self):
         """
@@ -330,7 +310,12 @@ class TestDataView(BaseBloomerpModelTestCase):
         self.client.force_login(self.admin_user)
         content_type = ContentType.objects.get_for_model(Todo)
         content_object_field = ApplicationField.get_by_field(Todo, "content_object")
-        preference = get_user_list_view_preference(self.admin_user, content_type)
+        preference = PreferenceManager(self.admin_user).get_or_create_selected(
+            UserListViewPreference,
+            scope={
+                "content_type_id" : content_type.id
+            }
+        )
         preference.display_fields = {
             **preference.display_fields,
             "table": [content_object_field.id],
@@ -392,7 +377,12 @@ class TestDataView(BaseBloomerpModelTestCase):
         content_type = ContentType.objects.get_for_model(self.CustomerModel)
         age_field = ApplicationField.get_by_field(self.CustomerModel, "age")
         last_name_field = ApplicationField.get_by_field(self.CustomerModel, "last_name")
-        preference = get_user_list_view_preference(self.admin_user, content_type)
+        preference = PreferenceManager(self.admin_user).get_or_create_selected(
+            UserListViewPreference,
+            scope={
+                "content_type_id" : content_type.id
+            }
+        )
         preference.view_type = "kanban"
         preference.options = {
             "kanban": {
@@ -448,7 +438,12 @@ class TestDataView(BaseBloomerpModelTestCase):
         content_type = ContentType.objects.get_for_model(self.CustomerModel)
         age_field = ApplicationField.get_by_field(self.CustomerModel, "age")
         last_name_field = ApplicationField.get_by_field(self.CustomerModel, "last_name")
-        preference = get_user_list_view_preference(self.admin_user, content_type)
+        preference = PreferenceManager(self.admin_user).get_or_create_selected(
+            UserListViewPreference,
+            scope={
+                "content_type_id":content_type.id
+            }
+        )
         preference.view_type = "kanban"
         preference.split_view_enabled = True
         preference.options = {
@@ -846,7 +841,12 @@ class TestGantDataView(BaseBloomerpModelTestCase):
         )
         name_field = ApplicationField.get_by_field(self.GantTaskModel, "name")
         dependency_field = ApplicationField.get_by_field(self.GantTaskModel, "dependency")
-        preference = get_user_list_view_preference(user or self.admin_user, content_type)
+        preference = PreferenceManager(self.admin_user).get_or_create_selected(
+            UserListViewPreference,
+            scope={
+                "content_type_id":content_type.id
+            }
+        )
         preference.view_type = "gant"
         preference.options = {
             "gant": {

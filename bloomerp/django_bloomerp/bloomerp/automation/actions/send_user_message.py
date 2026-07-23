@@ -13,7 +13,6 @@ class SendUserMessageForm(Form):
     users = forms.ModelMultipleChoiceField(
         queryset=None,
         widget=ForeignFieldWidget(
-            model=get_user_model(),
             attrs={
                 "is_m2m" : True,
                 "class" : "input w-full"
@@ -31,6 +30,11 @@ class SendUserMessageForm(Form):
             ("error", "Error"),
         ],
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["users"].widget.model = get_user_model()
+
 
 class SendUserMessage(BaseExecutor):
     config_form = SendUserMessageForm

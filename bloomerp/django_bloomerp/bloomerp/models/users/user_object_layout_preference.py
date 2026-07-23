@@ -1,4 +1,5 @@
 from django.contrib.contenttypes.models import ContentType
+from bloomerp.models.definition import get_model_config
 from bloomerp.models.mixins.content_layout_model_mixin import ContentLayoutModelMixin
 from bloomerp.models.users.base_view_preference import BaseViewPreference
 
@@ -17,9 +18,6 @@ class UserObjectLayoutPreference(ContentLayoutModelMixin, BaseViewPreference):
 
         content_type = ContentType.objects.get(pk=scope["content_type_id"])
         model = content_type.model_class()
-        if model is None:
-            raise ValueError("The content type does not resolve to a model.")
-
         return cls.objects.create(
             user=user,
             content_type=content_type,

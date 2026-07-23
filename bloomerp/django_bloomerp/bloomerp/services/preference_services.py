@@ -48,7 +48,7 @@ class PreferenceManager:
     Example:
         manager = PreferenceManager(request.user)
         preference = manager.get_or_create_selected(
-            UserDetailViewPreference,
+            UserObjectViewPreference,
             {"content_type_id": content_type.pk},
         )
     """
@@ -274,7 +274,7 @@ class PreferenceManager:
         Example:
             allowed = manager.can_set_initial_default(
                 request.user,
-                UserDetailViewPreference,
+                UserObjectViewPreference,
             )
         """
         return user.is_superuser

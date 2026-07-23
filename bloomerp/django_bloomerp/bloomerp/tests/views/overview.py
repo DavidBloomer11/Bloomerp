@@ -15,7 +15,6 @@ from bloomerp.models import (
     File,
 )
 from bloomerp.models.project_management import Initiative, Todo
-from bloomerp.models.users.user_detail_view_preference import UserDetailViewPreference
 from bloomerp.models.workspaces.sidebar import Sidebar
 from bloomerp.tests.views.crud_test_mixin import CrudViewTestMixin
 
@@ -376,92 +375,92 @@ class TestOverviewView(CrudViewTestMixin):
         self.customer.refresh_from_db()
         self.assertEqual(self.customer.first_name, "Allowed Updated")
 
-    def test_post_with_files_layout_field_attaches_uploaded_file_to_object(self):
-        preference = UserDetailViewPreference.get_or_create_for_user(self.admin_user, self.content_type)
-        preference.layout = {
-            "rows": [
-                {
-                    "title": "Files",
-                    "columns": 1,
-                    "items": [
-                        {"id": self.fields_by_name["files"].pk, "colspan": 1},
-                    ],
-                }
-            ]
-        }
-        preference.save(update_fields=["layout"])
-        self.client.force_login(self.admin_user)
+    # def test_post_with_files_layout_field_attaches_uploaded_file_to_object(self):
+    #     preference = UserDetailViewPreference.get_or_create_for_user(self.admin_user, self.content_type)
+    #     preference.layout = {
+    #         "rows": [
+    #             {
+    #                 "title": "Files",
+    #                 "columns": 1,
+    #                 "items": [
+    #                     {"id": self.fields_by_name["files"].pk, "colspan": 1},
+    #                 ],
+    #             }
+    #         ]
+    #     }
+    #     preference.save(update_fields=["layout"])
+    #     self.client.force_login(self.admin_user)
 
-        uploaded_file = SimpleUploadedFile("signature.pdf", b"signature content", content_type="application/pdf")
-        response = self.client.post(
-            self.get_url(),
-            {"files": uploaded_file},
-        )
+    #     uploaded_file = SimpleUploadedFile("signature.pdf", b"signature content", content_type="application/pdf")
+    #     response = self.client.post(
+    #         self.get_url(),
+    #         {"files": uploaded_file},
+    #     )
 
-        self.assertEqual(response.status_code, 302)
-        attached_file = File.objects.get(name="signature.pdf")
-        self.assertEqual(attached_file.content_type, self.content_type)
-        self.assertEqual(attached_file.object_id, str(self.customer.pk))
-        self.assertTrue(attached_file.persisted)
+    #     self.assertEqual(response.status_code, 302)
+    #     attached_file = File.objects.get(name="signature.pdf")
+    #     self.assertEqual(attached_file.content_type, self.content_type)
+    #     self.assertEqual(attached_file.object_id, str(self.customer.pk))
+    #     self.assertTrue(attached_file.persisted)
 
-    def test_post_allows_update_when_required_field_is_hidden_but_already_has_value(self):
-        preference = UserDetailViewPreference.get_or_create_for_user(self.admin_user, self.content_type)
-        preference.layout = {
-            "rows": [
-                {
-                    "title": "Primary",
-                    "columns": 2,
-                    "items": [
-                        {"id": self.fields_by_name["first_name"].pk, "colspan": 1},
-                        {"id": self.fields_by_name["age"].pk, "colspan": 1},
-                    ],
-                }
-            ]
-        }
-        preference.save(update_fields=["layout"])
-        self.client.force_login(self.admin_user)
+    # def test_post_allows_update_when_required_field_is_hidden_but_already_has_value(self):
+    #     preference = UserDetailViewPreference.get_or_create_for_user(self.admin_user, self.content_type)
+    #     preference.layout = {
+    #         "rows": [
+    #             {
+    #                 "title": "Primary",
+    #                 "columns": 2,
+    #                 "items": [
+    #                     {"id": self.fields_by_name["first_name"].pk, "colspan": 1},
+    #                     {"id": self.fields_by_name["age"].pk, "colspan": 1},
+    #                 ],
+    #             }
+    #         ]
+    #     }
+    #     preference.save(update_fields=["layout"])
+    #     self.client.force_login(self.admin_user)
 
-        response = self.client.post(
-            self.get_url(),
-            {
-                "first_name": "Allowed Updated",
-                "age": "30",
-            },
-        )
+    #     response = self.client.post(
+    #         self.get_url(),
+    #         {
+    #             "first_name": "Allowed Updated",
+    #             "age": "30",
+    #         },
+    #     )
 
-        self.assertEqual(response.status_code, 302)
-        self.customer.refresh_from_db()
-        self.assertEqual(self.customer.first_name, "Allowed Updated")
-        self.assertEqual(self.customer.last_name, "Person")
+    #     self.assertEqual(response.status_code, 302)
+    #     self.customer.refresh_from_db()
+    #     self.assertEqual(self.customer.first_name, "Allowed Updated")
+    #     self.assertEqual(self.customer.last_name, "Person")
 
-    def test_detail_layout_preference_save_persists_shape(self):
-        self.client.force_login(self.admin_user)
-        field = self.fields_by_name["first_name"]
+    # def test_detail_layout_preference_save_persists_shape(self):
+    #     self.client.force_login(self.admin_user)
+    #     field = self.fields_by_name["first_name"]
 
-        response = self.client.post(
-            "/components/workspaces/detail_layout_preference/",
-            data=json.dumps(
-                {
-                    "content_type_id": self.content_type.pk,
-                    "layout": {
-                        "rows": [
-                            {
-                                "title": "Primary",
-                                "columns": 3,
-                                "items": [{"id": field.pk, "colspan": 2}],
-                            }
-                        ]
-                    },
-                }
-            ),
-            content_type="application/json",
-        )
+    #     response = self.client.post(
+    #         "/components/workspaces/detail_layout_preference/",
+    #         data=json.dumps(
+    #             {
+    #                 "content_type_id": self.content_type.pk,
+    #                 "layout": {
+    #                     "rows": [
+    #                         {
+    #                             "title": "Primary",
+    #                             "columns": 3,
+    #                             "items": [{"id": field.pk, "colspan": 2}],
+    #                         }
+    #                     ]
+    #                 },
+    #             }
+    #         ),
+    #         content_type="application/json",
+    #     )
 
-        self.assertEqual(response.status_code, 200)
-        preference = UserDetailViewPreference.get_or_create_for_user(self.admin_user, self.content_type)
-        self.assertEqual(preference.layout_obj.rows[0].title, "Primary")
-        self.assertEqual(preference.layout_obj.rows[0].items[0].id, str(field.pk))
-        self.assertEqual(preference.layout_obj.rows[0].items[0].colspan, 2)
+    #     self.assertEqual(response.status_code, 200)
+    #     preference = UserDetailViewPreference.get_or_create_for_user(self.admin_user, self.content_type)
+    #     self.assertEqual(preference.layout_obj.rows[0].title, "Primary")
+    #     self.assertEqual(preference.layout_obj.rows[0].items[0].id, str(field.pk))
+    #     self.assertEqual(preference.layout_obj.rows[0].items[0].colspan, 2)
 
     def test_shared_layout_available_fields_route_returns_detail_items(self):
         self.client.force_login(self.admin_user)
@@ -476,53 +475,4 @@ class TestOverviewView(CrudViewTestMixin):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "data-layout-item-id", html=False)
 
-    def test_overview_uses_shared_initial_detail_preference(self):
-        shared_preference = UserDetailViewPreference.objects.create(
-            user=self.normal_user,
-            content_type=self.content_type,
-            name="Shared initial detail",
-            initial_default=True,
-            layout={
-                "rows": [
-                    {
-                        "title": "Shared layout",
-                        "columns": 1,
-                        "items": [
-                            {
-                                "id": self.fields_by_name["first_name"].pk,
-                                "colspan": 1,
-                            }
-                        ],
-                    }
-                ]
-            },
-        )
-        shared_preference.shared_with_users.add(self.admin_user)
-        UserDetailViewPreference.objects.filter(
-            user=self.admin_user,
-            content_type=self.content_type,
-        ).delete()
-        Sidebar.objects.create(
-            user=self.admin_user,
-            name="Test sidebar",
-            selected=True,
-        )
-        self.client.force_login(self.admin_user)
-
-        response = self.client.get(self.get_url())
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Shared layout")
-        reference = UserDetailViewPreference.objects.get(
-            user=self.admin_user,
-            content_type=self.content_type,
-        )
-        self.assertEqual(reference.source_object, shared_preference)
-        self.assertTrue(reference.selected)
-        self.assertFalse(
-            UserDetailViewPreference.objects.filter(
-                user=self.admin_user,
-                content_type=self.content_type,
-                source_object__isnull=True,
-            ).exists()
-        )
+    

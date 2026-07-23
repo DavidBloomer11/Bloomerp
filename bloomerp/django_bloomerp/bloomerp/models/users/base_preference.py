@@ -209,7 +209,7 @@ class BasePreference(
         unrelated request parameters are ignored.
 
         Example:
-            scope = UserDetailViewPreference.normalize_scope(
+            scope = UserObjectViewPreference.normalize_scope(
                 {"content_type_id": "12", "page": "2"}
             )
             # {"content_type_id": "12"}

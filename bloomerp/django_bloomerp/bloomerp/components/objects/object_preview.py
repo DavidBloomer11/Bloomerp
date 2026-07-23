@@ -2,11 +2,11 @@ from django.contrib.contenttypes.models import ContentType
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
-
-from bloomerp.models.users.user_detail_view_preference import UserDetailViewPreference
+from bloomerp.models.users.user_object_layout_preference import UserObjectLayoutPreference
 from bloomerp.router import router
 from bloomerp.services.detail_view_services import get_default_layout
 from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
+from bloomerp.services.preference_services import PreferenceManager
 from bloomerp.services.sectioned_layout_services import resolve_detail_layout_rows
 
 
@@ -43,7 +43,12 @@ def object_preview(request: HttpRequest, content_type_id: int, object_id: str) -
         )
 
     content_type = ContentType.objects.get_for_model(model)
-    preference = UserDetailViewPreference.get_or_create_for_user(request.user, content_type)
+    preference = PreferenceManager(request.user).get_or_create_selected(
+        UserObjectLayoutPreference,
+        scope={
+            "content_type_id" : content_type.id
+        }
+    )
     layout = {
         "rows": resolve_detail_layout_rows(
             layout=preference.layout_obj,

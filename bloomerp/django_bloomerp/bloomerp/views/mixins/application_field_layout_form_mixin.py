@@ -242,7 +242,6 @@ class ApplicationFieldLayoutFormMixin(LayoutFormMixin, ABC):
         form = form_class(
             instance=self.get_form_instance(),
             initial=super().get_initial(),
-            user=self.get_user(),
         )
         self._layout_form = self.apply_layout_widget_config(form)
         return self._layout_form

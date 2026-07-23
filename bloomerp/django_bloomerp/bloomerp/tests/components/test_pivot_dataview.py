@@ -3,7 +3,8 @@ from django.urls import reverse
 
 from bloomerp.dataviews.pivot_table import PivotField, PivotTable, PivotValueField
 from bloomerp.models import ApplicationField
-from bloomerp.services.user_services import get_user_list_view_preference
+from bloomerp.models.users.user_list_view_preference import UserListViewPreference
+from bloomerp.services.preference_services import PreferenceManager
 from bloomerp.tests.base import BaseBloomerpModelTestCase
 from bloomerp.tests.utils.dynamic_models import create_test_models
 
@@ -46,9 +47,12 @@ class TestPivotDataView(BaseBloomerpModelTestCase):
         page_size: int = 10,
         totals_scope: str = "page",
     ):
-        preference = get_user_list_view_preference(
-            self.admin_user,
-            self._field("region").content_type,
+        
+        preference = PreferenceManager(self.admin_user).get_or_create_selected(
+            UserListViewPreference,
+            scope={
+                "content_type_id" : self._field("region").content_type.id
+            }
         )
         preference.view_type = "pivot_table"
         preference.options = {
@@ -278,10 +282,13 @@ class TestPivotDataView(BaseBloomerpModelTestCase):
 
         # 5. Verify all ordered multi-select values are persisted as field IDs.
         self.assertEqual(post_response.status_code, 200)
-        preference = get_user_list_view_preference(
-            self.admin_user,
-            self._field("region").content_type,
+        preference = PreferenceManager(self.admin_user).get_or_create_selected(
+            UserListViewPreference,
+            scope={
+                "content_type_id":self._field("region").content_type.id,
+            }
         )
+        
         self.assertEqual(
             preference.options["pivot_table"]["row_field_ids"],
             [self._field("region").id, self._field("team").id],

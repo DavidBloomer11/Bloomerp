@@ -4,8 +4,10 @@ from dataclasses import dataclass
 from typing import Any, Type
 
 from django import forms
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Model, QuerySet
+from django.utils.datastructures import MultiValueDict
 
 from bloomerp.form_fields.one_to_many_field import (
     OneToManyCleanedData,
@@ -82,9 +84,9 @@ class BloomerpModelForm(forms.ModelForm):
     bloomerp_non_model_field_names: frozenset[str] = frozenset()
     bloomerp_read_only_field_names: frozenset[str] = frozenset()
 
-    def __init__(self, *args, user=None, **kwargs):
-        self.user = user
+    def __init__(self, *args, **kwargs):
         self._structured_values_saved = False
+        self._deserialized_data: dict[str, Any] | None = None
         super().__init__(*args, **kwargs)
 
     @classmethod
@@ -173,6 +175,25 @@ class BloomerpModelForm(forms.ModelForm):
             if field_name in self.fields
         }
 
+    def _clean_fields(self) -> None:
+        if self._deserialized_data is None:
+            super()._clean_fields()
+            return
+
+        for field_name, field in self.fields.items():
+            try:
+                if field.disabled:
+                    value = self[field_name].initial
+                else:
+                    value = self._deserialized_data.get(field_name)
+                self.cleaned_data[field_name] = field.clean(value)
+
+                field_clean_method = getattr(self, f"clean_{field_name}", None)
+                if field_clean_method is not None:
+                    self.cleaned_data[field_name] = field_clean_method()
+            except ValidationError as error:
+                self.add_error(field_name, error)
+
     def _save_model_fields(self, *, commit: bool) -> Model:
         detached_values = {
             field_name: self.cleaned_data.pop(field_name)
@@ -192,7 +213,7 @@ class BloomerpModelForm(forms.ModelForm):
 
         for value in self.cleaned_data.values():
             if isinstance(value, StructuredFormValue):
-                value.save(self.instance, user=self.user)
+                value.save(self.instance)
         self._structured_values_saved = True
 
     def save_o2m(self) -> None:
@@ -236,6 +257,35 @@ class BloomerpModelForm(forms.ModelForm):
             o2m_data[field_name] = entries
 
         return o2m_data
+
+    @classmethod
+    def from_deserialized_data(
+        cls,
+        data: dict[str, Any],
+        **form_kwargs: Any,
+    ) -> "BloomerpModelForm":
+        """Return a bound form that validates previously serialized cleaned data."""
+        bound_data = MultiValueDict()
+        for field_name, value in data.items():
+            field = cls.base_fields.get(field_name)
+            if isinstance(field, OneToManyField) and isinstance(value, list):
+                for row_index, row in enumerate(value):
+                    if not isinstance(row, dict):
+                        continue
+                    for row_field_name, row_value in row.items():
+                        key = f"{field_name}__{row_index}__{row_field_name}"
+                        if isinstance(row_value, list):
+                            bound_data.setlist(key, row_value)
+                        else:
+                            bound_data[key] = row_value
+            elif isinstance(value, list):
+                bound_data.setlist(field_name, value)
+            else:
+                bound_data[field_name] = value
+
+        form = cls(data=bound_data, **form_kwargs)
+        form._deserialized_data = data
+        return form
 
 
 def bloomerp_modelform_factory(
@@ -318,7 +368,7 @@ def bloomerp_modelform_factory(
             if isinstance(form_field, OneToManyField):
                 form_field.bind_parent(instance)
 
-        if instance is None or instance.pk is None:
+        if instance is None or instance._state.adding:
             return
         for field_name in self.bloomerp_non_model_field_names:
             value = getattr(instance, field_name, None)
