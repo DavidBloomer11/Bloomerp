@@ -1,5 +1,5 @@
-from dataclasses import dataclass
 import json
+from dataclasses import dataclass
 
 from django import forms
 from django.contrib import messages
@@ -11,25 +11,31 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 
-from bloomerp.celery.utils import is_celery_available
-from bloomerp.models import ApplicationField
-from bloomerp.router import router
-from bloomerp.services.object_services import string_search_on_queryset
-from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
-from bloomerp.services.preference_services import PreferenceManager
-from bloomerp.services.user_services import get_data_view_fields
-from bloomerp.models.users.user_list_view_preference import UserListViewPreference
-from bloomerp.utils.filters import filter_model
-from bloomerp.utils.models import get_model_and_content_type_or_404
 from bloomerp.components.objects.dataviews.dataview import (
     _apply_default_filters_to_querydict,
     _get_dataview_type_definition,
     _normalize_default_filters,
 )
+from bloomerp.models import ApplicationField
+from bloomerp.models.users.user_list_view_preference import UserListViewPreference
+from bloomerp.permissions.definition import BloomerpPermission
+from bloomerp.permissions.manager import UserPolicyManager
+from bloomerp.router import router
+from bloomerp.services.bulk_action_services import (
+    execute_bulk_delete,
+    execute_bulk_update,
+)
+from bloomerp.services.object_services import string_search_on_queryset
+from bloomerp.services.preference_services import PreferenceManager
+from bloomerp.services.user_services import get_data_view_fields
+from bloomerp.utils.async_utils import run_async_or_sync
+from bloomerp.utils.filters import filter_model
+from bloomerp.utils.models import get_model_and_content_type_or_404
 from bloomerp.utils.requests import render_message
 
 
 RESERVED_BULK_QUERY_KEYS = {
+    "action",
     "application_field_id",
     "csrfmiddlewaretoken",
     "object_ids",
@@ -39,13 +45,12 @@ RESERVED_BULK_QUERY_KEYS = {
     "_component_id",
 }
 
-
 @dataclass
 class BulkActionState:
     model: type[models.Model]
     content_type: ContentType
     queryset: QuerySet
-    permission_str: str
+    permission: BloomerpPermission
     object_ids: list[str]
     filter_querystring: str
     query_summary: list[tuple[str, list[str]]]
@@ -81,26 +86,26 @@ class BulkActionForm(forms.Form):
             self.fields["application_field_id"].initial = str(selected_field.id)
 
 
-def _bulk_permission(model: type[models.Model]) -> str:
-    return create_permission_str(model, "bulk_change")
-
-
-def _editable_fields(request: HttpRequest, model: type[models.Model], content_type: ContentType) -> list[ApplicationField]:
-    permission_manager = UserPermissionManager(request.user)
+def _editable_fields(
+    request: HttpRequest,
+    model: type[models.Model],
+    content_type: ContentType,
+) -> list[ApplicationField]:
+    permission_manager = UserPolicyManager(request.user)
     dataview_fields = get_data_view_fields(
         PreferenceManager(request.user).get_or_create_selected(
             UserListViewPreference,
-            scope={
-                "content_type_id" : content_type.id
-            }
+            scope={"content_type_id": content_type.id},
         )
     )
     accessible_fields = [field for field, _is_visible in dataview_fields.accessible_fields]
-    change_permission = create_permission_str(model, "change")
     editable_fields: list[ApplicationField] = []
 
     for application_field in accessible_fields:
-        if not permission_manager.has_field_permission(application_field, change_permission):
+        if not permission_manager.has_field_permission(
+            application_field,
+            BloomerpPermission.CHANGE,
+        ):
             continue
         try:
             model_field = model._meta.get_field(application_field.field)
@@ -152,21 +157,32 @@ def _field_selector_url(request: HttpRequest, content_type_id: int) -> str:
     return f"{base_url}?{querystring}" if querystring else base_url
 
 
-def _build_bulk_action_state(request: HttpRequest, content_type_id: int) -> BulkActionState | HttpResponse:
+def _build_bulk_action_state(
+    request: HttpRequest,
+    content_type_id: int,
+    permission: BloomerpPermission,
+) -> BulkActionState | HttpResponse:
+    """Creates the bulk action state
+
+    Args:
+        request (HttpRequest): request
+        content_type_id (int): content type id
+        permission (BloomerpPermission): the bulk action permission
+
+    Returns:
+        BulkActionState | HttpResponse: the state
+    """
     model, content_type = get_model_and_content_type_or_404(content_type_id)
-    permission_manager = UserPermissionManager(request.user)
-    permission_str = _bulk_permission(model)
+    permission_manager = UserPolicyManager(request.user)
     preference = PreferenceManager(request.user).get_or_create_selected(
         UserListViewPreference,
-        scope={
-            "content_type_id":content_type.id
-        }
+        scope={"content_type_id": content_type.id},
     )
 
-    if not permission_manager.has_global_permission(model, permission_str):
+    if not permission_manager.has_global_permission(model, permission):
         return render(request, "403.html", status=403)
 
-    queryset = permission_manager.get_queryset(model, permission_str)
+    queryset = permission_manager.get_accessible_queryset(model, permission)
     query = request.GET.get("q")
     if query:
         queryset = string_search_on_queryset(queryset, query)
@@ -185,7 +201,7 @@ def _build_bulk_action_state(request: HttpRequest, content_type_id: int) -> Bulk
         model=model,
         content_type=content_type,
         queryset=queryset,
-        permission_str=permission_str,
+        permission=permission,
         object_ids=object_ids,
         filter_querystring=filter_querydict.urlencode(),
         query_summary=_query_summary(filter_querydict),
@@ -242,32 +258,31 @@ def _run_bulk_update(
     object_ids: list[str],
     raw_value,
 ) -> tuple[str, int]:
-    if is_celery_available():
-        try:
-            from bloomerp.celery.tasks.bulk_action_task import process_bulk_action
-
-            process_bulk_action.delay(
-                content_type_id=content_type_id,
-                user_id=request.user.pk,
-                application_field_id=application_field.pk,
-                object_ids=object_ids,
-                value=raw_value,
-            )
-            return "queued", len(object_ids)
-        except Exception:
-            pass
-
-    from bloomerp.services.bulk_action_services import BulkActionService
-
-    count = BulkActionService(
-        model=application_field.get_model(),
-        user=request.user,
-    ).update_field(
-        application_field=application_field,
+    ran_async, result = run_async_or_sync(
+        execute_bulk_update,
+        content_type_id=content_type_id,
+        user_id=request.user.pk,
+        application_field_id=application_field.pk,
         object_ids=object_ids,
         value=raw_value,
     )
-    return "completed", count
+    return ("queued", len(object_ids)) if ran_async else ("completed", result)
+
+
+def _run_bulk_delete(
+    *,
+    request: HttpRequest,
+    content_type_id: int,
+    object_ids: list[str],
+) -> tuple[str, int]:
+    """Queue a bulk delete when possible, otherwise perform it synchronously."""
+    ran_async, result = run_async_or_sync(
+        execute_bulk_delete,
+        content_type_id=content_type_id,
+        user_id=request.user.pk,
+        object_ids=object_ids,
+    )
+    return ("queued", len(object_ids)) if ran_async else ("completed", result)
 
 
 @router.register(
@@ -275,31 +290,83 @@ def _run_bulk_update(
     url_name="components_bulk_actions",
 )
 def bulk_actions(request: HttpRequest, content_type_id: int) -> HttpResponse:
-    state = _build_bulk_action_state(request, content_type_id)
+    if request.method not in {"GET", "POST"}:
+        return HttpResponse("Method not allowed", status=405)
+
+    model, _content_type = get_model_and_content_type_or_404(content_type_id)
+    permission_manager = UserPolicyManager(request.user)
+    can_bulk_update = permission_manager.has_global_permission(
+        model,
+        BloomerpPermission.BULK_CHANGE,
+    )
+    can_bulk_delete = permission_manager.has_global_permission(
+        model,
+        BloomerpPermission.BULK_DELETE,
+    )
+    if request.method == "POST":
+        action = request.POST.get("action")
+        try:
+            permission = BloomerpPermission[action.upper()] if action else None
+        except KeyError:
+            permission = None
+    else:
+        permission = (
+            BloomerpPermission.BULK_CHANGE
+            if can_bulk_update
+            else BloomerpPermission.BULK_DELETE
+        )
+
+    if permission not in {
+        BloomerpPermission.BULK_CHANGE,
+        BloomerpPermission.BULK_DELETE,
+    }:
+        return HttpResponse("Invalid bulk action", status=400)
+
+    state = _build_bulk_action_state(request, content_type_id, permission)
     if isinstance(state, HttpResponse):
         return state
 
-    editable_fields = _editable_fields(request, state.model, state.content_type)
-    selected_field = _get_selected_field(request, state.content_type, editable_fields)
     if request.method == "POST":
-        if selected_field is None:
-            return HttpResponse("Invalid field", status=400)
         if not state.queryset.exists():
             return HttpResponse("No objects selected", status=400)
 
-        values = request.POST.getlist("value")
-        value = values if len(values) > 1 else request.POST.get("value")
-        status, count = _run_bulk_update(
-            request=request,
-            content_type_id=content_type_id,
-            application_field=selected_field,
-            object_ids=[str(pk) for pk in state.queryset.values_list("pk", flat=True)],
-            raw_value=value,
-        )
+        object_ids = [
+            str(pk)
+            for pk in state.queryset.values_list("pk", flat=True)
+        ]
+        if permission == BloomerpPermission.BULK_DELETE:
+            status, count = _run_bulk_delete(
+                request=request,
+                content_type_id=content_type_id,
+                object_ids=object_ids,
+            )
+        else:
+            editable_fields = _editable_fields(
+                request,
+                state.model,
+                state.content_type,
+            )
+            selected_field = _get_selected_field(
+                request,
+                state.content_type,
+                editable_fields,
+            )
+            if selected_field is None:
+                return HttpResponse("Invalid field", status=400)
+
+            values = request.POST.getlist("value")
+            value = values if len(values) > 1 else request.POST.get("value")
+            status, count = _run_bulk_update(
+                request=request,
+                content_type_id=content_type_id,
+                application_field=selected_field,
+                object_ids=object_ids,
+                raw_value=value,
+            )
         
         response = render_message(
             request,
-            f"Bulk action {status} for {count} object(s).",
+            f"{permission.value.name} {status} for {count} object(s).",
             "info"
         )
         
@@ -311,13 +378,42 @@ def bulk_actions(request: HttpRequest, content_type_id: int) -> HttpResponse:
         )
         return response
 
-    if request.method != "GET":
-        return HttpResponse("Method not allowed", status=405)
-
-    form = BulkActionForm(
-        fields=editable_fields,
-        field_selector_url=_field_selector_url(request, content_type_id),
-        selected_field=selected_field,
+    update_state = (
+        _build_bulk_action_state(
+            request,
+            content_type_id,
+            BloomerpPermission.BULK_CHANGE,
+        )
+        if can_bulk_update
+        else None
+    )
+    delete_state = (
+        _build_bulk_action_state(
+            request,
+            content_type_id,
+            BloomerpPermission.BULK_DELETE,
+        )
+        if can_bulk_delete
+        else None
+    )
+    editable_fields = (
+        _editable_fields(request, state.model, state.content_type)
+        if can_bulk_update
+        else []
+    )
+    selected_field = (
+        _get_selected_field(request, state.content_type, editable_fields)
+        if can_bulk_update
+        else None
+    )
+    form = (
+        BulkActionForm(
+            fields=editable_fields,
+            field_selector_url=_field_selector_url(request, content_type_id),
+            selected_field=selected_field,
+        )
+        if can_bulk_update
+        else None
     )
     return render(
         request,
@@ -326,9 +422,13 @@ def bulk_actions(request: HttpRequest, content_type_id: int) -> HttpResponse:
             "content_type_id": content_type_id,
             "content_type": state.content_type,
             "form": form,
+            "can_bulk_update": can_bulk_update,
+            "can_bulk_delete": can_bulk_delete,
             "selected_field": selected_field,
             "selected_field_value": _field_value_bound_field(selected_field) if selected_field else None,
             "count": state.queryset.count(),
+            "update_count": update_state.queryset.count() if isinstance(update_state, BulkActionState) else 0,
+            "delete_count": delete_state.queryset.count() if isinstance(delete_state, BulkActionState) else 0,
             "query_summary": state.query_summary,
             "query_search": request.GET.get("q", ""),
             "selection_label": state.selection_label,
@@ -343,6 +443,14 @@ def bulk_actions(request: HttpRequest, content_type_id: int) -> HttpResponse:
     url_name="components_bulk_actions_field_selector",
 )
 def field_selector(request: HttpRequest, content_type_id: int) -> HttpResponse:
+    state = _build_bulk_action_state(
+        request,
+        content_type_id,
+        BloomerpPermission.BULK_CHANGE,
+    )
+    if isinstance(state, HttpResponse):
+        return state
+
     model, content_type = get_model_and_content_type_or_404(content_type_id)
     editable_fields = _editable_fields(request, model, content_type)
     application_field = _get_selected_field(request, content_type, editable_fields)
