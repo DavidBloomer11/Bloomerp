@@ -2046,6 +2046,81 @@ class TestAutomation(TransactionTestCase):
             ["HUMAN_TRIGGER", "IF_CONDITION", "CREATE_OBJECT"],
         )
     
+    def test_if_condition_using_extracted_count_from_queryset(self):
+        """
+        UC: A user wants to use the extracted count in a queryset
+
+        Expected Result: the count works for the if condition
+        """
+        # 0. Create some test customers
+        self.CustomerModel.objects.create(first_name="Alice", last_name="Smith", age=30)
+
+        # 1. Create workflow
+        workflow = Workflow.objects.create(name="Test", enable_logging=True)
+        trigger = WorkflowNode.objects.create(
+            workflow=workflow,
+            config={
+                "sub_type": "HUMAN_TRIGGER",
+                "parameters": {"data": {"run": True}},
+            },
+            type=WorkflowNodeType.TRIGGER.value.id,
+        )
+
+        # 2. Create the list objects node
+        list_objects_node = WorkflowNode.objects.create(
+            workflow=workflow,
+            config={
+                "sub_type": "LIST_OBJECTS",
+                "parameters": {
+                    "content_type_id": ContentType.objects.get_for_model(self.CustomerModel).id
+                },
+            },
+            type=WorkflowNodeType.ACTION.value.id,
+        )
+        workflow.connect_nodes(trigger, list_objects_node)
+
+        # 3. Create the extract count node
+        extract_count_node = WorkflowNode.objects.create(
+            workflow=workflow,
+            config={
+                "sub_type": "EXTRACT_FIELD",
+                "parameters": {"field_path": "input.count"},
+            },
+            type=WorkflowNodeType.ACTION.value.id,
+        )
+
+        # 4. Create the if condition node
+        if_condition_node = WorkflowNode.objects.create(
+            workflow=workflow,
+            config={
+                "sub_type": "IF_CONDITION",
+                "parameters": {
+                    "field": "input",
+                    "operator": "greater_than",
+                    "value": "0",
+                },
+            },
+            type=WorkflowNodeType.FLOW.value.id,
+        )
+        workflow.connect_nodes(list_objects_node, extract_count_node)
+        workflow.connect_nodes(extract_count_node, if_condition_node)
+
+        # 5. Create a pass-through node that accepts the primitive count
+        downstream_node = WorkflowNode.objects.create(
+            workflow=workflow,
+            config={
+                "sub_type": "WAIT",
+                "parameters": {"wait_time": 0},
+            },
+            type=WorkflowNodeType.ACTION.value.id,
+        )
+        workflow.connect_nodes(if_condition_node, downstream_node)
+
+        # 6. Run the workflow
+        workflow_run = run_workflow(workflow, {})
+
+        self.assertEqual(workflow_run.number_of_steps, 5)
+
     # ----------------------------------------
     # Flow: MERGE_BRANCHES
     # ----------------------------------------
