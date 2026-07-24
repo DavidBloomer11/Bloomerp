@@ -370,8 +370,8 @@ def bloomerp_modelform_factory(
 
         if instance is None or instance._state.adding:
             return
-        for field_name in self.bloomerp_non_model_field_names:
-            value = getattr(instance, field_name, None)
+        for field_name in self.bloomerp_non_model_field_names:            
+            value = getattr(instance, field_name, None) or getattr(instance, f"{field_name}_set", None)
             if hasattr(value, "all"):
                 value = list(value.all())
             self.initial[field_name] = value
