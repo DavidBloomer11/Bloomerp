@@ -77,13 +77,13 @@ class BloomerpPermission(Enum):
         name="Bulk Change",
         codename="bulk_change",
         description="Permission to change multiple records at once.",
-        scopes=[PermissionScope.GLOBAL, PermissionScope.FIELD, PermissionScope.ROW]
+        scopes=[PermissionScope.GLOBAL, PermissionScope.FIELD]
     )
     BULK_DELETE = BloomerpPermissionDefinition(
         name="Bulk Delete",
         codename="bulk_delete",
         description="Permission to delete multiple records at once.",
-        scopes=[PermissionScope.GLOBAL, PermissionScope.ROW]
+        scopes=[PermissionScope.GLOBAL]
     )
     
     @classmethod
