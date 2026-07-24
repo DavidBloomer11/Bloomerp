@@ -34,7 +34,11 @@ class TestBulkActionsComponent(BaseBloomerpModelTestCase):
 
         # 3. Confirm the destructive action reflects the selected count.
         self.assertContains(response, "Delete 1 object(s)")
-        self.assertContains(response, 'name="action" value="delete"', html=False)
+        self.assertContains(
+            response,
+            'name="action" value="bulk_delete"',
+            html=False,
+        )
 
     @patch(
         "bloomerp.utils.async_utils.is_celery_available",
@@ -59,7 +63,7 @@ class TestBulkActionsComponent(BaseBloomerpModelTestCase):
         # 2. Submit the destructive bulk action.
         response = self.client.post(
             url,
-            {"action": "delete"},
+            {"action": "bulk_delete"},
             HTTP_HX_REQUEST="true",
         )
 
@@ -69,10 +73,10 @@ class TestBulkActionsComponent(BaseBloomerpModelTestCase):
         self.assertTrue(self.CustomerModel.objects.filter(pk=unselected.pk).exists())
         self.assertIn("bloomerp:bulk-action-complete", response["HX-Trigger-After-Swap"])
 
-    def test_bulk_delete_requires_explicit_delete_action(self):
+    def test_bulk_delete_requires_a_bulk_permission_action(self):
         """
-        Use case: A bulk-action POST omits the requested action.
-        Expected result: The component rejects the request without deleting objects.
+        Use case: A bulk-action POST omits its action or supplies a non-bulk permission.
+        Expected result: Each request is rejected without deleting objects.
         """
         # 1. Create a selected object and sign in as a superuser.
         selected = self.create_customer("Selected", "Customer", 30)
@@ -84,9 +88,15 @@ class TestBulkActionsComponent(BaseBloomerpModelTestCase):
         )
         url = f"{base_url}?selection=selected&object_ids={selected.pk}"
 
-        # 2. Submit without identifying a bulk action.
-        response = self.client.post(url, {}, HTTP_HX_REQUEST="true")
+        # 2. Submit without a permission and with a non-bulk permission.
+        for action in (None, "view"):
+            with self.subTest(action=action):
+                response = self.client.post(
+                    url,
+                    {"action": action} if action else {},
+                    HTTP_HX_REQUEST="true",
+                )
+                self.assertEqual(response.status_code, 400)
 
-        # 3. Confirm the request was rejected and the object remains.
-        self.assertEqual(response.status_code, 400)
+        # 3. Confirm the object remains.
         self.assertTrue(self.CustomerModel.objects.filter(pk=selected.pk).exists())

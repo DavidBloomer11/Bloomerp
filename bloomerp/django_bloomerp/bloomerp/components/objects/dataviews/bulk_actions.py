@@ -45,14 +45,6 @@ RESERVED_BULK_QUERY_KEYS = {
     "_component_id",
 }
 
-BULK_ACTION_UPDATE = "update"
-BULK_ACTION_DELETE = "delete"
-BULK_ACTION_PERMISSIONS = {
-    BULK_ACTION_UPDATE: BloomerpPermission.BULK_CHANGE,
-    BULK_ACTION_DELETE: BloomerpPermission.BULK_DELETE,
-}
-
-
 @dataclass
 class BulkActionState:
     model: type[models.Model]
@@ -168,12 +160,18 @@ def _field_selector_url(request: HttpRequest, content_type_id: int) -> str:
 def _build_bulk_action_state(
     request: HttpRequest,
     content_type_id: int,
-    action: str,
+    permission: BloomerpPermission,
 ) -> BulkActionState | HttpResponse:
-    permission = BULK_ACTION_PERMISSIONS.get(action)
-    if permission is None:
-        return HttpResponse("Invalid bulk action", status=400)
+    """Creates the bulk action state
 
+    Args:
+        request (HttpRequest): request
+        content_type_id (int): content type id
+        permission (BloomerpPermission): the bulk action permission
+
+    Returns:
+        BulkActionState | HttpResponse: the state
+    """
     model, content_type = get_model_and_content_type_or_404(content_type_id)
     permission_manager = UserPolicyManager(request.user)
     preference = PreferenceManager(request.user).get_or_create_selected(
@@ -307,12 +305,24 @@ def bulk_actions(request: HttpRequest, content_type_id: int) -> HttpResponse:
     )
     if request.method == "POST":
         action = request.POST.get("action")
-        if action is None:
-            return HttpResponse("Bulk action is required", status=400)
+        try:
+            permission = BloomerpPermission[action.upper()] if action else None
+        except KeyError:
+            permission = None
     else:
-        action = BULK_ACTION_UPDATE if can_bulk_update else BULK_ACTION_DELETE
+        permission = (
+            BloomerpPermission.BULK_CHANGE
+            if can_bulk_update
+            else BloomerpPermission.BULK_DELETE
+        )
 
-    state = _build_bulk_action_state(request, content_type_id, action)
+    if permission not in {
+        BloomerpPermission.BULK_CHANGE,
+        BloomerpPermission.BULK_DELETE,
+    }:
+        return HttpResponse("Invalid bulk action", status=400)
+
+    state = _build_bulk_action_state(request, content_type_id, permission)
     if isinstance(state, HttpResponse):
         return state
 
@@ -324,7 +334,7 @@ def bulk_actions(request: HttpRequest, content_type_id: int) -> HttpResponse:
             str(pk)
             for pk in state.queryset.values_list("pk", flat=True)
         ]
-        if action == BULK_ACTION_DELETE:
+        if permission == BloomerpPermission.BULK_DELETE:
             status, count = _run_bulk_delete(
                 request=request,
                 content_type_id=content_type_id,
@@ -356,7 +366,7 @@ def bulk_actions(request: HttpRequest, content_type_id: int) -> HttpResponse:
         
         response = render_message(
             request,
-            f"Bulk {action} {status} for {count} object(s).",
+            f"{permission.value.name} {status} for {count} object(s).",
             "info"
         )
         
@@ -369,12 +379,20 @@ def bulk_actions(request: HttpRequest, content_type_id: int) -> HttpResponse:
         return response
 
     update_state = (
-        _build_bulk_action_state(request, content_type_id, BULK_ACTION_UPDATE)
+        _build_bulk_action_state(
+            request,
+            content_type_id,
+            BloomerpPermission.BULK_CHANGE,
+        )
         if can_bulk_update
         else None
     )
     delete_state = (
-        _build_bulk_action_state(request, content_type_id, BULK_ACTION_DELETE)
+        _build_bulk_action_state(
+            request,
+            content_type_id,
+            BloomerpPermission.BULK_DELETE,
+        )
         if can_bulk_delete
         else None
     )
@@ -428,7 +446,7 @@ def field_selector(request: HttpRequest, content_type_id: int) -> HttpResponse:
     state = _build_bulk_action_state(
         request,
         content_type_id,
-        BULK_ACTION_UPDATE,
+        BloomerpPermission.BULK_CHANGE,
     )
     if isinstance(state, HttpResponse):
         return state
