@@ -24,3 +24,21 @@ def process_bulk_action(
         object_ids=object_ids,
         value=value,
     )
+
+
+@shared_task
+def process_bulk_delete(
+    *,
+    content_type_id: int,
+    user_id: int,
+    object_ids: list[str],
+) -> int:
+    """Delete a permission-scoped collection of objects in the background."""
+    from bloomerp.services.bulk_action_services import BulkActionService
+
+    user = get_user_model().objects.get(pk=user_id)
+    service = BulkActionService.from_content_type_id(
+        content_type_id=content_type_id,
+        user=user,
+    )
+    return service.delete_objects(object_ids=object_ids)

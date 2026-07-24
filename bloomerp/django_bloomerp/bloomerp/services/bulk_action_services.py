@@ -3,7 +3,7 @@ from typing import Any
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.forms import modelform_factory
-from django.db import models
+from django.db import models, transaction
 
 from bloomerp.models import ApplicationField
 from bloomerp.permissions.definition import BloomerpPermission
@@ -57,3 +57,22 @@ class BulkActionService:
             updated_count += 1
         
         return updated_count
+
+    @transaction.atomic
+    def delete_objects(self, *, object_ids: list[str]) -> int:
+        """Delete the permitted objects while preserving model delete hooks."""
+        bulk_permission = create_permission_str(self.model, "bulk_delete")
+
+        if not self.permission_manager.has_global_permission(self.model, bulk_permission):
+            raise PermissionDenied("Permission denied")
+
+        queryset = self.permission_manager.get_queryset(
+            self.model,
+            bulk_permission,
+        ).filter(pk__in=object_ids)
+        objects = list(queryset)
+
+        for obj in objects:
+            obj.delete()
+
+        return len(objects)

@@ -30,6 +30,7 @@ from bloomerp.utils.requests import render_message
 
 
 RESERVED_BULK_QUERY_KEYS = {
+    "action",
     "application_field_id",
     "csrfmiddlewaretoken",
     "object_ids",
@@ -38,6 +39,10 @@ RESERVED_BULK_QUERY_KEYS = {
     "selection",
     "_component_id",
 }
+
+BULK_ACTION_UPDATE = "update"
+BULK_ACTION_DELETE = "delete"
+BULK_ACTIONS = {BULK_ACTION_UPDATE, BULK_ACTION_DELETE}
 
 
 @dataclass
@@ -81,8 +86,9 @@ class BulkActionForm(forms.Form):
             self.fields["application_field_id"].initial = str(selected_field.id)
 
 
-def _bulk_permission(model: type[models.Model]) -> str:
-    return create_permission_str(model, "bulk_change")
+def _bulk_permission(model: type[models.Model], action: str) -> str:
+    permission = "bulk_delete" if action == BULK_ACTION_DELETE else "bulk_change"
+    return create_permission_str(model, permission)
 
 
 def _editable_fields(request: HttpRequest, model: type[models.Model], content_type: ContentType) -> list[ApplicationField]:
@@ -152,10 +158,17 @@ def _field_selector_url(request: HttpRequest, content_type_id: int) -> str:
     return f"{base_url}?{querystring}" if querystring else base_url
 
 
-def _build_bulk_action_state(request: HttpRequest, content_type_id: int) -> BulkActionState | HttpResponse:
+def _build_bulk_action_state(
+    request: HttpRequest,
+    content_type_id: int,
+    action: str,
+) -> BulkActionState | HttpResponse:
+    if action not in BULK_ACTIONS:
+        return HttpResponse("Invalid bulk action", status=400)
+
     model, content_type = get_model_and_content_type_or_404(content_type_id)
     permission_manager = UserPermissionManager(request.user)
-    permission_str = _bulk_permission(model)
+    permission_str = _bulk_permission(model, action)
     preference = PreferenceManager(request.user).get_or_create_selected(
         UserListViewPreference,
         scope={
@@ -270,36 +283,106 @@ def _run_bulk_update(
     return "completed", count
 
 
+def _run_bulk_delete(
+    *,
+    request: HttpRequest,
+    content_type_id: int,
+    object_ids: list[str],
+) -> tuple[str, int]:
+    """Queue a bulk delete when possible, otherwise perform it synchronously."""
+    if is_celery_available():
+        try:
+            from bloomerp.celery.tasks.bulk_action_task import process_bulk_delete
+
+            process_bulk_delete.delay(
+                content_type_id=content_type_id,
+                user_id=request.user.pk,
+                object_ids=object_ids,
+            )
+            return "queued", len(object_ids)
+        except Exception:
+            pass
+
+    from bloomerp.services.bulk_action_services import BulkActionService
+
+    model, _content_type = get_model_and_content_type_or_404(content_type_id)
+    count = BulkActionService(
+        model=model,
+        user=request.user,
+    ).delete_objects(object_ids=object_ids)
+    return "completed", count
+
+
 @router.register(
     path="components/dataview/<int:content_type_id>/bulk_actions/",
     url_name="components_bulk_actions",
 )
 def bulk_actions(request: HttpRequest, content_type_id: int) -> HttpResponse:
-    state = _build_bulk_action_state(request, content_type_id)
+    if request.method not in {"GET", "POST"}:
+        return HttpResponse("Method not allowed", status=405)
+
+    model, _content_type = get_model_and_content_type_or_404(content_type_id)
+    permission_manager = UserPermissionManager(request.user)
+    can_bulk_update = permission_manager.has_global_permission(
+        model,
+        _bulk_permission(model, BULK_ACTION_UPDATE),
+    )
+    can_bulk_delete = permission_manager.has_global_permission(
+        model,
+        _bulk_permission(model, BULK_ACTION_DELETE),
+    )
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action is None:
+            return HttpResponse("Bulk action is required", status=400)
+    else:
+        action = BULK_ACTION_UPDATE if can_bulk_update else BULK_ACTION_DELETE
+
+    state = _build_bulk_action_state(request, content_type_id, action)
     if isinstance(state, HttpResponse):
         return state
 
-    editable_fields = _editable_fields(request, state.model, state.content_type)
-    selected_field = _get_selected_field(request, state.content_type, editable_fields)
     if request.method == "POST":
-        if selected_field is None:
-            return HttpResponse("Invalid field", status=400)
         if not state.queryset.exists():
             return HttpResponse("No objects selected", status=400)
 
-        values = request.POST.getlist("value")
-        value = values if len(values) > 1 else request.POST.get("value")
-        status, count = _run_bulk_update(
-            request=request,
-            content_type_id=content_type_id,
-            application_field=selected_field,
-            object_ids=[str(pk) for pk in state.queryset.values_list("pk", flat=True)],
-            raw_value=value,
-        )
+        object_ids = [
+            str(pk)
+            for pk in state.queryset.values_list("pk", flat=True)
+        ]
+        if action == BULK_ACTION_DELETE:
+            status, count = _run_bulk_delete(
+                request=request,
+                content_type_id=content_type_id,
+                object_ids=object_ids,
+            )
+        else:
+            editable_fields = _editable_fields(
+                request,
+                state.model,
+                state.content_type,
+            )
+            selected_field = _get_selected_field(
+                request,
+                state.content_type,
+                editable_fields,
+            )
+            if selected_field is None:
+                return HttpResponse("Invalid field", status=400)
+
+            values = request.POST.getlist("value")
+            value = values if len(values) > 1 else request.POST.get("value")
+            status, count = _run_bulk_update(
+                request=request,
+                content_type_id=content_type_id,
+                application_field=selected_field,
+                object_ids=object_ids,
+                raw_value=value,
+            )
         
         response = render_message(
             request,
-            f"Bulk action {status} for {count} object(s).",
+            f"Bulk {action} {status} for {count} object(s).",
             "info"
         )
         
@@ -311,13 +394,34 @@ def bulk_actions(request: HttpRequest, content_type_id: int) -> HttpResponse:
         )
         return response
 
-    if request.method != "GET":
-        return HttpResponse("Method not allowed", status=405)
-
-    form = BulkActionForm(
-        fields=editable_fields,
-        field_selector_url=_field_selector_url(request, content_type_id),
-        selected_field=selected_field,
+    update_state = (
+        _build_bulk_action_state(request, content_type_id, BULK_ACTION_UPDATE)
+        if can_bulk_update
+        else None
+    )
+    delete_state = (
+        _build_bulk_action_state(request, content_type_id, BULK_ACTION_DELETE)
+        if can_bulk_delete
+        else None
+    )
+    editable_fields = (
+        _editable_fields(request, state.model, state.content_type)
+        if can_bulk_update
+        else []
+    )
+    selected_field = (
+        _get_selected_field(request, state.content_type, editable_fields)
+        if can_bulk_update
+        else None
+    )
+    form = (
+        BulkActionForm(
+            fields=editable_fields,
+            field_selector_url=_field_selector_url(request, content_type_id),
+            selected_field=selected_field,
+        )
+        if can_bulk_update
+        else None
     )
     return render(
         request,
@@ -326,9 +430,13 @@ def bulk_actions(request: HttpRequest, content_type_id: int) -> HttpResponse:
             "content_type_id": content_type_id,
             "content_type": state.content_type,
             "form": form,
+            "can_bulk_update": can_bulk_update,
+            "can_bulk_delete": can_bulk_delete,
             "selected_field": selected_field,
             "selected_field_value": _field_value_bound_field(selected_field) if selected_field else None,
             "count": state.queryset.count(),
+            "update_count": update_state.queryset.count() if isinstance(update_state, BulkActionState) else 0,
+            "delete_count": delete_state.queryset.count() if isinstance(delete_state, BulkActionState) else 0,
             "query_summary": state.query_summary,
             "query_search": request.GET.get("q", ""),
             "selection_label": state.selection_label,
@@ -343,6 +451,14 @@ def bulk_actions(request: HttpRequest, content_type_id: int) -> HttpResponse:
     url_name="components_bulk_actions_field_selector",
 )
 def field_selector(request: HttpRequest, content_type_id: int) -> HttpResponse:
+    state = _build_bulk_action_state(
+        request,
+        content_type_id,
+        BULK_ACTION_UPDATE,
+    )
+    if isinstance(state, HttpResponse):
+        return state
+
     model, content_type = get_model_and_content_type_or_404(content_type_id)
     editable_fields = _editable_fields(request, model, content_type)
     application_field = _get_selected_field(request, content_type, editable_fields)

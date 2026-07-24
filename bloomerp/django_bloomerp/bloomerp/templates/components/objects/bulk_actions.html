@@ -25,15 +25,16 @@
         </div>
     </div>
 
-    {% if count == 0 %}
+    {% if update_count == 0 and delete_count == 0 %}
         <div class="rounded-xl bg-warning-light p-3 text-sm text-warning-dark">
             No objects match this bulk action.
         </div>
-    {% elif not form.fields.application_field_id.choices %}
+    {% else %}
+    {% if can_bulk_update and not form.fields.application_field_id.choices %}
         <div class="rounded-xl bg-warning-light p-3 text-sm text-warning-dark">
             No editable fields are available for your permissions.
         </div>
-    {% else %}
+    {% elif can_bulk_update and update_count %}
         <form
             hx-post="{{ submit_url }}"
             hx-target="#bulk-actions-modal-body"
@@ -42,6 +43,7 @@
             class="space-y-4"
         >
             {% csrf_token %}
+            <input type="hidden" name="action" value="update">
             {{ form.application_field_id|as_crispy_field }}
             <div id="bulk-action-field-value">
                 {% if selected_field %}
@@ -53,5 +55,31 @@
                 <button type="submit" class="btn btn-primary">Apply bulk action</button>
             </div>
         </form>
+    {% endif %}
+    {% if can_bulk_delete and delete_count %}
+        <div class="rounded-xl border border-danger-light bg-danger-light/20 p-4">
+            <p class="text-sm font-semibold text-danger-dark">
+                <c-i18n.blocktrans>Delete {{ delete_count }} object(s)</c-i18n.blocktrans>
+            </p>
+            <p class="mt-1 text-sm text-slate-700">
+                <c-i18n.blocktrans>
+                    This permanently deletes the objects in the {{ selection_label }}.
+                </c-i18n.blocktrans>
+            </p>
+            <form
+                hx-post="{{ submit_url }}"
+                hx-target="#bulk-actions-modal-body"
+                hx-swap="innerHTML"
+                method="post"
+                class="mt-4 flex justify-end"
+            >
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete">
+                <button type="submit" class="btn btn-danger">
+                    <c-i18n.blocktrans>Delete {{ delete_count }} object(s)</c-i18n.blocktrans>
+                </button>
+            </form>
+        </div>
+    {% endif %}
     {% endif %}
 </div>
