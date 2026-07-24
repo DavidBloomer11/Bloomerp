@@ -1,5 +1,5 @@
-from dataclasses import dataclass
 import json
+from dataclasses import dataclass
 
 from django import forms
 from django.contrib import messages
@@ -11,21 +11,26 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 
-from bloomerp.celery.utils import is_celery_available
-from bloomerp.models import ApplicationField
-from bloomerp.router import router
-from bloomerp.services.object_services import string_search_on_queryset
-from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
-from bloomerp.services.preference_services import PreferenceManager
-from bloomerp.services.user_services import get_data_view_fields
-from bloomerp.models.users.user_list_view_preference import UserListViewPreference
-from bloomerp.utils.filters import filter_model
-from bloomerp.utils.models import get_model_and_content_type_or_404
 from bloomerp.components.objects.dataviews.dataview import (
     _apply_default_filters_to_querydict,
     _get_dataview_type_definition,
     _normalize_default_filters,
 )
+from bloomerp.models import ApplicationField
+from bloomerp.models.users.user_list_view_preference import UserListViewPreference
+from bloomerp.permissions.definition import BloomerpPermission
+from bloomerp.permissions.manager import UserPolicyManager
+from bloomerp.router import router
+from bloomerp.services.bulk_action_services import (
+    execute_bulk_delete,
+    execute_bulk_update,
+)
+from bloomerp.services.object_services import string_search_on_queryset
+from bloomerp.services.preference_services import PreferenceManager
+from bloomerp.services.user_services import get_data_view_fields
+from bloomerp.utils.async_utils import run_async_or_sync
+from bloomerp.utils.filters import filter_model
+from bloomerp.utils.models import get_model_and_content_type_or_404
 from bloomerp.utils.requests import render_message
 
 
@@ -42,7 +47,10 @@ RESERVED_BULK_QUERY_KEYS = {
 
 BULK_ACTION_UPDATE = "update"
 BULK_ACTION_DELETE = "delete"
-BULK_ACTIONS = {BULK_ACTION_UPDATE, BULK_ACTION_DELETE}
+BULK_ACTION_PERMISSIONS = {
+    BULK_ACTION_UPDATE: BloomerpPermission.BULK_CHANGE,
+    BULK_ACTION_DELETE: BloomerpPermission.BULK_DELETE,
+}
 
 
 @dataclass
@@ -50,7 +58,7 @@ class BulkActionState:
     model: type[models.Model]
     content_type: ContentType
     queryset: QuerySet
-    permission_str: str
+    permission: BloomerpPermission
     object_ids: list[str]
     filter_querystring: str
     query_summary: list[tuple[str, list[str]]]
@@ -86,27 +94,26 @@ class BulkActionForm(forms.Form):
             self.fields["application_field_id"].initial = str(selected_field.id)
 
 
-def _bulk_permission(model: type[models.Model], action: str) -> str:
-    permission = "bulk_delete" if action == BULK_ACTION_DELETE else "bulk_change"
-    return create_permission_str(model, permission)
-
-
-def _editable_fields(request: HttpRequest, model: type[models.Model], content_type: ContentType) -> list[ApplicationField]:
-    permission_manager = UserPermissionManager(request.user)
+def _editable_fields(
+    request: HttpRequest,
+    model: type[models.Model],
+    content_type: ContentType,
+) -> list[ApplicationField]:
+    permission_manager = UserPolicyManager(request.user)
     dataview_fields = get_data_view_fields(
         PreferenceManager(request.user).get_or_create_selected(
             UserListViewPreference,
-            scope={
-                "content_type_id" : content_type.id
-            }
+            scope={"content_type_id": content_type.id},
         )
     )
     accessible_fields = [field for field, _is_visible in dataview_fields.accessible_fields]
-    change_permission = create_permission_str(model, "change")
     editable_fields: list[ApplicationField] = []
 
     for application_field in accessible_fields:
-        if not permission_manager.has_field_permission(application_field, change_permission):
+        if not permission_manager.has_field_permission(
+            application_field,
+            BloomerpPermission.CHANGE,
+        ):
             continue
         try:
             model_field = model._meta.get_field(application_field.field)
@@ -163,23 +170,21 @@ def _build_bulk_action_state(
     content_type_id: int,
     action: str,
 ) -> BulkActionState | HttpResponse:
-    if action not in BULK_ACTIONS:
+    permission = BULK_ACTION_PERMISSIONS.get(action)
+    if permission is None:
         return HttpResponse("Invalid bulk action", status=400)
 
     model, content_type = get_model_and_content_type_or_404(content_type_id)
-    permission_manager = UserPermissionManager(request.user)
-    permission_str = _bulk_permission(model, action)
+    permission_manager = UserPolicyManager(request.user)
     preference = PreferenceManager(request.user).get_or_create_selected(
         UserListViewPreference,
-        scope={
-            "content_type_id":content_type.id
-        }
+        scope={"content_type_id": content_type.id},
     )
 
-    if not permission_manager.has_global_permission(model, permission_str):
+    if not permission_manager.has_global_permission(model, permission):
         return render(request, "403.html", status=403)
 
-    queryset = permission_manager.get_queryset(model, permission_str)
+    queryset = permission_manager.get_accessible_queryset(model, permission)
     query = request.GET.get("q")
     if query:
         queryset = string_search_on_queryset(queryset, query)
@@ -198,7 +203,7 @@ def _build_bulk_action_state(
         model=model,
         content_type=content_type,
         queryset=queryset,
-        permission_str=permission_str,
+        permission=permission,
         object_ids=object_ids,
         filter_querystring=filter_querydict.urlencode(),
         query_summary=_query_summary(filter_querydict),
@@ -255,32 +260,15 @@ def _run_bulk_update(
     object_ids: list[str],
     raw_value,
 ) -> tuple[str, int]:
-    if is_celery_available():
-        try:
-            from bloomerp.celery.tasks.bulk_action_task import process_bulk_action
-
-            process_bulk_action.delay(
-                content_type_id=content_type_id,
-                user_id=request.user.pk,
-                application_field_id=application_field.pk,
-                object_ids=object_ids,
-                value=raw_value,
-            )
-            return "queued", len(object_ids)
-        except Exception:
-            pass
-
-    from bloomerp.services.bulk_action_services import BulkActionService
-
-    count = BulkActionService(
-        model=application_field.get_model(),
-        user=request.user,
-    ).update_field(
-        application_field=application_field,
+    ran_async, result = run_async_or_sync(
+        execute_bulk_update,
+        content_type_id=content_type_id,
+        user_id=request.user.pk,
+        application_field_id=application_field.pk,
         object_ids=object_ids,
         value=raw_value,
     )
-    return "completed", count
+    return ("queued", len(object_ids)) if ran_async else ("completed", result)
 
 
 def _run_bulk_delete(
@@ -290,27 +278,13 @@ def _run_bulk_delete(
     object_ids: list[str],
 ) -> tuple[str, int]:
     """Queue a bulk delete when possible, otherwise perform it synchronously."""
-    if is_celery_available():
-        try:
-            from bloomerp.celery.tasks.bulk_action_task import process_bulk_delete
-
-            process_bulk_delete.delay(
-                content_type_id=content_type_id,
-                user_id=request.user.pk,
-                object_ids=object_ids,
-            )
-            return "queued", len(object_ids)
-        except Exception:
-            pass
-
-    from bloomerp.services.bulk_action_services import BulkActionService
-
-    model, _content_type = get_model_and_content_type_or_404(content_type_id)
-    count = BulkActionService(
-        model=model,
-        user=request.user,
-    ).delete_objects(object_ids=object_ids)
-    return "completed", count
+    ran_async, result = run_async_or_sync(
+        execute_bulk_delete,
+        content_type_id=content_type_id,
+        user_id=request.user.pk,
+        object_ids=object_ids,
+    )
+    return ("queued", len(object_ids)) if ran_async else ("completed", result)
 
 
 @router.register(
@@ -322,14 +296,14 @@ def bulk_actions(request: HttpRequest, content_type_id: int) -> HttpResponse:
         return HttpResponse("Method not allowed", status=405)
 
     model, _content_type = get_model_and_content_type_or_404(content_type_id)
-    permission_manager = UserPermissionManager(request.user)
+    permission_manager = UserPolicyManager(request.user)
     can_bulk_update = permission_manager.has_global_permission(
         model,
-        _bulk_permission(model, BULK_ACTION_UPDATE),
+        BloomerpPermission.BULK_CHANGE,
     )
     can_bulk_delete = permission_manager.has_global_permission(
         model,
-        _bulk_permission(model, BULK_ACTION_DELETE),
+        BloomerpPermission.BULK_DELETE,
     )
     if request.method == "POST":
         action = request.POST.get("action")

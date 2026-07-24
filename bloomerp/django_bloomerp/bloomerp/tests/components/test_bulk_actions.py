@@ -37,7 +37,7 @@ class TestBulkActionsComponent(BaseBloomerpModelTestCase):
         self.assertContains(response, 'name="action" value="delete"', html=False)
 
     @patch(
-        "bloomerp.components.objects.dataviews.bulk_actions.is_celery_available",
+        "bloomerp.utils.async_utils.is_celery_available",
         return_value=False,
     )
     def test_bulk_delete_post_deletes_selected_objects(self, _is_celery_available):
