@@ -1,13 +1,19 @@
 from bloomerp.forms.auth import BloomerpUserCreationForm
 from bloomerp.router import router
-from bloomerp.services.permission_services import UserPermissionManager
-from bloomerp.models.users.user import User
+from bloomerp.services.permission_services import (
+    UserPermissionManager,
+    create_permission_str,
+)
 from bloomerp.utils.models import get_detail_view_url
 from bloomerp.views.base import BaseBloomerpView
 
+from django.contrib.auth import get_user_model
 from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse
 from django.views.generic.edit import FormView
+
+
+User = get_user_model()
 
 
 @router.register(
@@ -21,7 +27,7 @@ from django.views.generic.edit import FormView
 class UserCreateView(BaseBloomerpView, SuccessMessageMixin, FormView):
     template_name = "views/generic/detail/create.html"
     fields = None
-    model = None
+    model = User
     exclude = []
     success_message = "Object was created successfully."
     form_class = BloomerpUserCreationForm
@@ -36,15 +42,15 @@ class UserCreateView(BaseBloomerpView, SuccessMessageMixin, FormView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse(get_detail_view_url(User), kwargs={"pk": self.object.pk})
+        return reverse(get_detail_view_url(self.model), kwargs={"pk": self.object.pk})
 
     def has_permission(self):
         manager = UserPermissionManager(self.request.user)
 
         return manager.has_global_permission(
             self.model,
-            "add_user"
+            create_permission_str(self.model, "add"),
         )
 
     def get_success_message(self, cleaned_data):
-        return f"User was created successfully."
+        return "User was created successfully."

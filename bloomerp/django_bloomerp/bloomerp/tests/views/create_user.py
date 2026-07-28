@@ -1,7 +1,7 @@
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
-from django.urls import reverse
+from django.urls import resolve, reverse
 
 from bloomerp.models import FieldPolicy, Policy, RowPolicy
 from bloomerp.models.access_control.row_policy_rule import RowPolicyRule
@@ -80,6 +80,14 @@ class TestCreateUserView(BaseBloomerpModelTestCase):
             password=payload["password1"],
         )
         self.assertEqual(authenticated_user, created_user)
+
+    def test_create_route_is_bound_to_the_active_user_model(self):
+        match = resolve(self.get_url())
+
+        self.assertIs(
+            match.func.view_initkwargs["model"],
+            get_user_model(),
+        )
 
     def test_view_redirects_user_to_correct_place(self):
         # UC: Creating a user succeeds. Expected Result: The response redirects to the created user's detail overview.
