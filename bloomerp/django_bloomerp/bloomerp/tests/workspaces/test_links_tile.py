@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+from bs4 import BeautifulSoup
 from django.template.loader import render_to_string
 from django.test import SimpleTestCase
 
@@ -216,6 +217,39 @@ class LinksTileBuilderHelperTests(SimpleTestCase):
         self.assertIn('data-name="Customers"', html)
         self.assertIn('name="add_link_icon"', html)
         self.assertIn("data-edit-link-parent", html)
+
+    def test_builder_template_preserves_icon_selectors_in_htmx_expressions(self):
+        """
+        Use case: A user adds or edits an item with an icon.
+        Expected result: HTML parsing preserves each complete HTMX expression.
+        """
+        links = [Link(url="/leads/", name="Leads")]
+        context = {
+            "link_builder_items": _build_link_builder_items(links),
+            "link_folder_options": _build_link_folder_options(links),
+            "link_route_suggestions": [],
+            "add_link_icon_picker": _render_link_icon_picker("add_link_icon"),
+            "add_folder_icon_picker": _render_link_icon_picker("add_folder_icon"),
+        }
+
+        html = render_to_string("components/workspaces/tile_builders/links_tile_builder.html", context)
+        htmx_expressions = [
+            element["hx-vars"]
+            for element in BeautifulSoup(html, "html.parser").find_all(attrs={"hx-vars": True})
+        ]
+
+        self.assertTrue(
+            any('querySelector("[name=add_link_icon]")' in value for value in htmx_expressions)
+        )
+        self.assertTrue(
+            any('querySelector("[name=add_folder_icon]")' in value for value in htmx_expressions)
+        )
+        self.assertTrue(
+            any(
+                'querySelector("input[type=hidden][name^=edit_link_icon_]")' in value
+                for value in htmx_expressions
+            )
+        )
 
     def test_builder_helpers_preserve_nested_paths(self):
         """

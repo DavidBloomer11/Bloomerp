@@ -64,7 +64,7 @@
                         data: {
                             url: this.closest("[data-add-link-form]").querySelector("[data-link-url]").value,
                             name: this.closest("[data-add-link-form]").querySelector("[data-link-name]").value,
-                            icon: this.closest("[data-add-link-form]").querySelector('[name="add_link_icon"]').value,
+                            icon: this.closest("[data-add-link-form]").querySelector("[name=add_link_icon]").value,
                             parent_path: JSON.parse(this.closest("[data-add-link-form]").querySelector("[data-link-parent]").value)
                         }
                     }'
@@ -105,7 +105,7 @@
                         operation: "add_folder",
                         data: {
                             name: this.closest("[data-add-folder-form]").querySelector("[data-folder-name]").value,
-                            icon: this.closest("[data-add-folder-form]").querySelector('[name="add_folder_icon"]').value,
+                            icon: this.closest("[data-add-folder-form]").querySelector("[name=add_folder_icon]").value,
                             parent_path: JSON.parse(this.closest("[data-add-folder-form]").querySelector("[data-folder-parent]").value)
                         }
                     }'

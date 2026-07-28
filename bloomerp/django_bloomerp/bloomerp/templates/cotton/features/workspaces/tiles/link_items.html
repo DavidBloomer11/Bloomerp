@@ -4,7 +4,7 @@
             <summary class="flex cursor-pointer list-none items-center gap-2 rounded-xl px-2 py-1 text-sm font-medium hover:bg-base">
                 <i class="fa-solid fa-chevron-right text-[10px] text-gray-400 transition-transform group-open:rotate-90" aria-hidden="true"></i>
                 <i class="{% if link.icon %}{{ link.icon }}{% else %}fa-regular fa-folder text-warning-dark{% endif %}" aria-hidden="true"></i>
-                <span>{{ link.name }}</span>
+                <span class="text-sm">{{ link.name }}</span>
             </summary>
             {% if link.children %}
                 <div class="ml-4 border-l border-gray-200 pl-3">
@@ -15,7 +15,7 @@
     {% else %}
         <a href="{{ link.url }}" class="flex items-center gap-2 rounded-xl px-2 py-1 text-primary hover:bg-base hover:underline">
             {% if link.icon %}<i class="{{ link.icon }}" aria-hidden="true"></i>{% endif %}
-            <span>{{ link.name }}</span>
+            <span class="text-sm">{{ link.name }}</span>
         </a>
     {% endif %}
 {% endfor %}

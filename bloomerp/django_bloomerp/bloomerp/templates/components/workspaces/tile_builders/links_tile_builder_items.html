@@ -56,7 +56,7 @@
                                     path: {{ item.path }},
                                     url: this.closest("[data-edit-link-form]").querySelector("[data-edit-link-url]")?.value || "",
                                     name: this.closest("[data-edit-link-form]").querySelector("[data-edit-link-name]").value,
-                                    icon: this.closest("[data-edit-link-form]").querySelector('input[type="hidden"][name^="edit_link_icon_"]').value,
+                                    icon: this.closest("[data-edit-link-form]").querySelector("input[type=hidden][name^=edit_link_icon_]").value,
                                     parent_path: this.closest("[data-edit-link-form]").querySelector("[data-edit-link-parent]") ? JSON.parse(this.closest("[data-edit-link-form]").querySelector("[data-edit-link-parent]").value) : null
                                 }
                             }'
