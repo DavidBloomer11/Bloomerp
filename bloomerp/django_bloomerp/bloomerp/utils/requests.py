@@ -1,6 +1,8 @@
 from ipaddress import ip_address
+from dataclasses import dataclass
+from django.contrib import messages
 import re
-from typing import Any, Literal, Optional
+from typing import Any, Literal, LiteralString, Optional
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Model
 from django.http import HttpRequest, HttpResponse
@@ -8,6 +10,10 @@ from django.forms import Form
 from django.shortcuts import render
 from django.template.loader import render_to_string
 from django.contrib import messages
+from django_cotton import render_component
+
+from bloomerp.models.base_bloomerp_model import FieldLayout
+from bloomerp.utils.renderer import render_field
 
 def parse_bool_parameter(value : Any, default_value=False) -> bool:
     """
@@ -73,6 +79,14 @@ def get_object_from_request(
     except:
         return ERROR_RESP
 
+
+@dataclass
+class ExtraButton:
+    label:str
+    type:Literal["primary", "secondary", "danger"]
+    attrs:dict | None = None
+    
+
 def render_blank_form(
         request : HttpRequest, 
         form:Form, 
@@ -82,6 +96,7 @@ def render_blank_form(
         form_args:dict=None,
         button_attrs:dict=None,
         text:str|None=None,
+        extra_buttons:list[ExtraButton]|None = None
         ) -> HttpResponse:
     """
     Render a small standalone form fragment used for HTMX panel inserts.
@@ -115,6 +130,7 @@ def render_blank_form(
             "form_args" : form_args if form_args else {},
             "button_attrs" : button_attrs if isinstance(button_attrs, dict) else {},
             "text": text,
+            "extra_buttons" : extra_buttons if extra_buttons else []
         }
     )
     
@@ -260,3 +276,40 @@ def get_ip_from_request(request:HttpRequest) -> Optional[str]:
         return str(ip_address(raw_ip_address.strip()))
     except ValueError:
         return None
+
+def render_form_with_layout(request:HttpRequest, form:Form, layout:FieldLayout) -> HttpResponse:
+    fields = form.fields
+    
+    transformed_rows = []
+    for row in layout.rows:
+        transformed_items = []
+        for item in row.items:
+            field = fields.get(item.id)
+            
+            if field:
+                item.set_content(
+                    render_field(
+                        field.widget,
+                        field.label,
+                        item.id,
+                        field.initial,
+                        help_text=field.help_text
+                    )
+                )
+            
+            transformed_items.append(
+                item
+            )
+        
+        transformed_rows.append(row)
+    
+    transformed_layout = FieldLayout(
+        rows=transformed_rows,
+    )
+    
+    return render_component(
+        request,
+        "features.sectioned_layouts.container"
+    )
+    
+    

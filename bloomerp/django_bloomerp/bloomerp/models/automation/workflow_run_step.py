@@ -4,8 +4,10 @@ from bloomerp.models.definition import BloomerpModelConfig
 from bloomerp.models.mixins.timestamp_model_mixin import TimestampModelMixin
 
 class WorkflowRunStepStatus(models.TextChoices):
+    PAUSED = "PAUSED", "Paused"
     COMPLETED = "COMPLETED", "Completed"
     FAILED = "FAILED", "Failed"
+    CANCELLED = "CANCELLED", "Cancelled"
 
 
 class WorkflowRunStep(TimestampModelMixin, models.Model):
@@ -16,6 +18,7 @@ class WorkflowRunStep(TimestampModelMixin, models.Model):
     
     bloomerp_config = BloomerpModelConfig(
         module="automation",
+        record_activity_log=False
     )
     
     workflow_run = models.ForeignKey(
@@ -36,5 +39,23 @@ class WorkflowRunStep(TimestampModelMixin, models.Model):
         choices=WorkflowRunStepStatus.choices,
         default=WorkflowRunStepStatus.COMPLETED,
         help_text="The status of this workflow run step.",
+    )
+    state = models.JSONField(
+        null=True,
+        blank=True,
+        help_text="Serializable workflow execution state captured after this step.",
+    )
+    output_file = models.FileField(
+        upload_to="workflow_run_outputs/",
+        null=True,
+        blank=True,
+        help_text="Serialized output produced by this workflow node execution.",
+    )
+    node = models.ForeignKey(
+        to="WorkflowNode",
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        help_text="Reference to node object"
     )
     

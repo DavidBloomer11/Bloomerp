@@ -1,7 +1,7 @@
 from typing import Type
 
 from django import forms
-from bloomerp.automation.schema import WorkflowInputRequirement, WorkflowIOSchema, flatten_schema_fields
+from bloomerp.automation.schema import WorkflowInputRequirement, WorkflowIOSchema
 from bloomerp.automation.values import resolve_parameters
 
 class BaseExecutor:

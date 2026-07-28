@@ -2,7 +2,9 @@ import htmx from "htmx.org";
 import Sortable, { type SortableEvent } from "sortablejs";
 
 import BaseComponent, { componentIdentifier, getComponent, initComponents } from "../BaseComponent";
-import BaseSectionedLayoutItem from "./BaseSectionedLayoutItem";
+import { Modal } from "../Modal";
+import SearchSection from "../SearchSection";
+import BaseSectionedLayoutItem, { type LayoutItemEditRequestDetail } from "./BaseSectionedLayoutItem";
 import { getCsrfToken } from "../../utils/cookies";
 import { parseBoolean } from "../../utils/booleans";
 
@@ -61,6 +63,9 @@ export default abstract class BaseSectionedLayoutContainer<TItem extends BaseSec
     protected searchActive = false;
     protected searchMatches: SearchMatch<TItem>[] = [];
     protected activeSearchMatchIndex: number | null = null;
+    protected activeItemEditorId: string | null = null;
+    protected itemEditorModalClosedHandler: (() => void) | null = null;
+    protected itemEditRequestHandler: ((event: Event) => void) | null = null;
 
     protected abstract getItemComponent(element: HTMLElement): TItem | null;
     protected abstract getItemSelector(): string;
@@ -72,7 +77,13 @@ export default abstract class BaseSectionedLayoutContainer<TItem extends BaseSec
         
 
         return {
-            content_type_id: Number.parseInt(this.element?.dataset.contentTypeId ?? "", 10) || null,
+            target_content_type_id:
+                Number.parseInt(
+                    this.element?.dataset.targetContentTypeId
+                        ?? this.element?.dataset.contentTypeId
+                        ?? "",
+                    10,
+                ) || null,
             layout: {
                 rows: this.serializeRows(),
             },
@@ -96,43 +107,6 @@ export default abstract class BaseSectionedLayoutContainer<TItem extends BaseSec
             return this.normalizeLayoutItemConfig(JSON.parse(value));
         } catch {
             return {};
-        }
-    }
-
-    protected async loadInitialItems(): Promise<void> {
-        for (let rowIndex = 0; rowIndex < this.layoutRows.length; rowIndex += 1) {
-            const row = this.layoutRows[rowIndex];
-            const rowEl = this.rowElements[rowIndex];
-            const targetGrid = rowEl?.querySelector<HTMLElement>("[data-layout-grid]");
-            if (!targetGrid) continue;
-
-            const expectedIds = new Set(row.items.map((item) => item.id));
-            const seenIds = new Set<string>();
-
-            Array.from(targetGrid.querySelectorAll<HTMLElement>(this.getItemSelector())).forEach((element) => {
-                const itemId = this.normalizeLayoutItemId(element.dataset.layoutItemId);
-                if (!itemId) {
-                    element.remove();
-                    return;
-                }
-                if (!expectedIds.has(itemId) || seenIds.has(itemId)) {
-                    element.remove();
-                    return;
-                }
-
-                seenIds.add(itemId);
-                const component = this.getItemComponent(element);
-                component?.setMaxCols(row.columns);
-            });
-
-            for (const item of row.items) {
-                if (seenIds.has(item.id)) {
-                    continue;
-                }
-                // eslint-disable-next-line no-await-in-loop
-                await this.renderItem(item.id, rowIndex);
-                seenIds.add(item.id);
-            }
         }
     }
 
@@ -196,6 +170,11 @@ export default abstract class BaseSectionedLayoutContainer<TItem extends BaseSec
         this.element.addEventListener("layout:item-colspan-change", () => {
             void this.requestSave();
         });
+        this.itemEditRequestHandler = (event: Event) => {
+            const { detail } = event as CustomEvent<LayoutItemEditRequestDetail>;
+            this.openItemEditor(detail);
+        };
+        this.element.addEventListener("layout:item-edit-request", this.itemEditRequestHandler);
 
         // Add event listener to edit button
         const editToggle = this.element.querySelector<HTMLElement>("[data-layout-edit-toggle]");
@@ -205,7 +184,7 @@ export default abstract class BaseSectionedLayoutContainer<TItem extends BaseSec
         this.openSidebarButtons = Array.from(this.element.querySelectorAll<HTMLElement>("[data-layout-open-sidebar]"));
         this.openSidebarButtons.forEach((button) => {
             button.addEventListener("click", () => {
-                void this.loadAvailableItems({ focusFirstItem: true });
+                this.getAvailableItemsSearchSection()?.focus();
             });
         });
         this.cacheSearchElements();
@@ -221,24 +200,19 @@ export default abstract class BaseSectionedLayoutContainer<TItem extends BaseSec
         this.searchButton?.addEventListener("click", this.searchButtonHandler);
         this.searchInput?.addEventListener("input", this.searchInputHandler);
         this.element.addEventListener("keydown", this.searchKeydownHandler, true);
+        this.itemEditorModalClosedHandler = () => {
+            const itemId = this.activeItemEditorId;
+            this.activeItemEditorId = null;
+            if (itemId) void this.rerenderItem(itemId);
+        };
 
         this.setupDnD();
         const initEditMode = this.parseBooleanDatasetValue(this.element.dataset.initEdit);
-        this.itemLoadQueue = this.loadInitialItems().then(() => {
-            this.reindexItems();
-            this.syncAvailableItemsState();
-            this.refreshSortables();
-
-            if (initEditMode) {
-                this.setEditMode(true);
-            } else if (!this.editMode && this.items.length > 0) {
-                this.focusItemByIndex(0);
-            }
-
-            if (this.searchActive) {
-                this.refreshSearchMatches();
-            }
-        });
+        if (initEditMode) {
+            this.setEditMode(true);
+        } else if (this.items.length > 0) {
+            this.focusItemByIndex(0);
+        }
     }
 
     public override destroy(): void {
@@ -252,6 +226,15 @@ export default abstract class BaseSectionedLayoutContainer<TItem extends BaseSec
         if (this.searchKeydownHandler && this.element) {
             this.element.removeEventListener("keydown", this.searchKeydownHandler, true);
         }
+        if (this.itemEditRequestHandler && this.element) {
+            this.element.removeEventListener("layout:item-edit-request", this.itemEditRequestHandler);
+        }
+        if (this.itemEditorModalClosedHandler) {
+            this.getItemEditorModal()?.element?.removeEventListener(
+                "bloomerp:modal-closed",
+                this.itemEditorModalClosedHandler,
+            );
+        }
         this.searchButton = null;
         this.searchPanel = null;
         this.searchInput = null;
@@ -259,6 +242,9 @@ export default abstract class BaseSectionedLayoutContainer<TItem extends BaseSec
         this.searchButtonHandler = null;
         this.searchInputHandler = null;
         this.searchKeydownHandler = null;
+        this.itemEditorModalClosedHandler = null;
+        this.itemEditRequestHandler = null;
+        this.activeItemEditorId = null;
         this.searchMatches = [];
     }
 
@@ -457,6 +443,43 @@ export default abstract class BaseSectionedLayoutContainer<TItem extends BaseSec
             const rowIndex = Number.parseInt(rowElement.dataset.rowIndex ?? "0", 10);
             this.focusRowByIndex(rowIndex);
         }
+    }
+
+    protected openItemEditor({ itemId, url }: LayoutItemEditRequestDetail): void {
+        const modal = this.getItemEditorModal();
+        if (!url || !itemId || !modal) return;
+        const modalBody = modal.element?.querySelector<HTMLElement>("#field-display-option-modal-body");
+        if (!modalBody) return;
+
+        if (this.itemEditorModalClosedHandler) {
+            modal.element?.removeEventListener("bloomerp:modal-closed", this.itemEditorModalClosedHandler);
+            modal.element?.addEventListener("bloomerp:modal-closed", this.itemEditorModalClosedHandler);
+        }
+        this.activeItemEditorId = itemId;
+        modal.open();
+        void htmx.ajax("get", url, {
+            target: modalBody,
+            swap: "innerHTML",
+        });
+    }
+
+    protected getItemEditorModal(): Modal | null {
+        const modalElement = document.getElementById("field-display-option-modal");
+        const modal = modalElement ? getComponent(modalElement) : null;
+        return modal instanceof Modal ? modal : null;
+    }
+
+    protected async rerenderItem(itemId: string): Promise<void> {
+        const item = this.items.find((candidate) => candidate.getLayoutItemId() === itemId);
+        const itemElement = item?.element;
+        const rowElement = itemElement?.closest<HTMLElement>("[data-layout-row]");
+        if (!itemElement || !rowElement) return;
+
+        const rowIndex = this.getRowIndexFromElement(rowElement);
+        const position = Array.from(rowElement.querySelectorAll<HTMLElement>(this.getItemSelector())).indexOf(itemElement);
+        itemElement.remove();
+        await this.renderItem(itemId, rowIndex, position);
+        this.reindexItems();
     }
 
     protected onKeyDown(event: KeyboardEvent): void {
@@ -893,99 +916,51 @@ export default abstract class BaseSectionedLayoutContainer<TItem extends BaseSec
         });
     }
 
-    public async loadAvailableItems(options?: { focusFirstItem?: boolean }): Promise<void> {
+    public async loadAvailableItems(): Promise<void> {
         const container = this.element?.querySelector<HTMLElement>("[data-layout-available-items]");
         const url = this.element?.dataset.layoutAvailableItemsUrl;
+
         if (!container || !url) return;
 
         await htmx.ajax("get", url, {
             target: container,
             swap: "innerHTML",
-            values: this.element?.dataset.contentTypeId
-                ? { content_type_id: this.element.dataset.contentTypeId }
+            values: this.element?.dataset.targetContentTypeId
+                ? { target_content_type_id: this.element.dataset.targetContentTypeId }
+                : this.element?.dataset.contentTypeId
+                    ? { content_type_id: this.element.dataset.contentTypeId }
                 : undefined,
         });
         this.bindSidebarItems(container);
         this.syncAvailableItemsState();
-
-        if (options?.focusFirstItem) {
-            this.focusFirstAvailableSidebarItem();
-        }
-    }
-
-    protected focusFirstAvailableSidebarItem(): void {
-        let attemptsRemaining = 12;
-
-        const tryFocus = () => {
-            const firstAvailableItem = this.element?.querySelector<HTMLElement>(
-                "[data-layout-sidebar-item]:not([disabled]):not([aria-disabled='true'])",
-            );
-
-            if (firstAvailableItem && this.isFocusableElement(firstAvailableItem) && this.isActionableElement(firstAvailableItem)) {
-                firstAvailableItem.focus();
-                if (document.activeElement === firstAvailableItem) {
-                    return;
-                }
-            }
-
-            attemptsRemaining -= 1;
-            if (attemptsRemaining <= 0) return;
-            window.requestAnimationFrame(tryFocus);
-        };
-
-        window.requestAnimationFrame(tryFocus);
     }
 
     protected bindSidebarItems(container: HTMLElement): void {
-        const items = Array.from(container.querySelectorAll<HTMLElement>("[data-layout-sidebar-item]"));
-        items.forEach((item) => {
-            if (!item.dataset.bound) {
-                item.dataset.bound = "true";
-                item.setAttribute("draggable", "false");
-                item.addEventListener("click", () => {
-                    if (!this.editMode) return;
-                    const itemId = this.normalizeLayoutItemId(item.dataset.layoutItemId);
-                    if (!itemId) return;
-                    if (this.items.some((layoutItem) => layoutItem.getLayoutItemId() === itemId)) return;
-                    const targetRowIndex = this.isRowFocused ? this.focusedRowIndex : Math.max(0, this.getRowIndexForItem(this.items[this.focusedItemIndex]));
-                    void this.renderItem(itemId, targetRowIndex).then(() => {
-                        this.reindexItems();
-                        this.syncAvailableItemsState();
-        void this.requestSave();
-                    });
-                });
-                item.addEventListener("keydown", (event: KeyboardEvent) => {
-                    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        this.moveSidebarItemFocus(item, event.key === "ArrowDown" ? 1 : -1);
-                        return;
-                    }
-
-                    if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        item.click();
-                    }
-                });
-            }
-        });
+        this.getAvailableItemsSearchSection(container)?.setOnClickHandler((item) => this.addAvailableItem(item));
         this.refreshSortables();
     }
 
-    protected moveSidebarItemFocus(currentItem: HTMLElement, delta: number): void {
-        const focusableSidebarItems = Array.from(
-            this.element?.querySelectorAll<HTMLElement>("[data-layout-sidebar-item]:not([disabled]):not([aria-disabled='true'])") ?? [],
+    protected getAvailableItemsSearchSection(container?: HTMLElement): SearchSection | null {
+        const searchElement = (container ?? this.element)?.querySelector<HTMLElement>(
+            '[bloomerp-component="search-section"]',
         );
-        if (focusableSidebarItems.length === 0) return;
+        return searchElement ? getComponent(searchElement) as SearchSection : null;
+    }
 
-        const currentIndex = focusableSidebarItems.indexOf(currentItem);
-        if (currentIndex < 0) {
-            focusableSidebarItems[0]?.focus();
-            return;
-        }
+    protected addAvailableItem(item: HTMLElement): void {
+        if (!this.editMode) return;
 
-        const nextIndex = Math.max(0, Math.min(focusableSidebarItems.length - 1, currentIndex + delta));
-        focusableSidebarItems[nextIndex]?.focus();
+        const itemId = this.normalizeLayoutItemId(item.dataset.layoutItemId);
+        if (!itemId || this.items.some((layoutItem) => layoutItem.getLayoutItemId() === itemId)) return;
+
+        const targetRowIndex = this.isRowFocused
+            ? this.focusedRowIndex
+            : Math.max(0, this.getRowIndexForItem(this.items[this.focusedItemIndex]));
+        void this.renderItem(itemId, targetRowIndex).then(() => {
+            this.reindexItems();
+            this.syncAvailableItemsState();
+            void this.requestSave();
+        });
     }
 
     protected syncAvailableItemsState(): void {

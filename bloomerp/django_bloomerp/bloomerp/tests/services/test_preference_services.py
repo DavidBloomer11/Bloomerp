@@ -1,7 +1,11 @@
+import inspect
+
+from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
 from django.db import IntegrityError, transaction
 
 from bloomerp.models.users.user_list_view_preference import UserListViewPreference
+from bloomerp.models.users.base_preference import BasePreference
 from bloomerp.models.workspaces.sidebar import Sidebar
 from bloomerp.models.workspaces.workspace import Workspace
 from bloomerp.services.preference_services import PreferenceManager, clean_scope
@@ -40,6 +44,24 @@ class PreferenceManagerTestCase(BaseBloomerpModelTestCase):
             },
         )
         self.assertEqual(scope["enabled"], " TrUe ")
+
+    def test_every_concrete_preference_implements_abstract_contract(self):
+        self.assertTrue(inspect.isabstract(BasePreference))
+        concrete_preferences = [
+            model
+            for model in apps.get_models()
+            if issubclass(model, BasePreference) and not model._meta.abstract
+        ]
+
+        self.assertTrue(concrete_preferences)
+        self.assertEqual(
+            [
+                model.__name__
+                for model in concrete_preferences
+                if inspect.isabstract(model)
+            ],
+            [],
+        )
 
     def test_normalize_scope_preserves_explicit_none(self):
         self.assertEqual(Sidebar.normalize_scope({}), {})

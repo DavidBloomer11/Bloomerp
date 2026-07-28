@@ -17,6 +17,7 @@ from django.views.generic import TemplateView
 )
 class BloomerpModuleHomeView(BaseWorkspaceView, TemplateView):
     
+    
     def get_visible_workspaces(self):
         module_id = self.get_module_id()
         return PreferenceManager(self.request.user).get_available(

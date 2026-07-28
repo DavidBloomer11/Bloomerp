@@ -20,6 +20,7 @@ from bloomerp.router import router
 from bloomerp.services.file_services import ensure_folder_hierarchy_for_object
 from bloomerp.permissions.manager import UserPermissionManager
 from bloomerp.permissions.manager import create_permission_str
+from bloomerp.services.preference_services import PreferenceManager
 from bloomerp.utils.filters import filter_model
 
 
@@ -225,10 +226,13 @@ def _hydrate_legacy_querystring(request: HttpRequest, legacy_query: str | None =
 
 
 def _get_file_preference(user, content_type: ContentType) -> UserListViewPreference:
-    preference = UserListViewPreference.get_or_create_for_user(
-        user=user,
-        content_type_or_model=content_type,
+    preference = PreferenceManager(user).get_or_create_selected(
+        UserListViewPreference,
+        scope={
+            "content_type_id" : content_type.id
+        }
     )
+    
     if preference.view_type not in FILE_BROWSER_VIEW_TYPES:
         preference.view_type = FILE_BROWSER_VIEW_TYPES[0]
         preference.save(update_fields=["view_type"])

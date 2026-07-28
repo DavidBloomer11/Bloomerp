@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from django.core.exceptions import FieldDoesNotExist
 from django.db.models import QuerySet
 from django.http import HttpRequest
 
@@ -23,29 +24,38 @@ class TableDataviewRenderer(BaseDataviewRenderer):
         return context
 
     @staticmethod
-    def _get_sortable_fields_by_name(data_view_fields) -> dict:
-        if hasattr(data_view_fields, "accessible_fields"):
-            return {
-                field.field: field
-                for field, _is_visible in data_view_fields.accessible_fields
-            }
+    def _get_sortable_fields_by_name(queryset: QuerySet, dataview_fields) -> dict:
+        if hasattr(dataview_fields, "accessible_fields"):
+            application_fields = [
+                field
+                for field, _is_visible in dataview_fields.accessible_fields
+            ]
+        else:
+            application_fields = list(dataview_fields.visible_fields)
 
-        return {
-            field.field: field
-            for field in data_view_fields.visible_fields
-        }
+        sortable_fields = {}
+        for application_field in application_fields:
+            try:
+                model_field = queryset.model._meta.get_field(application_field.field)
+            except FieldDoesNotExist:
+                continue
+
+            if getattr(model_field, "concrete", False):
+                sortable_fields[application_field.field] = application_field
+
+        return sortable_fields
 
     @classmethod
     def apply_sorting(
         cls,
         queryset: QuerySet,
         request: HttpRequest,
-        data_view_fields,
+        dataview_fields,
         options: object | None = None,
     ) -> tuple[QuerySet, dict]:
         sort_field = request.GET.get("sort") or getattr(options, "sort_field", None)
         sort_direction = request.GET.get("direction") or getattr(options, "sort_direction", "asc") or "asc"
-        sortable_fields_by_name = cls._get_sortable_fields_by_name(data_view_fields)
+        sortable_fields_by_name = cls._get_sortable_fields_by_name(queryset, dataview_fields)
 
         context = {
             "current_sort_field": "",

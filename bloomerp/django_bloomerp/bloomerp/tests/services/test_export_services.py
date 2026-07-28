@@ -8,6 +8,7 @@ from django.db import models
 from django.http import QueryDict
 
 from bloomerp.models import ApplicationField, FieldPolicy, Policy, RowPolicy, RowPolicyRule
+from bloomerp.model_fields.week_field import WeekField
 from bloomerp.services.export_services import ExportService
 from bloomerp.tests.base import BaseBloomerpModelTestCase
 from bloomerp.tests.utils.dynamic_models import create_test_models
@@ -222,10 +223,16 @@ class TestExportServiceExcel(BaseBloomerpModelTestCase):
     create_foreign_models = True
 
     def test_create_export_bytes_xlsx_serializes_uuid_backed_foreign_keys(self):
+        """
+        Use case: An exported Excel file includes a UUID-backed foreign key.
+        Expected result: The value is serialized as a string that openpyxl accepts.
+        """
+        # 1. Save a UUID-backed foreign key value.
         customer = self.CustomerModel.objects.first()
         customer.country = self.CountryModel.objects.first()
         customer.save(update_fields=["country"])
 
+        # 2. Export the foreign-key field to xlsx.
         service = ExportService(
             model=self.CustomerModel,
             user=self.admin_user,
@@ -241,6 +248,7 @@ class TestExportServiceExcel(BaseBloomerpModelTestCase):
         workbook = openpyxl.load_workbook(BytesIO(export_bytes))
         sheet = workbook.active
 
+        # 3. Verify the xlsx is valid and contains the serialized ID.
         self.assertEqual(
             content_type,
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -252,6 +260,56 @@ class TestExportServiceExcel(BaseBloomerpModelTestCase):
             for cell_value in (sheet.cell(row=row_index, column=1).value for row_index in range(2, sheet.max_row + 1))
         ]
         self.assertIn(str(customer.country_id), exported_values)
+
+
+class TestExportServiceExcelUnsupportedValues(BaseBloomerpModelTestCase):
+    auto_create_customers = False
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.WeekRecordModel = create_test_models(
+            app_label="bloomerp",
+            model_defs={
+                "ExportWeekRecord": {
+                    "name": models.CharField(max_length=100),
+                    "week": WeekField(blank=True, null=True),
+                }
+            },
+            use_bloomerp_base=True,
+        )["ExportWeekRecord"]
+        cls._register_dynamic_model_routes([cls.WeekRecordModel])
+
+    def test_create_export_bytes_xlsx_serializes_week_values_as_strings(self):
+        """
+        Use case: An exported Excel file includes a custom field value object.
+        Expected result: The value falls back to its string representation instead of raising.
+        """
+        # 1. Create a model row whose custom WeekField returns a WeekValue object.
+        self.WeekRecordModel.objects.create(name="Launch", week="2026-W22")
+
+        # 2. Export the custom value to xlsx.
+        service = ExportService(
+            model=self.WeekRecordModel,
+            user=self.admin_user,
+            permission_str="export_exportweekrecord",
+        )
+        fields = [
+            ApplicationField.get_by_field(self.WeekRecordModel, "name"),
+            ApplicationField.get_by_field(self.WeekRecordModel, "week"),
+        ]
+
+        export_bytes, _, _ = service.create_export_bytes(
+            application_fields=fields,
+            file_type="xlsx",
+        )
+
+        # 3. Verify openpyxl can load the export and the custom value is stringified.
+        workbook = openpyxl.load_workbook(BytesIO(export_bytes))
+        sheet = workbook.active
+
+        self.assertEqual(sheet["A2"].value, "Launch")
+        self.assertEqual(sheet["B2"].value, "2026-W22")
 
 
 class TestExportServiceFileFields(BaseBloomerpModelTestCase):

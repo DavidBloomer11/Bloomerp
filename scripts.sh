@@ -1,6 +1,27 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+update-internal-sdk() {
+    local script_dir
+    local django_root
+    local sdk_dir
+
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    django_root="$script_dir/bloomerp/django_bloomerp"
+    sdk_dir="$django_root/bloomerp/static_src/ts/sdk"
+
+    (
+        cd "$django_root"
+        uv run manage.py create_sdk "$sdk_dir" \
+            --language typescript \
+            --filename sdk.ts \
+            --force \
+            --skip-checks \
+            --app bloomerp \
+            "$@"
+    )
+}
+
 reset-test-data() {
   local script_dir
   script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -247,6 +268,10 @@ PY
 }
 
 case "${1:-}" in
+    update-internal-sdk)
+        shift
+        update-internal-sdk "$@"
+        ;;
   reset-test-data)
     shift
     reset-test-data "$@"
@@ -256,16 +281,17 @@ case "${1:-}" in
     document-cotton-components "$@"
     ;;
   ""|-h|--help|help)
-    echo "Usage: ./scripts.sh <command>"
-    echo
-    echo "Commands:"
-    echo "  reset-test-data"
-    echo "  document-cotton-components"
+        echo "Usage: ./scripts.sh <command>"
+        echo
+        echo "Commands:"
+        echo "  update-internal-sdk [create_sdk options]"
+        echo "  reset-test-data"
+        echo "  document-cotton-components"
     ;;
   *)
     echo "Unknown command: $1" >&2
     echo "Usage: ./scripts.sh <command>" >&2
-    echo "Commands: reset-test-data, document-cotton-components" >&2
+        echo "Commands: update-internal-sdk, reset-test-data, document-cotton-components" >&2
     exit 1
     ;;
 esac

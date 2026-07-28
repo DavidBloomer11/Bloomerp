@@ -178,52 +178,7 @@ class ApplicationField(models.Model):
     @property
     def title(self):
         return self.field.replace("_", " ").title()
-
-    @staticmethod
-    def get_related_models(model: models.Model, skip_auto_created=True):
-        """Returns all related models for a specific model"""
-        content_type_id = ContentType.objects.get_for_model(model).pk
-        qs = ApplicationField.objects.filter(
-            meta__related_model=content_type_id
-        ).exclude(content_type=content_type_id)
-        if skip_auto_created:
-            qs = qs.exclude(meta__auto_created=True)
-        return qs
-
-    @staticmethod
-    def get_db_tables_and_columns(user= None) -> list[tuple[str, list[str]]]:
-        """
-        Returns a tuple for each database table.
-        The tuple contains the table name and a tuple of the list of columns and there datatype.
-        
-        Args:
-            user (User): The user object
-
-
-        Example output:
-        [
-            ('auth_user', [('id', 'int'), ('username','varchar'), ...]),
-            ('auth_group', [('id', 'int'), ('name','varchar'), ...]),
-        ]
-
-        """
-        tables = []
-
-        qs = ApplicationField.objects.filter(db_table__isnull=False)
-
-        if user:
-            content_types = user.get_content_types_for_user(permission_types=["view"])
-            qs = qs.filter(content_type__in=content_types)
-
-
-        for table in qs.values("db_table").distinct():
-            table_name = table["db_table"]
-            columns = ApplicationField.objects.filter(db_table=table_name).values_list(
-                "db_column", "db_field_type"
-            )
-            tables.append((table_name, columns))
-        return tables
-
+    
     @staticmethod
     def get_for_content_type_id(content_type_id: int) -> QuerySet:
         """Retrieves the application fields for a particular content type ID.
@@ -328,3 +283,5 @@ class ApplicationField(models.Model):
     @property
     def field_type_enum(self):
         return self.get_field_type_enum()
+    
+    

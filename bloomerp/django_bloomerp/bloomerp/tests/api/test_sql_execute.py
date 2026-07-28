@@ -1,5 +1,8 @@
+from unittest.mock import patch
+
 from django.contrib.auth.models import Permission
 
+from bloomerp.services.sql_services import DatabaseTable, Field
 from bloomerp.tests.base import BaseBloomerpModelTestCase
 
 
@@ -60,6 +63,90 @@ class SqlExecuteApiTests(BaseBloomerpModelTestCase):
         ]
         self.assertTrue(fields)
         self.assertTrue(all("icon" not in field for field in fields))
+
+    @patch("bloomerp.views.api.sql.accessible_tables.SqlExecutor.get_accessible_tables_and_fields")
+    def test_accessible_tables_api_supports_search_and_pagination(self, get_tables):
+        """
+        Use case: A user searches accessible table metadata and requests a specific page.
+        Expected result: Search is applied before pagination and pagination metadata is returned.
+        """
+        # 1. Provide predictable accessible tables and authenticate the user.
+        get_tables.return_value = [
+            DatabaseTable(
+                name="suppliers",
+                fields=[Field(name="email", field_type="text")],
+            ),
+            DatabaseTable(
+                name="customers",
+                fields=[Field(name="email", field_type="text")],
+            ),
+            DatabaseTable(
+                name="invoices",
+                fields=[Field(name="customer_id", field_type="integer")],
+            ),
+        ]
+        self.client.force_login(self.admin_user)
+
+        # 2. Search by field name and request the second matching table.
+        response = self.client.get(
+            "/api/sql/accessible-tables/?search=email&page=2&page_size=1&refresh=true"
+        )
+
+        # 3. Verify filtered pagination data and the existing database response shape.
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(
+            [table["name"] for table in payload["databases"][0]["tables"]],
+            ["suppliers"],
+        )
+        self.assertEqual(payload["page"], 2)
+        self.assertEqual(payload["page_size"], 1)
+        self.assertEqual(payload["total_tables"], 2)
+        self.assertEqual(payload["total_pages"], 2)
+        self.assertFalse(payload["has_next"])
+        self.assertTrue(payload["has_previous"])
+        self.assertTrue(payload["refreshed"])
+
+    @patch("bloomerp.views.api.sql.accessible_tables.SqlExecutor.get_accessible_tables_and_fields")
+    def test_accessible_tables_api_searches_field_types(self, get_tables):
+        """
+        Use case: A user searches accessible metadata by a field type.
+        Expected result: Only matching fields and their parent tables are returned.
+        """
+        # 1. Provide a table containing text and integer fields and authenticate the user.
+        get_tables.return_value = [
+            DatabaseTable(
+                name="customers",
+                fields=[
+                    Field(name="email", field_type="text"),
+                    Field(name="age", field_type="integer"),
+                ],
+            )
+        ]
+        self.client.force_login(self.admin_user)
+
+        # 2. Search using the integer field type.
+        response = self.client.get("/api/sql/accessible-tables/?search=INTEGER")
+
+        # 3. Verify the table remains but non-matching fields are excluded.
+        self.assertEqual(response.status_code, 200)
+        tables = response.json()["databases"][0]["tables"]
+        self.assertEqual([field["name"] for field in tables[0]["fields"]], ["age"])
+
+    def test_accessible_tables_api_rejects_invalid_pagination(self):
+        """
+        Use case: A user requests an invalid accessible-tables page size.
+        Expected result: The API responds with a validation error.
+        """
+        # 1. Authenticate a user allowed to inspect accessible tables.
+        self.client.force_login(self.admin_user)
+
+        # 2. Request a page size above the documented maximum.
+        response = self.client.get("/api/sql/accessible-tables/?page_size=101")
+
+        # 3. Verify query validation rejects the request.
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("page_size", response.json())
 
     def test_execute_sql_api_requires_permission(self):
         """

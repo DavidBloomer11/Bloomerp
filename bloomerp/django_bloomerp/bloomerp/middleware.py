@@ -1,8 +1,30 @@
+from collections.abc import Callable
+from threading import current_thread
+
+from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest, HttpResponse
 from django.template.loader import render_to_string
-from django.core.exceptions import PermissionDenied
-from threading import current_thread
+from django.utils.cache import patch_vary_headers
 from django.utils.deprecation import MiddlewareMixin
+
+
+class HTMXVaryMiddleware:
+    """Keep full-page and HTMX response variants in separate cache entries."""
+
+    vary_headers = (
+        "HX-Request",
+        "HX-History-Restore-Request",
+        "HX-Target",
+    )
+
+    def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]) -> None:
+        self.get_response = get_response
+
+    def __call__(self, request: HttpRequest) -> HttpResponse:
+        response = self.get_response(request)
+        patch_vary_headers(response, self.vary_headers)
+        return response
+
 
 class HTMXPermissionDeniedMiddleware:
     def __init__(self, get_response):

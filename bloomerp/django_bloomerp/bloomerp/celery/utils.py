@@ -30,3 +30,20 @@ def is_celery_available() -> bool:
         ``CELERY_BROKER_URL``.
     """
     return find_spec("celery") is not None and _has_configured_celery_broker()
+
+
+def parse_cron_schedule(schedule: str, *, source_key: str) -> dict[str, str]:
+    parts = str(schedule or "").split()
+    if len(parts) != 5:
+        raise ValueError(
+            f"Inbox job source {source_key!r} must use a five-part cron schedule."
+        )
+
+    minute, hour, day_of_month, month_of_year, day_of_week = parts
+    return {
+        "minute": minute,
+        "hour": hour,
+        "day_of_week": day_of_week,
+        "day_of_month": day_of_month,
+        "month_of_year": month_of_year,
+    }

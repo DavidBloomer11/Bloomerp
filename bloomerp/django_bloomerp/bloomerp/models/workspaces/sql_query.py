@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from bloomerp.models.base_bloomerp_model import BloomerpModel
 from bloomerp.model_fields.code_field import CodeField
 from django.utils.translation import gettext_lazy as _
+from bloomerp.models.definition import ApiSettings, BloomerpModelConfig
 from bloomerp.utils.sql import SqlQueryExecutor
 
 class SqlQuery(BloomerpModel):
@@ -18,7 +19,14 @@ class SqlQuery(BloomerpModel):
             ('execute_sql_query', 'Can execute SQL queries')
             # Maybe add more permissions here corresponding to the actions that can be performed on the query
         ]
-
+    
+    bloomerp_config = BloomerpModelConfig(
+        api_settings=ApiSettings(
+            enable_auto_generation=True,
+        )
+    )
+    
+    
     name = models.CharField(max_length=255)
     query = CodeField(language='sql', help_text=_("SQL Query to execute"))
 

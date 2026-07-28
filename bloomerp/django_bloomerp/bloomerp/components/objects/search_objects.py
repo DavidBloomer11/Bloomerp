@@ -3,9 +3,10 @@ from django.http import HttpResponse, HttpRequest
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from bloomerp.models import BloomerpModel
+from bloomerp.permissions.definition import BloomerpPermission
 from bloomerp.router import router
 from bloomerp.services.object_services import string_search_on_queryset
-from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
+from bloomerp.permissions.manager import UserPolicyManager
 
 def _get_detail_url(obj) -> str:
     """Helper function to get the detail url"""
@@ -35,15 +36,12 @@ def search_objects(request:HttpRequest, content_type_id:int) -> HttpResponse:
     """
     Model : BloomerpModel = ContentType.objects.get_for_id(content_type_id).model_class()
     query = request.GET.get('fk_search_results_query')
-    permission_manager = UserPermissionManager(request.user)
+    permission_manager = UserPolicyManager(request.user)
     
     # Get the base queryset
     base_queryset = permission_manager.get_queryset(
         Model,
-        create_permission_str(
-            Model,
-            "view"
-        )
+        BloomerpPermission.VIEW
     )
     
     if query:

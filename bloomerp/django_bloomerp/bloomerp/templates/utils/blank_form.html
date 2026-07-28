@@ -25,6 +25,7 @@
     {% endfor %}
     {% endif %}
 
+    
     <div class="mt-4 flex justify-start gap-2">
         <button 
             type="submit" 
@@ -39,6 +40,20 @@
                 {{ submit_label|default:"Submit" }}
             </c-i18n.blocktrans>
         </button>
+
+        {% for button in extra_buttons %}
+        <button  
+            class="btn btn-{{ button.type|default:"secondary" }}"
+            {% if button.attrs %}
+            {% for attr,value in button.attrs.items %}
+            {{ attr }}="{{ value }}"
+            {% endfor %}
+            {% endif %}
+            >
+            {{ button.label }}
+        </button>
+        {% endfor %}
+
     </div>
 
 </form>

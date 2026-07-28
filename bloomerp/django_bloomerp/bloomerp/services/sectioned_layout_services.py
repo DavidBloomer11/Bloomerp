@@ -7,8 +7,10 @@ from django import forms
 from django.forms import BoundField
 from django.db.models import Model
 
+from bloomerp.field_types.types import FieldType
 from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.application_field import ApplicationField
+from bloomerp.permissions.manager import UserPolicyManager
 from bloomerp.services.permission_services import UserPermissionManager
 from django.db.models import QuerySet
 from bloomerp.models.users import User
@@ -121,9 +123,6 @@ def get_model_field_layout(model: Type[Model]) -> FieldLayout | None:
         return normalize_layout_payload(legacy_layout)
 
     return None
-
-
-
 
 
 def get_object_field_value(*, obj: Model, application_field: ApplicationField) -> Any:
@@ -298,14 +297,9 @@ def get_available_layout_fields(*, content_type: ContentType, user, layout_kind:
     """
     # TODO: use dataclass for response here
     model = content_type.model_class()
-    permission_manager = UserPermissionManager(user)
+    permission_manager = UserPolicyManager(user)
     permission_prefix = "add" if layout_kind == "create" else "view"
     permission_str = f"{permission_prefix}_{model._meta.model_name}"
-
-    if layout_kind == "create":
-        from bloomerp.services.create_view_services import AUTO_MANAGED_FIELD_NAMES
-    else:
-        AUTO_MANAGED_FIELD_NAMES = frozenset()
 
     fields = ApplicationField.objects.filter(content_type=content_type).order_by("field")
     available: list[dict[str, Any]] = []
@@ -314,13 +308,6 @@ def get_available_layout_fields(*, content_type: ContentType, user, layout_kind:
             continue
 
         field_type = field.get_field_type_enum().value
-        if field.field in AUTO_MANAGED_FIELD_NAMES and not field_type.editable_without_form_field:
-            continue
-
-        if layout_kind == "create" and not (
-            field_type.allow_in_model or field_type.editable_without_form_field
-        ):
-            continue
 
         available.append(
             {
@@ -414,6 +401,7 @@ def create_default_layout(
                     LayoutItem(
                         id=resolved_id,
                         colspan=clamp_layout_colspan(item.colspan, row.columns),
+                        config=item.config,
                     )
                 )
 
@@ -431,6 +419,16 @@ def create_default_layout(
         items = [
             LayoutItem(id=application_field.pk, colspan=1)
             for application_field in application_fields
+            if application_field.field_type_enum != FieldType.ONE_TO_MANY_FIELD
+            and application_field.field not in [
+                "id", 
+                "pk", 
+                "updated_by", 
+                "created_by",
+                "datetime_created",
+                "datetime_updated",
+                "comments"
+            ]
         ]
         return FieldLayout(
             rows=[

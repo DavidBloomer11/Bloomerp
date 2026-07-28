@@ -5,6 +5,7 @@ export default function showMessage(
     messageText: string,
     messageType: MessageType = MessageType.INFO,
     duration: number = 5,
+    pauseWhenHidden: boolean = false,
 ): void {
     // Create a host element and set data attributes consumed by UiMessage
     const host = document.createElement('div');
@@ -12,6 +13,7 @@ export default function showMessage(
     host.dataset.messageText = messageText;
     host.dataset.messageType = messageType as string;
     host.dataset.duration = String(duration);
+    host.dataset.pauseWhenHidden = String(pauseWhenHidden);
     // Mark host for auto-removal by the component after message is dismissed
     host.dataset.autoRemove = 'true';
 

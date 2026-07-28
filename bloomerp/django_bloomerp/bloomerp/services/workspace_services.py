@@ -1,9 +1,12 @@
+from copy import copy
 from dataclasses import dataclass
 from typing import Any, Optional, Type
 
 from django.http import HttpRequest
 from django.urls import reverse
+from django.utils.html import format_html
 
+from bloomerp.models.base_bloomerp_model import LayoutItem
 from bloomerp.models.workspaces.workspace import Workspace
 from bloomerp.models.workspaces.tile import Tile
 from bloomerp.modules.definition import module_registry
@@ -118,8 +121,47 @@ def render_tile_to_string(
         **tile.schema
     )
 
-    # 3. Get the render class
-    return tile_type.value.render_cls.render(config=config, request=request)
+    # 3. Get the render class. Saved canvases receive their persistence context;
+    # previews call the renderer directly without a Tile instance.
+    render_kwargs = {"tile": tile} if tile_type == TileType.CANVAS_TILE else {}
+    return tile_type.value.render_cls.render(config=config, request=request, **render_kwargs)
+
+
+def build_workspace_layout_item(
+    *,
+    tile: Tile,
+    request: HttpRequest,
+    colspan: int = 1,
+    config: dict | None = None,
+) -> LayoutItem:
+    """Transform a tile into the shared layout item rendered by every layout."""
+    render_request = copy(request)
+    render_request.GET = request.GET.copy()
+    for transport_param in ("colspan", "max_cols"):
+        render_request.GET.pop(transport_param, None)
+    render_request.GET["tile_id"] = str(tile.pk)
+
+    try:
+        content = render_tile_to_string(tile, render_request)
+    except Exception as exc:
+        content = format_html('<div class="alert alert-danger">{}</div>', exc)
+
+    return LayoutItem(
+        id=str(tile.pk),
+        colspan=colspan,
+        config=config or {},
+        icon=tile.icon,
+        label=tile.name,
+        content=content,
+        component_name="workspace-tile",
+        border=True,
+        edit_url=(
+            f"{reverse('tiles_detail_update_tile', kwargs={'pk': tile.pk})}"
+            "?reset_wizard=true"
+        ),
+        search_keywords=tile.get_type_display(),
+    )
+
 
 @dataclass
 class WorkspaceFilter:

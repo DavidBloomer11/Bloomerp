@@ -5,6 +5,8 @@ import getGeneralModal from "@/utils/modals";
 export default class WorkspaceTile extends BaseSectionedLayoutItem {
     private icon = "";
     private title = "";
+    private editButton: HTMLElement | null = null;
+    private editButtonHandler: (() => void) | null = null;
 
     public initialize(): void {
         super.initialize();
@@ -15,9 +17,10 @@ export default class WorkspaceTile extends BaseSectionedLayoutItem {
             this.itemId = tileId;
         }
 
-        // Set settings button
-        this.element.querySelector('[data-update-tile]').addEventListener('click', ()=> {
-            const url = this.element.dataset.updateUrl
+        this.editButton = this.element.querySelector<HTMLElement>('[data-layout-edit-item]');
+        this.editButtonHandler = () => {
+            const url = this.element?.dataset.layoutEditUrl;
+            if (!url) return;
             const modal = getGeneralModal()
             modal.setSize('full')
             modal.setTitle('Update Tile')
@@ -29,7 +32,17 @@ export default class WorkspaceTile extends BaseSectionedLayoutItem {
                     target: modal.getBodyElement()
                 }
             ).then(()=> {modal.open()})
-        })
+        };
+        this.editButton?.addEventListener('click', this.editButtonHandler);
+    }
+
+    public override destroy(): void {
+        if (this.editButton && this.editButtonHandler) {
+            this.editButton.removeEventListener('click', this.editButtonHandler);
+        }
+        this.editButton = null;
+        this.editButtonHandler = null;
+        super.destroy();
     }
 
     public setIcon(icon: string): void {

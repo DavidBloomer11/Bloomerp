@@ -149,7 +149,9 @@ class ExportService:
             return value.isoformat()
         if isinstance(value, Decimal):
             return str(value)
-        return value
+        if isinstance(value, (int, float, str)):
+            return value
+        return str(value)
 
 
 def wrap_export_bytes(export_bytes: bytes) -> BytesIO:

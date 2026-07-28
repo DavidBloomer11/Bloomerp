@@ -5,7 +5,6 @@ import bloomerp.model_fields.icon_field
 import bloomerp.model_fields.text_editor_field
 import bloomerp.model_fields.user_field
 import bloomerp.models.files.file
-import bloomerp.models.users.user_detail_view_preference
 import bloomerp.models.users.user_list_view_preference
 import bloomerp.models.workspaces.tile
 import django.contrib.auth.models
@@ -497,7 +496,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('field_layout', models.JSONField(default=dict)),
-                ('tab_state', models.JSONField(default=bloomerp.models.users.user_detail_view_preference.get_default_tab_state)),
+                ('tab_state', models.JSONField(default={})),
                 ('content_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='contenttypes.contenttype')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='detail_view_preference', to=settings.AUTH_USER_MODEL)),
             ],

@@ -1,3 +1,5 @@
+import json
+import tempfile
 from unittest.mock import patch
 
 from django.contrib.contenttypes.models import ContentType
@@ -11,18 +13,19 @@ from bloomerp.automation.flows import object_if_condition
 from bloomerp.automation.schema import WorkflowValueType
 from bloomerp.automation.schema_resolver import resolve_node_output_schema
 from bloomerp.automation.utils import enhanced_get_attr
+from bloomerp.automation.workflow_state import WorkflowRunState
 from bloomerp.models import ApplicationField, User
 from bloomerp.models.automation import Workflow, WorkflowEdge, WorkflowNode
 from bloomerp.models.automation.workflow_run import WorkflowRun
 from bloomerp.models.document_templates.document_template import DocumentTemplate
-from bloomerp.celery.tasks.workflow_task import run_scheduled_workflow
+from bloomerp.celery.tasks.workflow_task import run_scheduled_workflow, run_workflow_async
 from bloomerp.services.workflow_services import (
     _serialize_trigger_data,
     format_execution_trace,
+    resume_workflow,
     run_workflow,
-    run_workflow_async,
 )
-from bloomerp.signals.automations import setup_automation_signals
+from bloomerp.signals.automation_signals import setup_automation_signals
 from bloomerp.tests.utils.dynamic_models import create_test_models, ensure_content_types_for_models
 from django.contrib.auth import get_user_model
 
@@ -173,6 +176,164 @@ class TestAutomation(TransactionTestCase):
             [entry["node_sub_type"] for entry in workflow_run.execution_trace],
             ["HUMAN_TRIGGER", "CREATE_OBJECT"],
         )
+
+    def test_logged_steps_store_state_and_node_outputs(self):
+        workflow = Workflow.objects.create(name="Checkpoint workflow", enable_logging=True)
+        trigger = WorkflowNode.objects.create(
+            workflow=workflow,
+            config={
+                "sub_type": "HUMAN_TRIGGER",
+                "parameters": {"data": {"run": True}},
+            },
+            type=WorkflowNodeType.TRIGGER.value.id,
+        )
+        enrich = WorkflowNode.objects.create(
+            workflow=workflow,
+            config={
+                "sub_type": "ENRICH_DATA",
+                "parameters": {"data": {"amount": 100}},
+            },
+            type=WorkflowNodeType.ACTION.value.id,
+        )
+        workflow.connect_nodes(trigger, enrich)
+
+        with tempfile.TemporaryDirectory() as media_root, self.settings(MEDIA_ROOT=media_root):
+            workflow_run = run_workflow(workflow, {"employee_id": 7})
+            steps = list(workflow_run.steps.order_by("sequence"))
+
+            self.assertEqual(len(steps), 2)
+            for step in steps:
+                state = WorkflowRunState.model_validate(step.state)
+                self.assertEqual(state.workflow_run_id, workflow_run.id)
+                self.assertEqual(state.current_step_id, step.id)
+                self.assertTrue(step.output_file)
+
+            with steps[0].output_file.open("r") as output_file:
+                self.assertEqual(
+                    json.load(output_file),
+                    {"run": True, "employee_id": 7},
+                )
+            with steps[1].output_file.open("r") as output_file:
+                self.assertEqual(
+                    json.load(output_file),
+                    {"run": True, "employee_id": 7, "amount": 100},
+                )
+
+    def test_resume_workflow_continues_existing_run_from_saved_step(self):
+        workflow = Workflow.objects.create(name="Resume workflow", enable_logging=True)
+        trigger = WorkflowNode.objects.create(
+            workflow=workflow,
+            config={
+                "sub_type": "HUMAN_TRIGGER",
+                "parameters": {"data": {"run": True}},
+            },
+            type=WorkflowNodeType.TRIGGER.value.id,
+        )
+        pause_node = WorkflowNode.objects.create(
+            workflow=workflow,
+            config={
+                "sub_type": "ENRICH_DATA",
+                "parameters": {"data": {"proposal": "ready"}},
+            },
+            type=WorkflowNodeType.ACTION.value.id,
+        )
+        workflow.connect_nodes(trigger, pause_node)
+
+        with tempfile.TemporaryDirectory() as media_root, self.settings(MEDIA_ROOT=media_root):
+            workflow_run = run_workflow(workflow, {"employee_id": 7})
+            paused_step = workflow_run.steps.get(sequence=1)
+            paused_step.status = "PAUSED"
+            paused_step.save(update_fields=["status"])
+
+            downstream = WorkflowNode.objects.create(
+                workflow=workflow,
+                config={
+                    "sub_type": "ENRICH_DATA",
+                    "parameters": {"data": {"approved": True}},
+                },
+                type=WorkflowNodeType.ACTION.value.id,
+            )
+            workflow.connect_nodes(pause_node, downstream)
+
+            resumed_run = resume_workflow(paused_step)
+
+            self.assertEqual(resumed_run.id, workflow_run.id)
+            self.assertEqual(
+                [step.sequence for step in resumed_run.steps.order_by("sequence")],
+                [0, 1, 2],
+            )
+            self.assertEqual(resumed_run.execution_trace[0]["output"]["proposal"], "ready")
+            self.assertTrue(resumed_run.execution_trace[0]["output"]["approved"])
+
+    def test_resume_workflow_dispatches_asynchronously_for_async_workflow(self):
+        workflow = Workflow.objects.create(name="Async resume workflow", enable_logging=True)
+        trigger = WorkflowNode.objects.create(
+            workflow=workflow,
+            config={
+                "sub_type": "HUMAN_TRIGGER",
+                "parameters": {"data": {"proposal": "ready"}},
+            },
+            type=WorkflowNodeType.TRIGGER.value.id,
+        )
+        pause_node = WorkflowNode.objects.create(
+            workflow=workflow,
+            config={
+                "sub_type": "ENRICH_DATA",
+                "parameters": {"data": {}},
+            },
+            type=WorkflowNodeType.ACTION.value.id,
+        )
+        workflow.connect_nodes(trigger, pause_node)
+
+        with tempfile.TemporaryDirectory() as media_root, self.settings(MEDIA_ROOT=media_root):
+            workflow_run = run_workflow(workflow, {})
+            paused_step = workflow_run.steps.get(sequence=1)
+            paused_step.status = "PAUSED"
+            paused_step.save(update_fields=["status"])
+            workflow.run_asynchronously = True
+            workflow.save(update_fields=["run_asynchronously"])
+
+            with patch(
+                "bloomerp.services.workflow_services.resume_workflow_async.delay"
+            ) as delay_mock:
+                result = resume_workflow(paused_step)
+
+            self.assertIsNone(result)
+            delay_mock.assert_called_once_with(paused_step.pk)
+            paused_step.refresh_from_db()
+            self.assertEqual(paused_step.status, "PAUSED")
+
+    def test_run_workflow_can_start_from_a_selected_node(self):
+        workflow = Workflow.objects.create(name="Debug start workflow")
+        WorkflowNode.objects.create(
+            workflow=workflow,
+            config={
+                "sub_type": "HUMAN_TRIGGER",
+                "parameters": {"data": {"trigger_ran": True}},
+            },
+            type=WorkflowNodeType.TRIGGER.value.id,
+        )
+        start_node = WorkflowNode.objects.create(
+            workflow=workflow,
+            config={
+                "sub_type": "ENRICH_DATA",
+                "parameters": {"data": {"started_here": True}},
+            },
+            type=WorkflowNodeType.ACTION.value.id,
+        )
+
+        workflow_run = run_workflow(
+            workflow,
+            {"debug_input": True},
+            start_node=start_node,
+        )
+
+        self.assertEqual(
+            [entry["node_sub_type"] for entry in workflow_run.execution_trace],
+            ["ENRICH_DATA"],
+        )
+        self.assertTrue(workflow_run.execution_trace[0]["output"]["debug_input"])
+        self.assertTrue(workflow_run.execution_trace[0]["output"]["started_here"])
     
     def test_workflow_execution_create_record_human_trigger_empty_data(self):
         # 1. Create the test data
@@ -199,6 +360,24 @@ class TestAutomation(TransactionTestCase):
         delay_mock.assert_called_once_with(
             self.workflow.id,
             {"first_name": "John"},
+        )
+
+    def test_async_workflow_passes_selected_start_node_to_celery(self):
+        self.workflow.run_asynchronously = True
+        self.workflow.save(update_fields=["run_asynchronously"])
+
+        with patch("bloomerp.services.workflow_services.run_workflow_async.delay") as delay_mock:
+            result = run_workflow(
+                self.workflow,
+                {"first_name": "John"},
+                start_node=self.end_node,
+            )
+
+        self.assertIsNone(result)
+        delay_mock.assert_called_once_with(
+            self.workflow.id,
+            {"first_name": "John"},
+            self.end_node.id,
         )
 
     def test_run_workflow_async_hydrates_model_instances_before_running_sync(self):
@@ -422,261 +601,12 @@ class TestAutomation(TransactionTestCase):
             instance.save()
 
             run_workflow_mock.assert_called_once()
-
-    # def test_object_create_workflow_can_send_email_to_created_employee(self):
-    #     content_type = ContentType.objects.get_for_model(self.EmployeeModel)
-    #     workflow = Workflow.objects.create(
-    #         name="Employee welcome email",
-    #         created_by=self.user,
-    #         updated_by=self.user,
-    #     )
-    #     trigger = WorkflowNode.objects.create(
-    #         workflow=workflow,
-    #         config={
-    #             "sub_type": "ON_OBJECT_CREATE",
-    #             "parameters": {"content_type_id": content_type.id},
-    #         },
-    #         type=WorkflowNodeType.TRIGGER.value.id,
-    #         created_by=self.user,
-    #         updated_by=self.user,
-    #     )
-    #     email_action = WorkflowNode.objects.create(
-    #         workflow=workflow,
-    #         config={
-    #             "sub_type": "SEND_EMAIL",
-    #             "parameters": {
-    #                 "recipient": "{{ input.instance.email }}",
-    #                 "subject": "Welcome {{ input.instance.first_name }}",
-    #                 "body": "Hi {{ input.instance.first_name }}, welcome to Bloomerp.",
-    #             },
-    #         },
-    #         type=WorkflowNodeType.ACTION.value.id,
-    #         created_by=self.user,
-    #         updated_by=self.user,
-    #     )
-    #     WorkflowEdge.objects.create(
-    #         from_node=trigger,
-    #         to_node=email_action,
-    #     )
-
-    #     setup_automation_signals(refresh=True)
-
-    #     with patch("bloomerp.automation.actions.send_email.send_email") as send_email_mock:
-    #         self.EmployeeModel.objects.create(
-    #             first_name="Ava",
-    #             last_name="Ng",
-    #             email="ava@example.com",
-    #             created_by=self.user,
-    #             updated_by=self.user,
-    #         )
-
-    #     send_email_mock.assert_called_once_with(
-    #         "ava@example.com",
-    #         "Welcome Ava",
-    #         "Hi Ava, welcome to Bloomerp.",
-    #     )
     
     def test_exeucte_node(self):
         """Tests the execution of a basic node"""
         data = self.start_node.execute({}) # Don't need to pass any data with human triggers
         
         self.assertEqual(self.start_node.config.get("parameters").get("data"), data)
-
-    # def test_list_filter_summary_email_sends_one_email_with_active_employees(self):
-    #     content_type = ContentType.objects.get_for_model(self.EmployeeModel)
-    #     self.EmployeeModel.objects.create(
-    #         first_name="Ava",
-    #         last_name="Ng",
-    #         email="ava@example.com",
-    #         status="active",
-    #         created_by=self.user,
-    #         updated_by=self.user,
-    #     )
-    #     self.EmployeeModel.objects.create(
-    #         first_name="Ben",
-    #         last_name="Fox",
-    #         email="ben@example.com",
-    #         status="terminated",
-    #         created_by=self.user,
-    #         updated_by=self.user,
-    #     )
-
-    #     workflow = Workflow.objects.create(
-    #         name="Active employee digest",
-    #         created_by=self.user,
-    #         updated_by=self.user,
-    #     )
-    #     trigger = WorkflowNode.objects.create(
-    #         workflow=workflow,
-    #         config={
-    #             "sub_type": "HUMAN_TRIGGER",
-    #             "parameters": {"data": {"run": True}},
-    #         },
-    #         type=WorkflowNodeType.TRIGGER.value.id,
-    #         created_by=self.user,
-    #         updated_by=self.user,
-    #     )
-    #     list_objects = WorkflowNode.objects.create(
-    #         workflow=workflow,
-    #         config={
-    #             "sub_type": "LIST_OBJECTS",
-    #             "parameters": {"content_type_id": content_type.id},
-    #         },
-    #         type=WorkflowNodeType.ACTION.value.id,
-    #         created_by=self.user,
-    #         updated_by=self.user,
-    #     )
-    #     filter_active = WorkflowNode.objects.create(
-    #         workflow=workflow,
-    #         config={
-    #             "sub_type": "FILTER_OBJECTS",
-    #             "parameters": {
-    #                 "field": "status",
-    #                 "operator": "exact",
-    #                 "value": "active",
-    #             },
-    #         },
-    #         type=WorkflowNodeType.FLOW.value.id,
-    #         created_by=self.user,
-    #         updated_by=self.user,
-    #     )
-    #     email_action = WorkflowNode.objects.create(
-    #         workflow=workflow,
-    #         config={
-    #             "sub_type": "SEND_EMAIL",
-    #             "parameters": {
-    #                 "recipient": "hr@example.com",
-    #                 "subject": "Active employees",
-    #                 "body": "{{ input }}",
-    #             },
-    #         },
-    #         type=WorkflowNodeType.ACTION.value.id,
-    #         created_by=self.user,
-    #         updated_by=self.user,
-    #     )
-    #     WorkflowEdge.objects.create(from_node=trigger, to_node=list_objects)
-    #     WorkflowEdge.objects.create(from_node=list_objects, to_node=filter_active)
-    #     WorkflowEdge.objects.create(from_node=filter_active, to_node=email_action)
-
-    #     with patch("bloomerp.automation.actions.send_email.send_email") as send_email_mock:
-    #         workflow_run = run_workflow(workflow, {})
-
-    #     send_email_mock.assert_called_once()
-    #     recipient, subject, body = send_email_mock.call_args.args
-    #     self.assertEqual(recipient, "hr@example.com")
-    #     self.assertEqual(subject, "Active employees")
-    #     self.assertIn("ava@example.com", body)
-    #     self.assertNotIn("ben@example.com", body)
-
-    # def test_for_each_fans_filtered_employee_list_into_per_employee_emails(self):
-    #     content_type = ContentType.objects.get_for_model(self.EmployeeModel)
-    #     self.EmployeeModel.objects.create(
-    #         first_name="Ava",
-    #         last_name="Ng",
-    #         email="ava@example.com",
-    #         status="active",
-    #         created_by=self.user,
-    #         updated_by=self.user,
-    #     )
-    #     self.EmployeeModel.objects.create(
-    #         first_name="Cy",
-    #         last_name="Park",
-    #         email="cy@example.com",
-    #         status="active",
-    #         created_by=self.user,
-    #         updated_by=self.user,
-    #     )
-    #     self.EmployeeModel.objects.create(
-    #         first_name="Ben",
-    #         last_name="Fox",
-    #         email="ben@example.com",
-    #         status="terminated",
-    #         created_by=self.user,
-    #         updated_by=self.user,
-    #     )
-
-    #     workflow = Workflow.objects.create(
-    #         name="Per employee email",
-    #         created_by=self.user,
-    #         updated_by=self.user,
-    #     )
-    #     trigger = WorkflowNode.objects.create(
-    #         workflow=workflow,
-    #         config={
-    #             "sub_type": "HUMAN_TRIGGER",
-    #             "parameters": {"data": {"run": True}},
-    #         },
-    #         type=WorkflowNodeType.TRIGGER.value.id,
-    #         created_by=self.user,
-    #         updated_by=self.user,
-    #     )
-    #     list_objects = WorkflowNode.objects.create(
-    #         workflow=workflow,
-    #         config={
-    #             "sub_type": "LIST_OBJECTS",
-    #             "parameters": {"content_type_id": content_type.id},
-    #         },
-    #         type=WorkflowNodeType.ACTION.value.id,
-    #         created_by=self.user,
-    #         updated_by=self.user,
-    #     )
-    #     filter_active = WorkflowNode.objects.create(
-    #         workflow=workflow,
-    #         config={
-    #             "sub_type": "FILTER_OBJECTS",
-    #             "parameters": {
-    #                 "field": "status",
-    #                 "operator": "exact",
-    #                 "value": "active",
-    #             },
-    #         },
-    #         type=WorkflowNodeType.FLOW.value.id,
-    #         created_by=self.user,
-    #         updated_by=self.user,
-    #     )
-    #     for_each = WorkflowNode.objects.create(
-    #         workflow=workflow,
-    #         config={
-    #             "sub_type": "FOR_EACH",
-    #             "parameters": {},
-    #         },
-    #         type=WorkflowNodeType.FLOW.value.id,
-    #         created_by=self.user,
-    #         updated_by=self.user,
-    #     )
-    #     email_action = WorkflowNode.objects.create(
-    #         workflow=workflow,
-    #         config={
-    #             "sub_type": "SEND_EMAIL",
-    #             "parameters": {
-    #                 "recipient": "{{ input.item.email }}",
-    #                 "subject": "Hello {{ input.item.first_name }}",
-    #                 "body": "Hi {{ input.item.first_name }}",
-    #             },
-    #         },
-    #         type=WorkflowNodeType.ACTION.value.id,
-    #         created_by=self.user,
-    #         updated_by=self.user,
-    #     )
-    #     WorkflowEdge.objects.create(from_node=trigger, to_node=list_objects)
-    #     WorkflowEdge.objects.create(from_node=list_objects, to_node=filter_active)
-    #     WorkflowEdge.objects.create(from_node=filter_active, to_node=for_each)
-    #     WorkflowEdge.objects.create(from_node=for_each, to_node=email_action)
-
-    #     with patch("bloomerp.automation.actions.send_email.send_email") as send_email_mock:
-    #         workflow_run = run_workflow(workflow, {})
-
-    #     self.assertEqual(send_email_mock.call_count, 2)
-    #     recipients = {call.args[0] for call in send_email_mock.call_args_list}
-    #     self.assertEqual(recipients, {"ava@example.com", "cy@example.com"})
-    #     self.assertNotIn("ben@example.com", recipients)
-    #     fanout_entries = [
-    #         entry
-    #         for entry in workflow_run.execution_trace
-    #         if entry["node_sub_type"] == "FOR_EACH"
-    #     ]
-    #     self.assertEqual(fanout_entries[0]["output"]["kind"], "fanout")
-    #     self.assertEqual(fanout_entries[0]["output"]["item_count"], 2)
     
     # ---------------------------------------
     # Action: ENRICH
@@ -1311,8 +1241,6 @@ class TestAutomation(TransactionTestCase):
         output = get_terminal_node_output(workflow_run)
         self.assertEqual(output, username)
         
-        
-    
     # ----------------------------------------
     # Action: SQL_QUERY
     # ----------------------------------------
@@ -2118,6 +2046,81 @@ class TestAutomation(TransactionTestCase):
             ["HUMAN_TRIGGER", "IF_CONDITION", "CREATE_OBJECT"],
         )
     
+    def test_if_condition_using_extracted_count_from_queryset(self):
+        """
+        UC: A user wants to use the extracted count in a queryset
+
+        Expected Result: the count works for the if condition
+        """
+        # 0. Create some test customers
+        self.CustomerModel.objects.create(first_name="Alice", last_name="Smith", age=30)
+
+        # 1. Create workflow
+        workflow = Workflow.objects.create(name="Test", enable_logging=True)
+        trigger = WorkflowNode.objects.create(
+            workflow=workflow,
+            config={
+                "sub_type": "HUMAN_TRIGGER",
+                "parameters": {"data": {"run": True}},
+            },
+            type=WorkflowNodeType.TRIGGER.value.id,
+        )
+
+        # 2. Create the list objects node
+        list_objects_node = WorkflowNode.objects.create(
+            workflow=workflow,
+            config={
+                "sub_type": "LIST_OBJECTS",
+                "parameters": {
+                    "content_type_id": ContentType.objects.get_for_model(self.CustomerModel).id
+                },
+            },
+            type=WorkflowNodeType.ACTION.value.id,
+        )
+        workflow.connect_nodes(trigger, list_objects_node)
+
+        # 3. Create the extract count node
+        extract_count_node = WorkflowNode.objects.create(
+            workflow=workflow,
+            config={
+                "sub_type": "EXTRACT_FIELD",
+                "parameters": {"field_path": "input.count"},
+            },
+            type=WorkflowNodeType.ACTION.value.id,
+        )
+
+        # 4. Create the if condition node
+        if_condition_node = WorkflowNode.objects.create(
+            workflow=workflow,
+            config={
+                "sub_type": "IF_CONDITION",
+                "parameters": {
+                    "field": "input",
+                    "operator": "greater_than",
+                    "value": "0",
+                },
+            },
+            type=WorkflowNodeType.FLOW.value.id,
+        )
+        workflow.connect_nodes(list_objects_node, extract_count_node)
+        workflow.connect_nodes(extract_count_node, if_condition_node)
+
+        # 5. Create a pass-through node that accepts the primitive count
+        downstream_node = WorkflowNode.objects.create(
+            workflow=workflow,
+            config={
+                "sub_type": "WAIT",
+                "parameters": {"wait_time": 0},
+            },
+            type=WorkflowNodeType.ACTION.value.id,
+        )
+        workflow.connect_nodes(if_condition_node, downstream_node)
+
+        # 6. Run the workflow
+        workflow_run = run_workflow(workflow, {})
+
+        self.assertEqual(workflow_run.number_of_steps, 5)
+
     # ----------------------------------------
     # Flow: MERGE_BRANCHES
     # ----------------------------------------
@@ -2302,7 +2305,7 @@ class TestAutomation(TransactionTestCase):
         send_message = WorkflowNode.objects.create(
             workflow=workflow,
             config={
-                "sub_type": "SEND_USER_MESSAGE",
+                "sub_type": "SEND_USER_INBOX_MESSAGE",
                 "parameters": {
                     "user_id": str(self.user.id),
                     "message": (
@@ -2321,12 +2324,12 @@ class TestAutomation(TransactionTestCase):
         workflow.connect_nodes(trigger, merge_branch)
         workflow.connect_nodes(merge_branch, send_message)
 
-        with patch("bloomerp.automation.actions.send_user_message.send_user_message") as send_message_mock:
+        with patch("bloomerp.automation.actions.send_user_inbox_message.publish_event") as send_message_mock:
             workflow_run = run_workflow(workflow, {})
 
         self.assertEqual(send_message_mock.call_count, 2)
         messages = [
-            call.kwargs["payload"]["message"]
+            call.kwargs["data"]["message"]
             for call in send_message_mock.call_args_list
         ]
         self.assertEqual(messages, ["A|A", "A|B"])
@@ -2334,7 +2337,7 @@ class TestAutomation(TransactionTestCase):
         send_message_entries = [
             entry
             for entry in workflow_run.execution_trace
-            if entry["node_sub_type"] == "SEND_USER_MESSAGE"
+            if entry["node_sub_type"] == "SEND_USER_INBOX_MESSAGE"
         ]
         self.assertEqual(len(send_message_entries), 2)
         
@@ -2482,84 +2485,69 @@ class TestAutomation(TransactionTestCase):
         )
     
     # ---------------------------------------
-    # Tests for document template generation
+    # Flow: HUMAN_IN_THE_LOOP
     # ---------------------------------------
-    # def test_action_create_document_template(self):
-    #     # 1. Create a document template
-    #     document_template = DocumentTemplate.objects.create(
-    #         name="Test",
-    #         template="""
-    #         <div>Hello World</div>
-    #         """
-    #     )
+    def test_flow_object_human_in_the_loop_pauses_when_arrived(self):
+        """
+        UC: Users want human in the loop behavior
         
-    #     # 2. Create workflow
-    #     workflow = Workflow.objects.create(name="Document template generator")
-        
-    #     # 3. Add trigger
-    #     trigger = WorkflowNode.objects.create(
-    #         workflow=workflow,
-    #         config={
-    #             "sub_type": "HUMAN_TRIGGER",
-    #             "parameters": {"data": {"run": True}},
-    #         },
-    #         type=WorkflowNodeType.TRIGGER.value.id,
-    #     )
-        
-    #     # 4. Create the action node
-    #     action = WorkflowNode.objects.create(
-    #         workflow=workflow,
-    #         type=WorkflowNodeType.ACTION.value.id,
-    #         config={
-    #             "sub_type" : "GENERATE_PDF"
-    #         }
-    #     )
-        
-    #     # 5. Connect the nodes
-    #     workflow.connect_nodes(trigger, action)
-        
-    #     # 6. Run the workflow
-    #     result = run_workflow(workflow, {})
-    #     self.assertIn("pdf_url", result)
-        
-        
-    # def test_action_create_document_template_with_input(self):
-    #     # 1. Create a document template
-    #     document_template = DocumentTemplate.objects.create(
-    #         name="Test with input",
-    #         template="""
-    #         <div>Hello {{ input.name }}</div>
-    #         """
-    #     )
-        
-    #     # 2. Create workflow
-    #     workflow = Workflow.objects.create(name="Document template generator with input")
-        
-    #     # 3. Add trigger
-    #     trigger = WorkflowNode.objects.create(
-    #         workflow=workflow,
-    #         config={
-    #             "sub_type": "HUMAN_TRIGGER",
-    #             "parameters": {"data": {"name": "Alice"}},
-    #         },
-    #         type=WorkflowNodeType.TRIGGER.value.id,
-    #     )
-        
-    #     # 4. Create the action node
-    #     action = WorkflowNode.objects.create(
-    #         workflow=workflow,
-    #         type=WorkflowNodeType.ACTION.value.id,
-    #         config={
-    #             "sub_type" : "GENERATE_PDF"
-    #         }
-    #     )
-        
-    #     # 5. Connect the nodes
-    #     workflow.connect_nodes(trigger, action)
-        
-    #     # 6. Run the workflow
-    #     result = run_workflow(workflow, {})
-    #     self.assertIn("pdf_url", result)
-        
+        Expected Result: Loop pauses until condition is met
+        """
+        workflow = Workflow.objects.create(
+            name="Human approval workflow",
+            enable_logging=True,
+        )
+        trigger = WorkflowNode.objects.create(
+            workflow=workflow,
+            config={
+                "sub_type": "HUMAN_TRIGGER",
+                "parameters": {"data": {"proposal": "ready"}},
+            },
+            type=WorkflowNodeType.TRIGGER.value.id,
+        )
+        approval = WorkflowNode.objects.create(
+            workflow=workflow,
+            config={
+                "sub_type": "HUMAN_IN_THE_LOOP",
+                "parameters": {"message": "Create the payables?", "approvers": []},
+            },
+            type=WorkflowNodeType.ACTION.value.id,
+        )
+        downstream = WorkflowNode.objects.create(
+            workflow=workflow,
+            config={
+                "sub_type": "ENRICH_DATA",
+                "parameters": {"data": {"approved": True}},
+            },
+            type=WorkflowNodeType.ACTION.value.id,
+        )
+        workflow.connect_nodes(trigger, approval)
+        workflow.connect_nodes(approval, downstream)
+
+        with tempfile.TemporaryDirectory() as media_root, self.settings(MEDIA_ROOT=media_root):
+            workflow_run = run_workflow(workflow, {"employee_id": 7})
+            steps = list(workflow_run.steps.order_by("sequence"))
+
+            self.assertEqual(
+                [step.action_id for step in steps],
+                ["HUMAN_TRIGGER", "HUMAN_IN_THE_LOOP"],
+            )
+            self.assertEqual(steps[-1].status, "PAUSED")
+            self.assertEqual(workflow_run.execution_trace[-1]["status"], "paused")
+            with steps[-1].output_file.open("r") as output_file:
+                self.assertEqual(
+                    json.load(output_file),
+                    {"proposal": "ready", "employee_id": 7},
+                )
+
+            resumed_run = resume_workflow(steps[-1])
+
+            steps[-1].refresh_from_db()
+            self.assertEqual(steps[-1].status, "COMPLETED")
+            self.assertEqual(
+                [step.action_id for step in resumed_run.steps.order_by("sequence")],
+                ["HUMAN_TRIGGER", "HUMAN_IN_THE_LOOP", "ENRICH_DATA"],
+            )
+            self.assertTrue(resumed_run.execution_trace[-1]["output"]["approved"])
     
     

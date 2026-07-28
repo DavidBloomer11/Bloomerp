@@ -38,9 +38,10 @@ from django.urls import NoReverseMatch
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.models.base_bloomerp_model import BloomerpModel
 from bloomerp.models.definition import BloomerpModelConfig
+from bloomerp.permissions.definition import BloomerpPermission
 from bloomerp.router import router
 from bloomerp.modules.definition import module_registry
-from bloomerp.permissions.manager import UserPermissionManager, create_permission_str
+from bloomerp.permissions.manager import UserPolicyManager, create_permission_str
 from bloomerp.services.object_services import string_search_on_queryset
 
 from django.contrib.auth.models import Permission
@@ -140,7 +141,7 @@ def _ignore_model(model) -> bool:
 
 def _collect_object_results(
     request: HttpRequest,
-    permission_manager: UserPermissionManager,
+    permission_manager: UserPolicyManager,
     models: list,
     search_value: str,
     per_model_limit: int,
@@ -150,7 +151,7 @@ def _collect_object_results(
 
     Args:
         request (HttpRequest): the request object
-        permission_manager (UserPermissionManager): the permissions manager
+        permission_manager (UserPolicyManager): the permissions manager
         models (list): the list of models
         search_value (str): the search value
         per_model_limit (int): limit per model
@@ -171,7 +172,7 @@ def _collect_object_results(
             continue
         
         # Get the objects
-        base_qs = permission_manager.get_queryset(model, create_permission_str(model, "view"))
+        base_qs = permission_manager.get_queryset(model, BloomerpPermission.VIEW)
 
         remaining_slots = total_limit - total_results
         if remaining_slots <= 0:
@@ -212,9 +213,10 @@ def _collect_object_results(
 
     return results, truncated
 
+# TODO: Refactor
 def _get_accessible_models(
     request: HttpRequest,
-    permission_manager: UserPermissionManager,
+    permission_manager: UserPolicyManager,
 ) -> list:
     content_types = list(request.user.accessible_content_types)
     row_policy_ct_ids = permission_manager.get_row_policies().values_list(
@@ -278,7 +280,7 @@ def global_search(request: HttpRequest) -> HttpResponse:
         "search_scope": {},
     }
 
-    permission_manager = UserPermissionManager(request.user)
+    permission_manager = UserPolicyManager(request.user)
 
     match starts_with:
         case ">":
@@ -379,7 +381,7 @@ def global_search(request: HttpRequest) -> HttpResponse:
 
             if search_query.startswith("///"):
                 search_value = search_query[3:].strip()
-                models = _get_accessible_models(request, permission_manager)
+                models = permission_manager.get_accessible_models_and_fields()
                 context["search_label"] = "All content"
                 context["highlight_query"] = search_value
                 context["query"] = search_value

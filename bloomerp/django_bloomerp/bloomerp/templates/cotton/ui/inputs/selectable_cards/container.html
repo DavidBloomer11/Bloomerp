@@ -29,6 +29,11 @@ Parameters:
     {% endif %}
 </div>
 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-8 justify-center">
+    {% if items %}
+        {% for item in items %}
+            <c-ui.inputs.selectable_cards.item :icon="item.icon" :name="item.name" :description="item.description" :value="item.value" />
+        {% endfor %}
+    {% endif %}
     {{ slot }}
 </div>
 

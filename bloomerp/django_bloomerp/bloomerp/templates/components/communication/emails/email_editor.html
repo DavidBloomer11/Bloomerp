@@ -1,0 +1,148 @@
+{% load i18n %}
+
+<div 
+    bloomerp-component="email-editor"
+    class="flex h-full min-h-0 flex-col bg-white"
+    data-from-email="{{ from_email }}"
+    data-parent-email="{{ parent_email }}"
+    >
+    <header class="flex h-14 shrink-0 items-center justify-between border-b border-gray-200 px-5">
+        <div class="min-w-0">
+            <h2 class="truncate text-base font-semibold text-gray-950">
+                <c-i18n.blocktrans>{{ title }}</c-i18n.blocktrans>
+            </h2>
+            {% if from_email %}
+                <p class="truncate text-sm text-gray-500">
+                    <c-i18n.blocktrans>From {{ from_email }}</c-i18n.blocktrans>
+                </p>
+            {% endif %}
+        </div>
+    </header>
+
+    <form
+        class="flex min-h-0 flex-1 flex-col"
+        {% if form_action %}
+            hx-post="{{ form_action }}"
+            hx-target="#inbox-item-render-target"
+            hx-swap="innerHTML"
+        {% endif %}
+        enctype="multipart/form-data"
+    >
+        {% csrf_token %}
+        <input type="hidden" name="mode" value="{{ mode }}">
+        {% if inbox_folder %}
+            <input type="hidden" name="folder_id" value="{{ inbox_folder.id }}">
+        {% endif %}
+        {% if inbox_item %}
+            <input type="hidden" name="reply_to_item_id" value="{{ inbox_item.id }}">
+        {% endif %}
+        {% if email_account %}
+            <input type="hidden" name="email_account_id" value="{{ email_account.id }}">
+        {% endif %}
+
+        {% if errors %}
+            <div class="mx-5 mt-4 rounded-xl border border-danger-light bg-danger-light/10 px-4 py-3 text-sm text-danger-dark">
+                {% for error in errors %}
+                    <p><c-i18n.blocktrans>{{ error }}</c-i18n.blocktrans></p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="shrink-0 divide-y divide-gray-200 border-b border-gray-200 px-5">
+            <label class="grid min-h-12 grid-cols-[4rem_minmax(0,1fr)_auto] items-center gap-3">
+                <span class="text-sm font-medium text-gray-500">
+                    <c-i18n.blocktrans>To</c-i18n.blocktrans>
+                </span>
+                <input
+                    class="min-w-0 border-0 px-0 text-sm text-gray-950 placeholder:text-gray-400 focus:ring-0"
+                    type="email"
+                    name="to"
+                    value="{{ to }}"
+                    placeholder="name@example.com"
+                    multiple
+                    autocomplete="email"
+                >
+                <div class="flex items-center gap-2 justify-self-end text-sm text-gray-500">
+                    <button type="button" id="show-cc-field">cc</button>
+                    <button type="button" id="show-bcc-field">bcc</button>
+                </div>
+            </label>
+
+            <label class="grid min-h-12 grid-cols-[4rem_minmax(0,1fr)] items-center gap-3 hidden" id="cc-field">
+                <span class="text-sm font-medium text-gray-500">
+                    <c-i18n.blocktrans>Cc</c-i18n.blocktrans>
+                </span>
+                <input
+                    class="min-w-0 border-0 px-0 text-sm text-gray-950 placeholder:text-gray-400 focus:ring-0"
+                    type="email"
+                    name="cc"
+                    value="{{ cc }}"
+                    placeholder="name@example.com"
+                    multiple
+                    autocomplete="email"
+                >
+            </label>
+
+            <label class="grid min-h-12 grid-cols-[4rem_minmax(0,1fr)] items-center gap-3 hidden" id="bcc-field">
+                <span class="text-sm font-medium text-gray-500">
+                    <c-i18n.blocktrans>Bcc</c-i18n.blocktrans>
+                </span>
+                <input
+                    class="min-w-0 border-0 px-0 text-sm text-gray-950 placeholder:text-gray-400 focus:ring-0"
+                    type="email"
+                    name="bcc"
+                    value="{{ bcc }}"
+                    placeholder="name@example.com"
+                    multiple
+                    autocomplete="email"
+                >
+            </label>
+
+            <label class="grid min-h-12 grid-cols-[4rem_minmax(0,1fr)] items-center gap-3">
+                <span class="text-sm font-medium text-gray-500">
+                    <c-i18n.blocktrans>Subject</c-i18n.blocktrans>
+                </span>
+                <input
+                    class="min-w-0 border-0 px-0 text-sm font-medium text-gray-950 placeholder:text-gray-400 focus:ring-0"
+                    type="text"
+                    name="subject"
+                    value="{{ subject }}"
+                    placeholder="{% trans 'Subject' %}"
+                    autocomplete="off"
+                >
+            </label>
+        </div>
+
+        <div class="min-h-0 flex-1 overflow-y-auto p-5">
+            <c-ui.inputs.text_editor
+                name="body"
+                :value="body"
+                placeholder="{% trans 'Write your message' %}"
+                :has_border="False"
+                class="min-h-96 bg-white"
+            />
+        </div>
+
+        <footer class="flex shrink-0 items-center justify-between border-t border-gray-200 px-5 py-3">
+            <label class="btn btn-secondary btn-sm">
+                <i class="fa fa-paperclip"></i>
+                <span><c-i18n.blocktrans>Attach</c-i18n.blocktrans></span>
+                <input class="hidden" type="file" name="attachments" multiple>
+            </label>
+
+            <div class="flex items-center gap-3">
+                <p class="text-sm text-gray-500">
+                    <c-i18n.blocktrans>Ready to send.</c-i18n.blocktrans>
+                </p>
+                <button
+                    class="btn btn-primary btn-sm"
+                    type="submit"
+                    {% if not send_enabled %}disabled{% endif %}
+                >
+                    <i class="fa fa-paper-plane"></i>
+                    <span><c-i18n.blocktrans>{{ submit_label }}</c-i18n.blocktrans></span>
+                </button>
+            </div>
+        </footer>
+    </form>
+</div>

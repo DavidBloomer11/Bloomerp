@@ -270,6 +270,11 @@ export abstract class BaseDataViewComponent extends BaseComponent {
         return this.getAllCells();
     }
 
+    /** Returns a snapshot of the current selection for view-specific actions. */
+    protected getSelectedCells(): BaseDataViewCell[] {
+        return Array.from(this.selectedCells);
+    }
+
     private getCellCoords(cell: BaseDataViewCell): { row: number; col: number } | null {
         const el = cell.element;
         if (!el) return null;
