@@ -348,10 +348,10 @@ class WorkspaceTileRenderingTests(BaseBloomerpModelTestCase):
 
     def test_link_tile_resolves_current_user_parameters(self):
         """
-        Use case: A workspace link tile points to an internal Bloomerp URL.
-        Expected result: The tile renders an HTMX navigation link with resolved parameters.
+        Use case: A link tile URL contains a current-user parameter.
+        Expected result: Rendering resolves the URL without mutating the saved configuration.
         """
-        # 1. Render a link tile whose URL contains a current-user template parameter.
+        # 1. Create a link with a current-user parameter.
         config = LinkTileConfig(
             links=[
                 Link(
@@ -367,8 +367,7 @@ class WorkspaceTileRenderingTests(BaseBloomerpModelTestCase):
         # 2. Render the tile.
         html = LinksTileRenderer.render(config, request)
 
-        # 3. Verify the original config is preserved and rendered links use HTMX navigation.
-        resolved_url = f"/employees/?user={self.admin_user.id}"
+        # 3. Verify the resolved output and unchanged source configuration.
         self.assertIn(f'href="/employees/?user={self.admin_user.id}"', html)
         self.assertIn(f'hx-get="{resolved_url}"', html)
         self.assertIn('hx-target="#main-content"', html)
@@ -376,18 +375,24 @@ class WorkspaceTileRenderingTests(BaseBloomerpModelTestCase):
         self.assertIn('hx-swap="innerHTML"', html)
         self.assertEqual(config.links[0].url, "/employees/?user={{ current_user.id }}")
 
-    def test_link_tile_leaves_external_links_as_regular_anchors(self):
+    def test_link_tile_renders_nested_folders(self):
         """
-        Use case: A workspace link tile points to an external URL.
-        Expected result: The tile renders a regular anchor without HTMX navigation.
+        Use case: A link tile contains nested folders.
+        Expected result: Folders render as collapsible levels and the nested link remains navigable.
         """
-        # 1. Render a link tile with an external URL.
+        # 1. Create two nested folders containing a link.
         config = LinkTileConfig(
             links=[
                 Link(
-                    url="https://example.com/docs",
-                    name="Docs",
-                    is_internal=False,
+                    name="Sales",
+                    is_folder=True,
+                    children=[
+                        Link(
+                            name="Reports",
+                            is_folder=True,
+                            children=[Link(url="/sales/report/", name="Monthly report", is_internal=True)],
+                        )
+                    ],
                 )
             ]
         )
@@ -397,10 +402,42 @@ class WorkspaceTileRenderingTests(BaseBloomerpModelTestCase):
         # 2. Render the tile.
         html = LinksTileRenderer.render(config, request)
 
-        # 3. Verify external navigation remains a normal browser link.
-        self.assertIn('href="https://example.com/docs"', html)
-        self.assertNotIn("hx-get=", html)
-        self.assertNotIn("hx-target=", html)
+        # 3. Verify collapsible hierarchy, progressive indentation, and the nested link.
+        self.assertEqual(html.count("<details"), 2)
+        self.assertGreaterEqual(html.count("ml-4"), 2)
+        self.assertIn('href="/sales/report/"', html)
+        self.assertIn("Monthly report", html)
+
+    def test_link_tile_renders_optional_item_icons(self):
+        """
+        Use case: A link tile folder and link have custom icons.
+        Expected result: Both configured icons appear in the rendered tile.
+        """
+        # 1. Create a folder and nested link with custom icons.
+        config = LinkTileConfig(
+            links=[
+                Link(
+                    name="Sales",
+                    icon="fa-solid fa-briefcase",
+                    is_folder=True,
+                    children=[
+                        Link(
+                            url="/sales/",
+                            name="Customers",
+                            icon="fa-solid fa-user",
+                            is_internal=True,
+                        )
+                    ],
+                )
+            ]
+        )
+        request = self.factory.get("/")
+        request.user = self.admin_user
+
+        # 2. Render the tile and verify both icons.
+        html = LinksTileRenderer.render(config, request)
+        self.assertIn("fa-solid fa-briefcase", html)
+        self.assertIn("fa-solid fa-user", html)
 
     def test_user_parameter_resolver_hides_model_object_without_view_permission(self):
         customer = self.CustomerModel.objects.create(

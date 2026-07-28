@@ -1,91 +1,120 @@
-<div 
-    class="overflow-hidden bg-white focus:outline-none focus:ring-0"
-    >
-    <table 
-        id="data-table-{{ content_type_id }}" 
-        class="table-auto table w-full border-collapse outline-none"
-        >
-        <thead>
-            <tr>
-                <th>
-                    <c-i18n.blocktrans>URL</c-i18n.blocktrans>
-                </th>
-                <th>
-                    <c-i18n.blocktrans>Name</c-i18n.blocktrans>
-                </th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody >
-            {% for link in config.links %}
-                <tr>
-                    <td>
-                        {{ link.url }}
-                    </td>
-                    <td>
-                        {{ link.name }}
-                    </td>
-                    <td class="w-18">
-                        <button 
-                            class="btn btn-sm btn-secondary flex gap-2 items-center w-full justify-center" 
-                            type="button"
-                            hx-post="{% url 'preview_workspace_tile' %}"
-                            hx-vars='
-                                {
-                                    "csrfmiddlewaretoken": "{{ csrf_token }}",
-                                    "operation" : "remove_link",
-                                    "data" : {
-                                        "url" : "{{ link.url }}"
-                                    }
-                                }
-                            '
-                            hx-target="#tile-preview-section"
-                            hx-trigger="click"
-                            >
-                            <i class="fa fa-minus"></i>
-                            <c-i18n.blocktrans>Remove</c-i18n.blocktrans>
-                        </button>
-                    </td>
-                </tr>
-            {% endfor %}
+<div
+    oninput="
+        if (event.target.matches('[data-link-url], [data-edit-link-url]')) {
+            const option = Array.from(event.target.list?.options || []).find((candidate) => candidate.value === event.target.value);
+            const form = event.target.closest('[data-add-link-form], [data-edit-link-form]');
+            const nameInput = form?.querySelector('[data-link-name], [data-edit-link-name]');
+            if (option && nameInput && !nameInput.value.trim()) nameInput.value = option.dataset.name || '';
+        }
+    "
+>
+    <datalist id="workspace-link-route-suggestions">
+        {% for route in link_route_suggestions %}
+            <option value="{{ route.url }}" data-name="{{ route.name }}">{{ route.name }}{% if route.description %} — {{ route.description }}{% endif %}</option>
+        {% endfor %}
+    </datalist>
 
-            <tr class="cursor-pointer">
-                <td
-                    >
-                    <input 
-                        type="text" 
-                        class="input input-sm w-full"
-                        data-link-url
-                        >
-                </td>
-                <td>
-                    <input 
-                        type="text" 
-                        class="input input-sm w-full"
-                        data-link-name
-                        >
-                </td>
-                <td>
-                    <button
-                        class="btn btn-secondary btn-sm flex gap-2 items-center w-full justify-center"
-                        type="button"
-                        hx-post="{% url 'preview_workspace_tile' %}"
-                        hx-vals='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'
-                        hx-vars='js:{
-                            operation: "add_link",
-                            data: {
-                                url: this.closest("tr").querySelector("[data-link-url]").value,
-                                name: this.closest("tr").querySelector("[data-link-name]").value
-                            }
-                        }'
-                        hx-target="#tile-preview-section"
-                        hx-trigger="click"
-                        >
-                        <i class="fa fa-plus"></i>
-                        <c-i18n.blocktrans>Add</c-i18n.blocktrans>
-                    </button>
-                </td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="border-b border-gray-200 p-3">
+        <div class="mb-3 flex items-center justify-between gap-2">
+            <h3 class="font-medium"><c-i18n.blocktrans>Links and folders</c-i18n.blocktrans></h3>
+            <span class="text-xs text-gray-500"><c-i18n.blocktrans>Use the arrows to reorder items</c-i18n.blocktrans></span>
+        </div>
+        {% if link_builder_items %}
+            <div class="space-y-2">
+                {% include "components/workspaces/tile_builders/links_tile_builder_items.html" with items=link_builder_items %}
+            </div>
+        {% else %}
+            <p class="text-sm text-gray-500"><c-i18n.blocktrans>No links have been added yet.</c-i18n.blocktrans></p>
+        {% endif %}
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div class="bg-white p-3 border-r border-gray-200">
+            <h3 class="mb-3 font-medium"><c-i18n.blocktrans>Add link</c-i18n.blocktrans></h3>
+            <div class="space-y-3" data-add-link-form>
+                <label class="block">
+                    <span class="mb-1 block text-sm"><c-i18n.blocktrans>URL</c-i18n.blocktrans></span>
+                    <input type="text" class="input input-sm w-full" list="workspace-link-route-suggestions" data-link-url autocomplete="off">
+                    <span class="mt-1 block text-xs text-gray-500"><c-i18n.blocktrans>Search route names or descriptions, or enter any URL.</c-i18n.blocktrans></span>
+                </label>
+                <label class="block">
+                    <span class="mb-1 block text-sm"><c-i18n.blocktrans>Name</c-i18n.blocktrans></span>
+                    <input type="text" class="input input-sm w-full" data-link-name>
+                </label>
+                <div class="block">
+                    <span class="mb-1 block text-sm"><c-i18n.blocktrans>Icon (optional)</c-i18n.blocktrans></span>
+                    {{ add_link_icon_picker }}
+                </div>
+                <label class="block">
+                    <span class="mb-1 block text-sm"><c-i18n.blocktrans>Folder</c-i18n.blocktrans></span>
+                    <select class="input input-sm w-full" data-link-parent>
+                        <option value="[]"><c-i18n.blocktrans>Top level</c-i18n.blocktrans></option>
+                        {% for folder in link_folder_options %}
+                            <option value="{{ folder.path }}">{{ folder.name }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <button
+                    class="btn btn-primary btn-sm flex w-full items-center justify-center gap-2"
+                    type="button"
+                    hx-post="{% url 'preview_workspace_tile' %}"
+                    hx-vals='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'
+                    hx-vars='js:{
+                        operation: "add_link",
+                        data: {
+                            url: this.closest("[data-add-link-form]").querySelector("[data-link-url]").value,
+                            name: this.closest("[data-add-link-form]").querySelector("[data-link-name]").value,
+                            icon: this.closest("[data-add-link-form]").querySelector("[name=add_link_icon]").value,
+                            parent_path: JSON.parse(this.closest("[data-add-link-form]").querySelector("[data-link-parent]").value)
+                        }
+                    }'
+                    hx-target="#tile-preview-section"
+                >
+                    <i class="fa fa-plus" aria-hidden="true"></i>
+                    <c-i18n.blocktrans>Add link</c-i18n.blocktrans>
+                </button>
+            </div>
+        </div>
+
+        <div class="p-3">
+            <h3 class="mb-3 font-medium"><c-i18n.blocktrans>Add folder</c-i18n.blocktrans></h3>
+            <div class="space-y-3" data-add-folder-form>
+                <label class="block">
+                    <span class="mb-1 block text-sm"><c-i18n.blocktrans>Name</c-i18n.blocktrans></span>
+                    <input type="text" class="input input-sm w-full" data-folder-name>
+                </label>
+                <div class="block">
+                    <span class="mb-1 block text-sm"><c-i18n.blocktrans>Icon (optional)</c-i18n.blocktrans></span>
+                    {{ add_folder_icon_picker }}
+                </div>
+                <label class="block">
+                    <span class="mb-1 block text-sm"><c-i18n.blocktrans>Parent folder</c-i18n.blocktrans></span>
+                    <select class="input input-sm w-full" data-folder-parent>
+                        <option value="[]"><c-i18n.blocktrans>Top level</c-i18n.blocktrans></option>
+                        {% for folder in link_folder_options %}
+                            <option value="{{ folder.path }}">{{ folder.name }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <button
+                    class="btn btn-secondary btn-sm flex w-full items-center justify-center gap-2"
+                    type="button"
+                    hx-post="{% url 'preview_workspace_tile' %}"
+                    hx-vals='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'
+                    hx-vars='js:{
+                        operation: "add_folder",
+                        data: {
+                            name: this.closest("[data-add-folder-form]").querySelector("[data-folder-name]").value,
+                            icon: this.closest("[data-add-folder-form]").querySelector("[name=add_folder_icon]").value,
+                            parent_path: JSON.parse(this.closest("[data-add-folder-form]").querySelector("[data-folder-parent]").value)
+                        }
+                    }'
+                    hx-target="#tile-preview-section"
+                >
+                    <i class="fa fa-folder-plus" aria-hidden="true"></i>
+                    <c-i18n.blocktrans>Add folder</c-i18n.blocktrans>
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
