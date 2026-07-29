@@ -7,6 +7,11 @@ import showMessage from "../../utils/messages";
 
 type CalendarDirection = "up" | "down" | "left" | "right";
 type CalendarDateUpdate = { object_id: string; start_ms?: number; end_ms?: number };
+type CalendarDragPayload = {
+    object_id: string;
+    start_ms: number;
+    end_ms?: number;
+};
 
 export class CalendarCell extends BaseDataViewCell {
     private get section(): HTMLElement | null {
@@ -80,7 +85,7 @@ export class Calendar extends BaseDataViewComponent {
         this.element.addEventListener("pointerdown", this.onEventPointerDown, {
             signal: controller.signal,
         });
-        this.element.addEventListener("dragstart", this.onUnscheduledDragStart, {
+        this.element.addEventListener("dragstart", this.onCalendarDragStart, {
             signal: controller.signal,
         });
         this.element.addEventListener("dragend", this.clearDropHighlights, {
@@ -304,7 +309,8 @@ export class Calendar extends BaseDataViewComponent {
         );
         if (!objectId || !Number.isFinite(original)) return;
 
-        const vertical = this.viewMode === "day" || this.viewMode === "week";
+        const vertical = this.viewMode === "day"
+            || (this.viewMode === "week" && item.dataset.calendarUnit?.includes("T"));
         const origin = vertical ? event.clientY : event.clientX;
         const unit = item.dataset.calendarUnit;
         const section = item.closest<HTMLElement>("[data-calendar-unit-section]")
@@ -353,8 +359,41 @@ export class Calendar extends BaseDataViewComponent {
         }, { signal: gesture.signal, once: true });
     };
 
-    private onUnscheduledDragStart = (event: DragEvent): void => {
-        const item = (event.target as HTMLElement | null)?.closest<HTMLElement>(
+    private onCalendarDragStart = (event: DragEvent): void => {
+        const target = event.target as HTMLElement | null;
+        if (target?.closest("[data-calendar-resize-start], [data-calendar-resize-end]")) {
+            event.preventDefault();
+            return;
+        }
+
+        const scheduledItem = target?.closest<HTMLElement>("[data-calendar-event]");
+        if (scheduledItem) {
+            if (!event.dataTransfer || !this.canMoveEvent(scheduledItem)) {
+                event.preventDefault();
+                return;
+            }
+            const objectId = scheduledItem.dataset.objectId;
+            const start = Number(scheduledItem.dataset.calendarStart);
+            const end = Number(scheduledItem.dataset.calendarEnd);
+            if (!objectId || !Number.isFinite(start)) {
+                event.preventDefault();
+                return;
+            }
+            const payload: CalendarDragPayload = {
+                object_id: objectId,
+                start_ms: start,
+                ...(Number.isFinite(end) ? { end_ms: end } : {}),
+            };
+            event.dataTransfer.effectAllowed = "move";
+            event.dataTransfer.setData(
+                "application/x-bloomerp-calendar-event",
+                JSON.stringify(payload),
+            );
+            event.dataTransfer.setData("text/plain", objectId);
+            return;
+        }
+
+        const item = target?.closest<HTMLElement>(
             "[data-calendar-unscheduled-event]",
         );
         if (!item || !event.dataTransfer || !this.canMoveEvent(item)) {
@@ -369,9 +408,7 @@ export class Calendar extends BaseDataViewComponent {
     };
 
     private onGridDragOver = (event: DragEvent): void => {
-        const dropzone = (event.target as HTMLElement | null)?.closest<HTMLElement>(
-            "[data-calendar-dropzone]",
-        );
+        const dropzone = this.findDropzone(event);
         if (!dropzone || !event.dataTransfer) return;
         event.preventDefault();
         event.dataTransfer.dropEffect = "move";
@@ -380,25 +417,40 @@ export class Calendar extends BaseDataViewComponent {
     };
 
     private onGridDragLeave = (event: DragEvent): void => {
-        const dropzone = (event.target as HTMLElement | null)?.closest<HTMLElement>(
-            "[data-calendar-dropzone]",
-        );
+        const dropzone = this.findDropzone(event);
         if (!dropzone || dropzone.contains(event.relatedTarget as Node | null)) return;
         dropzone.classList.remove("ring-2", "ring-inset", "ring-primary");
     };
 
     private onGridDrop = (event: DragEvent): void => {
         if (!event.dataTransfer || this.mutationInFlight) return;
-        const dropzone = (event.target as HTMLElement | null)?.closest<HTMLElement>(
-            "[data-calendar-dropzone]",
-        );
+        const dropzone = this.findDropzone(event);
         const unit = dropzone?.dataset.calendarUnit;
         if (!dropzone || !unit) return;
         event.preventDefault();
         this.clearDropHighlights();
+        const scheduledPayload = this.parseScheduledDrag(
+            event.dataTransfer.getData("application/x-bloomerp-calendar-event"),
+        );
+        const start = this.timestampForUnit(unit);
+        if (scheduledPayload && start !== null) {
+            const update: CalendarDateUpdate = {
+                object_id: scheduledPayload.object_id,
+                start_ms: start,
+            };
+            if (this.hasEndField && scheduledPayload.end_ms !== undefined) {
+                const duration = Math.max(
+                    scheduledPayload.end_ms - scheduledPayload.start_ms,
+                    1,
+                );
+                update.end_ms = start + duration;
+            }
+            void this.persistDateUpdates([update], true);
+            return;
+        }
+
         const objectId = event.dataTransfer.getData("application/x-bloomerp-calendar-object")
             || event.dataTransfer.getData("text/plain");
-        const start = this.timestampForUnit(unit);
         if (!objectId || start === null) return;
         const update: CalendarDateUpdate = { object_id: objectId, start_ms: start };
         if (this.hasEndField) {
@@ -409,6 +461,32 @@ export class Calendar extends BaseDataViewComponent {
         }
         void this.persistDateUpdates([update], true);
     };
+
+    private findDropzone(event: DragEvent): HTMLElement | null {
+        const direct = (event.target as HTMLElement | null)?.closest<HTMLElement>(
+            "[data-calendar-dropzone]",
+        );
+        if (direct) return direct;
+        for (const element of document.elementsFromPoint(event.clientX, event.clientY)) {
+            const dropzone = (element as HTMLElement).closest<HTMLElement>(
+                "[data-calendar-dropzone]",
+            );
+            if (dropzone) return dropzone;
+        }
+        return null;
+    }
+
+    private parseScheduledDrag(rawPayload: string): CalendarDragPayload | null {
+        if (!rawPayload) return null;
+        try {
+            const payload = JSON.parse(rawPayload) as Partial<CalendarDragPayload>;
+            if (!payload.object_id || !Number.isFinite(payload.start_ms)) return null;
+            if (payload.end_ms !== undefined && !Number.isFinite(payload.end_ms)) return null;
+            return payload as CalendarDragPayload;
+        } catch {
+            return null;
+        }
+    }
 
     private timestampForUnit(unit: string): number | null {
         let value: Date;

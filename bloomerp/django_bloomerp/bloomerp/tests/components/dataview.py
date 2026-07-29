@@ -937,6 +937,37 @@ class TestCalendarDataView(BaseBloomerpModelTestCase):
         self.assertContains(response, 'draggable="true"', html=False)
         self.assertContains(response, "height: max(", html=False)
 
+    def test_calendar_week_renders_multiday_event_as_one_draggable_range(self):
+        """
+        Use case: An all-day event spans several dates in week view.
+        Expected result: One draggable bar spans the relevant day columns without duplicate entries.
+        """
+        # 1. Configure week view and create a four-day all-day event.
+        self.client.force_login(self.admin_user)
+        content_type = self._configure_calendar(view_mode="week")
+        monday = timezone.localdate() - timedelta(days=timezone.localdate().weekday())
+        self.CalendarEventModel.objects.create(
+            name="Release window",
+            starts_on=monday,
+            ends_on=monday + timedelta(days=3),
+        )
+
+        # 2. Render the current week.
+        url = reverse("components_dataview", kwargs={"content_type_id": content_type.id})
+        response = self.client.get(url, HTTP_HX_REQUEST="true")
+
+        # 3. Verify the range occupies one overlay spanning Monday through Thursday.
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'class="calendar-event', count=1, html=False)
+        self.assertContains(
+            response,
+            '<span class="block truncate font-medium">Release window</span>',
+            count=1,
+            html=True,
+        )
+        self.assertContains(response, "grid-column: 2 / span 4", html=False)
+        self.assertContains(response, 'draggable="true"', html=False)
+
     def test_calendar_date_action_schedules_and_resizes_records(self):
         """
         Use case: Calendar controls move an event and drop an unscheduled record on the grid.

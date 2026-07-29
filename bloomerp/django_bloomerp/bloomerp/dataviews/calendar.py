@@ -74,6 +74,7 @@ class CalendarDataviewRenderer(BaseDataviewRenderer):
             "calendar_today": today,
             "calendar_legend": [],
             "calendar_month_segments_by_week": {},
+            "calendar_week_segments": [],
             "calendar_unscheduled_events": [],
             "calendar_page_querystring": self.build_querystring(
                 self.state.request,
@@ -148,6 +149,11 @@ class CalendarDataviewRenderer(BaseDataviewRenderer):
                 events,
                 context["calendar_weeks"],
             )
+        elif view_mode == "week":
+            context["calendar_week_segments"] = self._build_month_segments(
+                [event for event in events if event["all_day"]],
+                [[{"date": day} for day in calendar_days]],
+            ).get(0, [])
         context["calendar_unscheduled_events"] = self._build_unscheduled_events(
             start_field,
             end_field,
@@ -489,6 +495,7 @@ class CalendarDataviewRenderer(BaseDataviewRenderer):
                 "duration_minutes": duration_minutes,
                 "can_edit_start": can_edit_start,
                 "can_edit_end": can_edit_end,
+                "can_move": can_edit_start and (end_field is None or can_edit_end),
             })
         legend = [
             {"label": label or "Unassigned", "color_classes": color_by_group[label]}
