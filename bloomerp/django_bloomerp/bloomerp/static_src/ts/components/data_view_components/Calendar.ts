@@ -1,9 +1,39 @@
 import { BaseDataViewComponent } from "./BaseDataViewComponent";
 import { BaseDataViewCell } from "./BaseDataViewCell";
+import { MessageType } from "../UiMessage";
+import { getComponent } from "../BaseComponent";
+import { getCsrfToken } from "../../utils/cookies";
+import showMessage from "../../utils/messages";
 
 type CalendarDirection = "up" | "down" | "left" | "right";
+type CalendarDateUpdate = { object_id: string; start_ms?: number; end_ms?: number };
 
 export class CalendarCell extends BaseDataViewCell {
+    private get section(): HTMLElement | null {
+        if (this.element?.hasAttribute("data-calendar-event")) return this.element;
+        return this.element?.closest<HTMLElement>("[data-calendar-unit-section]") ?? null;
+    }
+
+    public override highlight(): void {
+        super.highlight();
+        this.section?.classList.add("ring-2", "ring-inset", "ring-primary");
+    }
+
+    public override unhighlight(): void {
+        super.unhighlight();
+        this.section?.classList.remove("ring-2", "ring-inset", "ring-primary");
+    }
+
+    public override select(): void {
+        super.select();
+        this.section?.classList.add("bg-primary-50");
+    }
+
+    public override unselect(): void {
+        super.unselect();
+        this.section?.classList.remove("bg-primary-50");
+    }
+
     public override click(target?: string | HTMLElement): void {
         if (this.element?.hasAttribute("data-calendar-load-more")) {
             this.element.click();
@@ -17,6 +47,8 @@ export class Calendar extends BaseDataViewComponent {
     protected cellClass = CalendarCell;
     private viewMode = "week";
     private pageOffset = 0;
+    private mutationInFlight = false;
+    private activeGestureController: AbortController | null = null;
 
     public override initialize(): void {
         if (!this.element) return;
@@ -37,11 +69,32 @@ export class Calendar extends BaseDataViewComponent {
 
         const modeSelect = this.element.querySelector<HTMLSelectElement>("[data-calendar-view-mode]");
         modeSelect?.addEventListener("change", () => {
-            this.dataViewContainer?.filter({
-                calendar_view_mode: modeSelect.value,
-                calendar_page: 0,
-            });
+            const optionsSelect = this.dataViewContainer?.element?.querySelector<HTMLSelectElement>(
+                '[data-display-options-form] [name="view_mode"]',
+            );
+            if (!optionsSelect) return;
+            optionsSelect.value = modeSelect.value;
+            optionsSelect.dispatchEvent(new Event("change", { bubbles: true }));
         }, { signal: controller.signal });
+
+        this.element.addEventListener("pointerdown", this.onEventPointerDown, {
+            signal: controller.signal,
+        });
+        this.element.addEventListener("dragstart", this.onUnscheduledDragStart, {
+            signal: controller.signal,
+        });
+        this.element.addEventListener("dragend", this.clearDropHighlights, {
+            signal: controller.signal,
+        });
+        this.element.addEventListener("dragover", this.onGridDragOver, {
+            signal: controller.signal,
+        });
+        this.element.addEventListener("dragleave", this.onGridDragLeave, {
+            signal: controller.signal,
+        });
+        this.element.addEventListener("drop", this.onGridDrop, {
+            signal: controller.signal,
+        });
 
         this.element.addEventListener("keydown", (event) => {
             if (!event.metaKey || !["ArrowLeft", "ArrowRight"].includes(event.key)) return;
@@ -49,6 +102,12 @@ export class Calendar extends BaseDataViewComponent {
             event.stopImmediatePropagation();
             this.navigateTo(this.pageOffset + (event.key === "ArrowLeft" ? -1 : 1));
         }, { capture: true, signal: controller.signal });
+    }
+
+    public override destroy(): void {
+        this.activeGestureController?.abort();
+        this.activeGestureController = null;
+        super.destroy();
     }
 
     public moveCellUp(): BaseDataViewCell {
@@ -71,6 +130,40 @@ export class Calendar extends BaseDataViewComponent {
         this.dataViewContainer?.filter({ calendar_page: pageOffset });
     }
 
+    protected override handleAltArrow(event: KeyboardEvent): boolean {
+        if (!event.key.startsWith("Arrow")) return false;
+        const direction = event.key.replace("Arrow", "").toLowerCase() as CalendarDirection;
+        event.preventDefault();
+        if (this.viewMode === "day" && (direction === "left" || direction === "right")) {
+            return true;
+        }
+        if (!this.currentCell) this.initFocus();
+
+        const selected = this.getSelectedCells().filter(
+            (cell): cell is CalendarCell => cell instanceof CalendarCell,
+        );
+        const candidates = selected.length > 0
+            ? selected
+            : (this.currentCell instanceof CalendarCell ? [this.currentCell] : []);
+        const itemsById = new Map<string, HTMLElement>();
+        for (const cell of candidates) {
+            const item = cell.element?.closest<HTMLElement>("[data-calendar-event]");
+            const objectId = item?.dataset.objectId;
+            if (item && objectId) itemsById.set(objectId, item);
+        }
+        if (itemsById.size === 0) return true;
+        const items = Array.from(itemsById.values());
+        if (!items.every((item) => this.canMoveEvent(item))) {
+            showMessage("You do not have permission to move every selected record.", MessageType.ERROR);
+            return true;
+        }
+        const updates = items
+            .map((item) => this.buildMovedUpdate(item, direction))
+            .filter((update): update is CalendarDateUpdate => update !== null);
+        if (updates.length > 0) void this.persistDateUpdates(updates, true);
+        return true;
+    }
+
     private move(direction: CalendarDirection): BaseDataViewCell {
         if (!this.currentCell) this.initFocus();
         if (!this.currentCell) throw new Error("Calendar has no cells to navigate");
@@ -82,7 +175,9 @@ export class Calendar extends BaseDataViewComponent {
         const unitCells = this.cellsForUnit(unit);
         const itemIndex = unitCells.indexOf(current);
         const forward = direction === "down" || direction === "right";
-        const cyclesItems = this.viewMode !== "week" || direction === "up" || direction === "down";
+        const cyclesItems = direction === "up"
+            || direction === "down"
+            || (this.viewMode !== "week" && this.viewMode !== "day");
         if (cyclesItems && forward && itemIndex >= 0 && itemIndex < unitCells.length - 1) {
             return unitCells[itemIndex + 1];
         }
@@ -139,4 +234,236 @@ export class Calendar extends BaseDataViewComponent {
         if (direction === "left" || direction === "right") return null;
         return sections[currentIndex + (direction === "up" ? -1 : 1)] ?? null;
     }
+
+    private canMoveEvent(item: HTMLElement): boolean {
+        return item.dataset.calendarCanEditStart === "true"
+            && (!this.hasEndField || item.dataset.calendarCanEditEnd === "true");
+    }
+
+    private get hasEndField(): boolean {
+        return Boolean(this.element?.dataset.calendarEndFieldType);
+    }
+
+    private buildMovedUpdate(
+        item: HTMLElement,
+        direction: CalendarDirection,
+    ): CalendarDateUpdate | null {
+        const objectId = item.dataset.objectId;
+        const start = Number(item.dataset.calendarStart);
+        const end = Number(item.dataset.calendarEnd);
+        if (!objectId || !Number.isFinite(start)) return null;
+        const update: CalendarDateUpdate = {
+            object_id: objectId,
+            start_ms: this.shiftTimestamp(start, direction),
+        };
+        if (this.hasEndField && Number.isFinite(end)) {
+            update.end_ms = this.shiftTimestamp(end, direction);
+        }
+        return update;
+    }
+
+    private shiftTimestamp(timestamp: number, direction: CalendarDirection): number {
+        const shifted = new Date(timestamp);
+        const amount = direction === "left" || direction === "up" ? -1 : 1;
+        if (this.viewMode === "week" && (direction === "up" || direction === "down")) {
+            shifted.setHours(shifted.getHours() + amount);
+        } else if (this.viewMode === "day") {
+            shifted.setHours(shifted.getHours() + amount);
+        } else if (this.viewMode === "month" && (direction === "up" || direction === "down")) {
+            shifted.setDate(shifted.getDate() + amount * 7);
+        } else if (this.viewMode === "year") {
+            shifted.setMonth(shifted.getMonth() + amount);
+        } else {
+            shifted.setDate(shifted.getDate() + amount);
+        }
+        return shifted.getTime();
+    }
+
+    private onEventPointerDown = (event: PointerEvent): void => {
+        if (!this.element || event.button !== 0 || this.mutationInFlight) return;
+        const target = event.target as HTMLElement | null;
+        const edge = target?.closest<HTMLElement>("[data-calendar-resize-start], [data-calendar-resize-end]");
+        const item = target?.closest<HTMLElement>("[data-calendar-event]");
+        if (!item) return;
+        const component = getComponent(item);
+        if (component instanceof CalendarCell) {
+            this.focus(component);
+            this.collapseSelectionToActive();
+            this.element.focus({ preventScroll: true });
+        }
+        if (!edge) return;
+        const isStart = edge.hasAttribute("data-calendar-resize-start");
+        if (isStart && item.dataset.calendarCanEditStart !== "true") return;
+        if (!isStart && item.dataset.calendarCanEditEnd !== "true") return;
+
+        event.preventDefault();
+        event.stopPropagation();
+        const objectId = item.dataset.objectId;
+        const original = Number(
+            isStart ? item.dataset.calendarStart : item.dataset.calendarEnd,
+        );
+        if (!objectId || !Number.isFinite(original)) return;
+
+        const vertical = this.viewMode === "day" || this.viewMode === "week";
+        const origin = vertical ? event.clientY : event.clientX;
+        const unit = item.dataset.calendarUnit;
+        const section = item.closest<HTMLElement>("[data-calendar-unit-section]")
+            ?? (
+                unit
+                    ? this.element.querySelector<HTMLElement>(
+                        `[data-calendar-unit-section][data-calendar-unit="${CSS.escape(unit)}"]`,
+                    )
+                    : null
+            );
+        const unitPixels = vertical
+            ? 80
+            : Math.max(section?.getBoundingClientRect().width ?? 100, 1);
+        let units = 0;
+        this.activeGestureController?.abort();
+        const gesture = new AbortController();
+        this.activeGestureController = gesture;
+
+        window.addEventListener("pointermove", (moveEvent: PointerEvent) => {
+            const position = vertical ? moveEvent.clientY : moveEvent.clientX;
+            units = Math.round((position - origin) / unitPixels);
+        }, { signal: gesture.signal });
+        window.addEventListener("pointerup", () => {
+            gesture.abort();
+            if (this.activeGestureController === gesture) this.activeGestureController = null;
+            if (units === 0) return;
+            let value = original;
+            const direction: CalendarDirection = units < 0
+                ? (vertical ? "up" : "left")
+                : (vertical ? "down" : "right");
+            for (let index = 0; index < Math.abs(units); index += 1) {
+                value = this.shiftTimestamp(value, direction);
+            }
+            const start = Number(item.dataset.calendarStart);
+            const end = Number(item.dataset.calendarEnd);
+            if ((isStart && Number.isFinite(end) && value >= end)
+                || (!isStart && Number.isFinite(start) && value <= start)) return;
+            void this.persistDateUpdates([{
+                object_id: objectId,
+                ...(isStart ? { start_ms: value } : { end_ms: value }),
+            }], true);
+        }, { signal: gesture.signal, once: true });
+        window.addEventListener("pointercancel", () => {
+            gesture.abort();
+            if (this.activeGestureController === gesture) this.activeGestureController = null;
+        }, { signal: gesture.signal, once: true });
+    };
+
+    private onUnscheduledDragStart = (event: DragEvent): void => {
+        const item = (event.target as HTMLElement | null)?.closest<HTMLElement>(
+            "[data-calendar-unscheduled-event]",
+        );
+        if (!item || !event.dataTransfer || !this.canMoveEvent(item)) {
+            event.preventDefault();
+            return;
+        }
+        const objectId = item.dataset.objectId;
+        if (!objectId) return;
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("application/x-bloomerp-calendar-object", objectId);
+        event.dataTransfer.setData("text/plain", objectId);
+    };
+
+    private onGridDragOver = (event: DragEvent): void => {
+        const dropzone = (event.target as HTMLElement | null)?.closest<HTMLElement>(
+            "[data-calendar-dropzone]",
+        );
+        if (!dropzone || !event.dataTransfer) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "move";
+        this.clearDropHighlights();
+        dropzone.classList.add("ring-2", "ring-inset", "ring-primary");
+    };
+
+    private onGridDragLeave = (event: DragEvent): void => {
+        const dropzone = (event.target as HTMLElement | null)?.closest<HTMLElement>(
+            "[data-calendar-dropzone]",
+        );
+        if (!dropzone || dropzone.contains(event.relatedTarget as Node | null)) return;
+        dropzone.classList.remove("ring-2", "ring-inset", "ring-primary");
+    };
+
+    private onGridDrop = (event: DragEvent): void => {
+        if (!event.dataTransfer || this.mutationInFlight) return;
+        const dropzone = (event.target as HTMLElement | null)?.closest<HTMLElement>(
+            "[data-calendar-dropzone]",
+        );
+        const unit = dropzone?.dataset.calendarUnit;
+        if (!dropzone || !unit) return;
+        event.preventDefault();
+        this.clearDropHighlights();
+        const objectId = event.dataTransfer.getData("application/x-bloomerp-calendar-object")
+            || event.dataTransfer.getData("text/plain");
+        const start = this.timestampForUnit(unit);
+        if (!objectId || start === null) return;
+        const update: CalendarDateUpdate = { object_id: objectId, start_ms: start };
+        if (this.hasEndField) {
+            const direction: CalendarDirection = (
+                (this.viewMode === "day" || this.viewMode === "week") && unit.includes("T")
+            ) ? "down" : "right";
+            update.end_ms = this.shiftTimestamp(start, direction);
+        }
+        void this.persistDateUpdates([update], true);
+    };
+
+    private timestampForUnit(unit: string): number | null {
+        let value: Date;
+        if (/^\d{4}-\d{2}$/.test(unit)) {
+            value = new Date(`${unit}-01T00:00:00`);
+        } else if (unit.includes("T")) {
+            value = new Date(`${unit}:00:00`);
+        } else {
+            value = new Date(`${unit}T00:00:00`);
+        }
+        return Number.isNaN(value.getTime()) ? null : value.getTime();
+    }
+
+    private async persistDateUpdates(
+        updates: CalendarDateUpdate[],
+        refresh: boolean,
+    ): Promise<void> {
+        if (!this.element || this.mutationInFlight) return;
+        const url = this.element.dataset.calendarUpdateUrl;
+        if (!url) return;
+        this.mutationInFlight = true;
+        const csrfToken = getCsrfToken();
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
+                },
+                body: JSON.stringify({ updates }),
+            });
+            if (!response.ok) {
+                const message = response.status === 403
+                    ? "You do not have permission to change these dates."
+                    : "Unable to update the calendar dates.";
+                showMessage(message, MessageType.ERROR);
+                console.error("Failed to update calendar dates", await response.text());
+                return;
+            }
+            if (refresh) this.dataViewContainer?.refresh();
+        } catch (error) {
+            showMessage("Unable to update the calendar dates.", MessageType.ERROR);
+            console.error("Failed to update calendar dates", error);
+        } finally {
+            this.mutationInFlight = false;
+        }
+    }
+
+    private clearDropHighlights = (): void => {
+        if (!this.element) return;
+        for (const dropzone of this.element.querySelectorAll<HTMLElement>(
+            "[data-calendar-dropzone]",
+        )) {
+            dropzone.classList.remove("ring-2", "ring-inset", "ring-primary");
+        }
+    };
 }

@@ -831,7 +831,10 @@ class TestCalendarDataView(BaseBloomerpModelTestCase):
             "ends_at" if with_times else "ends_on",
         )
         category_field = ApplicationField.get_by_field(self.CalendarEventModel, "category")
-        preference = get_user_list_view_preference(self.admin_user, content_type)
+        preference = PreferenceManager(self.admin_user).get_or_create_selected(
+            UserListViewPreference,
+            scope={"content_type_id": content_type.id},
+        )
         preference.view_type = "calendar"
         preference.options = {
             "calendar": {
@@ -848,7 +851,7 @@ class TestCalendarDataView(BaseBloomerpModelTestCase):
     def test_calendar_renders_ranges_year_list_and_color_legend(self):
         """
         Use case: A color-grouped event spans several days and users switch calendar modes.
-        Expected result: The range fills each day, the legend renders, and year/list modes are available.
+        Expected result: The range is one spanning bar, the legend renders, and saved modes are honored.
         """
         # 1. Configure a month calendar and create a three-day event.
         self.client.force_login(self.admin_user)
@@ -869,23 +872,108 @@ class TestCalendarDataView(BaseBloomerpModelTestCase):
         # 3. Verify the range, configured legend, and all five mode choices render.
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'bloomerp-component="calendar"', html=False)
-        self.assertContains(response, 'class="calendar-event', count=3, html=False)
+        self.assertContains(response, 'class="calendar-event', count=1, html=False)
+        self.assertContains(response, "grid-column:", html=False)
+        self.assertContains(response, "span 3", html=False)
         self.assertContains(response, "Conference", html=False)
         self.assertContains(response, "Alpha", html=False)
         for mode in ("day", "week", "month", "year", "list"):
             self.assertContains(response, f'value="{mode}"', html=False)
 
-        # 4. Switch to year and list through the calendar query control.
-        year_response = self.client.get(
-            f"{url}?calendar_view_mode=year",
-            HTTP_HX_REQUEST="true",
+        # 4. Save year and list modes and verify rendering follows the preference.
+        preference = PreferenceManager(self.admin_user).get_or_create_selected(
+            UserListViewPreference,
+            scope={"content_type_id": content_type.id},
         )
-        list_response = self.client.get(
-            f"{url}?calendar_view_mode=list",
-            HTTP_HX_REQUEST="true",
-        )
+        preference.options["calendar"]["view_mode"] = "year"
+        preference.save(update_fields=["options"])
+        year_response = self.client.get(url, HTTP_HX_REQUEST="true")
+        preference.options["calendar"]["view_mode"] = "list"
+        preference.save(update_fields=["options"])
+        list_response = self.client.get(url, HTTP_HX_REQUEST="true")
         self.assertContains(year_response, today.strftime("%Y"), html=False)
         self.assertContains(list_response, "Conference", html=False)
+
+    def test_calendar_renders_interactive_time_grid_and_unscheduled_tray(self):
+        """
+        Use case: A day calendar contains a timed record and a record without dates.
+        Expected result: The grid exposes keyboard focus, vertical resize controls, and a draggable tray item.
+        """
+        # 1. Configure a day calendar with editable datetime fields.
+        self.client.force_login(self.admin_user)
+        content_type = self._configure_calendar(with_times=True, view_mode="day")
+        local_timezone = timezone.get_current_timezone()
+        today = timezone.localdate()
+        start = timezone.make_aware(datetime.combine(today, datetime.min.time()).replace(hour=9, minute=30), local_timezone)
+        self.CalendarEventModel.objects.create(
+            name="Timed session",
+            starts_at=start,
+            ends_at=start + timedelta(hours=2),
+        )
+        self.CalendarEventModel.objects.create(name="Needs scheduling")
+
+        # 2. Render the calendar.
+        url = reverse("components_dataview", kwargs={"content_type_id": content_type.id})
+        response = self.client.get(url, HTTP_HX_REQUEST="true")
+
+        # 3. Verify the interaction contract used by the calendar component.
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'tabindex="0"', html=False)
+        self.assertContains(response, "data-calendar-unit-section", html=False)
+        self.assertContains(response, "data-calendar-dropzone", html=False)
+        self.assertContains(response, "data-calendar-update-url", html=False)
+        self.assertContains(response, "data-calendar-resize-start", html=False)
+        self.assertContains(response, "data-calendar-resize-end", html=False)
+        self.assertContains(response, 'data-calendar-unscheduled-event', html=False)
+        self.assertContains(response, 'draggable="true"', html=False)
+        self.assertContains(response, "height: max(", html=False)
+
+    def test_calendar_date_action_schedules_and_resizes_records(self):
+        """
+        Use case: Calendar controls move an event and drop an unscheduled record on the grid.
+        Expected result: The configured date fields update atomically with DateField semantics.
+        """
+        # 1. Configure a calendar and create scheduled and unscheduled records.
+        self.client.force_login(self.admin_user)
+        content_type = self._configure_calendar()
+        scheduled = self.CalendarEventModel.objects.create(
+            name="Scheduled",
+            starts_on=date(2026, 9, 1),
+            ends_on=date(2026, 9, 3),
+        )
+        unscheduled = self.CalendarEventModel.objects.create(name="Unscheduled")
+        action_url = reverse(
+            "components_dataview_action",
+            kwargs={"content_type_id": content_type.id, "action": "dates"},
+        )
+        local_timezone = timezone.get_current_timezone()
+
+        # 2. Move both boundaries and schedule the undated record in one request.
+        response = self.client.post(
+            action_url,
+            data=json.dumps({
+                "updates": [
+                    {
+                        "object_id": str(scheduled.pk),
+                        "start_ms": round(timezone.make_aware(datetime(2026, 9, 2), local_timezone).timestamp() * 1000),
+                        "end_ms": round(timezone.make_aware(datetime(2026, 9, 6), local_timezone).timestamp() * 1000),
+                    },
+                    {
+                        "object_id": str(unscheduled.pk),
+                        "start_ms": round(timezone.make_aware(datetime(2026, 9, 10), local_timezone).timestamp() * 1000),
+                        "end_ms": round(timezone.make_aware(datetime(2026, 9, 12), local_timezone).timestamp() * 1000),
+                    },
+                ],
+            }),
+            content_type="application/json",
+        )
+
+        # 3. Verify exclusive UI ends are stored as inclusive DateField ends.
+        self.assertEqual(response.status_code, 200)
+        scheduled.refresh_from_db()
+        unscheduled.refresh_from_db()
+        self.assertEqual((scheduled.starts_on, scheduled.ends_on), (date(2026, 9, 2), date(2026, 9, 5)))
+        self.assertEqual((unscheduled.starts_on, unscheduled.ends_on), (date(2026, 9, 10), date(2026, 9, 11)))
 
     def test_calendar_unit_loads_five_events_at_a_time(self):
         """
