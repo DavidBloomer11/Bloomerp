@@ -873,6 +873,8 @@ class TestCalendarDataView(BaseBloomerpModelTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'bloomerp-component="calendar"', html=False)
         self.assertContains(response, 'class="calendar-event', count=1, html=False)
+        self.assertContains(response, 'style="grid-column: 1; grid-row: 1;"', html=False)
+        self.assertContains(response, 'style="grid-column: 7; grid-row: 1;"', html=False)
         self.assertContains(response, "grid-column:", html=False)
         self.assertContains(response, "span 3", html=False)
         self.assertContains(response, "Conference", html=False)

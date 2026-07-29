@@ -86,6 +86,7 @@ Permission-filtered calendar dataview with day, week, month, year, and list mode
                 {% with unit_key=day.key %}
                 <section
                     class="min-h-36 border-r border-gray-200 p-1 {% if not day.is_current_month %}bg-base{% endif %}"
+                    style="grid-column: {{ forloop.counter }}; grid-row: 1;"
                     data-calendar-unit="{{ unit_key }}"
                     data-calendar-row="{{ forloop.parentloop.counter0 }}"
                     data-calendar-column="{{ forloop.counter0 }}"
