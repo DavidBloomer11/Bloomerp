@@ -101,9 +101,9 @@ Permission-filtered calendar dataview with day, week, month, year, and list mode
                 {% endfor %}
                 {% with week_segments=calendar_month_segments_by_week|get_item:forloop.counter0 %}
                 {% for event in week_segments %}
-                <a
-                    href="{{ event.object.get_absolute_url }}"
-                    class="calendar-event relative z-10 mx-1 block self-start overflow-hidden rounded-xl border px-2 py-1 text-xs shadow-xs {{ event.color_classes }}"
+                <button
+                    type="button"
+                    class="calendar-event relative z-10 mx-1 block self-start overflow-hidden rounded-xl border px-2 py-1 text-left text-xs shadow-xs {{ event.color_classes }}"
                     style="grid-column: {{ event.start_column }} / span {{ event.span }}; grid-row: 1; margin-top: calc(2rem + {{ event.lane }} * 3.25rem);"
                     data-calendar-unit="{{ event.start_date|date:'Y-m-d' }}"
                     data-calendar-event
@@ -126,7 +126,7 @@ Permission-filtered calendar dataview with day, week, month, year, and list mode
                         {% endfor %}
                     </span>
                     {% endif %}
-                </a>
+                </button>
                 {% endfor %}
                 {% endwith %}
             </div>

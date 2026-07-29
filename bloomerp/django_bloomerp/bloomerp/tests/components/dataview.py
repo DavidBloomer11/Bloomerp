@@ -858,7 +858,7 @@ class TestCalendarDataView(BaseBloomerpModelTestCase):
         content_type = self._configure_calendar()
         today = timezone.localdate()
         event_day = today.replace(day=10)
-        self.CalendarEventModel.objects.create(
+        event = self.CalendarEventModel.objects.create(
             name="Conference",
             starts_on=event_day,
             ends_on=event_day + timedelta(days=2),
@@ -873,6 +873,13 @@ class TestCalendarDataView(BaseBloomerpModelTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'bloomerp-component="calendar"', html=False)
         self.assertContains(response, 'class="calendar-event', count=1, html=False)
+        self.assertContains(response, 'type="button"', html=False)
+        self.assertContains(
+            response,
+            f'data-detail-url="{event.get_absolute_url()}"',
+            html=False,
+        )
+        self.assertNotContains(response, f'href="{event.get_absolute_url()}"', html=False)
         self.assertContains(response, 'style="grid-column: 1; grid-row: 1;"', html=False)
         self.assertContains(response, 'style="grid-column: 7; grid-row: 1;"', html=False)
         self.assertContains(response, "grid-column:", html=False)

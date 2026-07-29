@@ -1,9 +1,9 @@
 {% load bloomerp %}
 
 {% for event in events %}
-<a
-    href="{{ event.object.get_absolute_url }}"
-    class="calendar-event block rounded-xl border px-2 py-1 text-xs shadow-xs transition-opacity hover:opacity-80 {{ event.color_classes }} {% if calendar_view_mode == 'day' or calendar_view_mode == 'week' %}{% if not event.all_day %}absolute left-1 right-1 z-10 overflow-hidden{% endif %}{% endif %}"
+<button
+    type="button"
+    class="calendar-event block w-full rounded-xl border px-2 py-1 text-left text-xs shadow-xs transition-opacity hover:opacity-80 {{ event.color_classes }} {% if calendar_view_mode == 'day' or calendar_view_mode == 'week' %}{% if not event.all_day %}absolute left-1 right-1 z-10 overflow-hidden{% endif %}{% endif %}"
     {% if calendar_view_mode == 'day' or calendar_view_mode == 'week' %}{% if not event.all_day %}style="top: calc({{ event.start_minute }} * 5rem / 60); height: max(1.75rem, calc({{ event.duration_minutes }} * 5rem / 60));"{% endif %}{% endif %}
     title="{{ event.object }}"
     data-calendar-unit="{{ calendar_unit }}"
@@ -34,7 +34,7 @@
         {% endfor %}
     </span>
     {% endif %}
-</a>
+</button>
 {% endfor %}
 
 {% if calendar_has_more %}
