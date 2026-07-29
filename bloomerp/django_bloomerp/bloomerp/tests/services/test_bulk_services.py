@@ -22,7 +22,7 @@ class TestBulkCrudService(BaseBloomerpModelTestCase):
             }
         ]
 
-        with patch("bloomerp.utils.realtime.send_user_message") as send_user_message:
+        with patch("bloomerp.utils.realtime.send_user_inbox_message") as send_user_inbox_message:
             created_count = service._process_rows_impl(
                 rows=rows,
                 fields=["first_name", "last_name", "age"],
@@ -30,7 +30,7 @@ class TestBulkCrudService(BaseBloomerpModelTestCase):
 
         # 2. Confirm the user receives a websocket toast after the upload completes.
         self.assertEqual(created_count, 1)
-        send_user_message.assert_called_once_with(
+        send_user_inbox_message.assert_called_once_with(
             self.admin_user.pk,
             payload={
                 "type": "toast",

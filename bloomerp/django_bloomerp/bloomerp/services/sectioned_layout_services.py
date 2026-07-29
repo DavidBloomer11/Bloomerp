@@ -7,13 +7,13 @@ from django import forms
 from django.forms import BoundField
 from django.db.models import Model
 
+from bloomerp.field_types.types import FieldType
 from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.permissions.manager import UserPolicyManager
 from bloomerp.services.permission_services import UserPermissionManager
 from django.db.models import QuerySet
 from bloomerp.models.users import User
-from bloomerp.forms.model_form import get_model_form_application_fields
 
 MAX_LAYOUT_COLUMNS = 12
 
@@ -123,9 +123,6 @@ def get_model_field_layout(model: Type[Model]) -> FieldLayout | None:
         return normalize_layout_payload(legacy_layout)
 
     return None
-
-
-
 
 
 def get_object_field_value(*, obj: Model, application_field: ApplicationField) -> Any:
@@ -305,12 +302,6 @@ def get_available_layout_fields(*, content_type: ContentType, user, layout_kind:
     permission_str = f"{permission_prefix}_{model._meta.model_name}"
 
     fields = ApplicationField.objects.filter(content_type=content_type).order_by("field")
-    if layout_kind == "create":
-        fields = get_model_form_application_fields(
-            model,
-            fields,
-            exclude_auto_managed=True,
-        )
     available: list[dict[str, Any]] = []
     for field in fields:
         if not permission_manager.has_field_permission(field, permission_str):
@@ -428,6 +419,16 @@ def create_default_layout(
         items = [
             LayoutItem(id=application_field.pk, colspan=1)
             for application_field in application_fields
+            if application_field.field_type_enum != FieldType.ONE_TO_MANY_FIELD
+            and application_field.field not in [
+                "id", 
+                "pk", 
+                "updated_by", 
+                "created_by",
+                "datetime_created",
+                "datetime_updated",
+                "comments"
+            ]
         ]
         return FieldLayout(
             rows=[

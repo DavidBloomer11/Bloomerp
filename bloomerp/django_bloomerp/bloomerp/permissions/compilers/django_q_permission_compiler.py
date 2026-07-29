@@ -56,13 +56,17 @@ class DjangoQPermissionCompiler(BasePermissionCompiler[CompiledDjangoAccess]):
             )
             return Q(**{filter_key: value})
 
-        lookup = self.resolve_lookup(application_field, operator)
-        if lookup is None:
-            return None
-        if lookup == Lookup.EQUALS_USER or str(condition.value) == "$user":
+        if (
+            self.resolve_lookup_globally(operator) == Lookup.EQUALS_USER
+            or str(condition.value) == "$user"
+        ):
             if self.user is None or getattr(self.user, "is_anonymous", False):
                 return None
             return Q(**{field_name: self.user})
+
+        lookup = self.resolve_lookup(application_field, operator)
+        if lookup is None:
+            return None
 
         value = self.normalize_lookup_value(application_field, lookup, condition.value)
         if lookup == Lookup.NOT_EQUALS:

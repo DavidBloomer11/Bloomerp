@@ -7,9 +7,10 @@ from django.contrib.contenttypes.models import ContentType
 from bloomerp.models.users.user import AbstractBloomerpUser
 from django.core.cache import cache
 from dataclasses import dataclass
-from bloomerp.models import UserDetailViewPreference
+
 from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
 from bloomerp.field_types import FieldType
+from bloomerp.services.preference_services import PreferenceManager
 
 AUTO_MANAGED_FIELD_NAMES = {
     "id",
@@ -113,18 +114,6 @@ def get_data_view_fields(preference: UserListViewPreference, view_type: str = No
     )
 
 
-def get_user_list_view_preference(user: AbstractBloomerpUser, content_type: ContentType) -> UserListViewPreference:
-    """Gets the UserListViewPreference for a user and content type, creating a default if none exists.
-    
-    Args:
-        user (AbstractBloomerpUser): The user for whom to get the preference.
-        content_type (ContentType): The content type for which to get the preference.
-    Returns:
-        UserListViewPreference: The user's list view preference.
-    """
-    return UserListViewPreference.get_or_create_for_user(user, content_type)
-
-
 def toggle_field_visibility(
     user: AbstractBloomerpUser, 
     content_type: ContentType, 
@@ -141,7 +130,12 @@ def toggle_field_visibility(
     Returns:
         tuple: (is_now_visible, preference)
     """
-    preference = UserListViewPreference.get_or_create_for_user(user, content_type)
+    preference = PreferenceManager(user).get_or_create_selected(
+        UserListViewPreference,
+        scope={
+            "content_type_id" : content_type.id
+        }
+    )
     view_type = view_type or preference.view_type
 
     manager = UserPermissionManager(user)

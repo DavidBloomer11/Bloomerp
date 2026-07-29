@@ -20,7 +20,6 @@ class ForEachForm(forms.Form):
 @dataclass
 class ForEachResult:
     items: list
-    collection: list
     
 
 
@@ -57,7 +56,6 @@ class ForEachExecutor(BaseExecutor):
         fields=[
             WorkflowValueField("input.item", "Current Item", "object"),
             WorkflowValueField("input.index", "Current Index", "number"),
-            WorkflowValueField("input.collection", "Original Collection", "list"),
         ],
     )
 
@@ -87,7 +85,6 @@ class ForEachExecutor(BaseExecutor):
                         children=remap_schema_field_paths(item_fields, {"0": "item"}),
                     ),
                     WorkflowValueField("index", "Current Index", "number"),
-                    WorkflowValueField("collection", "Original Collection", "list"),
                 ],
             )
         
@@ -95,4 +92,4 @@ class ForEachExecutor(BaseExecutor):
 
     def execute(self, input_data: Any) -> ForEachResult:
         items = normalize_items(input_data)
-        return ForEachResult(items=items, collection=items)
+        return ForEachResult(items=items)

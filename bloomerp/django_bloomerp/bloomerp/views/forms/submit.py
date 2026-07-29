@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.urls import reverse
 from django.views.generic.detail import DetailView
 
+from bloomerp.forms.model_form import BloomerpModelForm
 from bloomerp.models.forms.form import Form
 from bloomerp.router import router
 from bloomerp.services.form_services import FormManager
@@ -9,7 +10,7 @@ from bloomerp.views.mixins.application_field_layout_form_mixin import (
     ApplicationFieldLayoutFormMixin,
 )
 from bloomerp.views.mixins.layout_mixin import LayoutBinding
-from django_htmx.http import HttpResponseClientRefresh, HttpResponseClientRedirect
+from django_htmx.http import HttpResponseClientRedirect
 
 
 @router.register(
@@ -20,16 +21,13 @@ from django_htmx.http import HttpResponseClientRefresh, HttpResponseClientRedire
     url_name="submit",
     models=[Form],
 )
-class SubmitFormView(
-    ApplicationFieldLayoutFormMixin,
-    DetailView,
-):
+class SubmitFormView(ApplicationFieldLayoutFormMixin, DetailView):
     apply_permissions = False
     template_name = "views/forms/submit.html"
     model = Form
     module = None
     layout_mode = "create"
-
+    
     def get(self, request, *args, **kwargs):
         if request.htmx:
             return HttpResponseClientRedirect(
@@ -56,15 +54,12 @@ class SubmitFormView(
     def get_change_permission_str(self) -> str:
         return ""
 
-    def get_layout_editable_field_names(self) -> list[str]:
-        return FormManager(self.object).layout_field_names()
-
     def build_layout_form(self):
         manager = FormManager(self.object)
         form_class = manager.layout_form_cls()
         if form_class is None:
             return None
-
+        
         kwargs = {"initial": manager.get_initial_form_data()}
         if self.request.method.upper() == "POST":
             kwargs["data"] = self.request.POST
@@ -76,15 +71,19 @@ class SubmitFormView(
         if cached_form is None:
             cached_form = self.build_layout_form()
             self._layout_form = cached_form
+        
+        self.apply_layout_widget_config(
+            form=cached_form
+        )
         return cached_form
-
+    
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        form = self.build_layout_form()
+        form = self.get_form()
         manager = FormManager(self.object)
-
+        
         if form is not None and form.is_valid():
-            submission_resp = manager.register_submission(form.cleaned_data, request)
+            submission_resp = manager.register_submission(form, request)
             if not submission_resp.submitted:
                 return self.render_to_response(
                     self.get_context_data(
@@ -92,7 +91,7 @@ class SubmitFormView(
                         form_submission_error_message=submission_resp.message,
                     )
                 )
-
+            
             return self.render_to_response(
                 self.get_context_data(
                     form_submitted_successfully=True,

@@ -574,6 +574,7 @@ class FieldType(Enum):
             UPLOAD_TO_FIELD_OPTION,
             HELP_TEXT_FIELD_OPTION,
         ],
+        dataview_value_func=lambda field, obj: f"<a class='text-primary' href='{getattr(getattr(obj,field.field), "url") if getattr(obj, field.field) else None}'>{getattr(obj, field.field)}</a>"
     )
 
     IMAGE_FIELD = FieldTypeDefinition(

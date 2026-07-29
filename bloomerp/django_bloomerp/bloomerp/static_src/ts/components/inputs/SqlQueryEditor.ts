@@ -23,6 +23,7 @@ interface SqlDatabase {
 
 interface SqlSchemaResponse {
     databases: SqlDatabase[];
+    total_pages?: number;
 }
 
 interface SavedSqlQuery {
@@ -453,22 +454,42 @@ export default class SqlQueryEditor extends BaseComponent {
         if (refresh) {
             params.set('refresh', 'true');
         }
-
-        const endpoint = `${this.schemaUrl}?${params.toString()}`;
+        params.set('page_size', '100');
 
         try {
             insertSkeleton(this.catalogTree);
+            const databases = new Map<string, SqlDatabase>();
+            let page = 1;
+            let totalPages = 1;
 
-            const response = await fetch(endpoint, {
-                credentials: 'same-origin',
-            });
+            do {
+                params.set('page', String(page));
+                const endpoint = `${this.schemaUrl}?${params.toString()}`;
+                const response = await fetch(endpoint, {
+                    credentials: 'same-origin',
+                });
 
-            if (!response.ok) {
-                throw new Error(`Failed to fetch schema: ${response.status}`);
-            }
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch schema: ${response.status}`);
+                }
 
-            const payload = await response.json() as SqlSchemaResponse;
-            this.schemaData = payload.databases || [];
+                const payload = await response.json() as SqlSchemaResponse;
+                payload.databases?.forEach((database) => {
+                    const existing = databases.get(database.name);
+                    if (existing) {
+                        existing.tables.push(...database.tables);
+                    } else {
+                        databases.set(database.name, {
+                            ...database,
+                            tables: [...database.tables],
+                        });
+                    }
+                });
+                totalPages = Math.max(1, payload.total_pages || 1);
+                page += 1;
+            } while (page <= totalPages);
+
+            this.schemaData = Array.from(databases.values());
             this.renderCatalog(searchValue.toLowerCase());
             this.refreshAutocompleteTokens();
             this.setupSchemaCompleter();

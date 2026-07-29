@@ -72,6 +72,23 @@ class Workspace(ContentLayoutModelMixin, BasePreference):
             selected=True,
         )
 
+    @classmethod
+    def copy_preference_for_user(
+        cls,
+        *,
+        user: AbstractBloomerpUser,
+        source: "Workspace",
+        name: str,
+        scope: dict[str, Any] | None = None,
+    ) -> "Workspace":
+        """Copy a workspace and its serialized layout."""
+        return cls._create_preference_copy(
+            user=user,
+            source=source,
+            name=name,
+            scope=scope,
+        )
+
     def get_absolute_url(self):
         return reverse("workspace", kwargs={"pk": self.pk})
 

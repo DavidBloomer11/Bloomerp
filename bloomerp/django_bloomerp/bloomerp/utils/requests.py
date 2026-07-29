@@ -1,6 +1,8 @@
 from ipaddress import ip_address
+from dataclasses import dataclass
+from django.contrib import messages
 import re
-from typing import Any, Literal, Optional
+from typing import Any, Literal, LiteralString, Optional
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Model
 from django.http import HttpRequest, HttpResponse
@@ -77,6 +79,14 @@ def get_object_from_request(
     except:
         return ERROR_RESP
 
+
+@dataclass
+class ExtraButton:
+    label:str
+    type:Literal["primary", "secondary", "danger"]
+    attrs:dict | None = None
+    
+
 def render_blank_form(
         request : HttpRequest, 
         form:Form, 
@@ -86,6 +96,7 @@ def render_blank_form(
         form_args:dict=None,
         button_attrs:dict=None,
         text:str|None=None,
+        extra_buttons:list[ExtraButton]|None = None
         ) -> HttpResponse:
     """
     Render a small standalone form fragment used for HTMX panel inserts.
@@ -119,6 +130,7 @@ def render_blank_form(
             "form_args" : form_args if form_args else {},
             "button_attrs" : button_attrs if isinstance(button_attrs, dict) else {},
             "text": text,
+            "extra_buttons" : extra_buttons if extra_buttons else []
         }
     )
     
@@ -299,3 +311,5 @@ def render_form_with_layout(request:HttpRequest, form:Form, layout:FieldLayout) 
         request,
         "features.sectioned_layouts.container"
     )
+    
+    

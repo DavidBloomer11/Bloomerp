@@ -8,8 +8,6 @@ from django.urls import reverse
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.models.base_bloomerp_model import LayoutItem
 from bloomerp.models.forms.form import Form
-from bloomerp.models.users.user_create_view_preference import UserCreateViewPreference
-from bloomerp.models.users.user_detail_view_preference import UserDetailViewPreference
 from bloomerp.models.users.user_object_layout_preference import UserObjectLayoutPreference
 from bloomerp.models.workspaces.tile import Tile
 from bloomerp.models.workspaces.workspace import Workspace
@@ -168,7 +166,6 @@ def _build_create_render_context(*, request: HttpRequest, content_type: ContentT
     form_application_fields = get_model_form_application_fields(
         model,
         accessible_fields,
-        exclude_auto_managed=True,
     )
     allowed_field_names = list(
         form_application_fields.values_list("field", flat=True)
@@ -222,8 +219,6 @@ def _build_detail_render_context(
 items = {
     Workspace: _tile,
     Form: _render_application_field,
-    UserDetailViewPreference: _render_application_field,
-    UserCreateViewPreference: _render_application_field,
     UserObjectLayoutPreference: _render_application_field,
 }
 

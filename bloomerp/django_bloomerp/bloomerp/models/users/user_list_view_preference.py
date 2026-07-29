@@ -664,6 +664,23 @@ class UserListViewPreference(BaseViewPreference):
             content_type=content_type,
         )
 
+    @classmethod
+    def copy_preference_for_user(
+        cls,
+        *,
+        user,
+        source: "UserListViewPreference",
+        name: str,
+        scope: dict | None = None,
+    ) -> "UserListViewPreference":
+        """Copy a list-view preference and its serialized options."""
+        return cls._create_preference_copy(
+            user=user,
+            source=source,
+            name=name,
+            scope=scope,
+        )
+
     def get_visible_field_ids(self, view_type: str = None) -> list[int]:
         """Returns the list of ApplicationField IDs that are visible for the given view type.
 

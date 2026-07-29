@@ -6,7 +6,7 @@ from bloomerp.models import BloomerpModel
 from bloomerp.permissions.definition import BloomerpPermission
 from bloomerp.router import router
 from bloomerp.services.object_services import string_search_on_queryset
-from bloomerp.permissions.manager import UserPermissionManager
+from bloomerp.permissions.manager import UserPolicyManager
 
 def _get_detail_url(obj) -> str:
     """Helper function to get the detail url"""
@@ -36,7 +36,7 @@ def search_objects(request:HttpRequest, content_type_id:int) -> HttpResponse:
     """
     Model : BloomerpModel = ContentType.objects.get_for_id(content_type_id).model_class()
     query = request.GET.get('fk_search_results_query')
-    permission_manager = UserPermissionManager(request.user)
+    permission_manager = UserPolicyManager(request.user)
     
     # Get the base queryset
     base_queryset = permission_manager.get_queryset(

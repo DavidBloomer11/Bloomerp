@@ -16,14 +16,13 @@ class FilesCleanedData(StructuredFormValue):
     _saved: bool = field(default=False, init=False, repr=False)
 
     def save(self, parent: Model, *, user=None) -> None:
+        from bloomerp.models.files.file import File
         if self._saved or not self.files:
             return
-        from bloomerp.services.object_file_field_services import attach_uploaded_files_to_object
 
-        attach_uploaded_files_to_object(
-            obj=parent,
-            uploaded_files=self.files,
-            user=user,
+        File.upload_files_to_object(
+            parent,
+            self.files
         )
         self._saved = True
 
@@ -33,6 +32,11 @@ class FilesCleanedData(StructuredFormValue):
 
 class FilesRelationField(forms.Field):
     """Return uploaded object files as a structured, persistable value."""
+
+    def bound_data(self, data: Any, initial: Any) -> Any:
+        if data in (None, "", [], ()):
+            return initial
+        return data
 
     def clean(self, value: Any) -> FilesCleanedData:
         value = super().clean(value) or []

@@ -196,6 +196,7 @@ class UserDetailViewTabsPreferenceTests(TestCase):
 
         # 3. Confirm both rows were copied with new identities and preserved membership.
         copied_items = list(copied.items.order_by("parent_id", "position"))
+        self.assertEqual(copied.name, "Alternative")
         self.assertEqual(len(copied_items), 2)
         copied_folder = next(item for item in copied_items if item.is_folder)
         copied_tab = next(item for item in copied_items if not item.is_folder)

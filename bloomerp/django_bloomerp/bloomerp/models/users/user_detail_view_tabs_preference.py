@@ -85,6 +85,26 @@ class UserDetailViewTabsPreference(BasePreference):
         return preference
 
     @classmethod
+    def copy_preference_for_user(
+        cls,
+        *,
+        user,
+        source: "UserDetailViewTabsPreference",
+        name: str,
+        scope: dict[str, Any] | None = None,
+    ) -> "UserDetailViewTabsPreference":
+        """Copy a tabs preference and its complete relational tree."""
+        with transaction.atomic():
+            preference = cls._create_preference_copy(
+                user=user,
+                source=source,
+                name=name,
+                scope=scope,
+            )
+            source.copy_configuration_to(preference)
+        return preference
+
+    @classmethod
     def get_detail_route_options(
         cls,
         model: type[models.Model] | None,

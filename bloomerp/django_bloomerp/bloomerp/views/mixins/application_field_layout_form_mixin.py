@@ -34,7 +34,7 @@ class ApplicationFieldLayoutFormMixin(LayoutFormMixin, ABC):
     content_extractor_func = lambda self, item: self.render_field(item)
     is_visible_extractor_func = lambda self, item: self.is_visible(item)
     not_visible_content_extractor_func = lambda self, item: (
-        "You don't have access to this field"
+        "<div class='text-gray-600 text-sm'>You don't have access to this field</div>"
     )
     def edit_url_extractor_func(self, item: LayoutItem) -> str | None:
         application_field = self.get_application_field(item)
@@ -155,9 +155,16 @@ class ApplicationFieldLayoutFormMixin(LayoutFormMixin, ABC):
         return self.application_fields
 
     def get_application_field(self, item: LayoutItem) -> ApplicationField:
+        fields_by_id = getattr(self, "_application_fields_by_id", None)
+        if fields_by_id is None:
+            fields_by_id = {
+                str(application_field.pk): application_field
+                for application_field in self.get_application_fields()
+            }
+            self._application_fields_by_id = fields_by_id
         try:
-            return self.get_application_fields().get(id=item.id)
-        except ApplicationField.DoesNotExist as exc:
+            return fields_by_id[str(item.id)]
+        except KeyError as exc:
             raise ValidationError(
                 f"ApplicationField with id {item.id} does not exist for "
                 f"{self.layout_model.__name__}"
@@ -178,7 +185,6 @@ class ApplicationFieldLayoutFormMixin(LayoutFormMixin, ABC):
         self._form_application_fields = get_model_form_application_fields(
             self.layout_model,
             fields,
-            exclude_auto_managed=True,
         )
         return self._form_application_fields
 
@@ -236,7 +242,6 @@ class ApplicationFieldLayoutFormMixin(LayoutFormMixin, ABC):
         form = form_class(
             instance=self.get_form_instance(),
             initial=super().get_initial(),
-            user=self.get_user(),
         )
         self._layout_form = self.apply_layout_widget_config(form)
         return self._layout_form

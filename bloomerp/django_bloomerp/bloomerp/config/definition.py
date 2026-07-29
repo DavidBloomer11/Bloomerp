@@ -101,16 +101,17 @@ class BloomerpConfig(BaseModel):
     """
 
     auto_generate_api_endpoints : bool = True
+    
     require_staff_for_access: bool = True
 
     vite_dev_server_url : Optional[str] = 'http://localhost:5173'
 
     auth: BloomerpAuthSettings = Field(default_factory=BloomerpAuthSettings)
 
+    email_secret_key: Optional[str] = None
 
 def get_bloomerp_config() -> BloomerpConfig:
     config = getattr(settings, "BLOOMERP_CONFIG", None)
     if isinstance(config, BloomerpConfig):
         return config
     return BloomerpConfig()
-    

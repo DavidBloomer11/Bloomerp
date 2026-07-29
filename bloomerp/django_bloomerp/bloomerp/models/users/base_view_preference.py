@@ -44,51 +44,6 @@ class BaseViewPreference(BasePreference):
         ).select_related("source_object").first()
         return preference.effective_preference if preference else None
 
-    @classmethod
-    def get_or_create_for_user(
-        cls,
-        user,
-        content_type_or_model: ContentType | models.Model,
-    ) -> "BaseViewPreference":
-        content_type = cls.resolve_content_type(content_type_or_model)
-
-        preference = cls.get_selected_for_user(user, content_type)
-        if preference is None:
-            preference = cls.objects.filter(
-                user=user,
-                content_type=content_type,
-            ).order_by("pk").first()
-            if preference is not None:
-                preference.select()
-
-        if preference is None:
-            preference = cls.create_default_for_user(
-                user,
-                content_type_id=content_type.pk,
-            )
-
-        preference.ensure_default_state(user=user, content_type=content_type)
-        return preference
-
-    @classmethod
-    def create_default_for_user(
-        cls,
-        user,
-        **scope,
-    ) -> "BaseViewPreference":
-        """Create a default view preference from ``content_type_id``.
-
-        Concrete view-preference models implement this normalized factory
-        contract. The generic preference manager therefore does not need to
-        understand content types.
-
-        Example:
-            preference = ViewPreference.create_default_for_user(
-                user,
-                content_type_id=content_type.pk,
-            )
-        """
-        raise NotImplementedError
 
     def ensure_default_state(self, *, user, content_type: ContentType) -> None:
         """Allow subclasses to repair invalid or empty stored state."""

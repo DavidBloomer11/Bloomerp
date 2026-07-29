@@ -1,6 +1,10 @@
 {% if not pivot_configured %}
-<div class="rounded-xl border border-warning-light bg-base p-6 text-sm text-dark">
+<div class="rounded-xl border border-gray-200 bg-base p-6 text-sm text-dark">
     <c-i18n.blocktrans>Select at least one row field and one value field in the display options to configure the pivot table.</c-i18n.blocktrans>
+</div>
+{% elif pivot_too_wide %}
+<div class="rounded-xl border border-gray-200 bg-base p-6 text-sm text-dark">
+    <c-i18n.blocktrans>This pivot has too many columns to display safely. Refine the active filters or select fewer column or value fields.</c-i18n.blocktrans>
 </div>
 {% else %}
 <div

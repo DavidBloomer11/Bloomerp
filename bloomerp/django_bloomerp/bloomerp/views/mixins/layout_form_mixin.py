@@ -17,13 +17,13 @@ class LayoutFormMixin(LayoutMixin, FormMixin):
     content_extractor_func = lambda self, item: self.render_field(item)
     extra_attrs_extractor_func = lambda self, item: self.render_extra_attrs(item)
 
+    can_change = False
+    
     def render_extra_attrs(self, item: LayoutItem) -> dict:
         return {
             "data-required": str(self.resolve_is_required(item)),
         }
     
-    can_change = False
-
     def render_label(self, item: LayoutItem):
         label = self.resolve_form_label(item)
         is_required = self.resolve_is_required(item)

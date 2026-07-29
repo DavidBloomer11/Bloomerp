@@ -1,14 +1,3 @@
-<div class="space-y-1 flex flex-col">
-    {% for link in config.links %}
-        <a
-            href="{{ link.url }}"
-            {% if link.is_internal %}
-                hx-get="{{ link.url }}"
-                hx-target="#main-content"
-                hx-push-url="true"
-                hx-swap="innerHTML"
-            {% endif %}
-            class="text-blue-500 hover:underline"
-        >{{ link.name }}</a>
-    {% endfor %}
+<div class="space-y-1">
+    {% include "cotton/features/workspaces/tiles/link_items.html" with links=config.links %}
 </div>

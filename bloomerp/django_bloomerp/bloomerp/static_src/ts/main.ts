@@ -65,6 +65,9 @@ import { Calendar, CalendarCell } from './components/data_view_components/Calend
 
 import { openModal } from './utils/modals';
 import { closeModal } from './utils/modals';
+import { Inbox } from './components/inbox/Inbox';
+import { InboxItem } from './components/inbox/InboxItem';
+import { EmailEditor } from './components/inbox/EmailEditor';
 import { SelectPreference } from './components/SelectPreference';
 import BaseSectionedLayoutContainer from './components/layouts/BaseSectionedLayoutContainer';
 
@@ -165,6 +168,11 @@ registerComponent('ordered-field-select', OrderedFieldSelect);
 registerComponent('focus-on-form', FocusOnForm);
 registerComponent('base-wizard', BaseWizard)
 registerComponent('select-preference', SelectPreference)
+
+registerComponent('inbox', Inbox)
+registerComponent('inbox-item', InboxItem)
+
+registerComponent('email-editor', EmailEditor)
 
 // Auto init comonents
 setupComponentAutoInit();

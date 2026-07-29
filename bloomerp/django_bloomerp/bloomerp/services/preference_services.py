@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from copy import deepcopy
 from typing import Any
 
 from django.apps import apps
@@ -9,21 +8,6 @@ from django.db.models import Q, QuerySet
 
 from bloomerp.models.users.base_preference import BasePreference
 from bloomerp.models.users.user import AbstractBloomerpUser
-
-
-BASE_PREFERENCE_FIELD_NAMES = {
-    "id",
-    "pk",
-    "user",
-    "user_id",
-    "name",
-    "selected",
-    "source_object",
-    "source_object_id",
-    "shared_with_users",
-    "shared_with_groups",
-    "initial_default",
-}
 
 
 def clean_scope(scope: dict[str, Any] | None) -> dict[str, Any]:
@@ -64,7 +48,7 @@ class PreferenceManager:
     Example:
         manager = PreferenceManager(request.user)
         preference = manager.get_or_create_selected(
-            UserDetailViewPreference,
+            UserObjectViewPreference,
             {"content_type_id": content_type.pk},
         )
     """
@@ -116,6 +100,9 @@ class PreferenceManager:
             user=self.user,
             source_object__isnull=False,
             **scope,
+        ).filter(
+            Q(source_object__shared_with_users=self.user)
+            | Q(source_object__shared_with_groups__user=self.user)
         )
         owned_sources = preference_model.objects.filter(
             user=self.user,
@@ -132,12 +119,19 @@ class PreferenceManager:
             .exclude(user=self.user)
             .exclude(pk__in=owned_references.values("source_object_id"))
         )
-        return (
+        qs = (
             (owned_sources | owned_references | shared_sources)
             .distinct()
             .select_related("source_object", "user")
             .order_by("name", "pk")
         )
+
+        if preference_model.force_copy_initial_default:
+            qs = qs.exclude(
+                Q(initial_default=True) & ~Q(user=self.user)
+            )
+
+        return qs
 
     def get_or_create_selected(
         self,
@@ -164,7 +158,11 @@ class PreferenceManager:
             owned = preference_model.objects.filter(
                 user=self.user,
                 **scope,
-            ).select_related("source_object").order_by("-selected", "pk")
+            ).filter(
+                Q(source_object__isnull=True)
+                | Q(source_object__shared_with_users=self.user)
+                | Q(source_object__shared_with_groups__user=self.user)
+            ).distinct().select_related("source_object").order_by("-selected", "pk")
             entry = owned.first()
             if entry is not None:
                 self._select_entry(entry, scope)
@@ -172,6 +170,17 @@ class PreferenceManager:
 
             initial_default = self._find_initial_default(preference_model, scope)
             if initial_default is not None:
+                # In cases where a deep copy is required
+                if initial_default.force_copy_initial_default:
+                    entry = preference_model.copy_preference_for_user(
+                        user=self.user,
+                        source=initial_default,
+                        name=initial_default.name,
+                        scope=scope,
+                    )
+                    self._select_entry(entry, scope)
+                    return entry
+
                 entry = self._reference(initial_default, scope)
                 self._select_entry(entry, scope)
                 return entry.effective_preference
@@ -180,7 +189,7 @@ class PreferenceManager:
                 entry = preference_model.create_default_for_user(self.user, **scope)
                 self._select_entry(entry, scope)
                 return entry.effective_preference
-            
+
             return None
 
     def select(self, preference: BasePreference) -> BasePreference:
@@ -232,19 +241,14 @@ class PreferenceManager:
         """
         scope = preference_model.normalize_scope(clean_scope(scope))
         source = self.get_or_create_selected(preference_model, scope)
-        values = self._copy_values(source)
-        values.update(scope)
-        values.update(
-            user=self.user,
-            name=name.strip() or source.name,
-            selected=False,
-            source_object=None,
-        )
+
         with transaction.atomic():
-            created = preference_model.objects.create(**values)
-            copy_configuration = getattr(source, "copy_configuration_to", None)
-            if callable(copy_configuration):
-                copy_configuration(created)
+            created = preference_model.copy_preference_for_user(
+                user=self.user,
+                source=source,
+                name=name.strip() or source.name,
+                scope=scope,
+            )
             self._select_entry(created, scope)
         return created
 
@@ -270,7 +274,7 @@ class PreferenceManager:
         Example:
             allowed = manager.can_set_initial_default(
                 request.user,
-                UserDetailViewPreference,
+                UserObjectViewPreference,
             )
         """
         return user.is_superuser
@@ -334,25 +338,3 @@ class PreferenceManager:
         if not entry.selected:
             entry.selected = True
             entry.save(update_fields=["selected"])
-
-    @staticmethod
-    def _copy_values(preference: BasePreference) -> dict[str, Any]:
-        """Deep-copy concrete configuration values for a new preference.
-
-        Ownership, sharing, selection, identity, and source-reference fields
-        are excluded.
-
-        Example:
-            values = PreferenceManager._copy_values(source)
-        """
-        values: dict[str, Any] = {}
-        for field in preference._meta.concrete_fields:
-            if (
-                field.primary_key
-                or field.auto_created
-                or field.name in BASE_PREFERENCE_FIELD_NAMES
-            ):
-                continue
-            key = field.attname if field.many_to_one else field.name
-            values[key] = deepcopy(getattr(preference, key))
-        return values

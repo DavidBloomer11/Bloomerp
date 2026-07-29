@@ -54,5 +54,6 @@ def select_preference(request: HttpRequest, model: str) -> HttpResponse:
             "model": model,
             "scope": scope,
             "model_verbose_name": preference_model._meta.verbose_name,
+            
         },
     )

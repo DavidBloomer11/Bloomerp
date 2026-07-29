@@ -12,7 +12,6 @@ from django.urls import reverse
 from bloomerp.field_types import FieldTypeDefinition
 from bloomerp.forms.model_form import (
     bloomerp_modelform_factory,
-    get_model_form_application_fields,
 )
 from bloomerp.models import ApplicationField
 from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem
@@ -137,11 +136,7 @@ def _user_can_configure_field(request: HttpRequest, target: LayoutConfigTarget, 
             target.content_type,
             create_permission_str(model, "add"),
         )
-        return get_model_form_application_fields(
-            model,
-            accessible_fields,
-            exclude_auto_managed=True,
-        ).filter(pk=application_field.pk).exists()
+        return accessible_fields.filter(pk=application_field.pk).exists()
 
     permission_manager = UserPermissionManager(request.user)
     return permission_manager.has_field_permission(

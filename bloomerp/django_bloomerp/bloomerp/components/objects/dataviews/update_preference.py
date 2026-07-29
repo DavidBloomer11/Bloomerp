@@ -11,7 +11,7 @@ from bloomerp.services.user_services import get_data_view_fields, toggle_field_v
 from django.contrib.contenttypes.models import ContentType
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
-
+import json
 
 def _change_data_view_field_visibility(
     request: HttpRequest,

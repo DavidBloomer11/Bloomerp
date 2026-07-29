@@ -255,6 +255,24 @@ class ObjectAction(BaseModel):
     
     success_message:Optional[str] = None
     
+class ObjectModalAction(BaseModel):
+    id:str
+    
+    label:str
+    
+    endpoint:Callable[[Model], str]
+    
+    icon:Optional[str] = None
+    
+    style:Literal["primary", "secondary"] = "secondary"
+    
+    should_render_func:Callable[[HttpRequest, Model], bool] = lambda req, obj : True
+    
+    modal_title:Optional[str] = ""
+    
+    
+
+    
 class ModelViewSettings(BaseModel):
     """
     Optional settings for on the model level
@@ -266,8 +284,6 @@ class DetailViewSettings(BaseModel):
     """
     Settings regarding detail views for certain models
     """
-    extra_buttons : Optional[list[ObjectHTML]] = None
-    
     skip_views : Optional[list[str]] = None
     
 
@@ -311,7 +327,7 @@ class BloomerpModelConfig(BaseModel):
     
     model_view_settings : Optional[ModelViewSettings] = None 
     
-    object_actions : Optional[list[ObjectAction | ObjectHTML]] = None
+    object_actions : Optional[list[ObjectAction | ObjectHTML | ObjectModalAction]] = None
     
     @field_validator("module", mode="before")
     @classmethod
