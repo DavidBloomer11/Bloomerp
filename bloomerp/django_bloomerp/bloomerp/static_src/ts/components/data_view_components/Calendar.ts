@@ -11,6 +11,7 @@ type CalendarDragPayload = {
     object_id: string;
     start_ms: number;
     end_ms?: number;
+    grab_unit?: string;
 };
 type CalendarFocusBookmark = {
     objectId?: string;
@@ -466,10 +467,12 @@ export class Calendar extends BaseDataViewComponent {
                 event.preventDefault();
                 return;
             }
+            const grabUnit = this.findDropzone(event)?.dataset.calendarUnit;
             const payload: CalendarDragPayload = {
                 object_id: objectId,
                 start_ms: start,
                 ...(Number.isFinite(end) ? { end_ms: end } : {}),
+                ...(grabUnit ? { grab_unit: grabUnit } : {}),
             };
             event.dataTransfer.effectAllowed = "move";
             event.dataTransfer.setData(
@@ -521,16 +524,23 @@ export class Calendar extends BaseDataViewComponent {
         );
         const start = this.timestampForUnit(unit);
         if (scheduledPayload && start !== null) {
+            const unitDelta = scheduledPayload.grab_unit
+                ? this.unitDelta(scheduledPayload.grab_unit, unit)
+                : null;
+            const movedStart = unitDelta === null
+                ? start
+                : this.shiftByUnits(scheduledPayload.start_ms, unitDelta, unit);
             const update: CalendarDateUpdate = {
                 object_id: scheduledPayload.object_id,
-                start_ms: start,
+                start_ms: movedStart,
             };
             if (this.hasEndField && scheduledPayload.end_ms !== undefined) {
-                const duration = Math.max(
-                    scheduledPayload.end_ms - scheduledPayload.start_ms,
-                    1,
-                );
-                update.end_ms = start + duration;
+                update.end_ms = unitDelta === null
+                    ? movedStart + Math.max(
+                        scheduledPayload.end_ms - scheduledPayload.start_ms,
+                        1,
+                    )
+                    : this.shiftByUnits(scheduledPayload.end_ms, unitDelta, unit);
             }
             void this.persistDateUpdates([update], true);
             return;
@@ -569,10 +579,52 @@ export class Calendar extends BaseDataViewComponent {
             const payload = JSON.parse(rawPayload) as Partial<CalendarDragPayload>;
             if (!payload.object_id || !Number.isFinite(payload.start_ms)) return null;
             if (payload.end_ms !== undefined && !Number.isFinite(payload.end_ms)) return null;
+            if (payload.grab_unit !== undefined && typeof payload.grab_unit !== "string") return null;
             return payload as CalendarDragPayload;
         } catch {
             return null;
         }
+    }
+
+    private unitDelta(fromUnit: string, toUnit: string): number | null {
+        const fromMonth = /^(\d{4})-(\d{2})$/.exec(fromUnit);
+        const toMonth = /^(\d{4})-(\d{2})$/.exec(toUnit);
+        if (fromMonth && toMonth) {
+            return (
+                (Number(toMonth[1]) - Number(fromMonth[1])) * 12
+                + Number(toMonth[2]) - Number(fromMonth[2])
+            );
+        }
+
+        const unitPattern = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}))?$/;
+        const from = unitPattern.exec(fromUnit);
+        const to = unitPattern.exec(toUnit);
+        if (!from || !to || Boolean(from[4]) !== Boolean(to[4])) return null;
+        const fromValue = Date.UTC(
+            Number(from[1]),
+            Number(from[2]) - 1,
+            Number(from[3]),
+            Number(from[4] ?? 0),
+        );
+        const toValue = Date.UTC(
+            Number(to[1]),
+            Number(to[2]) - 1,
+            Number(to[3]),
+            Number(to[4] ?? 0),
+        );
+        const unitMilliseconds = from[4] ? 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+        return Math.round((toValue - fromValue) / unitMilliseconds);
+    }
+
+    private shiftByUnits(timestamp: number, units: number, unit: string): number {
+        let value = timestamp;
+        const direction: CalendarDirection = units < 0
+            ? (unit.includes("T") ? "up" : "left")
+            : (unit.includes("T") ? "down" : "right");
+        for (let index = 0; index < Math.abs(units); index += 1) {
+            value = this.shiftTimestamp(value, direction);
+        }
+        return value;
     }
 
     private timestampForUnit(unit: string): number | null {
