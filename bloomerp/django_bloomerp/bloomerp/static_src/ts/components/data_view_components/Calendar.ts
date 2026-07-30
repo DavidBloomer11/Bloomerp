@@ -60,6 +60,7 @@ export class Calendar extends BaseDataViewComponent {
     private pageOffset = 0;
     private mutationInFlight = false;
     private activeGestureController: AbortController | null = null;
+    private activeGestureCleanup: (() => void) | null = null;
 
     public override initialize(): void {
         if (!this.element) return;
@@ -123,6 +124,8 @@ export class Calendar extends BaseDataViewComponent {
     public override destroy(): void {
         this.activeGestureController?.abort();
         this.activeGestureController = null;
+        this.activeGestureCleanup?.();
+        this.activeGestureCleanup = null;
         super.destroy();
     }
 
@@ -412,18 +415,63 @@ export class Calendar extends BaseDataViewComponent {
         const unitPixels = vertical
             ? 80
             : Math.max(section?.getBoundingClientRect().width ?? 100, 1);
+        const originalStyle = item.getAttribute("style");
+        const originalRect = item.getBoundingClientRect();
         let units = 0;
         this.activeGestureController?.abort();
+        this.activeGestureCleanup?.();
         const gesture = new AbortController();
         this.activeGestureController = gesture;
+        const cleanup = (): void => {
+            if (originalStyle === null) item.removeAttribute("style");
+            else item.setAttribute("style", originalStyle);
+            this.clearDropHighlights();
+        };
+        this.activeGestureCleanup = cleanup;
+        const finishGesture = (): void => {
+            gesture.abort();
+            if (this.activeGestureController === gesture) {
+                this.activeGestureController = null;
+            }
+            cleanup();
+            if (this.activeGestureCleanup === cleanup) {
+                this.activeGestureCleanup = null;
+            }
+        };
 
         window.addEventListener("pointermove", (moveEvent: PointerEvent) => {
             const position = vertical ? moveEvent.clientY : moveEvent.clientX;
-            units = Math.round((position - origin) / unitPixels);
+            const delta = position - origin;
+            moveEvent.preventDefault();
+            units = Math.round(delta / unitPixels);
+
+            if (originalStyle === null) item.removeAttribute("style");
+            else item.setAttribute("style", originalStyle);
+            const size = Math.max(
+                (vertical ? originalRect.height : originalRect.width)
+                + (isStart ? -delta : delta),
+                8,
+            );
+            item.style.opacity = "0.7";
+            item.style.pointerEvents = "none";
+            item.style.zIndex = "30";
+            if (vertical) {
+                item.style.height = `${size}px`;
+                if (isStart) item.style.transform = `translateY(${delta}px)`;
+            } else {
+                item.style.width = `${size}px`;
+                if (isStart) item.style.transform = `translateX(${delta}px)`;
+            }
+
+            this.clearDropHighlights();
+            this.findDropzone(moveEvent)?.classList.add(
+                "ring-2",
+                "ring-inset",
+                "ring-primary",
+            );
         }, { signal: gesture.signal });
         window.addEventListener("pointerup", () => {
-            gesture.abort();
-            if (this.activeGestureController === gesture) this.activeGestureController = null;
+            finishGesture();
             if (units === 0) return;
             let value = original;
             const direction: CalendarDirection = units < 0
@@ -442,8 +490,7 @@ export class Calendar extends BaseDataViewComponent {
             }], true);
         }, { signal: gesture.signal, once: true });
         window.addEventListener("pointercancel", () => {
-            gesture.abort();
-            if (this.activeGestureController === gesture) this.activeGestureController = null;
+            finishGesture();
         }, { signal: gesture.signal, once: true });
     };
 
@@ -559,7 +606,7 @@ export class Calendar extends BaseDataViewComponent {
         void this.persistDateUpdates([update], true);
     };
 
-    private findDropzone(event: DragEvent): HTMLElement | null {
+    private findDropzone(event: DragEvent | PointerEvent): HTMLElement | null {
         const direct = (event.target as HTMLElement | null)?.closest<HTMLElement>(
             "[data-calendar-dropzone]",
         );
