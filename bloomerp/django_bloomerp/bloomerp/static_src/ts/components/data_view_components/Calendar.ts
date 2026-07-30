@@ -12,6 +12,11 @@ type CalendarDragPayload = {
     start_ms: number;
     end_ms?: number;
 };
+type CalendarFocusBookmark = {
+    objectId?: string;
+    row?: string;
+    column?: string;
+};
 
 export class CalendarCell extends BaseDataViewCell {
     private get section(): HTMLElement | null {
@@ -105,8 +110,13 @@ export class Calendar extends BaseDataViewComponent {
             if (!event.metaKey || !["ArrowLeft", "ArrowRight"].includes(event.key)) return;
             event.preventDefault();
             event.stopImmediatePropagation();
-            this.navigateTo(this.pageOffset + (event.key === "ArrowLeft" ? -1 : 1));
+            this.navigateTo(
+                this.pageOffset + (event.key === "ArrowLeft" ? -1 : 1),
+                true,
+            );
         }, { capture: true, signal: controller.signal });
+
+        this.restorePendingFocus();
     }
 
     public override destroy(): void {
@@ -131,8 +141,85 @@ export class Calendar extends BaseDataViewComponent {
         return this.move("right");
     }
 
-    private navigateTo(pageOffset: number): void {
+    private navigateTo(pageOffset: number, preserveFocus: boolean = false): void {
+        if (preserveFocus) this.queueFocusRestore(false);
         this.dataViewContainer?.filter({ calendar_page: pageOffset });
+    }
+
+    private queueFocusRestore(
+        followObject: boolean,
+        fallbackObjectId?: string,
+    ): void {
+        const container = this.dataViewContainer?.element;
+        if (!container) return;
+
+        const currentElement = this.currentCell?.element;
+        const currentEvent = currentElement?.closest<HTMLElement>("[data-calendar-event]");
+        const section = this.sectionForElement(currentElement);
+        const bookmark: CalendarFocusBookmark = {
+            ...(followObject
+                ? { objectId: currentEvent?.dataset.objectId ?? fallbackObjectId }
+                : {}),
+            ...(section?.dataset.calendarRow !== undefined
+                ? { row: section.dataset.calendarRow }
+                : {}),
+            ...(section?.dataset.calendarColumn !== undefined
+                ? { column: section.dataset.calendarColumn }
+                : {}),
+        };
+        container.dataset.calendarFocusBookmark = JSON.stringify(bookmark);
+    }
+
+    private restorePendingFocus(): void {
+        const container = this.dataViewContainer?.element;
+        const rawBookmark = container?.dataset.calendarFocusBookmark;
+        if (!container || !rawBookmark) return;
+        delete container.dataset.calendarFocusBookmark;
+
+        let bookmark: CalendarFocusBookmark;
+        try {
+            bookmark = JSON.parse(rawBookmark) as CalendarFocusBookmark;
+        } catch {
+            return;
+        }
+
+        window.requestAnimationFrame(() => {
+            if (!this.element?.isConnected) return;
+            let target: HTMLElement | null = null;
+            if (bookmark.objectId) {
+                target = this.element.querySelector<HTMLElement>(
+                    `[data-calendar-event][data-object-id="${CSS.escape(bookmark.objectId)}"]`,
+                );
+            }
+            if (!target && bookmark.row !== undefined && bookmark.column !== undefined) {
+                const section = this.element.querySelector<HTMLElement>(
+                    `[data-calendar-row="${CSS.escape(bookmark.row)}"]`
+                    + `[data-calendar-column="${CSS.escape(bookmark.column)}"]`,
+                );
+                target = section?.querySelector<HTMLElement>("[data-calendar-unit-cell]") ?? null;
+            }
+
+            const component = target ? getComponent(target) : null;
+            if (component instanceof CalendarCell) {
+                this.focus(component);
+                this.collapseSelectionToActive();
+                this.element.focus({ preventScroll: true });
+                return;
+            }
+            this.initFocus();
+        });
+    }
+
+    private sectionForElement(element: HTMLElement | null | undefined): HTMLElement | null {
+        if (!this.element || !element) return null;
+        const direct = element.closest<HTMLElement>("[data-calendar-unit-section]");
+        if (direct) return direct;
+        const unit = element.dataset.calendarUnit;
+        return unit
+            ? this.element.querySelector<HTMLElement>(
+                `[data-calendar-unit-section][data-calendar-unit="${CSS.escape(unit)}"]`,
+            )
+            : null;
     }
 
     protected override handleAltArrow(event: KeyboardEvent): boolean {
@@ -527,7 +614,10 @@ export class Calendar extends BaseDataViewComponent {
                 console.error("Failed to update calendar dates", await response.text());
                 return;
             }
-            if (refresh) this.dataViewContainer?.refresh();
+            if (refresh) {
+                this.queueFocusRestore(true, updates[0]?.object_id);
+                this.dataViewContainer?.refresh();
+            }
         } catch (error) {
             showMessage("Unable to update the calendar dates.", MessageType.ERROR);
             console.error("Failed to update calendar dates", error);
