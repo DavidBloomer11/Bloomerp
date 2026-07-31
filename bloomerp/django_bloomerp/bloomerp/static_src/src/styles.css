@@ -18,6 +18,9 @@
 @source "../../templates";
 @source "../../templates/components/document_templates";
 
+/* Keep dark mode controlled by ThemeProvider instead of the media query. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /*
 * Custom theme configuration for Tailwind CSS v4
 */
@@ -105,6 +108,36 @@
     text-rendering: optimizeLegibility;
     font-optical-sizing: auto;
   }
+
+  html.dark {
+    color-scheme: dark;
+  }
+}
+
+/*
+* Dark-mode compatibility for existing neutral UI. New components should use
+* explicit dark: variants; these shared mappings keep legacy surfaces readable
+* without spreading theme state or one-off selectors throughout the app.
+*/
+@layer utilities {
+  .dark .bg-white { background-color: var(--color-zinc-900); }
+  .dark .bg-gray-50 { background-color: var(--color-zinc-900); }
+  .dark .bg-gray-100 { background-color: var(--color-zinc-800); }
+  .dark .bg-gray-200 { background-color: var(--color-zinc-700); }
+  .dark .hover\:bg-gray-50:hover { background-color: var(--color-zinc-800); }
+  .dark .hover\:bg-gray-100:hover { background-color: var(--color-zinc-800); }
+  .dark .hover\:bg-gray-200:hover { background-color: var(--color-zinc-700); }
+  .dark .text-gray-900 { color: var(--color-zinc-100); }
+  .dark .text-gray-800 { color: var(--color-zinc-200); }
+  .dark .text-gray-700 { color: var(--color-zinc-200); }
+  .dark .text-gray-600 { color: var(--color-zinc-300); }
+  .dark .text-gray-500 { color: var(--color-zinc-400); }
+  .dark .text-gray-400 { color: var(--color-zinc-500); }
+  .dark .border-gray-100 { border-color: var(--color-zinc-800); }
+  .dark .border-gray-200 { border-color: var(--color-zinc-700); }
+  .dark .border-gray-300 { border-color: var(--color-zinc-600); }
+  .dark .divide-gray-200 > :not(:last-child) { border-color: var(--color-zinc-700); }
+  .dark .ring-offset-white { --tw-ring-offset-color: var(--color-zinc-900); }
 }
 
 /*
