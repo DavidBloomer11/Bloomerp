@@ -35,6 +35,10 @@ def _change_data_view_field_visibility(
             return HttpResponse("Permission denied", status=403)
 
         toggle_field_visibility(request.user, content_type, field_id, view_type)
+        # toggle_field_visibility loads and saves the selected preference through
+        # PreferenceManager. Refresh this request's instance so the response does
+        # not render the field button state from one click behind.
+        preference.refresh_from_db(fields=["display_fields"])
     except (ValueError, ApplicationField.DoesNotExist) as e:
         return HttpResponse(f"Invalid field: {e}", status=400)
 
