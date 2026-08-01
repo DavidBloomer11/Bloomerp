@@ -1,7 +1,10 @@
 from django.views.generic import TemplateView
-from bloomerp.views.base import BaseBloomerpView
-from bloomerp.router import router
+
+from bloomerp.models.workspaces.workspace import Workspace
 from bloomerp.modules.definition import module_registry
+from bloomerp.router import router
+from bloomerp.services.preference_services import PreferenceManager
+from bloomerp.views.workspaces.base import BaseWorkspaceView
 
 
 @router.register(
@@ -11,17 +14,31 @@ from bloomerp.modules.definition import module_registry
     route_type='app',
     url_name='bloomerp_home_view'
 )
-class BloomerpHomeView(BaseBloomerpView, TemplateView):
-    template_name = 'views/workspaces/bloomerp_home_view.html'
+class BloomerpHomeView(BaseWorkspaceView, TemplateView):
+    template_name = "views/workspaces/bloomerp_home_view.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["modules"] = module_registry.get_root_modules()
+        workspace = self.get_workspace()
+
+        if workspace:
+            context.update(self.get_workspace_template_context())
+        else:
+            context["modules"] = module_registry.get_root_modules()
+
         return context
 
+    def get_module_id(self) -> None:
+        """Return the unscoped module id used by general workspaces."""
+        return None
 
+    def get_workspace(self) -> Workspace | None:
+        """Return the selected general workspace unless modules were requested."""
+        if self.request.GET.get("modules") == "1":
+            return None
 
-        
-
-
-    
+        return PreferenceManager(self.request.user).get_or_create_selected(
+            Workspace,
+            {"module_id": None},
+            force_create=False,
+        )
