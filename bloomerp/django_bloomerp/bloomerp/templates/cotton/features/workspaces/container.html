@@ -55,6 +55,20 @@
     </c-slot>
     
     <c-slot name="buttons_right">
+        {% if show_module_selector %}
+            <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                hx-get="{% url 'bloomerp_home_view' %}?modules=1"
+                hx-target="#main-content"
+                hx-push-url="true"
+                hx-swap="innerHTML"
+            >
+                <i class="fa fa-puzzle-piece"></i>
+                <c-i18n.blocktrans>Select module</c-i18n.blocktrans>
+            </button>
+        {% endif %}
+
         <c-ui.shortcut_tooltip position="bottom" shortcut="mod+6">
             <c-features.preferences.select_preference_button
                 model="Workspace"
