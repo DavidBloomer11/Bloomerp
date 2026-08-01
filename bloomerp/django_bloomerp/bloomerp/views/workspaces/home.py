@@ -23,6 +23,7 @@ class BloomerpHomeView(BaseWorkspaceView, TemplateView):
 
         if workspace:
             context.update(self.get_workspace_template_context())
+            context["show_module_selector"] = True
         else:
             context["modules"] = module_registry.get_root_modules()
 
