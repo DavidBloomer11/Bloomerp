@@ -163,7 +163,12 @@ Slots:
     <!--End drawer section-->
 
     <!--Display options modal-->
-    <c-ui.modal id="field-display-option-modal" title="Edit display options"></c-ui.modal>
+    <c-ui.modal
+        id="field-display-option-modal"
+        title="Edit display options"
+        size="xl"
+        body_class="!max-h-[calc(100vh-8rem)]"
+    ></c-ui.modal>
     <!--End display options modal-->
     {% endif %}
 
@@ -189,5 +194,4 @@ Slots:
     </div>
     <!--End Search panel-->
 </div>
-
 

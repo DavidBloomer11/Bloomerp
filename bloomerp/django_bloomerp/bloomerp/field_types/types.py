@@ -1,10 +1,11 @@
 from dataclasses import dataclass, field as dataclass_field
 
 from bloomerp.field_types.dataview_value_functions import render_foreign_key_dataview_value, render_generic_relation_value, render_m2m_dataview_value
-from bloomerp.field_types.display_options import FieldDisplayOption
+from bloomerp.field_types.display_options import LABEL_OPTION, FieldDisplayOption
 from bloomerp.field_types.lookups import BOOLEAN_LOOKUPS, DATE_LOOKUPS, NUMERIC_LOOKUPS, ONE_TO_MANY_LOOKUPS, TEXT_LOOKUPS, TIME_LOOKUPS, WEEK_LOOKUPS, Lookup
 from bloomerp.field_types.options import AUTO_NOW_ADD_FIELD_OPTION, AUTO_NOW_FIELD_OPTION, BLANK_FIELD_OPTION, COMMON_CHOICE_FIELD_OPTIONS, COMMON_FIELD_OPTIONS, COMMON_RELATION_FIELD_OPTIONS, COMMON_TEXT_FIELD_OPTIONS, DB_INDEX_FIELD_OPTION, DECIMAL_PLACES_FIELD_OPTION, DEFAULT_FIELD_OPTION, HELP_TEXT_FIELD_OPTION, MAX_DIGITS_FIELD_OPTION, NULL_FIELD_OPTION, ON_DELETE_FIELD_OPTION, PROPERTY_EXPRESSION, RELATED_NAME_FIELD_OPTION, TO_FIELD_OPTION, UNIQUE_FIELD_OPTION, UPLOAD_TO_FIELD_OPTION, VERBOSE_NAME_FIELD_OPTION, FieldOption
 from bloomerp.form_fields.address_field import AddressFormField
+from bloomerp.form_fields.behavior_field import BehaviorField
 from bloomerp.form_fields.files_relation_field import FilesRelationField
 from bloomerp.form_fields.icon_field import IconFormField
 from bloomerp.form_fields.one_to_many_field import OneToManyField
@@ -19,6 +20,7 @@ from bloomerp.model_fields.phone_number_field import PhoneNumberField
 from bloomerp.model_fields.user_field import UserField
 from bloomerp.model_fields.week_field import WeekField
 from bloomerp.widgets.address_widget import AddressWidget
+from bloomerp.widgets.behavior_builder_widget import BehaviorBuilderWidget
 from bloomerp.widgets.code_editor_widget import CodeEditorWidget
 from bloomerp.widgets.foreign_field_widget import ForeignFieldWidget
 from bloomerp.widgets.icon_picker_widget import IconPickerWidget
@@ -105,7 +107,49 @@ def _is_parent_link_field(application_field: "ApplicationField", parent_model: t
     return getattr(remote_field, "model", None) == parent_model
 
 
+def get_behavior_form_field_kwargs(application_field: "ApplicationField") -> dict[str, Any]:
+    from bloomerp.models import ApplicationField
 
+    fields = []
+    for field in ApplicationField.objects.filter(
+        content_type=application_field.content_type,
+    ).order_by("field"):
+        try:
+            field_type = field.get_field_type_enum().value.id
+        except (ValueError, AttributeError):
+            field_type = field.field_type
+        fields.append(
+            {
+                "id": str(field.pk),
+                "name": field.field,
+                "label": field.title,
+                "fieldType": field_type,
+            }
+        )
+
+    return {
+        "widget": BehaviorBuilderWidget(
+            source_field={
+                "id": str(application_field.pk),
+                "label": application_field.title,
+                "fieldType": next(
+                    (field["fieldType"] for field in fields if field["id"] == str(application_field.pk)),
+                    application_field.field_type,
+                ),
+            },
+            field_catalog=fields,
+        )
+    }
+
+
+BEHAVIORS_DISPLAY_OPTION = FieldDisplayOption(
+    id="behaviors",
+    label="Behaviors",
+    form_field_cls=BehaviorField,
+    required=False,
+    help_text="Define what this form should do when the field changes.",
+    get_form_field_kwargs=get_behavior_form_field_kwargs,
+)
 
 @dataclass(frozen=True)
 class FieldTypeDefinition:
@@ -140,9 +184,27 @@ class FieldTypeDefinition:
 
     # Display options
     field_display_options : list[FieldDisplayOption] = dataclass_field(default_factory=list)
+    supports_behaviors: bool = True
 
     # Dataview display
     dataview_value_func : Callable[["ApplicationField", Model], str] = lambda application_field, object: getattr(object, application_field.field, None)
+
+    def __post_init__(self):
+        if self.supports_behaviors and not any(
+            option.id == BEHAVIORS_DISPLAY_OPTION.id
+            for option in self.field_display_options
+        ):
+            object.__setattr__(
+                self,
+                "field_display_options",
+                [*self.field_display_options, BEHAVIORS_DISPLAY_OPTION, LABEL_OPTION],
+            )
+        else:
+            object.__setattr__(
+                self,
+                "field_display_options",
+                [*self.field_display_options, LABEL_OPTION],
+            )
     
     def get_widget_cls(self) -> Type[Widget]:
         """Returns the widget_cls for the field type."""
@@ -271,14 +333,6 @@ class FieldType(Enum):
         },
         lookups=TEXT_LOOKUPS,
         field_options=COMMON_TEXT_FIELD_OPTIONS,
-        field_display_options=[
-            FieldDisplayOption(
-                id="label",
-                label="Label",
-                form_field_cls=forms.CharField,
-                required=False,
-            )
-        ]
     )
 
     CODE_FIELD = FieldTypeDefinition(
