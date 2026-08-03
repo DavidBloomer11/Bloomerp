@@ -4,6 +4,7 @@ import { type ContextMenuItem, getContextMenu } from "../../utils/contextMenu";
 import { componentIdentifier, getComponent, initComponents } from "../BaseComponent";
 import BaseSectionedLayoutContainer, { type SectionedLayoutRowPayload } from "../layouts/BaseSectionedLayoutContainer";
 import { DetailViewCell, type DetailViewCellChangeDetail, type DetailViewCellSnapshot, type DetailViewCellValue } from "./DetailViewCell";
+import FormBehaviorRuntime from "../behaviors/FormBehaviorRuntime";
 
 type RowInfo = {
     element: HTMLElement;
@@ -40,6 +41,7 @@ export default class ObjectCRUDViewContainer extends BaseSectionedLayoutContaine
     private resetButtonHandler: (() => void) | null = null;
     private undoShortcutHandler: ((event: KeyboardEvent) => void) | null = null;
     private layoutFieldUpdatedHandler: ((event: Event) => void) | null = null;
+    private behaviorRuntime: FormBehaviorRuntime | null = null;
 
     protected getItemSelector(): string {
         return `[${componentIdentifier}="detail-view-value"]`;
@@ -129,9 +131,17 @@ export default class ObjectCRUDViewContainer extends BaseSectionedLayoutContaine
         this.setNonRequiredFieldsVisibility(this.nonRequiredFieldsVisible);
         this.syncChangeButtonsVisibility();
 
+        const isLayoutBuilder = this.element.dataset.initEdit?.toLowerCase() === "true";
+        if (!isLayoutBuilder) {
+            this.behaviorRuntime = new FormBehaviorRuntime(this.element);
+            this.behaviorRuntime.initialize();
+        }
+
     }
 
     public override destroy(): void {
+        this.behaviorRuntime?.destroy();
+        this.behaviorRuntime = null;
         super.destroy();
         if (this.focusInHandler && this.element) {
             this.element.removeEventListener("focusin", this.focusInHandler);
@@ -188,6 +198,7 @@ export default class ObjectCRUDViewContainer extends BaseSectionedLayoutContaine
         this.syncChangeButtonsVisibility();
         this.syncToggleVisibility();
         this.setNonRequiredFieldsVisibility(this.nonRequiredFieldsVisible);
+        this.behaviorRuntime?.refresh();
     }
 
     public override toggleEditMode(): void {
@@ -488,7 +499,8 @@ export default class ObjectCRUDViewContainer extends BaseSectionedLayoutContaine
         this.items.forEach((item) => {
             if (!item.element) return;
             const isRequired = item.element.dataset.required === "True";
-            const shouldShow = shouldShowAllFields || isRequired;
+            const isBehaviorHidden = item.element.hasAttribute("data-behavior-hidden");
+            const shouldShow = !isBehaviorHidden && (shouldShowAllFields || isRequired);
             item.element.classList.toggle("hidden", !shouldShow);
         });
 

@@ -50,6 +50,7 @@ import { SidebarItem } from './components/sidebar/SidebarItem';
 import FocusIn from './components/inputs/FocusIn';
 import ShortcutTooltip from './components/ShortcutTooltip';
 import OrderedFieldSelect from './components/inputs/OrderedFieldSelect';
+import BehaviorBuilder from './components/inputs/BehaviorBuilder';
 import FocusOnForm from './components/FocusOnForm';
 import { BloomerpTextEditor } from './components/text_editor/BloomerpTextEditor';
 import { DocumentTemplateBuilder } from './components/DocumentTemplateBuilder';
@@ -164,6 +165,7 @@ registerComponent('sidebar-item', SidebarItem)
 registerComponent('focus-in', FocusIn)
 registerComponent('shortcut-tooltip', ShortcutTooltip);
 registerComponent('ordered-field-select', OrderedFieldSelect);
+registerComponent('behavior-builder', BehaviorBuilder);
 
 registerComponent('focus-on-form', FocusOnForm);
 registerComponent('base-wizard', BaseWizard)
