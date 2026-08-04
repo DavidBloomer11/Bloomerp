@@ -9,7 +9,7 @@
 	</head>
 
 	
-	<body class="bg-base" id="bloomerpBody" x-data>
+	<body class="bg-base text-gray-900 dark:bg-zinc-950 dark:text-zinc-100" id="bloomerpBody" x-data>
 		{% block body %}
 
 		<!-- Sidebar -->
@@ -17,7 +17,7 @@
 		<!-- End Sidebar-->		
 		 
 		<!--Main -->
-		<main id="main" class="relative z-0 transition-all duration-300 ease-in-out m-3 bg-white h-[calc(100vh-1.5rem)] rounded-xl overflow-y-auto border border-gray-200">
+		<main id="main" class="relative z-0 transition-all duration-300 ease-in-out m-3 bg-white dark:bg-zinc-900 h-[calc(100vh-1.5rem)] rounded-xl overflow-y-auto border border-gray-200 dark:border-zinc-700">
 			<div id="main-content" hx-history-elt class="h-full overflow-y-auto">
 				{% block main %}
 					{% if include_main_content %}
@@ -45,7 +45,7 @@
 						<i class="fa fa-magnifying-glass"></i>
 					</span>
 					<input id="global-search-modal-input" autofocus placeholder="Search or type a command"
-						class="w-full pl-10 pr-4 py-3 ring-0 focus:ring-0 border-0 focus:border-0" />
+						class="w-full bg-white pl-10 pr-4 py-3 ring-0 focus:ring-0 border-0 focus:border-0" />
 				</div>
 				<div id="global-search-results"
 					class="divide-y divide-gray-200 max-h-96 overflow-y-auto rounded-b-lg bg-white">

@@ -71,6 +71,7 @@ import { InboxItem } from './components/inbox/InboxItem';
 import { EmailEditor } from './components/inbox/EmailEditor';
 import { SelectPreference } from './components/SelectPreference';
 import BaseSectionedLayoutContainer from './components/layouts/BaseSectionedLayoutContainer';
+import ThemeProvider from './components/theme/ThemeProvider';
 
 Object.assign(window, { showMessage });
 
@@ -80,6 +81,7 @@ registerComponent('drawer', Drawer);
 registerComponent('sidebar', Sidebar);
 registerComponent('breadcrumb', Breadcrumb);
 registerComponent('resizable-div', ResizableDiv);
+registerComponent('theme-provider', ThemeProvider);
 
 // Dataview component
 registerComponent('dataview-container', DataViewContainer);
