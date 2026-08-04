@@ -30,6 +30,8 @@ class CalendarViewMode(models.TextChoices):
     DAY = 'day', 'Day'
     WEEK = 'week', 'Week'
     MONTH = 'month', 'Month'
+    YEAR = 'year', 'Year'
+    LIST = 'list', 'List'
 
 
 def get_default_display_fields() -> dict:
@@ -185,6 +187,20 @@ def _self_relation_field_choices(application_fields: QuerySet[ApplicationField])
 
 def _view_mode_choices(_application_fields: QuerySet[ApplicationField]) -> dict[str, Any]:
     return {"choices": CalendarViewMode.choices}
+
+
+def _calendar_color_field_choices(
+    application_fields: QuerySet[ApplicationField],
+) -> dict[str, Any]:
+    return {
+        "choices": _application_field_choices(
+            application_fields,
+            include_empty=True,
+            empty_label="No color grouping",
+        ),
+        "coerce": int,
+        "empty_value": None,
+    }
 
 
 @dataclass
@@ -395,7 +411,7 @@ class DataviewType(Enum):
         key="calendar",
         label="Calendar",
         icon="fa fa-calendar",
-        description="Displays records on a day, week, or month calendar.",
+        description="Displays records on a day, week, month, year, or list calendar.",
         renderer_cls=CalendarDataviewRenderer,
         opts=[
             PreferenceOption(
@@ -424,6 +440,15 @@ class DataviewType(Enum):
                 description="The calendar period to show.",
                 data_type=str,
                 default_value=CalendarViewMode.WEEK,
+            ),
+            PreferenceOption(
+                key="color_grouping_field_id",
+                label="Color grouping",
+                field_cls=forms.TypedChoiceField,
+                field_attrs_func=_calendar_color_field_choices,
+                description="Optional field used to color calendar items and build the legend.",
+                data_type=int | None,
+                default_value=None,
             ),
         ],
     )

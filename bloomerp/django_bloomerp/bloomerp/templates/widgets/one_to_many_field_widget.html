@@ -3,6 +3,10 @@
 <div
     class="one-to-many-field-widget rounded-xl border border-gray-200 overflow-hidden bg-white focus:outline-none focus:ring-0"
     bloomerp-component="one-to-many-field-widget"
+    data-one-to-many-name="{{ widget.attrs.name }}"
+    data-related-content-type-id="{{ content_type_id|default:'' }}"
+    data-detail-url-template="{{ detail_url_template|default:'' }}"
+    data-page-size="{{ page_size|default:10 }}"
 >
     <table
         id="data-table-{{ content_type_id }}"
@@ -10,52 +14,85 @@
     >
         <thead>
             <tr>
-                <th>
+                <th class="w-10">
                     <input type="checkbox" data-one-to-many-select-all {% if not can_edit %}disabled{% endif %}>
                 </th>
                 {% for column in columns %}
-                    <th>{{ column.title }}</th>
+                    <th
+                        data-one-to-many-column="{{ column.field }}"
+                        data-column-kind="{{ column.kind }}"
+                        data-column-default-value="{{ column.default_value_json }}"
+                    >
+                        <div class="flex items-center justify-between gap-2">
+                            <span>{{ column.title }}</span>
+                            <c-ui.inputs.one_to_many.column_actions :column="column" :can_edit="can_edit" />
+                        </div>
+                    </th>
                 {% endfor %}
+                <th class="w-20"><span class="sr-only"><c-i18n.blocktrans>Row actions</c-i18n.blocktrans></span></th>
             </tr>
         </thead>
         <tbody id="data-table-body-{{ content_type_id }}" data-one-to-many-body>
             {% for row in rows %}
             <tr class="cursor-pointer" data-one-to-many-row>
-                <td>
+                <td class="w-10">
                     {{ row.id_input }}
                     <input type="checkbox" data-one-to-many-row-checkbox {% if not can_edit %}disabled{% endif %}>
                 </td>
                 {% for cell in row.cells %}
-                    <td data-no-row-click>
+                    <td data-no-row-click data-one-to-many-cell="{{ cell.column.field }}">
                         {{ cell.input }}
                     </td>
                 {% endfor %}
+                <td data-no-row-click>
+                    <c-ui.inputs.one_to_many.row_actions :can_edit="can_edit" :row_id="row.id" :detail_url="row.detail_url" />
+                </td>
             </tr>
             {% empty %}
             <tr data-one-to-many-empty-row>
-                <td colspan="{{ columns|length|add:'1' }}" class="text-center text-gray-500 py-6">
+                <td colspan="{{ columns|length|add:'2' }}" class="text-center text-gray-500 py-6">
                     {% trans "No related objects found." %}
                 </td>
             </tr>
             {% endfor %}
         </tbody>
+        {% if show_totals %}
+            <tfoot class="border-t border-gray-200 bg-gray-50" data-one-to-many-totals>
+                <tr>
+                    <td class="px-3 py-2 text-sm font-medium text-gray-700">
+                        <c-i18n.blocktrans>Totals</c-i18n.blocktrans>
+                    </td>
+                    {% for column in columns %}
+                        <td class="px-3 py-2 text-sm text-gray-700">
+                            {% if column.show_total %}
+                                <strong data-one-to-many-total="{{ column.field }}">0</strong>
+                            {% endif %}
+                        </td>
+                    {% endfor %}
+                    <td></td>
+                </tr>
+            </tfoot>
+        {% endif %}
     </table>
     <template data-one-to-many-row-template>
         <tr class="cursor-pointer" data-one-to-many-row>
-            <td>
+            <td class="w-10">
                 {{ empty_row.id_input }}
                 <input type="checkbox" data-one-to-many-row-checkbox {% if not can_edit %}disabled{% endif %}>
             </td>
             {% for cell in empty_row.cells %}
-                <td data-no-row-click>
+                <td data-no-row-click data-one-to-many-cell="{{ cell.column.field }}">
                     {{ cell.input }}
                 </td>
             {% endfor %}
+            <td data-no-row-click>
+                <c-ui.inputs.one_to_many.row_actions :can_edit="can_edit" :row_id="empty_row.id" :detail_url="empty_row.detail_url" />
+            </td>
         </tr>
     </template>
     <template data-one-to-many-empty-row-template>
         <tr data-one-to-many-empty-row>
-            <td colspan="{{ columns|length|add:'1' }}" class="text-center text-gray-500 py-6">
+            <td colspan="{{ columns|length|add:'2' }}" class="text-center text-gray-500 py-6">
                 {% trans "No related objects found." %}
             </td>
         </tr>
@@ -67,6 +104,15 @@
             </button>
             <button type="button" class="btn btn-sm btn-danger hidden" data-one-to-many-delete-rows {% if not can_edit %}disabled{% endif %}>
                 <c-i18n.blocktrans>Remove selected</c-i18n.blocktrans>
+            </button>
+        </div>
+        <div class="hidden items-center gap-2" data-one-to-many-pagination>
+            <button type="button" class="btn btn-sm btn-secondary" data-one-to-many-previous-page aria-label="Previous page">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <span class="text-sm text-gray-600" data-one-to-many-page-status></span>
+            <button type="button" class="btn btn-sm btn-secondary" data-one-to-many-next-page aria-label="Next page">
+                <i class="fa-solid fa-chevron-right"></i>
             </button>
         </div>
     </div>

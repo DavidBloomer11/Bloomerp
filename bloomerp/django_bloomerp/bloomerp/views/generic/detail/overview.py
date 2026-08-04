@@ -27,7 +27,7 @@ class BloomerpDetailOverviewView(LayoutModelFormMixin, BaseBloomerpDetailView):
             self.object,
             self.get_view_permission_str()
         )
-
+    
     def get_view_permission_str(self):
         return create_permission_str(self.model, "view")
 

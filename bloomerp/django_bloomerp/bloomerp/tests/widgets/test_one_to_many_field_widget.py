@@ -1,6 +1,8 @@
+from bs4 import BeautifulSoup
+from django.http import QueryDict
+
 from bloomerp.tests.base import BaseBloomerpModelTestCase
 from bloomerp.widgets.one_to_many_field_widget import OneToManyFieldWidget
-from django.http import QueryDict
 
 class TestCreateView(BaseBloomerpModelTestCase):
     create_foreign_models = True
@@ -55,7 +57,49 @@ class TestCreateView(BaseBloomerpModelTestCase):
         for field_name in RENDERED_FIELDS:
             self.assertIn(field_name, widget_html)
             
-        self.assertNotIn("age", widget_html)  # Ensure that a field not specified is not rendered
+        self.assertNotIn(
+            "test_widget____prefix____age",
+            widget_html,
+        )  # Ensure that a field not specified is not rendered.
+
+    def test_widget_renders_column_defaults_for_new_rows(self):
+        """
+        Use case: Render a one-to-many widget whose related model has a field default.
+        Expected result: The default is exposed as column metadata and fills missing rows.
+        """
+        # 1. Configure a default for the related model's age field.
+        model_field = self.CustomerModel._meta.get_field("age")
+        original_default = model_field.default
+        model_field.default = 42
+
+        try:
+            # 2. Render a prefilled row that omits the defaulted field.
+            widget = OneToManyFieldWidget(
+                attrs={
+                    "related_model": self.CustomerModel,
+                    "parent_model": self.CountryModel,
+                    "layout_config": {"inline_fields": ["first_name", "age"]},
+                }
+            )
+            soup = BeautifulSoup(
+                widget.render(
+                    name="customers",
+                    value=[{"first_name": "Draft customer"}],
+                    attrs={},
+                ),
+                "html.parser",
+            )
+
+            # 3. Verify both the column metadata and row/template inputs use the default.
+            age_column = soup.select_one('[data-one-to-many-column="age"]')
+            self.assertIsNotNone(age_column)
+            self.assertEqual(age_column["data-column-default-value"], "42")
+            age_inputs = soup.select(
+                '[data-one-to-many-cell="age"] input[name*="__age"]'
+            )
+            self.assertEqual([input_element.get("value") for input_element in age_inputs], ["42", "42"])
+        finally:
+            model_field.default = original_default
 
     def test_widget_collects_nested_rows_for_form_cleaning(self):
         widget = OneToManyFieldWidget()
@@ -78,5 +122,41 @@ class TestCreateView(BaseBloomerpModelTestCase):
                 {"id": "20", "status": "draft"},
             ],
         )
+
+    def test_row_preview_action_is_only_available_for_persisted_rows(self):
+        """
+        Use case: Render persisted and draft rows in the same one-to-many widget.
+        Expected result: Only the persisted row links to its detail view and preview.
+        """
+        # 1. Render one saved customer and one draft customer row.
+        customer = self.CustomerModel.objects.first()
+        widget = OneToManyFieldWidget(
+            attrs={
+                "related_model": self.CustomerModel,
+                "parent_model": self.CountryModel,
+                "layout_config": {"inline_fields": ["first_name"]},
+            }
+        )
+        widget_html = widget.render(
+            name="customers",
+            value=[customer, {"first_name": "Draft customer"}],
+            attrs={},
+        )
+
+        # 2. Inspect the persisted, draft, and row-template preview actions.
+        preview_actions = BeautifulSoup(widget_html, "html.parser").select(
+            "tr[data-one-to-many-row] [data-one-to-many-view-row]"
+        )
+        self.assertEqual(len(preview_actions), 3)
+        persisted_action, draft_action, template_action = preview_actions
+
+        # 3. Verify only the saved row has an object ID and navigation URL.
+        self.assertEqual(persisted_action["data-object-id"], str(customer.pk))
+        self.assertEqual(persisted_action["href"], customer.get_absolute_url())
+        self.assertNotIn("hidden", persisted_action.get("class", []))
+        for action in (draft_action, template_action):
+            self.assertEqual(action["data-object-id"], "")
+            self.assertNotIn("href", action.attrs)
+            self.assertIn("hidden", action.get("class", []))
         
     

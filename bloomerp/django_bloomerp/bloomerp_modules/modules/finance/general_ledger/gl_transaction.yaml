@@ -59,6 +59,60 @@ fields:
       max_digits: 15
       decimal_places: 2
       default: 0
+
+  - id: currency
+    name: Currency
+    type: CharField
+    options:
+      max_length: 10
+      default: USD
+
+  - id: exchange_rate
+    name: Exchange Rate
+    type: DecimalField
+    options:
+      max_digits: 15
+      decimal_places: 6
+      default: 1
+
+  - id: transaction_type
+    name: Transaction Type
+    type: ChoiceField
+    options:
+      choices:
+        - ["DEBIT", "Debit"]
+        - ["CREDIT", "Credit"]
+        - ["ADJUSTMENT", "Adjustment"]
+        - ["TRANSFER", "Transfer"]
+        - ["REVALUATION", "Revaluation"]
+      default: DEBIT
+
+  - id: batch_number
+    name: Batch Number
+    type: CharField
+    options:
+      max_length: 30
+      null: true
+      blank: true
+
+  - id: line_number
+    name: Line Number
+    type: IntegerField
+    options:
+      default: 1
+
+  - id: is_reconciled
+    name: Reconciled
+    type: BooleanField
+    options:
+      default: false
+
+  - id: reconciliation_date
+    name: Reconciliation Date
+    type: DateField
+    options:
+      null: true
+      blank: true
       
   - id: running_balance
     name: Running Balance

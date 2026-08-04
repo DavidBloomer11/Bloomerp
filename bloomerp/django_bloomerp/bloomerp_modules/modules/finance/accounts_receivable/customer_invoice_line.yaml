@@ -1,0 +1,67 @@
+id: customer_invoice_line
+name: Customer Invoice Line
+description: Line item on a customer invoice
+name_plural: Customer Invoice Lines
+fields:
+  - id: invoice
+    name: Invoice
+    type: ForeignKey
+    options:
+      to: finance.accounts_receivable.customer_invoice
+      on_delete: call(django.db.models.CASCADE)
+  - id: line_number
+    name: Line Number
+    type: IntegerField
+  - id: product_code
+    name: Product Code
+    type: CharField
+    options:
+      max_length: 50
+      null: true
+      blank: true
+  - id: description
+    name: Description
+    type: TextField
+  - id: quantity
+    name: Quantity
+    type: DecimalField
+    options:
+      max_digits: 15
+      decimal_places: 3
+      default: 1
+  - id: unit_price
+    name: Unit Price
+    type: DecimalField
+    options:
+      max_digits: 15
+      decimal_places: 2
+      default: 0
+  - id: tax_rate
+    name: Tax Rate
+    type: DecimalField
+    options:
+      max_digits: 7
+      decimal_places: 4
+      default: 0
+  - id: tax_amount
+    name: Tax Amount
+    type: DecimalField
+    options:
+      max_digits: 15
+      decimal_places: 2
+      default: 0
+  - id: line_total
+    name: Line Total
+    type: DecimalField
+    options:
+      max_digits: 15
+      decimal_places: 2
+      default: 0
+  - id: revenue_account
+    name: Revenue Account
+    type: ForeignKey
+    options:
+      to: finance.general_ledger.account
+      null: true
+      blank: true
+      on_delete: call(django.db.models.SET_NULL)
