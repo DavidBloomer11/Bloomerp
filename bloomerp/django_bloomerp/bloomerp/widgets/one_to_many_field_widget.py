@@ -1,7 +1,9 @@
+import json
 from typing import TYPE_CHECKING
 from uuid import UUID
 
 from django.contrib.contenttypes.models import ContentType
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.db.models import Model
 from django.forms import widgets
@@ -111,7 +113,16 @@ class OneToManyFieldWidget(widgets.Widget):
     def _should_skip_field(self, application_field) -> bool:
         return application_field.field in SKIPPED_FIELD_NAMES
 
-    def _render_cell_input(self, *, name, obj, application_field, attrs, row_index):
+    def _render_cell_input(
+        self,
+        *,
+        name,
+        obj,
+        application_field,
+        attrs,
+        row_index,
+        default_values=None,
+    ):
         cell_attrs = {
             "class": "one-to-many-field-widget__input input input-sm w-full border-0 bg-transparent px-2 py-1 shadow-none focus:bg-white",
         }
@@ -120,7 +131,11 @@ class OneToManyFieldWidget(widgets.Widget):
         if attrs and attrs.get("readonly"):
             cell_attrs["readonly"] = "readonly"
 
-        value = self._get_cell_value(obj=obj, application_field=application_field)
+        value = self._get_cell_value(
+            obj=obj,
+            application_field=application_field,
+            default_values=default_values,
+        )
         widget = application_field.get_widget()
         return widget.render(
             name=f"{name}__{row_index}__{application_field.field}",
@@ -128,14 +143,16 @@ class OneToManyFieldWidget(widgets.Widget):
             attrs=cell_attrs,
         )
 
-    def _get_cell_value(self, *, obj, application_field):
+    def _get_cell_value(self, *, obj, application_field, default_values=None):
         if obj is None:
-            return None
+            return (default_values or {}).get(application_field.field)
         if isinstance(obj, dict):
-            return obj.get(application_field.field)
+            if application_field.field in obj:
+                return obj[application_field.field]
+            return (default_values or {}).get(application_field.field)
         return getattr(obj, application_field.field, None)
 
-    def _build_cells(self, *, name, obj, columns, attrs, row_index):
+    def _build_cells(self, *, name, obj, columns, attrs, row_index, default_values=None):
         return [
             {
                 "column": column,
@@ -145,6 +162,7 @@ class OneToManyFieldWidget(widgets.Widget):
                     attrs=attrs,
                     name=name,
                     row_index=row_index,
+                    default_values=default_values,
                 ),
             }
             for column in columns
@@ -170,6 +188,9 @@ class OneToManyFieldWidget(widgets.Widget):
     def _build_column_context(
         self,
         application_field: "ApplicationField",
+        *,
+        has_default: bool,
+        default_value: object = None,
     ) -> dict[str, object]:
         """Build the metadata used by column actions, totals, and cell selectors."""
         kind = self._get_column_kind(application_field)
@@ -179,7 +200,37 @@ class OneToManyFieldWidget(widgets.Widget):
             "title": application_field.title,
             "kind": kind,
             "show_total": bool(self.layout_config.get("show_totals")) and kind == "number",
+            "default_value_json": (
+                self._serialize_default_value(default_value) if has_default else ""
+            ),
         }
+
+    @staticmethod
+    def _get_column_default(application_field: "ApplicationField") -> tuple[bool, object]:
+        """Return a related model field's default in widget-ready form."""
+        try:
+            model_field = application_field._get_model_field()
+        except Exception:
+            return False, None
+        if not model_field.has_default():
+            return False, None
+
+        try:
+            default_value = model_field.get_default()
+            form_field = application_field.get_form_field()
+            if form_field is not None:
+                default_value = form_field.prepare_value(default_value)
+            return True, default_value
+        except Exception:
+            return True, None
+
+    @staticmethod
+    def _serialize_default_value(value: object) -> str:
+        """Serialize a column default for the frontend data attribute."""
+        try:
+            return json.dumps(value, cls=DjangoJSONEncoder)
+        except (TypeError, ValueError):
+            return json.dumps(str(value))
     
     def get_context(self, name, value, attrs):
         context = super().get_context(name, value, attrs)
@@ -195,6 +246,20 @@ class OneToManyFieldWidget(widgets.Widget):
             context['detail_url_template'] = ""
         
         columns = self.get_columns()
+        column_defaults = {}
+        column_context = []
+        for column in columns:
+            has_default, default_value = self._get_column_default(column)
+            if has_default:
+                column_defaults[column.field] = default_value
+            column_context.append(
+                self._build_column_context(
+                    column,
+                    has_default=has_default,
+                    default_value=default_value,
+                )
+            )
+
         related_objects = self._get_related_objects(value)
         rows = []
         for row_index, obj in enumerate(related_objects):
@@ -210,12 +275,13 @@ class OneToManyFieldWidget(widgets.Widget):
                         columns=columns,
                         attrs=attrs,
                         row_index=row_index,
+                        default_values=column_defaults,
                     ),
                 }
             )
 
         context['related_objects'] = related_objects
-        context['columns'] = [self._build_column_context(column) for column in columns]
+        context['columns'] = column_context
         context['rows'] = rows
         context['empty_row'] = {
             "id": "",
@@ -227,6 +293,7 @@ class OneToManyFieldWidget(widgets.Widget):
                 columns=columns,
                 attrs=attrs,
                 row_index="__prefix__",
+                default_values=column_defaults,
             ),
         }
         context['can_edit'] = not attrs.get("disabled")

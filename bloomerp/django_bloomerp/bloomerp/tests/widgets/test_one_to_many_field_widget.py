@@ -62,6 +62,45 @@ class TestCreateView(BaseBloomerpModelTestCase):
             widget_html,
         )  # Ensure that a field not specified is not rendered.
 
+    def test_widget_renders_column_defaults_for_new_rows(self):
+        """
+        Use case: Render a one-to-many widget whose related model has a field default.
+        Expected result: The default is exposed as column metadata and fills missing rows.
+        """
+        # 1. Configure a default for the related model's age field.
+        model_field = self.CustomerModel._meta.get_field("age")
+        original_default = model_field.default
+        model_field.default = 42
+
+        try:
+            # 2. Render a prefilled row that omits the defaulted field.
+            widget = OneToManyFieldWidget(
+                attrs={
+                    "related_model": self.CustomerModel,
+                    "parent_model": self.CountryModel,
+                    "layout_config": {"inline_fields": ["first_name", "age"]},
+                }
+            )
+            soup = BeautifulSoup(
+                widget.render(
+                    name="customers",
+                    value=[{"first_name": "Draft customer"}],
+                    attrs={},
+                ),
+                "html.parser",
+            )
+
+            # 3. Verify both the column metadata and row/template inputs use the default.
+            age_column = soup.select_one('[data-one-to-many-column="age"]')
+            self.assertIsNotNone(age_column)
+            self.assertEqual(age_column["data-column-default-value"], "42")
+            age_inputs = soup.select(
+                '[data-one-to-many-cell="age"] input[name*="__age"]'
+            )
+            self.assertEqual([input_element.get("value") for input_element in age_inputs], ["42", "42"])
+        finally:
+            model_field.default = original_default
+
     def test_widget_collects_nested_rows_for_form_cleaning(self):
         widget = OneToManyFieldWidget()
         data = QueryDict(mutable=True)

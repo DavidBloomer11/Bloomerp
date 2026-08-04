@@ -18,7 +18,11 @@
                     <input type="checkbox" data-one-to-many-select-all {% if not can_edit %}disabled{% endif %}>
                 </th>
                 {% for column in columns %}
-                    <th data-one-to-many-column="{{ column.field }}" data-column-kind="{{ column.kind }}">
+                    <th
+                        data-one-to-many-column="{{ column.field }}"
+                        data-column-kind="{{ column.kind }}"
+                        data-column-default-value="{{ column.default_value_json }}"
+                    >
                         <div class="flex items-center justify-between gap-2">
                             <span>{{ column.title }}</span>
                             <c-ui.inputs.one_to_many.column_actions :column="column" :can_edit="can_edit" />

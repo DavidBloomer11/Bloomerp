@@ -186,7 +186,10 @@ export default class OneToManyFieldWidget extends BaseWidget {
             this.replacePrefix(fragment, rowIndex);
             const rowElement = fragment.querySelector<HTMLElement>("[data-one-to-many-row]");
             if (rowElement) {
-                this.applyRowData(rowElement, rowData);
+                this.applyRowData(rowElement, {
+                    ...this.getDefaultRowData(),
+                    ...rowData,
+                });
             }
             this.tbody?.appendChild(fragment);
         });
@@ -256,7 +259,10 @@ export default class OneToManyFieldWidget extends BaseWidget {
         this.tbody.querySelector("[data-one-to-many-empty-row]")?.remove();
         const rowElement = fragment.querySelector<HTMLElement>("[data-one-to-many-row]");
         if (rowElement) {
-            this.applyRowData(rowElement, rowData);
+            this.applyRowData(rowElement, {
+                ...this.getDefaultRowData(),
+                ...rowData,
+            });
         }
         const appendedNodes = Array.from(fragment.children);
         this.tbody.appendChild(fragment);
@@ -388,6 +394,31 @@ export default class OneToManyFieldWidget extends BaseWidget {
         });
     }
 
+    private getDefaultRowData(): OneToManyRowState {
+        if (!this.element) return {};
+
+        const defaults: OneToManyRowState = {};
+        this.element.querySelectorAll<HTMLElement>("[data-one-to-many-column]").forEach((column) => {
+            const fieldName = column.dataset.oneToManyColumn;
+            const serializedValue = column.dataset.columnDefaultValue;
+            if (!fieldName || !serializedValue) return;
+
+            try {
+                const value = JSON.parse(serializedValue) as unknown;
+                if (Array.isArray(value)) {
+                    defaults[fieldName] = value.map((item) => String(item));
+                } else if (value && typeof value === "object") {
+                    defaults[fieldName] = JSON.stringify(value);
+                } else {
+                    defaults[fieldName] = value == null ? "" : String(value);
+                }
+            } catch {
+                defaults[fieldName] = serializedValue;
+            }
+        });
+        return defaults;
+    }
+
     private applyRowData(rowElement: HTMLElement, rowData: OneToManyRowState): void {
         const fields = rowElement.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
             "input[name], textarea[name], select[name]",
@@ -407,7 +438,9 @@ export default class OneToManyFieldWidget extends BaseWidget {
             if (field instanceof HTMLInputElement && field.type === "checkbox") {
                 field.checked = Array.isArray(value)
                     ? value.includes(field.value)
-                    : value === (field.value || "on");
+                    : value === "true"
+                        || value === "1"
+                        || value === (field.value || "on");
                 return;
             }
 
