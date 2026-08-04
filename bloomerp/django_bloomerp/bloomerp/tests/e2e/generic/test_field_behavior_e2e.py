@@ -12,6 +12,7 @@ from bloomerp.form_fields.behavior import (
     BehaviorRule,
     ClearValueAction,
     CopyValueFromOneToManyAction,
+    PopulateRowsAction,
     SetValueAction,
 )
 from bloomerp.models.application_field import ApplicationField
@@ -78,6 +79,7 @@ class TestFieldBehaviorE2E(TestCrudE2EMixin, BaseE2ETestCase):
             ]
         ).model_dump()
         self.country_preference.save(update_fields=["layout"])
+        self.CustomerModel._meta.get_field("age").default = 42
         self.login_as_admin()
 
     def get_country_field(self, field_name: str) -> ApplicationField:
@@ -259,6 +261,40 @@ class TestFieldBehaviorE2E(TestCrudE2EMixin, BaseE2ETestCase):
 
         # 3. Verify the target contains the row count.
         expect(self.locate_field("name")).to_have_value("2")
+
+    def test_populate_related_rows_uses_column_defaults(self):
+        """
+        Use case: Populate blank related rows through a form behavior.
+        Expected result: Each generated row uses the related model column default.
+        """
+        # 1. Configure the Planet change to create two Customer rows.
+        customers_field = self.get_country_field("customers")
+        self.configure_country_behavior(
+            source_field_name="planet",
+            rules=[
+                BehaviorRule(
+                    events=[BehaviorEvent.CHANGE],
+                    actions=[
+                        PopulateRowsAction(
+                            target_field=str(customers_field.pk),
+                            row_count=2,
+                        )
+                    ],
+                )
+            ],
+        )
+
+        # 2. Change the source field to trigger the populate-related-rows behavior.
+        self.goto(self.get_country_create_url())
+        self.select_foreign_value("planet", "Earth")
+
+        # 3. Verify both generated Customer rows received the age default.
+        customers_widget = self.page.locator('[data-one-to-many-name="customers"]')
+        age_inputs = customers_widget.locator(
+            '[data-one-to-many-cell="age"] input'
+        )
+        expect(age_inputs).to_have_count(2)
+        self.assertEqual([input_.input_value() for input_ in age_inputs.all()], ["42", "42"])
 
     def test_sum_of_numeric_field_can_be_extracted_from_o2m_field(self):
         """

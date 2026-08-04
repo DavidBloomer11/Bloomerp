@@ -50,6 +50,7 @@ class TestOneToManyWidgetE2E(TestCrudE2EMixin, BaseE2ETestCase):
         ).model_dump()
         preference.save(update_fields=["layout"])
         self.customer_type = self.CustomerTypeModel.objects.get(name="Retail")
+        self.CustomerModel._meta.get_field("age").default = 42
         self.login_as_admin()
 
     def get_base_url(self) -> str:
@@ -157,6 +158,26 @@ class TestOneToManyWidgetE2E(TestCrudE2EMixin, BaseE2ETestCase):
                 '[data-one-to-many-cell="customer_type"] .foreign-field-selected'
             )
         ).to_contain_text("Retail")
+
+    def test_add_and_clone_rows_use_column_defaults(self):
+        """
+        Use case: Add and clone rows when a related column has a model default.
+        Expected result: New rows use the default while clones preserve explicit values.
+        """
+        # 1. Open a form with a prefilled row that omits the defaulted age.
+        self.goto(self.get_url_with_rows([{"first_name": "Ada"}]))
+        self.assertEqual(self.get_column_values("age"), ["42"])
+
+        # 2. Add a row and verify the default is applied to it.
+        self.get_widget().get_by_role("button", name="Add row").click()
+        self.assertEqual(self.get_column_values("age"), ["42", "42"])
+
+        # 3. Change the first value and clone the row.
+        self.get_rows().nth(0).locator('[data-one-to-many-cell="age"] input').fill("30")
+        self.get_rows().nth(0).get_by_role("button", name="Clone row").click()
+
+        # 4. Verify cloning preserves the explicit value and does not replace it with the default.
+        self.assertEqual(self.get_column_values("age"), ["30", "42", "30"])
 
     def test_preview_icon_previews_and_opens_persisted_row(self):
         """
