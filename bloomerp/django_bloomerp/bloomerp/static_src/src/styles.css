@@ -124,6 +124,14 @@
   .dark .bg-gray-50 { background-color: var(--color-zinc-900); }
   .dark .bg-gray-100 { background-color: var(--color-zinc-800); }
   .dark .bg-gray-200 { background-color: var(--color-zinc-700); }
+
+  .dark .bg-primary-50 { background-color: var(--color-primary-950); }
+  .dark .bg-primary-100 { background-color: var(--color-primary-900); }
+  .dark .bg-primary-200 { background-color: var(--color-primary-800); }
+  .dark .bg-primary-300 { background-color: var(--color-primary-700); }
+
+  .bg-yellow-200 { background-color: var(--color-yellow-600); }
+
   .dark .hover\:bg-gray-50:hover { background-color: var(--color-zinc-800); }
   .dark .hover\:bg-gray-100:hover { background-color: var(--color-zinc-800); }
   .dark .hover\:bg-gray-200:hover { background-color: var(--color-zinc-700); }
@@ -138,6 +146,94 @@
   .dark .border-gray-300 { border-color: var(--color-zinc-600); }
   .dark .divide-gray-200 > :not(:last-child) { border-color: var(--color-zinc-700); }
   .dark .ring-offset-white { --tw-ring-offset-color: var(--color-zinc-900); }
+
+  .dark .text-primary { color: var(--color-primary-400); }
+  .dark .text-primary-50 { color: var(--color-primary-950); }
+  .dark .text-primary-900 { color: var(--color-primary-100); }
+  .dark .text-primary-800 { color: var(--color-primary-200); }
+  .dark .text-primary-700 { color: var(--color-primary-300); }
+  .dark .text-primary-600 { color: var(--color-primary-400); }
+  .dark .text-primary-500 { color: var(--color-primary-500); }
+  .dark .text-primary-400 { color: var(--color-primary-600); }
+  .dark .text-primary-300 { color: var(--color-primary-700); }
+  .dark .text-primary-200 { color: var(--color-primary-800); }
+  .dark .text-primary-100 { color: var(--color-primary-900); }
+  .dark .text-primary-950 { color: var(--color-primary-50); }
+
+  .dark .text-slate-700 { color: var(--color-zinc-300); }
+
+  /* Components using @apply need dark selectors of their own because the
+   * generated declaration no longer carries the original utility class. */
+  .dark .table {
+    color: var(--color-zinc-300);
+  }
+
+  .dark .table thead th {
+    background-color: var(--color-zinc-800);
+    border-color: var(--color-zinc-700);
+    color: var(--color-zinc-100);
+  }
+
+  .dark .table tbody td {
+    border-color: var(--color-zinc-700);
+  }
+
+  .dark .table-striped tbody tr:nth-child(odd),
+  .dark .table-hover tbody tr:hover {
+    background-color: var(--color-zinc-800);
+  }
+
+  .dark .table-light,
+  .dark .table-light-row {
+    background-color: var(--color-zinc-900);
+    color: var(--color-zinc-200);
+  }
+
+  .dark .table-light th {
+    background-color: var(--color-zinc-800);
+    border-color: var(--color-zinc-700);
+    color: var(--color-zinc-100);
+  }
+
+  .dark .input,
+  .dark .select,
+  .dark .node-input,
+  .dark .node-select {
+    background-color: var(--color-zinc-800);
+    border-color: var(--color-zinc-600);
+    color: var(--color-zinc-100);
+  }
+
+  .dark input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']):not([type='range']):not([type='color']):not(.bg-transparent),
+  .dark select:not(.bg-transparent),
+  .dark textarea:not(.bg-transparent) {
+    background-color: var(--color-zinc-800);
+    border-color: var(--color-zinc-600);
+    color: var(--color-zinc-100);
+  }
+
+  .dark input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']):not([type='range']):not([type='color'])::placeholder,
+  .dark textarea::placeholder {
+    color: var(--color-zinc-400);
+  }
+
+  .dark input[type='checkbox'],
+  .dark input[type='radio'] {
+    background-color: var(--color-zinc-800);
+    border-color: var(--color-zinc-600);
+  }
+
+  .dark input[type='checkbox']:checked,
+  .dark input[type='radio']:checked {
+    background-color: currentColor;
+    border-color: transparent;
+  }
+
+  .dark input[type='checkbox']:focus,
+  .dark input[type='radio']:focus {
+    --tw-ring-offset-color: var(--color-zinc-900);
+  }
+
 }
 
 /*
@@ -800,7 +896,7 @@
 @layer utilities {
     /*Default utilities*/
     .input {
-      @apply px-3 py-2 text-sm border border-gray-200 rounded-xl focus:ring-1 focus:ring-primary focus:border-primary
+      @apply px-3 py-2 text-sm border border-gray-200 rounded-xl focus:ring-1 focus:ring-primary focus:border-primary bg-white
     }
 
     /* Input size variants */
