@@ -1,4 +1,5 @@
 import json
+import re
 from datetime import date, datetime, timedelta
 
 from django.db import models
@@ -791,6 +792,54 @@ class TestDataView(BaseBloomerpModelTestCase):
 
         selected.refresh_from_db()
         self.assertEqual(selected.options["table"]["page_size"], 50)
+
+    def test_change_field_visibility_response_uses_updated_preference(self):
+        """
+        Use case: A user hides a currently visible dataview field.
+        Expected result: The first POST response renders that field as unselected.
+        """
+        # 1. Create a selected table preference with two visible fields.
+        self.client.force_login(self.admin_user)
+        content_type = ContentType.objects.get_for_model(self.CustomerModel)
+        first_name_field = ApplicationField.get_by_field(self.CustomerModel, "first_name")
+        last_name_field = ApplicationField.get_by_field(self.CustomerModel, "last_name")
+        preference = PreferenceManager(self.admin_user).get_or_create_selected(
+            UserListViewPreference,
+            scope={"content_type_id": content_type.id},
+        )
+        preference.set_visible_field_ids(
+            "table",
+            [first_name_field.id, last_name_field.id],
+        )
+        preference.save(update_fields=["display_fields"])
+
+        # 2. Hide the first field through the display-options component endpoint.
+        url = reverse(
+            viewname="components_update_dataview_preference",
+            kwargs={"content_type_id": content_type.id},
+        )
+        response = self.client.post(
+            url,
+            data={
+                "toggle_field_id": first_name_field.id,
+                "toggle_view_type": "table",
+            },
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+
+        # 3. Verify persistence and the HTML returned by this same request.
+        self.assertEqual(response.status_code, 200)
+        preference.refresh_from_db()
+        self.assertNotIn(first_name_field.id, preference.get_visible_field_ids("table"))
+        response_html = response.content.decode()
+        first_name_button = re.search(
+            rf'data-display-options-values=\'\{{"toggle_field_id": "{first_name_field.id}".*?class="([^"]+)"',
+            response_html,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(first_name_button)
+        self.assertIn("bg-white", first_name_button.group(1))
+        self.assertNotIn("bg-primary-100", first_name_button.group(1))
 
 
 class TestCalendarDataView(BaseBloomerpModelTestCase):
