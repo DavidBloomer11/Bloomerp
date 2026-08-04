@@ -4,9 +4,20 @@ from django import forms
 from django.contrib.contenttypes.models import ContentType
 from django.test import SimpleTestCase, TestCase
 
-from bloomerp.field_types.types import FieldType, get_behavior_form_field_kwargs
+from bloomerp.field_types.types import (
+    FieldType,
+    build_behavior_catalog_entry,
+    get_behavior_form_field_kwargs,
+)
+from bloomerp.form_fields.behavior import (
+    BehaviorConfig,
+    BehaviorRule,
+    ClearValueAction,
+    CopyValueFromOneToManyAction,
+)
 from bloomerp.form_fields.behavior_field import BehaviorField
 from bloomerp.models import ApplicationField
+from bloomerp.tests.base import BaseBloomerpModelTestCase
 from bloomerp.widgets.behavior_builder_widget import BehaviorBuilderWidget
 
 
@@ -21,11 +32,23 @@ class BehaviorBuilderWidgetTest(SimpleTestCase):
             source_field={"id": "12", "label": "Week", "fieldType": "WeekField"},
             field_catalog=[
                 {"id": "12", "name": "week", "label": "Week", "fieldType": "WeekField"},
-                {"id": "13", "name": "lines", "label": "Lines", "fieldType": "OneToManyField"},
+                {
+                    "id": "13",
+                    "name": "lines",
+                    "label": "Lines",
+                    "fieldType": "OneToManyField",
+                    "columns": [
+                        {
+                            "id": "31",
+                            "name": "amount",
+                            "label": "Amount",
+                            "fieldType": "DecimalField",
+                        }
+                    ],
+                },
             ],
         )
         value = {
-            "version": 1,
             "rules": [
                 {
                     "id": "weekdays",
@@ -56,6 +79,7 @@ class BehaviorBuilderWidgetTest(SimpleTestCase):
         self.assertIn('name="behaviors"', html)
         self.assertIn("Fill weekdays", html)
         self.assertIn("rowCount", html)
+        self.assertIn("Amount", html)
         self.assertEqual(json.loads(widget.value_from_datadict({"behaviors": json.dumps(value)}, {}, "behaviors")), value)
 
     def test_behavior_field_normalizes_and_validates_config(self):
@@ -63,24 +87,116 @@ class BehaviorBuilderWidgetTest(SimpleTestCase):
         Use case: Clean submitted Behavior builder JSON.
         Expected result: Valid rules are normalized and invalid rule collections are rejected.
         """
-        # 1. Configure the form field and an input using a future version number.
+        # 1. Build a valid configuration through the typed Python interface.
         field = BehaviorField(required=False)
-        config = {
-            "version": 9,
-            "rules": [{"id": "one", "conditions": [], "actions": []}],
-        }
+        config = BehaviorConfig(
+            rules=[
+                BehaviorRule(
+                    name="Clear description",
+                    actions=[ClearValueAction(target_field="13")],
+                ),
+            ],
+        )
 
-        # 2. Verify normalization, empty handling, and malformed input validation.
-        self.assertEqual(
-            field.clean(config),
+        # 2. Verify typed serialization, empty handling, and malformed input validation.
+        self.assertEqual(field.clean(config.to_storage()), config.to_storage())
+        self.assertIsNone(field.clean({"rules": []}))
+        with self.assertRaises(forms.ValidationError):
+            field.clean({"rules": {}})
+        with self.assertRaises(forms.ValidationError):
+            field.clean(
+                {
+                    "rules": [
+                        {
+                            "name": "Missing target",
+                            "actions": [{"type": "clear_value"}],
+                        },
+                    ],
+                },
+            )
+
+        # 3. Preserve compatibility with the frontend's current wide action payload.
+        cleaned = field.clean(
             {
-                "version": 1,
-                "rules": [{"id": "one", "conditions": [], "actions": []}],
+                "rules": [
+                    {
+                        "id": "rule-one",
+                        "name": "Clear description",
+                        "enabled": True,
+                        "events": ["change"],
+                        "connector": "all",
+                        "conditions": [],
+                        "actions": [
+                            {
+                                "id": "action-one",
+                                "type": "clear_value",
+                                "targetField": "13",
+                                "value": "unused",
+                                "sourceField": "12",
+                                "resolver": "blank_rows",
+                                "rowCount": 5,
+                                "writePolicy": "replace_generated",
+                                "messageTone": "info",
+                            },
+                        ],
+                    },
+                ],
             },
         )
-        self.assertIsNone(field.clean({"version": 1, "rules": []}))
-        with self.assertRaises(forms.ValidationError):
-            field.clean({"version": 1, "rules": {}})
+        self.assertEqual(
+            cleaned["rules"][0]["actions"][0],
+            {
+                "id": "action-one",
+                "targetField": "13",
+                "type": "clear_value",
+            },
+        )
+
+    def test_one_to_many_aggregation_action_is_typed_and_validated(self):
+        """
+        Use case: Build row and column aggregations for a one-to-many field.
+        Expected result: Count needs no column while the others require one.
+        """
+        # 1. Build a row-count action without selecting a column.
+        count_action = CopyValueFromOneToManyAction(
+            source_field="13",
+            target_field="12",
+            aggregation="count",
+        )
+
+        # 2. Build a numeric-column sum action.
+        sum_action = CopyValueFromOneToManyAction(
+            source_field="13",
+            target_field="12",
+            aggregation="sum",
+            column_name="amount",
+        )
+        first_action = CopyValueFromOneToManyAction(
+            source_field="13",
+            target_field="12",
+            aggregation="first",
+            column_name="description",
+        )
+        last_action = CopyValueFromOneToManyAction(
+            source_field="13",
+            target_field="12",
+            aggregation="last",
+            column_name="description",
+        )
+
+        # 3. Verify both actions serialize to the frontend contract.
+        self.assertEqual(count_action.model_dump(by_alias=True)["columnName"], "")
+        self.assertEqual(sum_action.model_dump(by_alias=True)["columnName"], "amount")
+        self.assertEqual(first_action.aggregation, "first")
+        self.assertEqual(last_action.aggregation, "last")
+
+        # 4. Verify a non-count aggregation cannot omit its column.
+        with self.assertRaises(ValueError):
+            CopyValueFromOneToManyAction(
+                source_field="13",
+                target_field="12",
+                aggregation="sum",
+            )
 
     def test_editable_field_types_expose_behaviors_in_display_options(self):
         """
@@ -127,3 +243,36 @@ class BehaviorDisplayOptionDatabaseTest(TestCase):
         ]
         self.assertEqual(catalog_names, ["a_behavior_test", "z_behavior_test"])
         self.assertEqual(widget.source_field["fieldType"], FieldType.CHAR_FIELD.value.id)
+
+
+class BehaviorOneToManyCatalogTest(BaseBloomerpModelTestCase):
+    create_foreign_models = True
+
+    def test_catalog_exposes_configured_one_to_many_columns(self):
+        """
+        Use case: Configure behaviors for Country.customers.
+        Expected result: Its catalog entry describes the selected customer columns.
+        """
+        # 1. Resolve the dynamic Country.customers application field.
+        customers_field = ApplicationField.get_for_model(self.CountryModel).get(
+            field="customers"
+        )
+
+        # 2. Build metadata using the field's inline layout configuration.
+        entry = build_behavior_catalog_entry(
+            customers_field,
+            {"inline_fields": ["first_name", "age"]},
+        )
+
+        # 3. Verify action and condition definitions receive typed columns.
+        self.assertEqual(entry["fieldType"], FieldType.ONE_TO_MANY_FIELD.value.id)
+        self.assertEqual(
+            [
+                (column["name"], column["fieldType"])
+                for column in entry["columns"]
+            ],
+            [
+                ("first_name", FieldType.CHAR_FIELD.value.id),
+                ("age", FieldType.INTEGER_FIELD.value.id),
+            ],
+        )

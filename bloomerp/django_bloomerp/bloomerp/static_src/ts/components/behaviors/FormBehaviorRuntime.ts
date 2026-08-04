@@ -15,6 +15,7 @@ import {
     type BehaviorConfig,
     type BehaviorRelatedRow,
     type BehaviorRule,
+    type BehaviorRuntime,
 } from "./BehaviorDefinitions";
 
 const MAX_BEHAVIOR_DEPTH = 20;
@@ -30,38 +31,16 @@ function parseJson<T>(value: string | undefined, fallback: T): T {
 
 function normalizeBehaviorConfig(value: unknown): BehaviorConfig {
     if (!value || typeof value !== "object" || Array.isArray(value)) {
-        return { version: 1, rules: [] };
+        return { rules: [] };
     }
     const rules = (value as { rules?: unknown }).rules;
     return {
-        version: 1,
         rules: Array.isArray(rules) ? rules as BehaviorRule[] : [],
     };
 }
 
 function getComparableValue(value: DetailViewCellValue): string {
     return Array.isArray(value) ? value.join(",") : String(value ?? "");
-}
-
-function compareValues(left: string, right: string): number {
-    const leftNumber = Number(left);
-    const rightNumber = Number(right);
-    if (left.trim() !== "" && right.trim() !== "" && Number.isFinite(leftNumber) && Number.isFinite(rightNumber)) {
-        return leftNumber - rightNumber;
-    }
-    return left.localeCompare(right, undefined, { numeric: true, sensitivity: "base" });
-}
-
-function readRows(widget: OneToManyFieldWidget): BehaviorRelatedRow[] {
-    return parseJson<BehaviorRelatedRow[]>(String(widget.getValue() ?? "[]"), []);
-}
-
-function findDateFieldName(widgetElement: HTMLElement): string | null {
-    const template = widgetElement.querySelector<HTMLTemplateElement>("[data-one-to-many-row-template]");
-    const dateInput = template?.content.querySelector<HTMLInputElement>('input[type="date"][name]');
-    if (!dateInput) return null;
-    const parts = dateInput.name.replace("__prefix__", "0").split("__");
-    return parts.length >= 3 ? parts.slice(2).join("__") : null;
 }
 
 function escapeHtml(value: string): string {
@@ -87,9 +66,10 @@ export default class FormBehaviorRuntime {
     public initialize(): void {
         this.changeHandler = (event: Event) => {
             const detail = (event as CustomEvent<DetailViewCellChangeDetail>).detail;
+            if (detail?.source === "behavior") return;
             const fieldId = detail?.cell?.applicationFieldId ?? detail?.cell?.getLayoutItemId();
             if (!fieldId) return;
-            this.runFieldBehaviors(fieldId, BehaviorEvent.Change, 0);
+            this.runFieldBehaviors(fieldId, BehaviorEvent.Change, 0, true);
         };
         this.root.addEventListener(DetailViewCell.changeEventName, this.changeHandler);
         this.scheduleInitialRun();
@@ -117,7 +97,7 @@ export default class FormBehaviorRuntime {
                 const signature = JSON.stringify(config.rules);
                 if (this.initialRuleSignatures.get(fieldId) === signature) return;
                 this.initialRuleSignatures.set(fieldId, signature);
-                this.runFieldBehaviors(fieldId, BehaviorEvent.Initial, 0);
+                this.runFieldBehaviors(fieldId, BehaviorEvent.Initial, 0, false);
             });
         });
     }
@@ -133,7 +113,7 @@ export default class FormBehaviorRuntime {
             .filter(({ fieldId, config }) => Boolean(fieldId) && config.rules.length > 0);
     }
 
-    private runFieldBehaviors(fieldId: string, event: BehaviorEvent, depth: number): void {
+    private runFieldBehaviors(fieldId: string, event: BehaviorEvent, depth: number, trackChanges: boolean): void {
         if (depth > MAX_BEHAVIOR_DEPTH || this.activeFields.has(fieldId)) return;
         const source = this.getBehaviorSources().find((item) => item.fieldId === fieldId);
         if (!source) return;
@@ -144,7 +124,7 @@ export default class FormBehaviorRuntime {
                 .filter((rule) => rule.enabled !== false && rule.events?.includes(event))
                 .filter((rule) => this.matchesConditions(rule))
                 .forEach((rule) => {
-                    rule.actions?.forEach((action) => this.executeAction(fieldId, action, depth + 1));
+                    rule.actions?.forEach((action) => this.executeAction(fieldId, action, depth + 1, trackChanges));
                 });
         } finally {
             this.activeFields.delete(fieldId);
@@ -159,48 +139,47 @@ export default class FormBehaviorRuntime {
     }
 
     private matchesCondition(condition: BehaviorCondition): boolean {
-        const actual = getComparableValue(this.getFieldValue(condition.field));
-        const expected = condition.value ?? "";
-        switch (condition.operator) {
-            case BehaviorOperator.EQUALS.id:
-                return actual === expected;
-            case BehaviorOperator.NOT_EQUALS.id:
-                return actual !== expected;
-            case BehaviorOperator.IS_EMPTY.id:
-                return actual.trim() === "";
-            case BehaviorOperator.IS_NOT_EMPTY.id:
-                return actual.trim() !== "";
-            case BehaviorOperator.CONTAINS.id:
-                return actual.toLocaleLowerCase().includes(expected.toLocaleLowerCase());
-            case BehaviorOperator.GREATER_THAN.id:
-                return compareValues(actual, expected) > 0;
-            case BehaviorOperator.LESS_THAN.id:
-                return compareValues(actual, expected) < 0;
-            default:
-                return false;
-        }
+        const definition = BehaviorOperator.get(condition.operator);
+        return definition?.matches(condition, this.createRuntime(0, false)) ?? false;
     }
 
-    private executeAction(sourceFieldId: string, action: BehaviorActionConfig, depth: number): void {
+    private isFieldValueEmpty(fieldId: string, value: DetailViewCellValue): boolean {
+        const relatedRows = this.getRelatedRows(fieldId);
+        if (relatedRows !== null) return relatedRows.length === 0;
+        if (Array.isArray(value)) return value.length === 0;
+        return String(value ?? "").trim() === "";
+    }
+
+    private executeAction(
+        sourceFieldId: string,
+        action: BehaviorActionConfig,
+        depth: number,
+        trackChanges: boolean,
+    ): void {
         const definition = BehaviorAction.get(action.type);
         if (!definition) {
             console.warn(`Unknown behavior action '${action.type}' was skipped.`);
             return;
         }
-        definition.execute({
+        definition.execute(
             action,
+            this.createRuntime(depth, trackChanges),
             sourceFieldId,
+        );
+    }
+
+    private createRuntime(depth: number, trackChanges: boolean): BehaviorRuntime {
+        return {
             getFieldValue: (fieldId) => this.getFieldValue(fieldId),
-            setFieldValue: (fieldId, value) => this.setFieldValue(fieldId, value, depth),
+            setFieldValue: (fieldId, value) => this.setFieldValue(fieldId, value, depth, trackChanges),
             setFieldVisibility: (fieldId, visible) => this.setFieldVisibility(fieldId, visible),
             setFieldEnabled: (fieldId, enabled) => this.setFieldEnabled(fieldId, enabled),
             setFieldRequired: (fieldId, required) => this.setFieldRequired(fieldId, required),
-            getRelatedRows: (fieldId) => this.getRelatedRows(fieldId),
-            getRelatedDateField: (fieldId) => this.getRelatedDateField(fieldId),
-            setRelatedRows: (fieldId, rows) => this.setRelatedRows(fieldId, rows),
+            getOneToManyField: (fieldId) => this.getOneToManyWidget(fieldId),
+            isFieldEmpty: (fieldId) => this.isFieldValueEmpty(fieldId, this.getFieldValue(fieldId)),
             showMessage: (message, tone) => this.showBehaviorMessage(message, tone),
             warn: (message) => console.warn(message),
-        });
+        };
     }
 
     private getFieldElement(fieldId: string): HTMLElement | null {
@@ -222,13 +201,18 @@ export default class FormBehaviorRuntime {
         return this.getFieldCell(fieldId)?.value ?? "";
     }
 
-    private setFieldValue(fieldId: string, value: DetailViewCellValue, depth: number): void {
+    private setFieldValue(
+        fieldId: string,
+        value: DetailViewCellValue,
+        depth: number,
+        trackChanges: boolean,
+    ): void {
         const cell = this.getFieldCell(fieldId);
         if (!cell) return;
         const previousValue = getComparableValue(cell.value);
-        cell.restoreValue(value);
+        cell.setValue(value, trackChanges, "behavior");
         if (previousValue !== getComparableValue(cell.value)) {
-            this.runFieldBehaviors(fieldId, BehaviorEvent.Change, depth);
+            this.runFieldBehaviors(fieldId, BehaviorEvent.Change, depth, trackChanges);
         }
     }
 
@@ -273,25 +257,15 @@ export default class FormBehaviorRuntime {
     }
 
     private getRelatedRows(fieldId: string): BehaviorRelatedRow[] | null {
-        const relatedField = this.getOneToManyWidget(fieldId);
-        return relatedField ? readRows(relatedField.widget) : null;
+        return this.getOneToManyWidget(fieldId)?.getRows() ?? null;
     }
 
-    private getRelatedDateField(fieldId: string): string | null {
-        const relatedField = this.getOneToManyWidget(fieldId);
-        return relatedField ? findDateFieldName(relatedField.element) : null;
-    }
-
-    private setRelatedRows(fieldId: string, rows: BehaviorRelatedRow[]): void {
-        this.getOneToManyWidget(fieldId)?.widget.setValue(rows, true);
-    }
-
-    private getOneToManyWidget(fieldId: string): { element: HTMLElement; widget: OneToManyFieldWidget } | null {
+    private getOneToManyWidget(fieldId: string): OneToManyFieldWidget | null {
         const field = this.getFieldElement(fieldId);
         const element = field?.querySelector<HTMLElement>('[bloomerp-component="one-to-many-field-widget"]');
         if (!element) return null;
         const component = getComponent(element);
-        return component instanceof OneToManyFieldWidget ? { element, widget: component } : null;
+        return component instanceof OneToManyFieldWidget ? component : null;
     }
 
     private showBehaviorMessage(message: string, tone: BehaviorMessageTone): void {

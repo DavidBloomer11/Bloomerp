@@ -36,13 +36,16 @@ class LayoutConfigTarget:
     content_type: ContentType
 
 
-def _layout_field_catalog(target: LayoutConfigTarget) -> list[dict[str, str]]:
-    ordered_ids = [
-        str(item.id)
+def _layout_field_catalog(target: LayoutConfigTarget) -> list[dict[str, object]]:
+    from bloomerp.field_types.types import build_behavior_catalog_entry
+
+    ordered_items = [
+        item
         for row in target.layout_object.layout_obj.rows
         for item in row.items
         if item.id not in (None, "")
     ]
+    ordered_ids = [str(item.id) for item in ordered_items]
     numeric_ids = [item_id for item_id in ordered_ids if item_id.isdigit()]
     field_names = [item_id for item_id in ordered_ids if not item_id.isdigit()]
     queryset = ApplicationField.objects.filter(content_type=target.content_type)
@@ -51,23 +54,13 @@ def _layout_field_catalog(target: LayoutConfigTarget) -> list[dict[str, str]]:
 
     catalog = []
     seen = set()
-    for item_id in ordered_ids:
+    for item in ordered_items:
+        item_id = str(item.id)
         field = fields_by_id.get(item_id) or fields_by_name.get(item_id)
         if field is None or field.pk in seen:
             continue
         seen.add(field.pk)
-        try:
-            field_type = field.get_field_type_enum().value.id
-        except (ValueError, AttributeError):
-            field_type = field.field_type
-        catalog.append(
-            {
-                "id": str(field.pk),
-                "name": field.field,
-                "label": field.title,
-                "fieldType": field_type,
-            }
-        )
+        catalog.append(build_behavior_catalog_entry(field, item.config))
     return catalog
 
 
