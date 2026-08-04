@@ -69,7 +69,14 @@ class LayoutModelFormMixin(ApplicationFieldLayoutFormMixin, ABC):
         return self.get_form_instance()
 
     def get_form_hx_target(self) -> str:
-        return "#main-content" if self.is_create_layout() else "#detail-view-content"
+        if self.is_create_layout():
+            return "#main-content"
+
+        htmx_target = getattr(getattr(self.request, "htmx", None), "target", None)
+        if htmx_target == "data-table-detail-pane":
+            return "#data-table-detail-pane"
+
+        return "#detail-view-content"
 
     def get_form_hx_push_url(self) -> bool:
         return self.is_create_layout()
