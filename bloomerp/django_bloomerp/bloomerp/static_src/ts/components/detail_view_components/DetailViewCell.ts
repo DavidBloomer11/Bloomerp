@@ -4,6 +4,7 @@ import { type ContextMenuItem, getContextMenu } from "../../utils/contextMenu";
 import BaseSectionedLayoutItem from "../layouts/BaseSectionedLayoutItem";
 
 export type DetailViewCellValue = string | string[] | null;
+export type DetailViewCellChangeSource = "user" | "behavior";
 
 export type DetailViewCellChangeDetail = {
     cell: DetailViewCell;
@@ -12,6 +13,7 @@ export type DetailViewCellChangeDetail = {
     target: HTMLElement | null;
     previousSnapshot: DetailViewCellSnapshot;
     snapshot: DetailViewCellSnapshot;
+    source: DetailViewCellChangeSource;
 };
 
 type DetailViewCellNativeFieldSnapshot = {
@@ -192,6 +194,22 @@ export class DetailViewCell extends BaseSectionedLayoutItem {
         }
     }
 
+    public setValue(
+        value: DetailViewCellValue,
+        emitChange = false,
+        source: DetailViewCellChangeSource = "user",
+    ): void {
+        const previousValue = this.cloneValue(this.value);
+        const previousSnapshot = this.cloneSnapshot(this.lastSnapshot ?? this.captureSnapshot());
+
+        this.restoreValue(value);
+
+        if (!emitChange) return;
+        const nextValue = this.cloneValue(this.value);
+        const nextSnapshot = this.cloneSnapshot(this.lastSnapshot ?? this.captureSnapshot());
+        this.emitCellChange(previousValue, nextValue, null, previousSnapshot, nextSnapshot, source);
+    }
+
     public restoreChange(target: HTMLElement | null, value: DetailViewCellValue, snapshot: DetailViewCellSnapshot): void {
         this.suppressChangeTracking = true;
 
@@ -326,6 +344,7 @@ export class DetailViewCell extends BaseSectionedLayoutItem {
         target: HTMLElement | null,
         previousSnapshot: DetailViewCellSnapshot,
         snapshot: DetailViewCellSnapshot,
+        source: DetailViewCellChangeSource = "user",
     ): void {
         if (!this.element || this.suppressChangeTracking || this.valuesEqual(previousValue, nextValue)) {
             return;
@@ -340,6 +359,7 @@ export class DetailViewCell extends BaseSectionedLayoutItem {
                 target,
                 previousSnapshot,
                 snapshot,
+                source,
             },
         }));
     }

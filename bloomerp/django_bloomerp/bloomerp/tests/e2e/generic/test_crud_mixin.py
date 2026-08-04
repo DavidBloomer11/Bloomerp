@@ -6,3 +6,9 @@ class TestCrudE2EMixin:
         Locate a field by its id
         """
         return self.page.locator("#id_"+field_id)
+    
+    def press_reset_button(self):
+        """
+        Press the reset button on the form
+        """
+        self.page.locator("button:has-text('Reset')").click()

@@ -30,6 +30,10 @@ class BaseBloomerpModelTestCase(TransactionTestCase):
             foreign_models = create_test_models(
                 app_label="bloomerp",
                 model_defs={
+                    "CustomerType": {
+                        "name": models.CharField(max_length=100),
+                        "__str__": lambda self: self.name,
+                    },
                     "Planet" : {
                         "name" : models.CharField(max_length=100),
                         "__str__" : lambda self: self.name
@@ -45,12 +49,14 @@ class BaseBloomerpModelTestCase(TransactionTestCase):
              
             cls.CountryModel = foreign_models["Country"]
             cls.PlanetModel = foreign_models["Planet"]
+            cls.CustomerTypeModel = foreign_models["CustomerType"]
             
         customer_def = {
             "first_name": models.CharField(max_length=100),
             "last_name": models.CharField(max_length=100),
             "age" : models.IntegerField(max_length=3),
             "picture" : BloomerpFileField(blank=True, null=True),
+            "date_joined" : models.DateField(blank=True, null=True),
             "__str__" : lambda self: f"{self.first_name} {self.last_name}"
         }
         
@@ -62,6 +68,13 @@ class BaseBloomerpModelTestCase(TransactionTestCase):
                 on_delete=models.SET_NULL,
                 related_name="customers"
                 )
+            customer_def["customer_type"] = models.ForeignKey(
+                to=cls.CustomerTypeModel,
+                blank=True,
+                null=True,
+                on_delete=models.SET_NULL,
+                related_name="customers",
+            )
         
         cls.CustomerModel = create_test_models(
             app_label="bloomerp",
@@ -74,7 +87,11 @@ class BaseBloomerpModelTestCase(TransactionTestCase):
         # Collect dynamically created test models
         _test_models = [cls.CustomerModel]
         if cls.create_foreign_models:
-            _test_models.extend([cls.CountryModel, cls.PlanetModel])
+            _test_models.extend([
+                cls.CountryModel,
+                cls.PlanetModel,
+                cls.CustomerTypeModel,
+            ])
 
         # Register dynamic models in the module registry and router, then
         # reload the bloomerp URL patterns so that get_absolute_url() works.
@@ -140,6 +157,9 @@ class BaseBloomerpModelTestCase(TransactionTestCase):
             # Log in as admin by default so test client requests are authenticated
         
         if self.create_foreign_models:
+            for name in ["Retail", "Business"]:
+                self.CustomerTypeModel.objects.create(name=name)
+
             for i in ["Earth", "Mars"]:
                 self.PlanetModel.objects.create(
                     name=i

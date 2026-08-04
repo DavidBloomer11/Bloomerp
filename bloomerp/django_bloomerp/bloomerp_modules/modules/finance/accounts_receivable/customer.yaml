@@ -1,0 +1,88 @@
+id: customer
+name: Customer
+description: Customer master record for accounts receivable
+name_plural: Customers
+string_representation: "{customer_code} - {customer_name}"
+fields:
+  - id: customer_code
+    name: Customer Code
+    type: CharField
+    options:
+      max_length: 20
+      unique: true
+  - id: customer_name
+    name: Customer Name
+    type: CharField
+    options:
+      max_length: 200
+  - id: crm_account
+    name: CRM Account
+    type: ForeignKey
+    options:
+      to: crm.core.crm_account
+      null: true
+      blank: true
+      on_delete: call(django.db.models.SET_NULL)
+  - id: email
+    name: Billing Email
+    type: EmailField
+    options:
+      null: true
+      blank: true
+  - id: phone
+    name: Billing Phone
+    type: CharField
+    options:
+      max_length: 30
+      null: true
+      blank: true
+  - id: billing_address
+    name: Billing Address
+    type: TextField
+    options:
+      null: true
+      blank: true
+  - id: currency
+    name: Currency
+    type: CharField
+    options:
+      max_length: 10
+      default: USD
+  - id: payment_terms_days
+    name: Payment Terms Days
+    type: IntegerField
+    options:
+      default: 30
+  - id: credit_limit
+    name: Credit Limit
+    type: DecimalField
+    options:
+      max_digits: 15
+      decimal_places: 2
+      default: 0
+  - id: tax_number
+    name: Tax Number
+    type: CharField
+    options:
+      max_length: 50
+      null: true
+      blank: true
+  - id: status
+    name: Status
+    type: ChoiceField
+    options:
+      choices:
+        - ["ACTIVE", "Active"]
+        - ["ON_HOLD", "On Hold"]
+        - ["INACTIVE", "Inactive"]
+  - id: is_active
+    name: Is Active
+    type: BooleanField
+    options:
+      default: true
+  - id: notes
+    name: Notes
+    type: TextField
+    options:
+      null: true
+      blank: true

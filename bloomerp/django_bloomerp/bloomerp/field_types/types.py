@@ -110,22 +110,12 @@ def _is_parent_link_field(application_field: "ApplicationField", parent_model: t
 def get_behavior_form_field_kwargs(application_field: "ApplicationField") -> dict[str, Any]:
     from bloomerp.models import ApplicationField
 
-    fields = []
-    for field in ApplicationField.objects.filter(
+    fields = [
+        build_behavior_catalog_entry(field)
+        for field in ApplicationField.objects.filter(
         content_type=application_field.content_type,
-    ).order_by("field"):
-        try:
-            field_type = field.get_field_type_enum().value.id
-        except (ValueError, AttributeError):
-            field_type = field.field_type
-        fields.append(
-            {
-                "id": str(field.pk),
-                "name": field.field,
-                "label": field.title,
-                "fieldType": field_type,
-            }
-        )
+        ).order_by("field")
+    ]
 
     return {
         "widget": BehaviorBuilderWidget(
@@ -140,6 +130,35 @@ def get_behavior_form_field_kwargs(application_field: "ApplicationField") -> dic
             field_catalog=fields,
         )
     }
+
+
+def build_behavior_catalog_entry(
+    application_field: "ApplicationField",
+    layout_config: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Describe a field and any editable O2M columns for behavior definitions."""
+    try:
+        field_type = application_field.get_field_type_enum().value.id
+    except (ValueError, AttributeError):
+        field_type = application_field.field_type
+
+    entry: dict[str, Any] = {
+        "id": str(application_field.pk),
+        "name": application_field.field,
+        "label": application_field.title,
+        "fieldType": field_type,
+    }
+    if field_type != FieldType.ONE_TO_MANY_FIELD.value.id:
+        return entry
+
+    widget = application_field.get_widget(layout_config=layout_config)
+    if not isinstance(widget, OneToManyFieldWidget):
+        return entry
+    entry["columns"] = [
+        build_behavior_catalog_entry(column)
+        for column in widget.get_columns()
+    ]
+    return entry
 
 
 BEHAVIORS_DISPLAY_OPTION = FieldDisplayOption(
@@ -190,21 +209,21 @@ class FieldTypeDefinition:
     dataview_value_func : Callable[["ApplicationField", Model], str] = lambda application_field, object: getattr(object, application_field.field, None)
 
     def __post_init__(self):
+        display_options = [
+            option
+            for option in self.field_display_options
+            if option.id != LABEL_OPTION.id
+        ]
         if self.supports_behaviors and not any(
             option.id == BEHAVIORS_DISPLAY_OPTION.id
-            for option in self.field_display_options
+            for option in display_options
         ):
-            object.__setattr__(
-                self,
-                "field_display_options",
-                [*self.field_display_options, BEHAVIORS_DISPLAY_OPTION, LABEL_OPTION],
-            )
-        else:
-            object.__setattr__(
-                self,
-                "field_display_options",
-                [*self.field_display_options, LABEL_OPTION],
-            )
+            display_options.append(BEHAVIORS_DISPLAY_OPTION)
+        object.__setattr__(
+            self,
+            "field_display_options",
+            [LABEL_OPTION, *display_options],
+        )
     
     def get_widget_cls(self) -> Type[Widget]:
         """Returns the widget_cls for the field type."""
@@ -731,18 +750,29 @@ class FieldType(Enum):
         allow_in_model=False,
         field_display_options=[
             FieldDisplayOption(
-                id="label",
-                label="Label",
-                form_field_cls=forms.CharField,
-                required=False,
-            ),
-            FieldDisplayOption(
                 id="inline_fields",
                 label="Inline fields",
                 form_field_cls=OrderedMultipleChoiceField,
                 required=False,
                 help_text="Choose which related fields appear as editable columns.",
                 get_form_field_kwargs=get_related_model_field_choices,
+            ),
+            FieldDisplayOption(
+                id="show_totals",
+                label="Show totals",
+                form_field_cls=forms.BooleanField,
+                required=False,
+                default=False,
+                help_text="Show totals beneath numeric inline columns.",
+            ),
+            FieldDisplayOption(
+                id="page_size",
+                label="Page size",
+                form_field_cls=forms.IntegerField,
+                required=False,
+                default=10,
+                help_text="Choose how many related rows appear on each page.",
+                form_field_kwargs={"min_value": 1, "max_value": 100},
             ),
         ],
         lookups=ONE_TO_MANY_LOOKUPS,

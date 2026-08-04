@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 
+from bloomerp.form_fields.behavior import BehaviorAction, BehaviorConfig, BehaviorRule
 from bloomerp.models.base_bloomerp_model import BloomerpModel, FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.definition import BloomerpModelConfig
 
@@ -59,7 +60,17 @@ class Initiative(BloomerpModel):
                         LayoutItem(
                             id="todos",
                             colspan=1,
-                            config={"inline_fields": ["title", "status"]},
+                            config={
+                                "inline_fields": ["title", "status"],
+                                # "behaviors" : BehaviorConfig(
+                                #     rules=[
+                                #         BehaviorRule(
+                                #             name="Set todo count based on inline fields",
+                                #             actions=[
+                                                
+                                #             ]
+                                # )]),     
+                            },
                         ),
                     ]
                 ),

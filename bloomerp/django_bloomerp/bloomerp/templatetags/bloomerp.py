@@ -2,9 +2,8 @@ import json
 
 import bleach
 from django import template
-from django.db.models.manager import Manager
 from django.db.models import Model
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest
 from bloomerp.models.definition import ObjectAction, ObjectHTML, ObjectModalAction
 from bloomerp.models.users.base_preference import BasePreference
 from bloomerp.services.preference_services import PreferenceManager
@@ -18,15 +17,9 @@ from django.middleware.csrf import get_token
 import re
 import uuid
 from bloomerp.models import Bookmark, AbstractBloomerpUser, ApplicationField
-from django.db.models.functions import Cast
-from django.db.models import DateTimeField, F
-from django.db.models import QuerySet
-from django.core.signing import dumps, loads
-from bloomerp.models import File
 import uuid
 from django.template.loader import render_to_string
 from bloomerp.field_types import FieldType
-from bloomerp.modules.definition import module_registry
 from bloomerp.services.sectioned_layout_services import (
     build_crud_layout_field_context,
     dump_layout_json as dump_layout_json_service,

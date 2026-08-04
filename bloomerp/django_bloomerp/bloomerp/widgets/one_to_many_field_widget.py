@@ -1,6 +1,14 @@
+from typing import TYPE_CHECKING
+from uuid import UUID
+
 from django.contrib.contenttypes.models import ContentType
+from django.db import models
 from django.db.models import Model
 from django.forms import widgets
+from django.urls import reverse
+
+if TYPE_CHECKING:
+    from bloomerp.models import ApplicationField
 
 SKIPPED_FIELD_NAMES = {
     "created_by",
@@ -8,6 +16,8 @@ SKIPPED_FIELD_NAMES = {
     "datetime_created",
     "datetime_updated",
 }
+DEFAULT_PAGE_SIZE = 10
+MAX_PAGE_SIZE = 100
 
 
 class OneToManyFieldWidget(widgets.Widget):
@@ -22,7 +32,17 @@ class OneToManyFieldWidget(widgets.Widget):
         self.related_model = attrs.pop('related_model', None)
         self.parent_model = attrs.pop('parent_model', None)
         self.fields = attrs.pop('fields', []) or self.layout_config.get("inline_fields", [])
+        self.page_size = self._parse_page_size(self.layout_config.get("page_size"))
         super().__init__(attrs)
+
+    @staticmethod
+    def _parse_page_size(value) -> int:
+        """Return a bounded page size from layout configuration."""
+        try:
+            page_size = int(value)
+        except (TypeError, ValueError):
+            return DEFAULT_PAGE_SIZE
+        return min(MAX_PAGE_SIZE, max(1, page_size))
 
     def _get_related_objects(self, value):
         if value is None:
@@ -129,6 +149,37 @@ class OneToManyFieldWidget(widgets.Widget):
             }
             for column in columns
         ]
+
+    @staticmethod
+    def _get_column_kind(application_field: "ApplicationField") -> str:
+        """Return the client-side behavior category for an inline column."""
+        try:
+            model_field = application_field._get_model_field()
+        except Exception:
+            return "text"
+
+        if isinstance(model_field, models.DateField):
+            return "date"
+        if isinstance(
+            model_field,
+            (models.IntegerField, models.FloatField, models.DecimalField),
+        ):
+            return "number"
+        return "text"
+
+    def _build_column_context(
+        self,
+        application_field: "ApplicationField",
+    ) -> dict[str, object]:
+        """Build the metadata used by column actions, totals, and cell selectors."""
+        kind = self._get_column_kind(application_field)
+        return {
+            "id": application_field.pk,
+            "field": application_field.field,
+            "title": application_field.title,
+            "kind": kind,
+            "show_total": bool(self.layout_config.get("show_totals")) and kind == "number",
+        }
     
     def get_context(self, name, value, attrs):
         context = super().get_context(name, value, attrs)
@@ -138,8 +189,10 @@ class OneToManyFieldWidget(widgets.Widget):
         # Get content type ID for the related model
         if self.related_model:
             context['content_type_id'] = ContentType.objects.get_for_model(self.related_model).id
+            context['detail_url_template'] = self._get_detail_url_template()
         else:
             context['content_type_id'] = None
+            context['detail_url_template'] = ""
         
         columns = self.get_columns()
         related_objects = self._get_related_objects(value)
@@ -148,6 +201,8 @@ class OneToManyFieldWidget(widgets.Widget):
             rows.append(
                 {
                     "object": obj,
+                    "id": self._get_row_id(obj),
+                    "detail_url": self._get_row_detail_url(obj),
                     "id_input": self._render_row_id_input(name=name, obj=obj, row_index=row_index),
                     "cells": self._build_cells(
                         name=name,
@@ -160,9 +215,11 @@ class OneToManyFieldWidget(widgets.Widget):
             )
 
         context['related_objects'] = related_objects
-        context['columns'] = columns
+        context['columns'] = [self._build_column_context(column) for column in columns]
         context['rows'] = rows
         context['empty_row'] = {
+            "id": "",
+            "detail_url": "",
             "id_input": self._render_row_id_input(name=name, obj=None, row_index="__prefix__"),
             "cells": self._build_cells(
                 name=name,
@@ -173,8 +230,45 @@ class OneToManyFieldWidget(widgets.Widget):
             ),
         }
         context['can_edit'] = not attrs.get("disabled")
+        context['show_totals'] = bool(self.layout_config.get("show_totals"))
+        context['page_size'] = self.page_size
         
         return context
+
+    @staticmethod
+    def _get_row_id(obj):
+        if isinstance(obj, dict):
+            return obj.get("id", "")
+        return getattr(obj, "pk", "") if obj is not None else ""
+
+    def _get_row_detail_url(self, obj) -> str:
+        row_id = self._get_row_id(obj)
+        if row_id in (None, ""):
+            return ""
+
+        if not isinstance(obj, dict) and hasattr(obj, "get_absolute_url"):
+            try:
+                return obj.get_absolute_url()
+            except Exception:
+                pass
+
+        return self._get_detail_url_template().replace("{object_id}", str(row_id))
+
+    def _get_detail_url_template(self) -> str:
+        if self.related_model is None:
+            return ""
+
+        placeholder = UUID(int=0)
+        try:
+            from bloomerp.utils.models import get_detail_view_url
+
+            detail_url = reverse(
+                get_detail_view_url(self.related_model),
+                kwargs={"pk": placeholder},
+            )
+        except Exception:
+            return ""
+        return detail_url.replace(str(placeholder), "{object_id}")
 
     def _render_row_id_input(self, *, name, obj, row_index):
         if isinstance(obj, dict):
