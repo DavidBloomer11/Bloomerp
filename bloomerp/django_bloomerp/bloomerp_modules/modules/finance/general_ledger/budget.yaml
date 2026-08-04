@@ -17,6 +17,13 @@ fields:
     type: CharField
     options:
       max_length: 100
+
+  - id: budget_version
+    name: Budget Version
+    type: CharField
+    options:
+      max_length: 20
+      default: "BASE"
       
   - id: account
     name: Account
@@ -82,6 +89,45 @@ fields:
       max_digits: 5
       decimal_places: 2
       default: 0
+
+  - id: forecast_amount
+    name: Forecast Amount
+    type: DecimalField
+    options:
+      max_digits: 15
+      decimal_places: 2
+      default: 0
+
+  - id: committed_amount
+    name: Committed Amount
+    type: DecimalField
+    options:
+      max_digits: 15
+      decimal_places: 2
+      default: 0
+
+  - id: currency
+    name: Currency
+    type: CharField
+    options:
+      max_length: 10
+      default: USD
+
+  - id: department
+    name: Department
+    type: CharField
+    options:
+      max_length: 50
+      null: true
+      blank: true
+
+  - id: cost_center
+    name: Cost Center
+    type: CharField
+    options:
+      max_length: 20
+      null: true
+      blank: true
       
   - id: status
     name: Status
