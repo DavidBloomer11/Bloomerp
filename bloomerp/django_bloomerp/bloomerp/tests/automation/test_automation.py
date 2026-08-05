@@ -518,7 +518,7 @@ class TestAutomation(TransactionTestCase):
 
         setup_automation_signals(refresh=True)
 
-        with patch("bloomerp.signals.automations.run_workflow") as run_workflow_mock:
+        with patch("bloomerp.signals.automation_signals.run_workflow") as run_workflow_mock:
             self.CustomerModel.objects.create(
                 first_name="Jane",
                 last_name="Doe",
@@ -560,7 +560,7 @@ class TestAutomation(TransactionTestCase):
             updated_by=self.user,
         )
 
-        with patch("bloomerp.signals.automations.run_workflow") as run_workflow_mock:
+        with patch("bloomerp.signals.automation_signals.run_workflow") as run_workflow_mock:
             instance.delete()
             run_workflow_mock.assert_called_once()
         
@@ -595,12 +595,127 @@ class TestAutomation(TransactionTestCase):
             updated_by=self.user,
         )
 
-        with patch("bloomerp.signals.automations.run_workflow") as run_workflow_mock:
+        with patch("bloomerp.signals.automation_signals.run_workflow") as run_workflow_mock:
             instance.age = 23
             instance.updated_by = self.user
             instance.save()
 
             run_workflow_mock.assert_called_once()
+
+    def test_inactive_workflow_does_not_run_after_create(self):
+        """
+        Use case: An inactive workflow has an object-create trigger.
+        Expected result: Creating the matching object does not run the workflow.
+        """
+        # 1. Create an inactive workflow with a matching object-create trigger.
+        content_type = ContentType.objects.get_for_model(self.CustomerModel)
+        workflow = Workflow.objects.create(
+            name="Inactive Create Trigger Workflow",
+            active=False,
+            created_by=self.user,
+            updated_by=self.user,
+        )
+        WorkflowNode.objects.create(
+            workflow=workflow,
+            config={
+                "sub_type": "ON_OBJECT_CREATE",
+                "parameters": {"content_type_id": content_type.id},
+            },
+            type=WorkflowNodeType.TRIGGER.value.id,
+            created_by=self.user,
+            updated_by=self.user,
+        )
+        setup_automation_signals(refresh=True)
+
+        # 2. Create the matching object and verify no workflow run is started.
+        with patch("bloomerp.signals.automation_signals.run_workflow") as run_workflow_mock:
+            self.CustomerModel.objects.create(
+                first_name="Inactive",
+                last_name="Create",
+                age=30,
+                created_by=self.user,
+                updated_by=self.user,
+            )
+
+        run_workflow_mock.assert_not_called()
+
+    def test_inactive_workflow_does_not_run_after_update(self):
+        """
+        Use case: An inactive workflow has an object-update trigger.
+        Expected result: Updating the matching object does not run the workflow.
+        """
+        # 1. Create an inactive workflow with a matching object-update trigger.
+        content_type = ContentType.objects.get_for_model(self.CustomerModel)
+        workflow = Workflow.objects.create(
+            name="Inactive Update Trigger Workflow",
+            active=False,
+            created_by=self.user,
+            updated_by=self.user,
+        )
+        WorkflowNode.objects.create(
+            workflow=workflow,
+            config={
+                "sub_type": "ON_OBJECT_UPDATE",
+                "parameters": {"content_type_id": content_type.id},
+            },
+            type=WorkflowNodeType.TRIGGER.value.id,
+            created_by=self.user,
+            updated_by=self.user,
+        )
+        setup_automation_signals(refresh=True)
+        instance = self.CustomerModel.objects.create(
+            first_name="Inactive",
+            last_name="Update",
+            age=30,
+            created_by=self.user,
+            updated_by=self.user,
+        )
+
+        # 2. Update the matching object and verify no workflow run is started.
+        with patch("bloomerp.signals.automation_signals.run_workflow") as run_workflow_mock:
+            instance.age = 31
+            instance.updated_by = self.user
+            instance.save()
+
+        run_workflow_mock.assert_not_called()
+
+    def test_inactive_workflow_does_not_run_after_delete(self):
+        """
+        Use case: An inactive workflow has an object-delete trigger.
+        Expected result: Deleting the matching object does not run the workflow.
+        """
+        # 1. Create an inactive workflow with a matching object-delete trigger.
+        content_type = ContentType.objects.get_for_model(self.CustomerModel)
+        workflow = Workflow.objects.create(
+            name="Inactive Delete Trigger Workflow",
+            active=False,
+            created_by=self.user,
+            updated_by=self.user,
+        )
+        WorkflowNode.objects.create(
+            workflow=workflow,
+            config={
+                "sub_type": "ON_OBJECT_DELETE",
+                "parameters": {"content_type_id": content_type.id},
+            },
+            type=WorkflowNodeType.TRIGGER.value.id,
+            created_by=self.user,
+            updated_by=self.user,
+        )
+        setup_automation_signals(refresh=True)
+        instance = self.CustomerModel.objects.create(
+            first_name="Inactive",
+            last_name="Delete",
+            age=30,
+            created_by=self.user,
+            updated_by=self.user,
+        )
+
+        # 2. Delete the matching object and verify no workflow run is started.
+        with patch("bloomerp.signals.automation_signals.run_workflow") as run_workflow_mock:
+            instance.delete()
+
+        run_workflow_mock.assert_not_called()
     
     def test_exeucte_node(self):
         """Tests the execution of a basic node"""
