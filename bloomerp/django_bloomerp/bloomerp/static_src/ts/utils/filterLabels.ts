@@ -1,6 +1,8 @@
 const LOOKUP_LABELS: Record<string, string> = {
     exact: "is",
     equals: "is",
+    not_equals: "is not",
+    ne: "is not",
     icontains: "contains",
     contains: "contains",
     startswith: "starts with",
