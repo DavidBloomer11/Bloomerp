@@ -101,6 +101,32 @@ class TestCreateView(BaseBloomerpModelTestCase):
         finally:
             model_field.default = original_default
 
+    def test_widget_renders_text_editors_with_compact_height(self):
+        """
+        Use case: Render a text editor as an inline one-to-many column.
+        Expected result: The inline editor is shorter than a standalone editor.
+        """
+        # 1. Render the optional customer description as an inline column.
+        widget = OneToManyFieldWidget(
+            attrs={
+                "related_model": self.CustomerModel,
+                "parent_model": self.CountryModel,
+                "layout_config": {"inline_fields": ["description"]},
+            }
+        )
+        soup = BeautifulSoup(
+            widget.render(name="customers", value=None, attrs={}),
+            "html.parser",
+        )
+
+        # 2. Verify the row template's editor uses only the compact minimum height.
+        editor = soup.select_one(
+            '[data-one-to-many-row-template] [bloomerp-component="bloomerp-text-editor"]'
+        )
+        self.assertIsNotNone(editor)
+        self.assertIn("min-h-36", editor.get("class", []))
+        self.assertNotIn("min-h-72", editor.get("class", []))
+
     def test_widget_collects_nested_rows_for_form_cleaning(self):
         widget = OneToManyFieldWidget()
         data = QueryDict(mutable=True)

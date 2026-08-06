@@ -8,11 +8,13 @@ class BloomerpTextEditorWidget(forms.Textarea):
         attrs.setdefault('id', 'id_%s' % name)
         context = super().get_context(name, value, attrs)
         widget_context = context.get('widget', {})
+        widget_classes = widget_context.get('attrs', {}).get('class', '').split()
         new_context = {**widget_context.get('attrs', {})}
         new_context.update({
             'name': widget_context.get('name'),
             'value': widget_context.get('value'),
             'disabled': widget_context.get('attrs', {}).get('disabled', False),
-            'include_toolbar' : True
+            'include_toolbar' : True,
+            'compact': 'one-to-many-field-widget__input' in widget_classes,
         })
         return new_context
