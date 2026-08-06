@@ -1,5 +1,6 @@
 {% load bloomerp %}
 {% generate_uuid as editor_uuid %}
+{% with editor_id=editor_uuid|add:"-"|add:name %}
 
 <div 
     bloomerp-component="bloomerp-text-editor" 
@@ -10,17 +11,18 @@
     data-override-default-styling="{{ override_default_styling|default:'False'}}"
     data-name="{{ name }}"
     data-actions-toolbar-section-id="{{ actions_toolbar_section_id }}"
-    data-editor-id="{{ editor_uuid }}"
+    data-editor-id="{{ editor_id }}"
     data-include-toolbar="{{ include_toolbar }}"
     {% if height %}style="height: {{ height }};"{% endif %}
     >
-    <style id="text-editor-styling-{{ editor_uuid }}"></style>
+    <style id="text-editor-styling-{{ editor_id }}"></style>
 
     <!--Toolbar-->
     {% if include_toolbar != False and include_toolbar != "false" and include_toolbar != "False" %}
-    <div class="" id="actions-toolbar-{{ editor_uuid }}"></div>
+    <div class="" id="actions-toolbar-{{ editor_id }}"></div>
     {% endif %}
     <!--End toolbar-->
-    <div id="editor-{{ editor_uuid }}" class="outline-none bloomerp-text-editor" contenteditable></div>
+    <div id="editor-{{ editor_id }}" class="outline-none bloomerp-text-editor" contenteditable></div>
     <input type="hidden" data-text-editor-input="true" name="{{ name }}" value="{{ value }}" id="id_{{ name }}">
 </div>
+{% endwith %}
