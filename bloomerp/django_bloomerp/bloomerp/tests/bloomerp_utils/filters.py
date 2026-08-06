@@ -47,6 +47,13 @@ class TestFilterUtil(BaseBloomerpModelTestCase):
                         blank=True,
                         related_name="primary_records",
                     ),
+                    "one_to_one_field": models.OneToOneField(
+                        "FilterTag",
+                        on_delete=models.SET_NULL,
+                        null=True,
+                        blank=True,
+                        related_name="one_to_one_primary_record",
+                    ),
                     "many_to_many_field": models.ManyToManyField(
                         "FilterTag",
                         blank=True,
@@ -121,6 +128,7 @@ class TestFilterUtil(BaseBloomerpModelTestCase):
             "uuid_field": FieldType.UUID_FIELD,
             "week_field": FieldType.WEEK_FIELD,
             "foreign_key_field": FieldType.FOREIGN_KEY,
+            "one_to_one_field": FieldType.ONE_TO_ONE_FIELD,
             "many_to_many_field": FieldType.MANY_TO_MANY_FIELD,
             "lines": FieldType.ONE_TO_MANY_FIELD,
         }
@@ -239,6 +247,36 @@ class TestFilterUtil(BaseBloomerpModelTestCase):
         self.assert_filtered_ids({"many_to_many_field__equals": [str(frontend.id)]}, [frontend_record.id, both_record.id])
         self.assert_filtered_ids({"many_to_many_field__in": [str(backend.id)]}, [backend_record.id, both_record.id])
         self.assert_filtered_ids({"many_to_many_field__name__icontains": "front"}, [frontend_record.id, both_record.id])
+
+    def test_not_equals_filters_exclude_selected_foreign_relations(self):
+        """
+        Use case: A user filters FK, O2O, and M2M fields with Not Equals.
+        Expected result: Records related to the selected values are excluded for every relation type.
+        """
+        # 1. Create relation values and records covering selected, other, empty, and overlapping relations.
+        backend = self.TagModel.objects.create(name="Backend")
+        frontend = self.TagModel.objects.create(name="Frontend")
+        selected_record = self.create_primary(foreign_key_field=backend, one_to_one_field=backend)
+        selected_record.many_to_many_field.add(backend)
+        other_record = self.create_primary(foreign_key_field=frontend, one_to_one_field=frontend)
+        other_record.many_to_many_field.add(frontend)
+        empty_record = self.create_primary(foreign_key_field=None, one_to_one_field=None)
+        overlapping_record = self.create_primary(foreign_key_field=backend)
+        overlapping_record.many_to_many_field.add(backend, frontend)
+
+        # 2. Exclude the selected value through both supported Not Equals aliases.
+        self.assert_filtered_ids(
+            {"foreign_key_field__not_equals": str(backend.id)},
+            [other_record.id, empty_record.id],
+        )
+        self.assert_filtered_ids(
+            {"one_to_one_field__ne": str(backend.id)},
+            [other_record.id, empty_record.id, overlapping_record.id],
+        )
+        self.assert_filtered_ids(
+            {"many_to_many_field__not_equals": [str(backend.id)]},
+            [other_record.id, empty_record.id],
+        )
 
     def test_one_to_many_count_filters_use_declared_aliases(self):
         no_lines = self.create_primary()
