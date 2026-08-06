@@ -282,7 +282,7 @@ export default class OneToManyFieldWidget extends BaseWidget {
     }
 
     private replacePrefix(root: ParentNode, rowIndex: number): void {
-        const elements = root.querySelectorAll<HTMLElement>("[name], [id], [for], [data-field-name]");
+        const elements = root.querySelectorAll<HTMLElement>("*");
         elements.forEach((element) => {
             for (const attr of ["name", "id", "for"]) {
                 const value = element.getAttribute(attr);
