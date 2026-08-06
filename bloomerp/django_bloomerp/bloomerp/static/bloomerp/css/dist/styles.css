@@ -3953,7 +3953,7 @@
     border-color: var(--color-zinc-700);
     color: var(--color-zinc-100);
   }
-  .dark .input, .dark .select, .dark .node-input, .dark .node-select {
+  .dark .input:not([type='checkbox']):not([type='radio']), .dark .select, .dark .node-input, .dark .node-select {
     background-color: var(--color-zinc-800);
     border-color: var(--color-zinc-600);
     color: var(--color-zinc-100);
@@ -4808,7 +4808,7 @@
   }
 }
 @layer utilities {
-  .input {
+  .input:not([type='checkbox']):not([type='radio']) {
     border-radius: var(--radius-xl);
     border-style: var(--tw-border-style);
     border-width: 1px;
@@ -4829,17 +4829,17 @@
       --tw-ring-color: var(--color-primary);
     }
   }
-  .input-sm {
+  .input-sm:not([type='checkbox']):not([type='radio']) {
     padding-inline: calc(var(--spacing) * 2);
     padding-block: calc(var(--spacing) * 1);
     font-size: var(--text-xs);
     line-height: var(--tw-leading, var(--text-xs--line-height));
   }
-  .input-lg {
+  .input-lg:not([type='checkbox']):not([type='radio']) {
     padding-inline: calc(var(--spacing) * 4);
     padding-block: calc(var(--spacing) * 3);
   }
-  .input:disabled {
+  .input:disabled:not([type='checkbox']):not([type='radio']) {
     cursor: not-allowed;
     background-color: var(--color-gray-100);
   }
