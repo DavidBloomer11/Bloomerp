@@ -235,8 +235,13 @@ def setup_automation_signals(refresh: bool = False) -> None:
 	if _SIGNALS_INITIALIZED and refresh:
 		_disconnect_registered_handlers()
 
-	create_triggers = WorkflowNode.get_triggers_by_type("ON_OBJECT_CREATE")
-	update_triggers = WorkflowNode.get_triggers_by_type("ON_OBJECT_UPDATE")
+	create_triggers = list(WorkflowNode.get_triggers_by_type("ON_OBJECT_CREATE"))
+	update_triggers = list(WorkflowNode.get_triggers_by_type("ON_OBJECT_UPDATE"))
+	create_or_update_triggers = list(
+		WorkflowNode.get_triggers_by_type("ON_OBJECT_CREATE_OR_UPDATE")
+	)
+	create_triggers.extend(create_or_update_triggers)
+	update_triggers.extend(create_or_update_triggers)
 	delete_triggers = WorkflowNode.get_triggers_by_type("ON_OBJECT_DELETE")
 
 	trigger_sets = {

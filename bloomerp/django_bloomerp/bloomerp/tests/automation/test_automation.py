@@ -602,6 +602,52 @@ class TestAutomation(TransactionTestCase):
 
             run_workflow_mock.assert_called_once()
 
+    def test_run_workflow_called_after_create_or_update(self):
+        """
+        Use case: A workflow has a combined object create-or-update trigger.
+        Expected result: The workflow runs once for both a create and an update.
+        """
+        # 1. Create a workflow with a combined post-save trigger.
+        content_type = ContentType.objects.get_for_model(self.CustomerModel)
+        workflow = Workflow.objects.create(
+            name="Create Or Update Trigger Workflow",
+            created_by=self.user,
+            updated_by=self.user,
+        )
+        WorkflowNode.objects.create(
+            workflow=workflow,
+            config={
+                "sub_type": "ON_OBJECT_CREATE_OR_UPDATE",
+                "parameters": {"content_type_id": content_type.id},
+            },
+            type=WorkflowNodeType.TRIGGER.value.id,
+            created_by=self.user,
+            updated_by=self.user,
+        )
+        setup_automation_signals(refresh=True)
+
+        # 2. Verify the combined trigger handles object creation.
+        with patch("bloomerp.signals.automation_signals.run_workflow") as run_workflow_mock:
+            instance = self.CustomerModel.objects.create(
+                first_name="Create",
+                last_name="Or Update",
+                age=30,
+                created_by=self.user,
+                updated_by=self.user,
+            )
+
+            run_workflow_mock.assert_called_once()
+            self.assertEqual(run_workflow_mock.call_args.args[1]["event"], "create")
+
+        # 3. Verify the same trigger handles object updates.
+        with patch("bloomerp.signals.automation_signals.run_workflow") as run_workflow_mock:
+            instance.age = 31
+            instance.updated_by = self.user
+            instance.save()
+
+            run_workflow_mock.assert_called_once()
+            self.assertEqual(run_workflow_mock.call_args.args[1]["event"], "update")
+
     def test_inactive_workflow_does_not_run_after_create(self):
         """
         Use case: An inactive workflow has an object-create trigger.
