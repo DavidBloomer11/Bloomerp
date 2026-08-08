@@ -69,6 +69,22 @@ class TestApplicationField(BaseBloomerpModelTestCase):
             },
             use_bloomerp_base=True,
         )["CustomerLine"]
+        cls.CustomerRelationModel = create_test_models(
+            app_label="bloomerp",
+            model_defs={
+                "CustomerRelation": {
+                    "customer": models.ForeignKey(
+                        cls.CustomerModel,
+                        on_delete=models.SET_NULL,
+                        related_name="nullable_relations",
+                        blank=True,
+                        null=True,
+                    ),
+                    "__str__": lambda self: "Customer relation",
+                }
+            },
+            use_bloomerp_base=True,
+        )["CustomerRelation"]
         cls.PhoneRecordModel = create_test_models(
             app_label="bloomerp",
             model_defs={
@@ -982,6 +998,37 @@ class TestApplicationField(BaseBloomerpModelTestCase):
         self.assertEqual(prepared_data["first_name"], "Partial")
         self.assertEqual(prepared_data["last_name"], "Update")
         self.assertEqual(prepared_data["age"], "45")
+
+    def test_model_form_clears_foreign_key_when_partial_update_submits_empty_value(self):
+        """
+        Use case: A user removes a foreign-key relationship from an existing object.
+        Expected result: The partial model form saves the relation as null.
+        """
+
+        # 1. Create an object with an existing nullable foreign-key relation.
+        customer = self.create_customer("Related", "Customer", 44)
+        relation = self.CustomerRelationModel.objects.create(customer=customer)
+        form_class = bloomerp_modelform_factory(
+            self.CustomerRelationModel,
+            fields=["customer"],
+        )
+
+        # 2. Keep the empty foreign-key value explicitly in the submitted data.
+        prepared_data = form_class.prepare_bound_data(
+            QueryDict("customer=", mutable=True),
+            MultiValueDict(),
+            relation,
+            partial=True,
+        )
+
+        # 3. Validate and save the partial update.
+        form = form_class(data=prepared_data, instance=relation)
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
+
+        # 4. Confirm the existing relationship was removed.
+        relation.refresh_from_db()
+        self.assertIsNone(relation.customer_id)
 
     def test_one_to_many_form_field_rejects_an_object_from_another_parent(self):
         customer = self.create_customer("First", "Parent", 40)

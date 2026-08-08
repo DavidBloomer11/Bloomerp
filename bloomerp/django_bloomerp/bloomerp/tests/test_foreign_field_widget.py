@@ -33,6 +33,22 @@ class TestForeignFieldWidget(SimpleTestCase):
 
         self.assertEqual(value, "2")
 
+    def test_value_from_datadict_allows_an_explicit_empty_single_value(self):
+        """
+        Use case: A user clears a foreign-key selection before submitting an object.
+        Expected result: The empty hidden value is submitted instead of being treated as omitted.
+        """
+
+        # 1. Build the same two-value submission produced when a selected relation is cleared.
+        widget = ForeignFieldWidget()
+        data = QueryDict("label=1&label=", mutable=True)
+
+        # 2. Read the submitted values from the custom widget.
+        value = widget.value_from_datadict(data, {}, "label")
+
+        # 3. Preserve the explicit empty value so partial updates can clear the relation.
+        self.assertEqual(value, "")
+
     def test_get_context_includes_selected_urls_json(self):
         class DummyObject:
             pk = 7

@@ -427,13 +427,33 @@ export default class ForeignFieldWidget extends BaseWidget {
         for (const inp of inputs) {
             if (inp.value === id) inp.remove();
         }
+        // Keep a named empty control so partial forms can distinguish a cleared
+        // relation from a field that was not included in the submission.
+        this.ensureEmptyValueInput();
+
         // if single select, clear visible input
-        if (!this.isM2M && this.input) this.input.value = '';
+        if (!this.isM2M) {
+            if (this.input) this.input.value = '';
+        }
         this.renderSelectedState();
 
         if (!this.valuesEqual(previousValue, this.getValue())) {
             this.onChange();
         }
+    }
+
+    private ensureEmptyValueInput(): void {
+        if (!this.fieldName) return;
+        if (this.element.querySelector(`input[type=hidden][name="${this.fieldName}"][data-empty-value="true"]`)) {
+            return;
+        }
+
+        const emptyValueInput = document.createElement('input');
+        emptyValueInput.type = 'hidden';
+        emptyValueInput.name = this.fieldName;
+        emptyValueInput.value = '';
+        emptyValueInput.dataset.emptyValue = 'true';
+        this.element.appendChild(emptyValueInput);
     }
 
     private getSelectionInputs(): HTMLInputElement[] {
