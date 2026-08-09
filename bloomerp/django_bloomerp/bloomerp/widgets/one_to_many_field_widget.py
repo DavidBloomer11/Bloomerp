@@ -176,6 +176,8 @@ class OneToManyFieldWidget(widgets.Widget):
         except Exception:
             return "text"
 
+        if isinstance(model_field, models.BooleanField):
+            return "boolean"
         if isinstance(model_field, models.DateField):
             return "date"
         if isinstance(
