@@ -1,4 +1,5 @@
 import uuid
+from types import SimpleNamespace
 
 from bloomerp.models.activity_log import ActivityLog, ActivityLogAction
 from bloomerp.models.definition import BloomerpModelConfig
@@ -71,6 +72,26 @@ class ActivityLogManagerTestCase(BaseBloomerpModelTestCase):
 
         self.assertIsNone(activity_log)
         self.assertEqual(ActivityLog.objects.count(), 0)
+
+    def test_set_changes_preserves_created_by_when_updating(self):
+        """
+        Use case: A different authenticated user updates an existing object.
+        Expected result: The creator is preserved and only updated_by changes.
+        """
+        # 1. Save the original creator on an existing object.
+        self.customer.created_by = self.admin_user
+        self.customer.updated_by = self.admin_user
+        self.customer.save()
+
+        # 2. Prepare an update as another authenticated user.
+        self.customer.first_name = "Grace"
+        request = SimpleNamespace(user=self.normal_user)
+        manager = ActivityLogManager(self.customer, request)
+        manager.set_changes()
+
+        # 3. Confirm the immutable creator remains intact while the updater changes.
+        self.assertEqual(self.customer.created_by, self.admin_user)
+        self.assertEqual(self.customer.updated_by, self.normal_user)
 
     def test_serializer_lookup_registers_missing_serializer_lazily(self):
         _model_serializers.pop(self.CustomerModel, None)
