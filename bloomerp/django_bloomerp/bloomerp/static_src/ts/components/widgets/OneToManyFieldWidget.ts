@@ -710,7 +710,11 @@ export default class OneToManyFieldWidget extends BaseWidget {
     }
 
     private getColumnValue(row: HTMLElement, fieldName: string): string {
-        return this.getColumnControl(row, fieldName)?.value ?? "";
+        const control = this.getColumnControl(row, fieldName);
+        if (control instanceof HTMLInputElement && control.type === "checkbox") {
+            return control.checked ? "true" : "false";
+        }
+        return control?.value ?? "";
     }
 
     private getColumnKind(fieldName: string): string {
@@ -721,7 +725,15 @@ export default class OneToManyFieldWidget extends BaseWidget {
 
     private setColumnValue(row: HTMLElement, fieldName: string, value: string): void {
         const control = this.getColumnControl(row, fieldName);
-        if (control) control.value = value;
+        if (!control) return;
+        if (control instanceof HTMLInputElement && control.type === "checkbox") {
+            control.checked = value === "true"
+                || value === "1"
+                || value === "on"
+                || value === "yes";
+            return;
+        }
+        control.value = value;
     }
 
     private toNumber(value: string): number {

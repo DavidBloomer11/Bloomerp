@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 from django.http import QueryDict
 
+from bloomerp.models.workspaces.sidebar_item import SidebarItem
 from bloomerp.tests.base import BaseBloomerpModelTestCase
 from bloomerp.widgets.one_to_many_field_widget import OneToManyFieldWidget
 
@@ -126,6 +127,44 @@ class TestCreateView(BaseBloomerpModelTestCase):
         self.assertIsNotNone(editor)
         self.assertIn("min-h-36", editor.get("class", []))
         self.assertNotIn("min-h-72", editor.get("class", []))
+
+    def test_widget_renders_boolean_inline_fields(self):
+        """
+        Use case: Render a boolean field as an inline one-to-many column.
+        Expected result: The boolean input is present and reflects each row value.
+        """
+        # 1. Render child rows containing both checked and unchecked values.
+        widget = OneToManyFieldWidget(
+            attrs={
+                "related_model": SidebarItem,
+                "parent_model": SidebarItem,
+                "layout_config": {"inline_fields": ["name", "is_folder"]},
+            }
+        )
+        soup = BeautifulSoup(
+            widget.render(
+                name="children",
+                value=[
+                    {"name": "Folder", "is_folder": True},
+                    {"name": "Item", "is_folder": False},
+                ],
+                attrs={},
+            ),
+            "html.parser",
+        )
+
+        # 2. Verify each row includes a checkbox with the submitted state.
+        boolean_inputs = soup.select(
+            '[data-one-to-many-body] > tr[data-one-to-many-row] '
+            '[data-one-to-many-cell="is_folder"] input[type="checkbox"]'
+        )
+        self.assertEqual(len(boolean_inputs), 2)
+        self.assertIn("checked", boolean_inputs[0].attrs)
+        self.assertNotIn("checked", boolean_inputs[1].attrs)
+        self.assertEqual(
+            soup.select_one('[data-one-to-many-column="is_folder"]')["data-column-kind"],
+            "boolean",
+        )
 
     def test_widget_collects_nested_rows_for_form_cleaning(self):
         widget = OneToManyFieldWidget()
