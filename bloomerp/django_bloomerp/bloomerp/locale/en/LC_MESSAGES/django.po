@@ -1,0 +1,1521 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-05 14:14+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+#: bloomerp/automation/defintion.py:53
+msgid "Trigger"
+msgstr ""
+
+#: bloomerp/automation/defintion.py:54
+msgid "The trigger for a workflow"
+msgstr ""
+
+#: bloomerp/automation/defintion.py:103
+msgid "Action"
+msgstr ""
+
+#: bloomerp/automation/defintion.py:104
+msgid "An action to perform"
+msgstr ""
+
+#: bloomerp/automation/defintion.py:216
+msgid "Flow"
+msgstr ""
+
+#: bloomerp/automation/defintion.py:217
+msgid "A flow node to branch the workflow"
+msgstr ""
+
+#: bloomerp/components/communication/emails/new_email.py:68
+msgid "Select an email folder before composing a message."
+msgstr ""
+
+#: bloomerp/components/communication/emails/new_email.py:72
+msgid "This email folder is not connected to an email account."
+msgstr ""
+
+#: bloomerp/components/communication/emails/new_email.py:100
+msgid "This email account has an unsupported provider."
+msgstr ""
+
+#: bloomerp/components/communication/emails/new_email.py:125
+msgid "Email sent successfully."
+msgstr ""
+
+#: bloomerp/components/communication/emails/new_email.py:139
+msgid "New email"
+msgstr ""
+
+#: bloomerp/components/communication/emails/new_email.py:140
+msgid "Send"
+msgstr ""
+
+#: bloomerp/components/communication/emails/new_email.py:175
+msgid "Add at least one recipient."
+msgstr ""
+
+#: bloomerp/components/communication/emails/new_email.py:182
+#, python-format
+msgid "'%(email)s' is not a valid email address."
+msgstr ""
+
+#: bloomerp/components/communication/emails/new_email.py:185
+msgid "Add a subject or message body before sending."
+msgstr ""
+
+#: bloomerp/components/communication/emails/reply_to_email.py:58
+msgid "Select an email before replying."
+msgstr ""
+
+#: bloomerp/components/communication/emails/reply_to_email.py:72
+msgid "Reply"
+msgstr ""
+
+#: bloomerp/components/communication/emails/reply_to_email.py:73
+msgid "Send reply"
+msgstr ""
+
+#: bloomerp/components/workspaces/preview_workspace_tile.py:190
+#, python-format
+msgid "Rendering error: %(error)s"
+msgstr ""
+
+#: bloomerp/components/workspaces/preview_workspace_tile.py:202
+msgid "Untitled tile"
+msgstr ""
+
+#: bloomerp/components/workspaces/preview_workspace_tile.py:356
+msgid "Operation does not exist"
+msgstr ""
+
+#: bloomerp/components/workspaces/share_workspace.py:18
+msgid "Shared with"
+msgstr ""
+
+#: bloomerp/components/workspaces/share_workspace.py:19
+msgid "Search and add users who should be able to open this workspace."
+msgstr ""
+
+#: bloomerp/components/workspaces/share_workspace.py:31
+msgid "Shared with groups"
+msgstr ""
+
+#: bloomerp/components/workspaces/share_workspace.py:33
+msgid ""
+"Search and add groups whose members should be able to open this workspace."
+msgstr ""
+
+#: bloomerp/components/workspaces/share_workspace.py:45
+msgid "Initial default"
+msgstr ""
+
+#: bloomerp/components/workspaces/share_workspace.py:47
+msgid "Use this workspace initially for users who receive it through sharing."
+msgstr ""
+
+#: bloomerp/components/workspaces/sidebar.py:82
+msgid "New link"
+msgstr "Nieuwe link"
+
+#: bloomerp/components/workspaces/sidebar.py:236
+#: bloomerp/components/workspaces/sidebar.py:246
+#: bloomerp/components/workspaces/sidebar.py:284
+#: bloomerp/components/workspaces/sidebar.py:312
+msgid "Add"
+msgstr ""
+
+#: bloomerp/components/workspaces/sidebar.py:260
+msgid "Folder created"
+msgstr ""
+
+#: bloomerp/components/workspaces/sidebar.py:305
+msgid "Item created"
+msgstr ""
+
+#: bloomerp/components/workspaces/sidebar.py:333
+#: bloomerp/components/workspaces/sidebar.py:342
+#: bloomerp/templates/components/forms/initial_data.html:37
+msgid "Save"
+msgstr ""
+
+#: bloomerp/components/workspaces/sidebar.py:346
+#: bloomerp/workspaces/links_tile/model.py:185
+msgid "Item updated"
+msgstr ""
+
+#: bloomerp/components/workspaces/sidebar.py:368
+#: bloomerp/workspaces/links_tile/model.py:148
+msgid "Item removed"
+msgstr ""
+
+#: bloomerp/components/workspaces/sidebar.py:386
+msgid "An item is required."
+msgstr ""
+
+#: bloomerp/components/workspaces/sidebar.py:397
+#: bloomerp/workspaces/links_tile/model.py:206
+msgid "Item moved"
+msgstr ""
+
+#: bloomerp/components/workspaces/sidebar.py:414
+msgid "A URL is required."
+msgstr ""
+
+#: bloomerp/components/workspaces/sidebar.py:430
+msgid "Link created"
+msgstr ""
+
+#: bloomerp/forms/auth.py:43
+#, python-format
+msgid ""
+"Please enter a correct %(identifier)s and password. Note that both fields "
+"may be case-sensitive."
+msgstr ""
+
+#: bloomerp/forms/auth.py:45
+msgid "This account is inactive."
+msgstr ""
+
+#: bloomerp/forms/widgets.py:13
+msgid "The sql query (data) to use for the query"
+msgstr ""
+
+#: bloomerp/forms/widgets.py:18
+msgid "The name given to the widget"
+msgstr ""
+
+#: bloomerp/forms/widgets.py:23
+msgid ""
+"The description of the widget. Will be displayed in the widget if provided"
+msgstr ""
+
+#: bloomerp/forms/widgets.py:37
+msgid "The type of output to display for the widget"
+msgstr ""
+
+#: bloomerp/forms/widgets.py:63
+msgid "The number of rows to display in the table"
+msgstr ""
+
+#: bloomerp/models/access_control/field_policy.py:23
+msgid "Access Control Field Policy"
+msgstr ""
+
+#: bloomerp/models/access_control/field_policy.py:24
+msgid "Access Control Field Policies"
+msgstr ""
+
+#: bloomerp/models/access_control/field_policy.py:33
+msgid "The name of the field-level access control policy."
+msgstr ""
+
+#: bloomerp/models/access_control/field_policy.py:37
+msgid "A JSON representation of the field-level access control rules."
+msgstr ""
+
+#: bloomerp/models/access_control/policy.py:30
+msgid "Access Control Policy"
+msgstr ""
+
+#: bloomerp/models/access_control/policy.py:31
+msgid "Access Control Policies"
+msgstr ""
+
+#: bloomerp/models/access_control/policy.py:68
+msgid "The name of the access control policy."
+msgstr ""
+
+#: bloomerp/models/access_control/policy.py:73
+msgid "A description of the access control policy."
+msgstr ""
+
+#: bloomerp/models/access_control/policy.py:80
+msgid "The row-level policy associated with this access control policy."
+msgstr ""
+
+#: bloomerp/models/access_control/policy.py:87
+msgid "The field-level policy associated with this access control policy."
+msgstr ""
+
+#: bloomerp/models/access_control/policy.py:94
+msgid "Users assigned to this access control policy."
+msgstr ""
+
+#: bloomerp/models/access_control/policy.py:101
+msgid "Groups assigned to this access control policy."
+msgstr ""
+
+#: bloomerp/models/access_control/policy.py:108
+msgid "Global permissions applied by this policy."
+msgstr ""
+
+#: bloomerp/models/access_control/row_policy.py:16
+msgid "Access Control Row Policy"
+msgstr ""
+
+#: bloomerp/models/access_control/row_policy.py:17
+msgid "Access Control Row Policies"
+msgstr ""
+
+#: bloomerp/models/access_control/row_policy.py:26
+msgid "The name of the row-level access control policy."
+msgstr ""
+
+#: bloomerp/models/access_control/row_policy.py:39
+msgid "The rule defined for this RowPolicy is invalid."
+msgstr ""
+
+#: bloomerp/models/access_control/row_policy_rule.py:25
+msgid "Access Control Row Policy Rule"
+msgstr ""
+
+#: bloomerp/models/access_control/row_policy_rule.py:26
+msgid "Access Control Row Policy Rules"
+msgstr ""
+
+#: bloomerp/models/access_control/row_policy_rule.py:32
+msgid "The row-level access control policy this rule belongs to."
+msgstr ""
+
+#: bloomerp/models/access_control/row_policy_rule.py:35
+msgid "A JSON representation of the row-level access control rule."
+msgstr ""
+
+#: bloomerp/models/application_field.py:29
+msgid "The name of the field."
+msgstr ""
+
+#: bloomerp/models/application_field.py:34
+#: bloomerp/models/communication/mention.py:21
+msgid "The content type (model) this field belongs to."
+msgstr ""
+
+#: bloomerp/models/application_field.py:39
+msgid "The type of the field."
+msgstr ""
+
+#: bloomerp/models/application_field.py:47
+msgid "Related model for ForeignKey, OneToOneField, ManyToManyField"
+msgstr ""
+
+#: bloomerp/models/application_field.py:52
+msgid "Additional metadata about the field."
+msgstr ""
+
+#: bloomerp/models/application_field.py:60
+msgid "The database table this field belongs to."
+msgstr ""
+
+#: bloomerp/models/automation/workflow.py:29
+msgid "Workflow"
+msgstr ""
+
+#: bloomerp/models/automation/workflow.py:30
+msgid "Workflows"
+msgstr ""
+
+#: bloomerp/models/automation/workflow.py:74
+msgid "The name of the workflow."
+msgstr ""
+
+#: bloomerp/models/automation/workflow.py:78
+msgid "Whether runs asynchronously"
+msgstr ""
+
+#: bloomerp/models/automation/workflow.py:82
+msgid "Whether the workflow is active or not"
+msgstr ""
+
+#: bloomerp/models/automation/workflow.py:86
+msgid ""
+"Whether to enable logging for this workflow. Disabling logging may improve "
+"performance but will result in no detailed execution history being stored."
+msgstr ""
+
+#: bloomerp/models/automation/workflow_node.py:23
+msgid "Workflow Node"
+msgstr ""
+
+#: bloomerp/models/automation/workflow_node.py:24
+msgid "Workflow Nodes"
+msgstr ""
+
+#: bloomerp/models/automation/workflow_node.py:29
+msgid "The name of the workflow node."
+msgstr ""
+
+#: bloomerp/models/automation/workflow_node.py:42
+msgid "The type of the workflow node."
+msgstr ""
+
+#: bloomerp/models/automation/workflow_node.py:47
+msgid "The configuration for the workflow node."
+msgstr ""
+
+#: bloomerp/models/automation/workflow_node.py:52
+msgid "The X position of the node in the workflow editor."
+msgstr ""
+
+#: bloomerp/models/automation/workflow_node.py:56
+msgid "The Y position of the node in the workflow editor."
+msgstr ""
+
+#: bloomerp/models/automation/workflow_node.py:140
+msgid "Node subtype is required in config"
+msgstr ""
+
+#: bloomerp/models/automation/workflow_run.py:24
+msgid "Workflow Run"
+msgstr ""
+
+#: bloomerp/models/automation/workflow_run.py:25
+msgid "Workflow Runs"
+msgstr ""
+
+#: bloomerp/models/automation/workflow_run.py:71
+msgid "The workflow associated with this run."
+msgstr ""
+
+#: bloomerp/models/communication/signature_request.py:30
+msgid "Recipient of the signature request."
+msgstr ""
+
+#: bloomerp/models/communication/signature_request.py:37
+msgid "Email of the recipient (if recipient is not provided)."
+msgstr ""
+
+#: bloomerp/models/communication/signature_request.py:46
+msgid "Sender of the signature request."
+msgstr ""
+
+#: bloomerp/models/communication/signature_request.py:51
+msgid "Status of the signature request."
+msgstr ""
+
+#: bloomerp/models/communication/signature_request.py:63
+msgid "Date and time when the document was signed."
+msgstr ""
+
+#: bloomerp/models/document_templates/document_template.py:19
+msgid "A4"
+msgstr ""
+
+#: bloomerp/models/document_templates/document_template.py:20
+msgid "Letter"
+msgstr ""
+
+#: bloomerp/models/document_templates/document_template.py:21
+msgid "A3"
+msgstr ""
+
+#: bloomerp/models/document_templates/document_template.py:24
+msgid "Portrait"
+msgstr ""
+
+#: bloomerp/models/document_templates/document_template.py:25
+msgid "Landscape"
+msgstr ""
+
+#: bloomerp/models/document_templates/document_template.py:119
+msgid "Name of the document template."
+msgstr ""
+
+#: bloomerp/models/document_templates/document_template.py:123
+msgid "Content of the template, including the variables."
+msgstr ""
+
+#: bloomerp/models/document_templates/document_template.py:130
+msgid ""
+"Root object types that can be used as variables in the document template."
+msgstr ""
+
+#: bloomerp/models/document_templates/document_template.py:142
+msgid "Header of the document template."
+msgstr ""
+
+#: bloomerp/models/document_templates/document_template.py:145
+msgid "Footer content of the document template."
+msgstr ""
+
+#: bloomerp/models/document_templates/document_template.py:152
+msgid "Orientation of the document template."
+msgstr ""
+
+#: bloomerp/models/document_templates/document_template.py:158
+msgid "Size of the document template."
+msgstr ""
+
+#: bloomerp/models/document_templates/document_template.py:163
+msgid "Margin of the document template in inches."
+msgstr ""
+
+#: bloomerp/models/document_templates/document_template.py:167
+msgid "Signifies whether the page numbers are included or not."
+msgstr ""
+
+#: bloomerp/models/document_templates/document_template.py:173
+msgid ""
+"Signifies to which folder a file generated from the template needs to be "
+"saved upon creation."
+msgstr ""
+
+#: bloomerp/models/document_templates/document_template.py:181
+msgid "Styling sets that can be applied to the document template."
+msgstr ""
+
+#: bloomerp/models/document_templates/document_template.py:188
+msgid "Custom CSS styling for the document template."
+msgstr ""
+
+#: bloomerp/models/document_templates/document_template_header.py:25
+msgid "Name of the template header."
+msgstr ""
+
+#: bloomerp/models/document_templates/document_template_header.py:27
+msgid "Image of the header."
+msgstr ""
+
+#: bloomerp/models/document_templates/document_template_header.py:30
+msgid "Top margin of the header in inches."
+msgstr ""
+
+#: bloomerp/models/document_templates/document_template_header.py:31
+msgid "Bottom margin of the header in inches."
+msgstr ""
+
+#: bloomerp/models/document_templates/document_template_header.py:32
+msgid "Left margin of the header in inches."
+msgstr ""
+
+#: bloomerp/models/document_templates/document_template_header.py:33
+msgid "Right margin of the header in inches."
+msgstr ""
+
+#: bloomerp/models/document_templates/document_template_header.py:35
+msgid "Height of the header in inches."
+msgstr ""
+
+#: bloomerp/models/document_templates/document_template_styling.py:16
+msgid "Name of the document template styling."
+msgstr ""
+
+#: bloomerp/models/forms/form.py:63
+msgid "The name of the form"
+msgstr ""
+
+#: bloomerp/models/forms/form.py:76
+msgid "Initial payload for the form"
+msgstr ""
+
+#: bloomerp/models/forms/form.py:82
+msgid ""
+"Whether the form submission needs to be reviewed before it is persisted."
+msgstr ""
+
+#: bloomerp/models/forms/form.py:86
+msgid ""
+"Whether the form requires an authenticated user in order to be accessible."
+msgstr ""
+
+#: bloomerp/models/forms/form.py:90
+msgid "Whether the form can be embedded in a public page."
+msgstr ""
+
+#: bloomerp/models/forms/form.py:95
+msgid "Maximum number of submissions possible for the form"
+msgstr ""
+
+#: bloomerp/models/forms/form.py:100
+msgid "Maximum number of submissions per IP address"
+msgstr ""
+
+#: bloomerp/models/forms/form.py:105
+msgid "The date and time from which the form will accept submissions."
+msgstr ""
+
+#: bloomerp/models/forms/form.py:110
+msgid ""
+"The date and time after which the form will no longer accept submissions."
+msgstr ""
+
+#: bloomerp/models/forms/form.py:121
+msgid "Closing time must be after opening time."
+msgstr ""
+
+#: bloomerp/models/forms/form.py:129
+msgid ""
+"Maximum submissions per IP address cannot exceed the total maximum "
+"submissions."
+msgstr ""
+
+#: bloomerp/models/forms/form_submission.py:68
+msgid "Whether the form was persisted"
+msgstr ""
+
+#: bloomerp/models/project_management/initiative.py:93
+msgid "The name of the initiative"
+msgstr ""
+
+#: bloomerp/models/project_management/initiative.py:109
+msgid "Labels assigned to the initiative"
+msgstr ""
+
+#: bloomerp/models/project_management/todo.py:51
+msgid "You do not have permission to mark this todo as completed."
+msgstr ""
+
+#: bloomerp/models/project_management/todo.py:53
+msgid "Todo marked as completed."
+msgstr ""
+
+#: bloomerp/models/project_management/todo.py:134
+msgid "The user who requested the todo"
+msgstr ""
+
+#: bloomerp/models/project_management/todo.py:139
+msgid "The date by which the todo is required"
+msgstr ""
+
+#: bloomerp/models/project_management/todo.py:143
+msgid "The priority of the todo"
+msgstr ""
+
+#: bloomerp/models/project_management/todo.py:150
+msgid "The effort required for the todo"
+msgstr ""
+
+#: bloomerp/models/project_management/todo.py:156
+msgid "The name of the todo"
+msgstr ""
+
+#: bloomerp/models/project_management/todo.py:166
+msgid "The date and time when the todo was completed"
+msgstr ""
+
+#: bloomerp/models/project_management/todo.py:176
+msgid "Labels assigned to the todo"
+msgstr ""
+
+#: bloomerp/models/project_management/todo.py:184
+msgid "The initiative this todo belongs to"
+msgstr ""
+
+#: bloomerp/models/project_management/todo.py:225
+msgid "The related object does not exist"
+msgstr ""
+
+#: bloomerp/models/users/user.py:70
+msgid "The date format to be used in the application"
+msgstr ""
+
+#: bloomerp/models/users/user.py:74
+msgid "The datetime format to be used in the application"
+msgstr ""
+
+#: bloomerp/models/workspaces/sql_query.py:31
+msgid "SQL Query to execute"
+msgstr ""
+
+#: bloomerp/models/workspaces/tile.py:22
+msgid "Name of the widget"
+msgstr ""
+
+#: bloomerp/models/workspaces/tile.py:27
+msgid "Description of the widget"
+msgstr ""
+
+#: bloomerp/models/workspaces/tile.py:30
+msgid "The type of tile"
+msgstr ""
+
+#: bloomerp/services/detail_view_services.py:408
+msgid "Details"
+msgstr ""
+
+#: bloomerp/templates/components/communication/emails/email_editor.html:110
+msgid "Subject"
+msgstr ""
+
+#: bloomerp/templates/components/communication/emails/email_editor.html:120
+msgid "Write your message"
+msgstr ""
+
+#: bloomerp/templates/components/files/browser.html:190
+msgid "Actions"
+msgstr ""
+
+#: bloomerp/templates/components/forms/initial_data.html:11
+msgid ""
+"Preset values by selecting a field and filling in the value. A form can have "
+"default values for fields that exist on the form and fields that are hidden "
+"from the user."
+msgstr ""
+
+#: bloomerp/templates/components/forms/initial_data.html:29
+msgid "New"
+msgstr ""
+
+#: bloomerp/templates/components/forms/initial_data_row.html:10
+msgid "Field"
+msgstr ""
+
+#: bloomerp/templates/components/forms/initial_data_row.html:21
+#: bloomerp/templates/components/forms/initial_data_value.html:61
+msgid "Select field"
+msgstr ""
+
+#: bloomerp/templates/components/forms/initial_data_row.html:33
+#: bloomerp/templates/components/forms/initial_data_value.html:96
+#: bloomerp/workspaces/analytics_tile/model.py:319
+msgid "Value"
+msgstr ""
+
+#: bloomerp/templates/components/forms/initial_data_row.html:36
+msgid "Select a field"
+msgstr ""
+
+#: bloomerp/templates/components/forms/initial_data_row.html:46
+msgid "Delete value"
+msgstr ""
+
+#: bloomerp/templates/components/forms/initial_data_value.html:6
+msgid "What should be preset for"
+msgstr ""
+
+#: bloomerp/templates/components/forms/initial_data_value.html:25
+msgid "Value on all rows"
+msgstr ""
+
+#: bloomerp/templates/components/forms/initial_data_value.html:26
+msgid "Every row gets this child field value."
+msgstr ""
+
+#: bloomerp/templates/components/forms/initial_data_value.html:46
+msgid "Initial rows"
+msgstr ""
+
+#: bloomerp/templates/components/forms/initial_data_value.html:47
+msgid "Create rows shown when the form opens."
+msgstr ""
+
+#: bloomerp/templates/components/forms/initial_data_value.html:75
+msgid "No editable child fields"
+msgstr ""
+
+#: bloomerp/templates/components/forms/initial_data_value.html:82
+msgid "Input value"
+msgstr ""
+
+#: bloomerp/templates/components/forms/qr_code.html:7
+msgid "Form QR code"
+msgstr ""
+
+#: bloomerp/templates/components/forms/qr_code.html:13
+msgid "Link"
+msgstr ""
+
+#: bloomerp/templates/components/forms/qr_code.html:24
+msgid "Link copied to clipboard!"
+msgstr ""
+
+#: bloomerp/templates/components/forms/qr_code.html:27
+msgid "Copy"
+msgstr ""
+
+#: bloomerp/templates/components/forms/qr_code.html:38
+msgid "Download"
+msgstr ""
+
+#: bloomerp/templates/components/workspaces/tile_builders/links_tile_builder_items.html:14
+msgid "Move up"
+msgstr ""
+
+#: bloomerp/templates/components/workspaces/tile_builders/links_tile_builder_items.html:23
+msgid "Move down"
+msgstr ""
+
+#: bloomerp/templates/components/workspaces/tile_builders/links_tile_builder_items.html:36
+msgid "URL"
+msgstr ""
+
+#: bloomerp/templates/components/workspaces/tile_builders/links_tile_builder_items.html:38
+msgid "Name"
+msgstr ""
+
+#: bloomerp/templates/components/workspaces/tile_builders/links_tile_builder_items.html:41
+msgid "Folder"
+msgstr ""
+
+#: bloomerp/templates/components/workspaces/tile_builders/links_tile_builder_items.html:70
+msgid "Remove"
+msgstr ""
+
+#: bloomerp/templates/cotton/i18n/blocktrans.html:13
+#, python-format
+msgid "%(slot)s"
+msgstr ""
+
+#: bloomerp/templates/cotton/ui/inputs/one_to_many/column_actions.html:2
+msgid "Column actions"
+msgstr ""
+
+#: bloomerp/templates/cotton/ui/inputs/one_to_many/column_actions.html:3
+msgid "Autofill"
+msgstr ""
+
+#: bloomerp/templates/cotton/ui/inputs/one_to_many/row_actions.html:2
+msgid "Clone row"
+msgstr ""
+
+#: bloomerp/templates/cotton/ui/inputs/one_to_many/row_actions.html:3
+msgid "Remove row"
+msgstr ""
+
+#: bloomerp/templates/cotton/ui/inputs/one_to_many/row_actions.html:4
+msgid "View row"
+msgstr ""
+
+#: bloomerp/templates/views/auth/login.html:24
+msgid "Login to Your Account"
+msgstr ""
+
+#: bloomerp/templates/views/auth/login.html:34
+msgid "Login"
+msgstr ""
+
+#: bloomerp/templates/views/auth/login.html:46
+msgid "Or continue with"
+msgstr ""
+
+#: bloomerp/templates/views/auth/login.html:56
+#, python-format
+msgid "Continue with %(provider_name)s"
+msgstr ""
+
+#: bloomerp/templates/views/auth/login.html:60
+#, python-format
+msgid "%(provider_name)s login requires django-allauth and provider setup"
+msgstr ""
+
+#: bloomerp/templates/views/auth/login.html:70
+msgid "Forgot password?"
+msgstr ""
+
+#: bloomerp/templates/views/auth/login.html:72
+msgid "Reset password"
+msgstr ""
+
+#: bloomerp/templates/views/auth/login.html:73
+msgid "or contact your staff."
+msgstr ""
+
+#: bloomerp/templates/views/auth/login.html:79
+msgid ""
+"Email verification is required before this account can access protected "
+"flows."
+msgstr ""
+
+#: bloomerp/templates/views/base_wizard.html:62
+msgid "Back"
+msgstr ""
+
+#: bloomerp/templates/views/base_wizard.html:75
+msgid "Continue"
+msgstr ""
+
+#: bloomerp/templates/views/base_wizard.html:79
+msgid "Processing..."
+msgstr ""
+
+#: bloomerp/templates/widgets/one_to_many_field_widget.html:54
+#: bloomerp/templates/widgets/one_to_many_field_widget.html:96
+msgid "No related objects found."
+msgstr ""
+
+#: bloomerp/views/access_control/manage_permissions.py:200
+msgid "Please select at least one global permission before continuing."
+msgstr ""
+
+#: bloomerp/views/access_control/manage_permissions.py:201
+msgid "Permission required"
+msgstr ""
+
+#: bloomerp/views/access_control/manage_permissions.py:222
+msgid ""
+"The row policy configuration could not be read. Please review step 2 and try "
+"again."
+msgstr ""
+
+#: bloomerp/views/access_control/manage_permissions.py:223
+msgid "Invalid row policy"
+msgstr ""
+
+#: bloomerp/views/access_control/manage_permissions.py:231
+msgid ""
+"The field policy configuration could not be read. Please review step 2 and "
+"try again."
+msgstr ""
+
+#: bloomerp/views/access_control/manage_permissions.py:232
+msgid "Invalid field policy"
+msgstr ""
+
+#: bloomerp/views/access_control/manage_permissions.py:248
+msgid "Row policies can only use permissions selected in step 1."
+msgstr ""
+
+#: bloomerp/views/access_control/manage_permissions.py:249
+msgid "Row policy mismatch"
+msgstr ""
+
+#: bloomerp/views/access_control/manage_permissions.py:274
+msgid "Properties and one-to-many fields cannot be used in row policies."
+msgstr ""
+
+#: bloomerp/views/access_control/manage_permissions.py:275
+msgid "Invalid row policy field"
+msgstr ""
+
+#: bloomerp/views/access_control/manage_permissions.py:289
+msgid "Field policies can only use permissions selected in step 1."
+msgstr ""
+
+#: bloomerp/views/access_control/manage_permissions.py:290
+msgid "Field policy mismatch"
+msgstr ""
+
+#: bloomerp/views/access_control/manage_permissions.py:313
+msgid "Please give the policy a name before saving."
+msgstr ""
+
+#: bloomerp/views/access_control/manage_permissions.py:314
+msgid "Name required"
+msgstr ""
+
+#: bloomerp/views/access_control/manage_permissions.py:335
+msgid "Global access control"
+msgstr ""
+
+#: bloomerp/views/access_control/manage_permissions.py:336
+msgid "Choose which model-level permissions this policy grants."
+msgstr ""
+
+#: bloomerp/views/access_control/manage_permissions.py:342
+msgid "Field based access control"
+msgstr ""
+
+#: bloomerp/views/access_control/manage_permissions.py:343
+msgid ""
+"Configure row and field rules using only the global permissions selected in "
+"step 1."
+msgstr ""
+
+#: bloomerp/views/access_control/manage_permissions.py:349
+msgid "Policy details"
+msgstr ""
+
+#: bloomerp/views/access_control/manage_permissions.py:350
+msgid "Give the policy a name and description before saving."
+msgstr ""
+
+#: bloomerp/views/access_control/manage_permissions.py:387
+msgid "Global permissions error"
+msgstr ""
+
+#: bloomerp/views/access_control/manage_permissions.py:394
+msgid "Policy rules error"
+msgstr ""
+
+#: bloomerp/views/access_control/manage_permissions.py:400
+msgid "Could not save policy"
+msgstr ""
+
+#: bloomerp/views/communication/create_email_account.py:63
+msgid "Accounting inbox"
+msgstr ""
+
+#: bloomerp/views/communication/create_email_account.py:64
+msgid "name@example.com"
+msgstr ""
+
+#: bloomerp/views/communication/create_email_account.py:66
+msgid "Defaults to email address"
+msgstr ""
+
+#: bloomerp/views/communication/create_email_account.py:112
+msgid "Please select an email provider to continue."
+msgstr ""
+
+#: bloomerp/views/communication/create_email_account.py:113
+#: bloomerp/views/workspaces/create_tile.py:60
+msgid "Selection required"
+msgstr ""
+
+#: bloomerp/views/communication/create_email_account.py:147
+msgid "Please select an email provider first."
+msgstr ""
+
+#: bloomerp/views/communication/create_email_account.py:148
+msgid "Provider required"
+msgstr ""
+
+#: bloomerp/views/communication/create_email_account.py:158
+msgid "Please review the form."
+msgstr ""
+
+#: bloomerp/views/communication/create_email_account.py:161
+msgid "Account details need attention"
+msgstr ""
+
+#: bloomerp/views/communication/create_email_account.py:202
+msgid "Select provider"
+msgstr ""
+
+#: bloomerp/views/communication/create_email_account.py:204
+msgid "Choose the type of email account you want to connect."
+msgstr ""
+
+#: bloomerp/views/communication/create_email_account.py:211
+msgid "Configure account"
+msgstr ""
+
+#: bloomerp/views/communication/create_email_account.py:213
+msgid "Enter the connection details for this mailbox."
+msgstr ""
+
+#: bloomerp/views/communication/create_email_account.py:223
+msgid "Create account"
+msgstr ""
+
+#: bloomerp/views/communication/create_email_account.py:233
+msgid "The wizard data is incomplete. Please review the account details."
+msgstr ""
+
+#: bloomerp/views/communication/create_email_account.py:234
+msgid "Incomplete setup"
+msgstr ""
+
+#: bloomerp/views/communication/create_email_account.py:253
+msgid "Mailbox connection failed"
+msgstr ""
+
+#: bloomerp/views/communication/create_email_account.py:259
+#, python-format
+msgid "Email account '%(account)s' created successfully."
+msgstr ""
+
+#: bloomerp/views/workspaces/create_tile.py:59
+msgid "Please select a tile type to continue."
+msgstr ""
+
+#: bloomerp/views/workspaces/create_tile.py:79
+msgid "Please provide a SQL query before continuing."
+msgstr ""
+
+#: bloomerp/views/workspaces/create_tile.py:80
+msgid "Query required"
+msgstr ""
+
+#: bloomerp/views/workspaces/create_tile.py:164
+msgid "Build tile"
+msgstr ""
+
+#: bloomerp/views/workspaces/create_tile.py:165
+msgid "Configure the details of your tile and preview what it looks like."
+msgstr ""
+
+#: bloomerp/views/workspaces/create_tile.py:185
+msgid "Select type"
+msgstr ""
+
+#: bloomerp/views/workspaces/create_tile.py:187
+msgid "Select the type of tile you want to create"
+msgstr ""
+
+#: bloomerp/views/workspaces/create_tile.py:198
+msgid "Select query"
+msgstr ""
+
+#: bloomerp/views/workspaces/create_tile.py:200
+msgid "Select or enter a query for your analytics tile"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:72
+msgid "Label"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:73
+msgid "The label"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:80
+msgid "Prefix"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:81
+msgid "Text that comes before the value"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:88
+msgid "Suffix"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:89
+msgid "Text that comes after the value"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:96
+msgid "Formatter"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:97
+msgid "The formatter applied to this value"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:104
+msgid "Color"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:105
+msgid "Optional color for this series, for example #3b82f6."
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:111
+msgid "Size"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:112
+msgid "The size"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:125
+msgid "Page Size"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:126
+msgid "The number of records on each page"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:141
+msgid "Chart type"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:142
+msgid "How the series should be drawn."
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:146
+msgid "Line"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:147
+msgid "Scatter"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:148
+msgid "Bar"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:155
+msgid "X-axis label"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:156
+msgid "Overrides the X-axis label. Leave blank to show no custom axis title."
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:162
+msgid "X-axis order"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:163
+msgid ""
+"Comma separated order for text X-axis values, for example Mon, Tue, Wed."
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:170
+msgid "Y-axis label"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:171
+msgid "Overrides the Y-axis label. Leave blank to show no custom axis title."
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:177
+msgid "Stacked"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:178
+msgid ""
+"Stacks multiple Y-axis series when supported by the selected chart type."
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:184
+msgid "Show legend"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:185
+msgid ""
+"Shows the legend when enabled. By default, legends are only shown for "
+"multiple series."
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:191
+msgid "Legend position"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:192
+msgid "Where the legend should be placed."
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:196
+msgid "Right"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:197
+msgid "Top"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:198
+msgid "Bottom"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:199
+msgid "Left"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:215
+msgid "Filter"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:217
+msgid "Applicable filter on this field"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:223
+msgid "Advanced formatting"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:224
+msgid ""
+"HTML based formatting. The value is injected as {{ value }}, the pre-"
+"formatted value as {{ pre_formatted_value }}."
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:246
+msgid "2D Chart"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:247
+msgid ""
+"Visualizes data from a custom query in a two-dimensional chart format, "
+"allowing users to easily identify trends, patterns, and insights through "
+"graphical representation."
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:252
+msgid "X-Axis"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:254
+msgid "The field to be used for the X-axis of the chart."
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:262
+msgid "Y-Axis"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:264
+msgid "The field to be used for the Y-axis of the chart."
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:286
+msgid "Table"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:287
+msgid ""
+"Displays data from a custom query in a structured tabular format, enabling "
+"users to view, sort, and analyze information in rows and columns for easy "
+"comparison and reference."
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:292
+msgid "Columns"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:294
+msgid "The columns of the table"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:313
+msgid "KPI"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:314
+msgid ""
+"Presents key performance indicators (KPIs) derived from a custom query in a "
+"concise and visually impactful format, allowing users to quickly assess "
+"critical metrics and track progress towards specific goals."
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:321
+msgid "The primary value"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:331
+msgid "Sub Value"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:333
+msgid "The secondary value that appears below the main value"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:351
+msgid "3D Chart"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:352
+msgid ""
+"Visualizes data from a custom query in a three-dimensional chart format, "
+"providing users with an immersive and interactive way to explore complex "
+"datasets, identify relationships, and gain deeper insights through a multi-"
+"dimensional graphical representation."
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:358
+msgid "Pivot Table"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:359
+msgid ""
+"Displays data from a custom query in a pivot table format, allowing users to "
+"dynamically summarize, analyze, and explore large datasets by rearranging "
+"and aggregating data across multiple dimensions for enhanced insights and "
+"decision-making."
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:365
+msgid "Map"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:366
+msgid ""
+"Visualizes geospatial data from a custom query on an interactive map, "
+"enabling users to identify spatial patterns, trends, and insights by "
+"plotting data points, regions, or heatmaps based on geographic locations for "
+"enhanced analysis and decision-making."
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:372
+msgid "Pie Chart"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:373
+msgid ""
+"Visualizes data from a custom query in a pie chart format, allowing users to "
+"easily understand the proportional distribution of different categories or "
+"segments within a dataset, making it ideal for displaying parts of a whole "
+"and comparing relative sizes for enhanced insights and decision-making."
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:378
+msgid "Labels"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:380
+msgid "The field used for the pie slice labels."
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:388
+msgid "Values"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:390
+msgid "The numeric field used for the pie slice values."
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:509
+msgid "Tile type updated"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:527
+msgid "Options updated"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:552
+msgid "Field options updated"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:557
+msgid "Field does not exist"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:583
+msgid "Field slot does not exist"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:605
+msgid "Field updated"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:633
+msgid "Field removed"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:652
+msgid "Filter already exists"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:661
+msgid "Filter added"
+msgstr ""
+
+#: bloomerp/workspaces/analytics_tile/model.py:684
+msgid "Filter removed"
+msgstr ""
+
+#: bloomerp/workspaces/dataview_tile/form.py:14
+msgid "Model"
+msgstr ""
+
+#: bloomerp/workspaces/dataview_tile/form.py:23
+msgid "List view preference"
+msgstr ""
+
+#: bloomerp/workspaces/dataview_tile/form.py:26
+msgid "Use current preference"
+msgstr ""
+
+#: bloomerp/workspaces/dataview_tile/model.py:44
+msgid "Please correct the data view configuration."
+msgstr ""
+
+#: bloomerp/workspaces/dataview_tile/model.py:55
+msgid "Data view updated"
+msgstr ""
+
+#: bloomerp/workspaces/links_tile/model.py:56
+msgid "The selected folder no longer exists"
+msgstr ""
+
+#: bloomerp/workspaces/links_tile/model.py:59
+msgid "Links can only be nested inside folders"
+msgstr ""
+
+#: bloomerp/workspaces/links_tile/model.py:67
+#: bloomerp/workspaces/links_tile/model.py:142
+#: bloomerp/workspaces/links_tile/model.py:198
+msgid "No link was selected"
+msgstr ""
+
+#: bloomerp/workspaces/links_tile/model.py:71
+#: bloomerp/workspaces/links_tile/model.py:146
+msgid "The selected link no longer exists"
+msgstr ""
+
+#: bloomerp/workspaces/links_tile/model.py:96
+msgid "Please add a name to the link"
+msgstr ""
+
+#: bloomerp/workspaces/links_tile/model.py:98
+#: bloomerp/workspaces/links_tile/model.py:169
+msgid "Please add a URL to the link"
+msgstr ""
+
+#: bloomerp/workspaces/links_tile/model.py:100
+msgid "Link already existed"
+msgstr ""
+
+#: bloomerp/workspaces/links_tile/model.py:111
+msgid "Link added"
+msgstr ""
+
+#: bloomerp/workspaces/links_tile/model.py:126
+msgid "Please add a name to the folder"
+msgstr ""
+
+#: bloomerp/workspaces/links_tile/model.py:130
+msgid "Folder added"
+msgstr ""
+
+#: bloomerp/workspaces/links_tile/model.py:167
+msgid "Please add a name"
+msgstr ""
+
+#: bloomerp/workspaces/links_tile/model.py:203
+msgid "Item cannot be moved further"
+msgstr ""
+
+#: bloomerp/workspaces/tiles.py:23
+msgid "Analytics Tile"
+msgstr ""
+
+#: bloomerp/workspaces/tiles.py:24
+msgid ""
+"Visualizes data from a custom query and presents it in a structured format "
+"such as a chart, KPI, table, or pie chart."
+msgstr ""
+
+#: bloomerp/workspaces/tiles.py:32
+msgid "Canvas"
+msgstr ""
+
+#: bloomerp/workspaces/tiles.py:33
+msgid ""
+"A free-form workspace where users can add and arrange different types of "
+"content such as text, media, and embedded components."
+msgstr ""
+
+#: bloomerp/workspaces/tiles.py:40
+msgid "Links"
+msgstr ""
+
+#: bloomerp/workspaces/tiles.py:41
+msgid ""
+"Provides quick access to a collection of internal or external links, "
+"allowing users to navigate efficiently to frequently used resources."
+msgstr ""
+
+#: bloomerp/workspaces/tiles.py:48
+msgid "Text"
+msgstr ""
+
+#: bloomerp/workspaces/tiles.py:49
+msgid ""
+"Displays simple markdown content such as notes, instructions, or reference "
+"text."
+msgstr ""
+
+#: bloomerp/workspaces/tiles.py:56
+msgid "Data View"
+msgstr ""
+
+#: bloomerp/workspaces/tiles.py:57
+msgid ""
+"Displays and manages records from a selected model in a structured view with "
+"filtering, sorting, and interaction capabilities."
+msgstr ""
+
+#: bloomerp/workspaces/tiles.py:65
+msgid "Form"
+msgstr ""
+
+#: bloomerp/workspaces/tiles.py:66
+msgid "Displays a form, containing inputs, etc."
+msgstr ""

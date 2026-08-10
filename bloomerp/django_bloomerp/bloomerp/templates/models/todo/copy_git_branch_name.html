@@ -1,6 +1,7 @@
+{% load i18n %}
 <button 
     class="btn btn-secondary btn-xs"
     onclick="navigator.clipboard.writeText('{{ object.git_branch_name }}'); showMessage('Branch copied to clipboard!');"
     >
-    <c-i18n.blocktrans>Copy branch name</c-i18n.blocktrans>
+    {% blocktrans %}Copy branch name{% endblocktrans %}
 </button>

@@ -1,3 +1,4 @@
+{% load i18n %}
 {% load bloomerp %}
 
 {% for event in events %}
@@ -49,6 +50,6 @@
     hx-target="this"
     hx-swap="outerHTML"
 >
-    <c-i18n.blocktrans>Load more</c-i18n.blocktrans>
+    {% blocktrans %}Load more{% endblocktrans %}
 </button>
 {% endif %}

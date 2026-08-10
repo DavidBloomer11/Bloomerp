@@ -5,6 +5,7 @@ import { componentIdentifier, getComponent, initComponents } from "../BaseCompon
 import BaseSectionedLayoutContainer, { type SectionedLayoutRowPayload } from "../layouts/BaseSectionedLayoutContainer";
 import { DetailViewCell, type DetailViewCellChangeDetail, type DetailViewCellSnapshot, type DetailViewCellValue } from "./DetailViewCell";
 import FormBehaviorRuntime from "../behaviors/FormBehaviorRuntime";
+import { t } from "@/utils/i18n";
 
 type RowInfo = {
     element: HTMLElement;
@@ -517,8 +518,8 @@ export default class ObjectCRUDViewContainer extends BaseSectionedLayoutContaine
         this.toggleVisibilityBtn?.setAttribute("aria-pressed", String(!visible));
         if (this.toggleVisibilityLabel) {
             this.toggleVisibilityLabel.textContent = visible
-                ? "Show Required Only"
-                : "Show All Fields";
+                ? t("Show Required Only")
+                : t("Show All Fields");
         }
     }
 

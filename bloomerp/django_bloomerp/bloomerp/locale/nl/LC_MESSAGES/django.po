@@ -1,0 +1,3950 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-06 11:43+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: nl\n"
+"Language-Team: nl <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.16.0\n"
+
+#: templates/views/auth/login.html:60
+#, python-format
+msgid "%(provider_name)s login requires django-allauth and provider setup"
+msgstr "%(provider_name)s-aanmelding vereist django-allauth en providerconfiguratie"
+
+#: components/communication/emails/new_email.py:182
+#, python-format
+msgid "'%(email)s' is not a valid email address."
+msgstr "'%(email)s' is geen geldig e-mailadres."
+
+#: workspaces/analytics_tile/model.py:246
+msgid "2D Chart"
+msgstr "2D-grafiek"
+
+#: workspaces/analytics_tile/model.py:351
+msgid "3D Chart"
+msgstr "3D-grafiek"
+
+#: templates/cotton/features/workspaces/preview_tile_container.html:24
+msgid "<p class=\"font-bold text-primary-900\"> Preview </p>"
+msgstr "<p class=\"font-bold text-primary-900\"> Voorvertoning </p>"
+
+#: templates/cotton/features/workspaces/preview_tile_container.html:12
+#, python-format
+msgid "<p class=\"font-bold text-primary-900\">%(name)s</p>"
+msgstr ""
+"\n"
+"                        <p class=\"font-bold text-primary-900\">%(name)s</p>\n"
+"                    "
+
+#: bloomerp.fieldpolicy.rule models/access_control/field_policy.py:37
+msgid "A JSON representation of the field-level access control rules."
+msgstr "Een JSON-representatie van de toegangscontroleregels op veldniveau."
+
+#: bloomerp.rowpolicyrule.rule models/access_control/row_policy_rule.py:35
+msgid "A JSON representation of the row-level access control rule."
+msgstr "Een JSON-representatie van de toegangscontroleregel op rijniveau."
+
+#: components/workspaces/sidebar.py:414
+msgid "A URL is required."
+msgstr "Een URL is vereist."
+
+#: bloomerp.inboxitem.snippet
+msgid "A brief snippet or summary of the inbox item content."
+msgstr "Een kort fragment of een samenvatting van de inhoud van het inboxitem."
+
+#: bloomerp.policy.description models/access_control/policy.py:73
+msgid "A description of the access control policy."
+msgstr "Een beschrijving van het toegangscontrolebeleid."
+
+#: bloomerp.workflowedge.name
+msgid "A descriptive name for the edge."
+msgstr "Een beschrijvende naam voor de verbinding."
+
+#: automation/defintion.py:217
+msgid "A flow node to branch the workflow"
+msgstr "Een flownode om de workflow te vertakken"
+
+#: workspaces/tiles.py:33
+msgid ""
+"A free-form workspace where users can add and arrange different types of content such as text, "
+"media, and embedded components."
+msgstr ""
+"Een vrije werkruimte waar gebruikers verschillende soorten inhoud kunnen toevoegen en "
+"rangschikken, zoals tekst, media en ingesloten componenten."
+
+#: bloomerp.apikey.name
+msgid "A human-readable label for this API key."
+msgstr "Een voor mensen leesbaar label voor deze API-sleutel."
+
+#: bloomerp.documenttemplate.page_size models/document_templates/document_template.py:21
+msgid "A3"
+msgstr "A3"
+
+#: bloomerp.documenttemplate.page_size models/document_templates/document_template.py:19
+msgid "A4"
+msgstr "A4"
+
+#: bloomerp.aiconversation
+msgid "AI conversation"
+msgstr "AI-gesprek"
+
+#: bloomerp.aiconversation
+msgid "AI conversations"
+msgstr "AI-gesprekken"
+
+#: bloomerp.apikey
+msgid "API Key"
+msgstr "API-sleutel"
+
+#: bloomerp.apikey
+msgid "API Keys"
+msgstr "API-sleutels"
+
+#: bloomerp.fieldpolicy models/access_control/field_policy.py:24
+msgid "Access Control Field Policies"
+msgstr "Toegangsbeheer-veldbeleidsregels"
+
+#: bloomerp.fieldpolicy models/access_control/field_policy.py:23
+msgid "Access Control Field Policy"
+msgstr "Toegangsbeheer-veldbeleidsregel"
+
+#: bloomerp.policy models/access_control/policy.py:31
+msgid "Access Control Policies"
+msgstr "Toegangsbeheerbeleidsregels"
+
+#: bloomerp.policy models/access_control/policy.py:30
+msgid "Access Control Policy"
+msgstr "Toegangsbeheerbeleidsregel"
+
+#: bloomerp.rowpolicy models/access_control/row_policy.py:17
+msgid "Access Control Row Policies"
+msgstr "Toegangsbeheer-rijbeleidsregels"
+
+#: bloomerp.rowpolicy models/access_control/row_policy.py:16
+msgid "Access Control Row Policy"
+msgstr "Toegangsbeheer-rijbeleidsregel"
+
+#: bloomerp.rowpolicyrule models/access_control/row_policy_rule.py:25
+msgid "Access Control Row Policy Rule"
+msgstr "Regel voor toegangsbeheer-rijbeleid"
+
+#: bloomerp.rowpolicyrule models/access_control/row_policy_rule.py:26
+msgid "Access Control Row Policy Rules"
+msgstr "Regels voor toegangsbeheer-rijbeleid"
+
+#: bloomerp.emailaccount.access_token
+msgid "Access Token"
+msgstr "Toegangstoken"
+
+#: bloomerp.apikey.account
+msgid "Account"
+msgstr "Account"
+
+#: templates/cotton/app/sidebar/body.html:202
+msgid "Account Settings"
+msgstr "Accountinstellingen"
+
+#: views/communication/create_email_account.py:161
+msgid "Account details need attention"
+msgstr "Accountgegevens vereisen aandacht"
+
+#: views/communication/create_email_account.py:63
+msgid "Accounting inbox"
+msgstr "Boekhoudinbox"
+
+#: automation/defintion.py:103 bloomerp.activitylog.action bloomerp.workflownode.type
+msgid "Action"
+msgstr "Actie"
+
+#: bloomerp.workflowrunstep.action_id
+msgid "Action Id"
+msgstr "Actie-ID"
+
+#: templates/components/files/browser.html:190
+msgid "Actions"
+msgstr "Acties"
+
+#: bloomerp.emailaccount.status bloomerp.workflow.active
+msgid "Active"
+msgstr "Actief"
+
+#: templates/views/generic/detail/base.html:132
+msgid "Activity"
+msgstr "Activiteit"
+
+#: bloomerp.activitylog
+msgid "Activity Log"
+msgstr "Activiteitenlogboek"
+
+#: bloomerp.activitylog
+msgid "Activity Logs"
+msgstr "Activiteitenlogboeken"
+
+#: bloomerp.activitylog.actor bloomerp.inboxitem.actor
+msgid "Actor"
+msgstr "Actor"
+
+#: components/workspaces/sidebar.py:236 components/workspaces/sidebar.py:246
+#: components/workspaces/sidebar.py:284 components/workspaces/sidebar.py:312
+#: templates/views/access_control/manage_permissions/wizard_object_access_control.html:164
+msgid "Add"
+msgstr "Toevoegen"
+
+#: templates/views/access_control/manage_permissions/wizard_object_access_control.html:161
+msgid "Add Condition"
+msgstr "Voorwaarde toevoegen"
+
+#: templates/views/access_control/manage_permissions/wizard_object_access_control.html:188
+msgid "Add Field Policy"
+msgstr "Veldbeleid toevoegen"
+
+#: templates/views/workflows/builder.html:11
+msgid "Add Node"
+msgstr "Knooppunt toevoegen"
+
+#: components/communication/emails/new_email.py:185
+msgid "Add a subject or message body before sending."
+msgstr "Voeg een onderwerp of berichttekst toe voordat je het bericht verzendt."
+
+#: components/communication/emails/new_email.py:175
+msgid "Add at least one recipient."
+msgstr "Voeg ten minste één ontvanger toe."
+
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:81
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:116
+msgid "Add folder"
+msgstr "Map toevoegen"
+
+#: templates/cotton/features/layout/container.html:126
+msgid "Add items"
+msgstr "Items toevoegen"
+
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:34
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:75
+msgid "Add link"
+msgstr "Link toevoegen"
+
+#: templates/cotton/features/workspaces/tiles/text.html:9
+msgid "Add markdown content to preview your text tile."
+msgstr "Voeg markdowninhoud toe om een voorbeeld van je teksttegel te bekijken."
+
+#: templates/widgets/one_to_many_field_widget.html:103
+msgid "Add row"
+msgstr "Rij toevoegen"
+
+#: bloomerp.applicationfield.meta models/application_field.py:53
+msgid "Additional metadata about the field."
+msgstr "Aanvullende metagegevens over het veld."
+
+#: bloomerp.applicationfield.field_type
+msgid "Address Field"
+msgstr "Adresveld"
+
+#: templates/cotton/app/sidebar/body.html:203
+msgid "Admin page"
+msgstr "Beheerpagina"
+
+#: workspaces/analytics_tile/model.py:223
+msgid "Advanced formatting"
+msgstr "Geavanceerde opmaak"
+
+#: bloomerp.inboxfolder.type
+#: templates/views/access_control/manage_permissions/wizard_object_access_control.html:56
+msgid "All"
+msgstr "Alles"
+
+#: templates/cotton/ui/inputs/permissions.html:28
+msgid "All Permissions"
+msgstr "Alle machtigingen"
+
+#: templates/cotton/features/dataviews/calendar.html:149
+msgid "All day"
+msgstr "Hele dag"
+
+#: templates/components/objects/dataview_gant_unscheduled.html:18
+msgid "All visible records are scheduled."
+msgstr "Alle zichtbare records zijn ingepland."
+
+#: automation/defintion.py:104
+msgid "An action to perform"
+msgstr "Een uit te voeren actie"
+
+#: components/workspaces/sidebar.py:386
+msgid "An item is required."
+msgstr "Er is een item vereist."
+
+#: bloomerp.tile.type workspaces/tiles.py:23
+msgid "Analytics Tile"
+msgstr "Analysetegel"
+
+#: workspaces/analytics_tile/model.py:217
+msgid "Applicable filter on this field"
+msgstr "Toepasselijk filter voor dit veld"
+
+#: bloomerp.aiconversation.args
+msgid "Args"
+msgstr "Argumenten"
+
+#: bloomerp.applicationfield.field_type
+msgid "Array Field"
+msgstr "Arrayveld"
+
+#: bloomerp.todo.assigned_to
+msgid "Assigned To"
+msgstr "Toegewezen aan"
+
+#: templates/components/communication/emails/email_editor.html:129
+msgid "Attach"
+msgstr "Bijvoegen"
+
+#: templates/inbox_items/email.html:7
+msgid "Attachments"
+msgstr "Bijlagen"
+
+#: bloomerp.applicationfield.field_type
+msgid "Auto Field"
+msgstr "Automatisch veld"
+
+#: bloomerp.tile.auto_generated
+msgid "Auto Generated"
+msgstr "Automatisch gegenereerd"
+
+#: bloomerp.aiconversation.auto_named
+msgid "Auto Named"
+msgstr "Automatisch benoemd"
+
+#: templates/cotton/ui/inputs/one_to_many/column_actions.html:3
+#: templates/cotton/ui/inputs/one_to_many/column_actions.html:42
+msgid "Autofill"
+msgstr "Automatisch invullen"
+
+#: templates/cotton/app/theme_selector.html:19
+msgid "Automatic"
+msgstr "Automatisch"
+
+#: bloomerp.emailaccount.avatar bloomerp.form.avatar bloomerp.inboxfolder.avatar
+#: bloomerp.inboxitem.avatar bloomerp.sqlquery.avatar bloomerp.tile.avatar bloomerp.user.avatar
+#: bloomerp.userinboxpreference.avatar
+msgid "Avatar"
+msgstr "Avatar"
+
+#: templates/mixins/bloomerp_layout_form_mixin.html:89
+#: templates/mixins/bloomerp_layout_form_mixin.html:147 templates/views/base_wizard.html:62
+msgid "Back"
+msgstr "Terug"
+
+#: bloomerp.initiative.status bloomerp.todo.status
+msgid "Backlog"
+msgstr "Backlog"
+
+#: workspaces/analytics_tile/model.py:148
+msgid "Bar"
+msgstr "Staaf"
+
+#: templates/components/communication/emails/email_editor.html:88
+msgid "Bcc"
+msgstr "Bcc"
+
+#: bloomerp.applicationfield.field_type
+msgid "Big Auto Field"
+msgstr "Groot automatisch veld"
+
+#: bloomerp.applicationfield.field_type
+msgid "Big Integer Field"
+msgstr "Groot geheel getalveld"
+
+#: bloomerp.applicationfield.field_type
+msgid "Binary Field"
+msgstr "Binair veld"
+
+#: bloomerp.aiconversation.conversation_type
+msgid "Bloom AI"
+msgstr "Bloom AI"
+
+#: bloomerp.applicationfield.field_type
+msgid "Bloomerp File Field"
+msgstr "Bloomerp-bestandsveld"
+
+#: templates/cotton/app/sidebar/body.html:204
+msgid "Bookmarks"
+msgstr "Bladwijzers"
+
+#: bloomerp.applicationfield.field_type
+msgid "Boolean Field"
+msgstr "Booleaans veld"
+
+#: workspaces/analytics_tile/model.py:198
+msgid "Bottom"
+msgstr "Onderkant"
+
+#: bloomerp.documenttemplateheader.margin_bottom
+#: models/document_templates/document_template_header.py:31
+msgid "Bottom margin of the header in inches."
+msgstr "Onderste marge van de koptekst in inches."
+
+#: views/workspaces/create_tile.py:164
+msgid "Build tile"
+msgstr "Tegel bouwen"
+
+#: bloomerp.emailaccount.mailboxes
+msgid "Cached list of folders/mailboxes for this account."
+msgstr "Gecachte lijst met mappen/postvakken voor dit account."
+
+#: bloomerp.userlistviewpreference.view_type
+msgid "Calendar"
+msgstr "Agenda"
+
+#: bloomerp.initiative.status
+msgid "Canceled"
+msgstr "Geannuleerd"
+
+#: bloomerp.todo.status bloomerp.workflowrunstep.status
+msgid "Cancelled"
+msgstr "Geannuleerd"
+
+#: bloomerp.tile.type workspaces/tiles.py:32
+msgid "Canvas"
+msgstr "Canvas"
+
+#: templates/components/workspaces/tile_builders/canvas_tile_builder.html:4
+msgid "Canvas height"
+msgstr "Canvashoogte"
+
+#: bloomerp.userlistviewpreference.view_type
+msgid "Card"
+msgstr "Kaart"
+
+#: templates/components/communication/emails/email_editor.html:73
+msgid "Cc"
+msgstr "Cc"
+
+#: bloomerp.activitylog.action
+msgid "Change"
+msgstr "Wijzigen"
+
+#: templates/views/generic/model/bulk_upload_wizard/confirm_step.html:20
+msgid "Changed rows"
+msgstr "Gewijzigde rijen"
+
+#: bloomerp.applicationfield.field_type
+msgid "Char Field"
+msgstr "Tekenreeksveld"
+
+#: workspaces/analytics_tile/model.py:141
+msgid "Chart type"
+msgstr "Grafiektype"
+
+#: bloomerp.applicationfield.field_type
+msgid "Choice Field"
+msgstr "Keuzeveld"
+
+#: views/communication/create_email_account.py:204
+msgid "Choose the type of email account you want to connect."
+msgstr "Kies het type e-mailaccount dat u wilt verbinden."
+
+#: views/access_control/manage_permissions.py:336
+msgid "Choose which model-level permissions this policy grants."
+msgstr "Kies welke modelmachtigingen dit beleid verleent."
+
+#: templates/cotton/ui/inputs/one_to_many/row_actions.html:2
+msgid "Clone row"
+msgstr "Rij klonen"
+
+#: bloomerp.form.closes_at
+msgid "Closes At"
+msgstr "Sluit op"
+
+#: models/forms/form.py:121
+msgid "Closing time must be after opening time."
+msgstr "De sluitingstijd moet na de openingstijd liggen."
+
+#: bloomerp.applicationfield.field_type
+msgid "Code Field"
+msgstr "Codeveld"
+
+#: bloomerp.aiconversation.conversation_type
+msgid "Code Generator"
+msgstr "Codegenerator"
+
+#: bloomerp.sidebaritem.color bloomerp.todolabel.color workspaces/analytics_tile/model.py:104
+msgid "Color"
+msgstr "Kleur"
+
+#: templates/cotton/ui/inputs/one_to_many/column_actions.html:2
+msgid "Column actions"
+msgstr "Kolomacties"
+
+#: templates/cotton/features/dataviews/pivot_table.html:104
+msgid "Column totals"
+msgstr "Kolomtotalen"
+
+#: workspaces/analytics_tile/model.py:292
+msgid "Columns"
+msgstr "Kolommen"
+
+#: workspaces/analytics_tile/model.py:163
+msgid "Comma separated order for text X-axis values, for example Mon, Tue, Wed."
+msgstr "Door komma's gescheiden volgorde voor tekstwaarden op de X-as, bijvoorbeeld ma, di, wo."
+
+#: bloomerp.aiconversation.comments bloomerp.apikey.comments bloomerp.documenttemplate.comments
+#: bloomerp.documenttemplateheader.comments bloomerp.documenttemplatestyling.comments
+#: bloomerp.emailaccount.comments bloomerp.form.comments bloomerp.formsubmission.comments
+#: bloomerp.inboxfolder.comments bloomerp.inboxitem.comments bloomerp.initiative.comments
+#: bloomerp.sqlquery.comments bloomerp.tile.comments bloomerp.todo.comments bloomerp.todolabel.comments
+#: bloomerp.userinboxpreference.comments templates/views/generic/detail/base.html:141
+msgid "Comments"
+msgstr "Opmerkingen"
+
+#: bloomerp.initiative.status bloomerp.todo.status bloomerp.workflowrunstep.status
+#: templates/inbox_items/workflow_run.html:14
+msgid "Completed"
+msgstr "Voltooid"
+
+#: bloomerp.initiative.completed_at
+msgid "Completed At"
+msgstr "Voltooid op"
+
+#: bloomerp.workflownode.config
+msgid "Config"
+msgstr "Configuratie"
+
+#: views/communication/create_email_account.py:211
+msgid "Configure account"
+msgstr "Account configureren"
+
+#: views/access_control/manage_permissions.py:343
+msgid "Configure row and field rules using only the global permissions selected in step 1."
+msgstr "Configureer rij- en veldregels met alleen de globale machtigingen die in stap 1 zijn geselecteerd."
+
+#: views/workspaces/create_tile.py:165
+msgid "Configure the details of your tile and preview what it looks like."
+msgstr "Configureer de details van je tegel en bekijk een voorbeeld van hoe deze eruitziet."
+
+#: bloomerp.comment.content bloomerp.todo.content
+msgid "Content"
+msgstr "Inhoud"
+
+#: bloomerp.comment.content_object bloomerp.file.content_object bloomerp.filefolder.content_object
+#: bloomerp.todo.content_object
+msgid "Content Object"
+msgstr "Inhoudsobject"
+
+#: bloomerp.activitylog.content_type bloomerp.applicationfield.content_type
+#: bloomerp.bookmark.content_type bloomerp.comment.content_type bloomerp.fieldpolicy.content_type
+#: bloomerp.file.content_type bloomerp.filefolder.content_type bloomerp.form.content_type
+#: bloomerp.rowpolicy.content_type bloomerp.todo.content_type
+#: bloomerp.userdetailviewtabspreference.content_type bloomerp.userlistviewpreference.content_type
+#: bloomerp.userobjectlayoutpreference.content_type
+msgid "Content Type"
+msgstr "Inhoudstype"
+
+#: bloomerp.documenttemplate.content_types
+msgid "Content Types"
+msgstr "Inhoudstypen"
+
+#: bloomerp.documenttemplate.template models/document_templates/document_template.py:123
+msgid "Content of the template, including the variables."
+msgstr "Inhoud van de sjabloon, inclusief de variabelen."
+
+#: templates/views/base_wizard.html:75
+msgid "Continue"
+msgstr "Doorgaan"
+
+#: templates/views/auth/login.html:56
+#, python-format
+msgid "Continue with %(provider_name)s"
+msgstr "Doorgaan met %(provider_name)s"
+
+#: bloomerp.aiconversation.conversation_history
+msgid "Conversation History"
+msgstr "Gespreksgeschiedenis"
+
+#: bloomerp.aiconversation.conversation_type
+msgid "Conversation Type"
+msgstr "Gesprekstype"
+
+#: templates/components/forms/qr_code.html:27
+msgid "Copy"
+msgstr "Kopiëren"
+
+#: templates/models/todo/copy_git_branch_name.html:6
+msgid "Copy branch name"
+msgstr "Branchnaam kopiëren"
+
+#: templates/cotton/ui/inputs/one_to_many/column_actions.html:30
+msgid "Copy first value"
+msgstr "Eerste waarde kopiëren"
+
+#: views/access_control/manage_permissions.py:400
+msgid "Could not save policy"
+msgstr "Beleid kon niet worden opgeslagen"
+
+#: bloomerp.activitylog.action templates/views/workspaces/my_workspaces_view.html:14
+msgid "Create"
+msgstr "Maken"
+
+#: templates/views/generic/detail/base.html:154
+msgid "Create Todo"
+msgstr "Taak maken"
+
+#: views/communication/create_email_account.py:223
+msgid "Create account"
+msgstr "Account maken"
+
+#: templates/views/workspaces/bloomerp_workspace_view.html:28
+msgid "Create default"
+msgstr "Standaardinstelling maken"
+
+#: templates/components/files/browser.html:144
+msgid "Create folder"
+msgstr "Map maken"
+
+#: templates/components/forms/initial_data_value.html:47
+msgid "Create rows shown when the form opens."
+msgstr "Maak rijen die worden weergegeven wanneer het formulier wordt geopend."
+
+#: templates/cotton/features/workspaces/container.html:88
+msgid "Create tile"
+msgstr "Tegel maken"
+
+#: bloomerp.aiconversation.created_by bloomerp.apikey.created_by bloomerp.comment.created_by
+#: bloomerp.documenttemplate.created_by bloomerp.documenttemplateheader.created_by
+#: bloomerp.documenttemplatestyling.created_by bloomerp.emailaccount.created_by
+#: bloomerp.file.created_by bloomerp.filefolder.created_by bloomerp.form.created_by
+#: bloomerp.formsubmission.created_by bloomerp.inboxfolder.created_by bloomerp.inboxitem.created_by
+#: bloomerp.initiative.created_by bloomerp.policy.created_by bloomerp.sqlquery.created_by
+#: bloomerp.tile.created_by bloomerp.todo.created_by bloomerp.todolabel.created_by
+#: bloomerp.userinboxpreference.created_by bloomerp.workflow.created_by
+#: bloomerp.workflownode.created_by
+msgid "Created By"
+msgstr "Gemaakt door"
+
+#: templates/cotton/app/sidebar/body.html:251
+msgid "Current language"
+msgstr "Huidige taal"
+
+#: bloomerp.documenttemplate.custom_styling models/document_templates/document_template.py:188
+msgid "Custom CSS styling for the document template."
+msgstr "Aangepaste CSS-opmaak voor de documentsjabloon."
+
+#: bloomerp.documenttemplate.custom_styling
+msgid "Custom Styling"
+msgstr "Aangepaste opmaak"
+
+#: templates/cotton/app/theme_selector.html:14
+msgid "Dark"
+msgstr "Donker"
+
+#: bloomerp.formsubmission.data
+msgid "Data"
+msgstr "Gegevens"
+
+#: bloomerp.tile.type workspaces/tiles.py:56
+msgid "Data View"
+msgstr "Gegevensweergave"
+
+#: workspaces/dataview_tile/model.py:55
+msgid "Data view updated"
+msgstr "Gegevensweergave bijgewerkt"
+
+#: bloomerp.applicationfield.field_type
+msgid "Date Field"
+msgstr "Datumveld"
+
+#: bloomerp.user.date_view_preference
+msgid "Date View Preference"
+msgstr "Voorkeur voor datumweergave"
+
+#: models/communication/signature_request.py:63
+msgid "Date and time when the document was signed."
+msgstr "Datum en tijd waarop het document is ondertekend."
+
+#: bloomerp.applicationfield.field_type
+msgid "DateTime Field"
+msgstr "Datum/tijdveld"
+
+#: bloomerp.todo.datetime_completed
+msgid "Datetime Completed"
+msgstr "Datum/tijd voltooid"
+
+#: bloomerp.aiconversation.datetime_created bloomerp.apikey.datetime_created
+#: bloomerp.bookmark.datetime_created bloomerp.comment.datetime_created
+#: bloomerp.documenttemplate.datetime_created bloomerp.documenttemplateheader.datetime_created
+#: bloomerp.documenttemplatestyling.datetime_created bloomerp.emailaccount.datetime_created
+#: bloomerp.file.datetime_created bloomerp.filefolder.datetime_created bloomerp.form.datetime_created
+#: bloomerp.formsubmission.datetime_created bloomerp.inboxfolder.datetime_created
+#: bloomerp.inboxitem.datetime_created bloomerp.initiative.datetime_created
+#: bloomerp.policy.datetime_created bloomerp.sqlquery.datetime_created bloomerp.tile.datetime_created
+#: bloomerp.todo.datetime_created bloomerp.todolabel.datetime_created
+#: bloomerp.userinboxpreference.datetime_created bloomerp.workflow.datetime_created
+#: bloomerp.workflownode.datetime_created bloomerp.workflowrun.datetime_created
+#: bloomerp.workflowrunstep.datetime_created
+msgid "Datetime Created"
+msgstr "Datum/tijd aangemaakt"
+
+#: bloomerp.inboxitem.datetime_received
+msgid "Datetime Received"
+msgstr "Datum/tijd ontvangen"
+
+#: bloomerp.aiconversation.datetime_updated bloomerp.apikey.datetime_updated
+#: bloomerp.comment.datetime_updated bloomerp.documenttemplate.datetime_updated
+#: bloomerp.documenttemplateheader.datetime_updated bloomerp.documenttemplatestyling.datetime_updated
+#: bloomerp.emailaccount.datetime_updated bloomerp.file.datetime_updated
+#: bloomerp.filefolder.datetime_updated bloomerp.form.datetime_updated
+#: bloomerp.formsubmission.datetime_updated bloomerp.inboxfolder.datetime_updated
+#: bloomerp.inboxitem.datetime_updated bloomerp.initiative.datetime_updated
+#: bloomerp.policy.datetime_updated bloomerp.sqlquery.datetime_updated bloomerp.tile.datetime_updated
+#: bloomerp.todo.datetime_updated bloomerp.todolabel.datetime_updated
+#: bloomerp.userinboxpreference.datetime_updated bloomerp.workflow.datetime_updated
+#: bloomerp.workflownode.datetime_updated bloomerp.workflowrun.datetime_updated
+#: bloomerp.workflowrunstep.datetime_updated
+msgid "Datetime Updated"
+msgstr "Datum/tijd bijgewerkt"
+
+#: bloomerp.user.datetime_view_preference
+msgid "Datetime View Preference"
+msgstr "Voorkeur voor datum/tijdweergave"
+
+#: bloomerp.user.date_view_preference
+msgid "Day-Month-Year (15-08-2000)"
+msgstr "Dag-maand-jaar (15-08-2000)"
+
+#: bloomerp.user.datetime_view_preference
+msgid "Day-Month-Year Hour:Minute (15-08-2000 12:30)"
+msgstr "Dag-maand-jaar Uur:minuut (15-08-2000 12:30)"
+
+#: bloomerp.applicationfield.db_column
+msgid "Db Column"
+msgstr "Databasekolom"
+
+#: bloomerp.applicationfield.db_field_type
+msgid "Db Field Type"
+msgstr "Databaseveldtype"
+
+#: bloomerp.applicationfield.db_table
+msgid "Db Table"
+msgstr "Databasetabel"
+
+#: bloomerp.applicationfield.field_type
+msgid "Decimal Field"
+msgstr "Decimaal veld"
+
+#: bloomerp.userlistviewpreference.default_filters
+msgid "Default Filters"
+msgstr "Standaardfilters"
+
+#: views/communication/create_email_account.py:66
+msgid "Defaults to email address"
+msgstr "Standaard ingesteld op e-mailadres"
+
+#: templates/components/access_control/row_policy.html:3
+msgid "Define the row policy by selecting a lookup and value for the field."
+msgstr "Definieer het rijbeleid door een opzoeking en waarde voor het veld te selecteren."
+
+#: bloomerp.activitylog.action
+msgid "Delete"
+msgstr "Verwijderen"
+
+#: templates/components/objects/bulk_actions.html:63 templates/components/objects/bulk_actions.html:80
+#, python-format
+msgid "Delete %(delete_count)s object(s)"
+msgstr "%(delete_count)s object(en) verwijderen"
+
+#: templates/components/forms/initial_data_row.html:46
+msgid "Delete value"
+msgstr "Waarde verwijderen"
+
+#: bloomerp.form.description bloomerp.initiative.description bloomerp.policy.description
+#: bloomerp.tile.description
+msgid "Description"
+msgstr "Beschrijving"
+
+#: bloomerp.tile.description models/workspaces/tile.py:27
+msgid "Description of the widget"
+msgstr "Beschrijving van de widget"
+
+#: bloomerp.user.is_superuser
+msgid "Designates that this user has all permissions without explicitly assigning them."
+msgstr "Geeft aan dat deze gebruiker alle machtigingen heeft zonder ze expliciet toe te wijzen."
+
+#: bloomerp.user.is_staff
+msgid "Designates whether the user can log into this admin site."
+msgstr "Geeft aan of de gebruiker kan inloggen op deze beheerderssite."
+
+#: bloomerp.user.is_active
+msgid ""
+"Designates whether this user should be treated as active. Unselect this instead of deleting "
+"accounts."
+msgstr ""
+"Geeft aan of deze gebruiker als actief moet worden beschouwd. Schakel dit uit in plaats van "
+"accounts te verwijderen."
+
+#: templates/inbox_items/workflow_run.html:100
+msgid "Detailed run logging is still available."
+msgstr "Gedetailleerde uitvoerlogging is nog steeds beschikbaar."
+
+#: services/detail_view_services.py:408
+msgid "Details"
+msgstr "Details"
+
+#: bloomerp.userlistviewpreference.display_fields
+msgid "Display Fields"
+msgstr "Weergavevelden"
+
+#: workspaces/tiles.py:66
+msgid "Displays a form, containing inputs, etc."
+msgstr "Geeft een formulier weer met invoervelden enz."
+
+#: workspaces/tiles.py:57
+msgid ""
+"Displays and manages records from a selected model in a structured view with filtering, sorting, "
+"and interaction capabilities."
+msgstr ""
+"Geeft records van een geselecteerd model weer en beheert deze in een gestructureerde weergave met"
+" filter-, sorteer- en interactiemogelijkheden."
+
+#: workspaces/analytics_tile/model.py:359
+msgid ""
+"Displays data from a custom query in a pivot table format, allowing users to dynamically "
+"summarize, analyze, and explore large datasets by rearranging and aggregating data across "
+"multiple dimensions for enhanced insights and decision-making."
+msgstr ""
+"Geeft gegevens uit een aangepaste query weer in de vorm van een draaitabel, zodat gebruikers "
+"grote datasets dynamisch kunnen samenvatten, analyseren en verkennen door gegevens over meerdere "
+"dimensies te herschikken en te aggregeren voor betere inzichten en besluitvorming."
+
+#: workspaces/analytics_tile/model.py:287
+msgid ""
+"Displays data from a custom query in a structured tabular format, enabling users to view, sort, "
+"and analyze information in rows and columns for easy comparison and reference."
+msgstr ""
+"Geeft gegevens uit een aangepaste query weer in een gestructureerd tabeloverzicht, zodat "
+"gebruikers informatie in rijen en kolommen kunnen bekijken, sorteren en analyseren voor "
+"eenvoudige vergelijking en raadpleging."
+
+#: workspaces/tiles.py:49
+msgid "Displays simple markdown content such as notes, instructions, or reference text."
+msgstr "Geeft eenvoudige markdown-inhoud weer, zoals notities, instructies of referentietekst."
+
+#: bloomerp.aiconversation.conversation_type
+msgid "Document Template Generator"
+msgstr "Generator voor documentsjablonen"
+
+#: templates/components/forms/qr_code.html:38 templates/views/sdk/download.html:39
+msgid "Download"
+msgstr "Downloaden"
+
+#: bloomerp.emailaccount.status
+msgid "Draft"
+msgstr "Concept"
+
+#: templates/cotton/features/dataviews/gant.html:68
+msgid "Drag a record onto the timeline to schedule it."
+msgstr "Sleep een record naar de tijdlijn om het in te plannen."
+
+#: templates/components/objects/dataview_gant_rows.html:70
+msgid "Drop an unscheduled record here."
+msgstr "Zet hier een niet-gepland record neer."
+
+#: templates/views/access_control/manage_permissions/wizard_object_access_control.html:80
+#: templates/views/access_control/manage_permissions/wizard_object_access_control.html:102
+msgid "Drop fields here"
+msgstr "Zet velden hier neer"
+
+#: bloomerp.todo.status
+msgid "Duplicate"
+msgstr "Duplicaat"
+
+#: bloomerp.applicationfield.field_type
+msgid "Duration Field"
+msgstr "Duurveld"
+
+#: templates/components/workspaces/tile_builders/links_tile_builder_items.html:32
+#: templates/cotton/features/layout/container.html:111
+msgid "Edit"
+msgstr "Bewerken"
+
+#: bloomerp.todo.effort
+msgid "Effort"
+msgstr "Inspanning"
+
+#: bloomerp.inboxitem.item_type
+msgid "Email"
+msgstr "E-mail"
+
+#: bloomerp.emailaccount
+msgid "Email Account"
+msgstr "E-mailaccount"
+
+#: bloomerp.emailaccount
+msgid "Email Accounts"
+msgstr "E-mailaccounts"
+
+#: bloomerp.emailaccount.email_address
+msgid "Email Address"
+msgstr "E-mailadres"
+
+#: bloomerp.applicationfield.field_type
+msgid "Email Field"
+msgstr "E-mailveld"
+
+#: views/communication/create_email_account.py:259
+#, python-format
+msgid "Email account '%(account)s' created successfully."
+msgstr "E-mailaccount '%(account)s' is succesvol aangemaakt."
+
+#: models/communication/signature_request.py:37
+msgid "Email of the recipient (if recipient is not provided)."
+msgstr "E-mailadres van de ontvanger (als de ontvanger niet is opgegeven)."
+
+#: components/communication/emails/new_email.py:125
+msgid "Email sent successfully."
+msgstr "E-mail succesvol verzonden."
+
+#: templates/views/auth/login.html:79
+msgid "Email verification is required before this account can access protected flows."
+msgstr "E-mailverificatie is vereist voordat dit account toegang kan krijgen tot beveiligde flows."
+
+#: bloomerp.inboxfolder.type
+msgid "Emails"
+msgstr "E-mails"
+
+#: bloomerp.workflow.enable_logging
+msgid "Enable Logging"
+msgstr "Logboekregistratie inschakelen"
+
+#: bloomerp.emailaccount.access_token
+msgid "Encrypted OAuth access token."
+msgstr "Versleuteld OAuth-toegangstoken."
+
+#: bloomerp.emailaccount.oauth_client_secret
+msgid "Encrypted OAuth client secret."
+msgstr "Versleuteld OAuth-clientgeheim."
+
+#: bloomerp.emailaccount.refresh_token
+msgid "Encrypted OAuth refresh token."
+msgstr "Versleuteld OAuth-vernieuwingstoken."
+
+#: bloomerp.emailaccount.password
+msgid ""
+"Encrypted password or app password used for providers that support direct SMTP/IMAP "
+"authentication."
+msgstr ""
+"Versleuteld wachtwoord of app-wachtwoord dat wordt gebruikt voor providers die directe SMTP/IMAP-"
+"authenticatie ondersteunen."
+
+#: views/communication/create_email_account.py:213
+msgid "Enter the connection details for this mailbox."
+msgstr "Voer de verbindingsgegevens voor deze mailbox in."
+
+#: bloomerp.emailaccount.status
+msgid "Error"
+msgstr "Fout"
+
+#: templates/components/forms/initial_data_value.html:26
+msgid "Every row gets this child field value."
+msgstr "Elke rij krijgt deze waarde voor het onderliggende veld."
+
+#: templates/inbox_items/workflow_run.html:30
+msgid "Executed steps"
+msgstr "Uitgevoerde stappen"
+
+#: templates/inbox_items/workflow_run.html:63
+msgid "Execution graph"
+msgstr "Uitvoeringsgrafiek"
+
+#: templates/inbox_items/workflow_run.html:26
+msgid "Execution time"
+msgstr "Uitvoeringstijd"
+
+#: bloomerp.apikey.expires_at
+msgid "Expires At"
+msgstr "Vervalt op"
+
+#: bloomerp.emailaccount.extra_settings
+msgid "Extra Settings"
+msgstr "Extra instellingen"
+
+#: bloomerp.aiconversation.args
+msgid "Extra arguments for the conversation"
+msgstr "Extra argumenten voor het gesprek"
+
+#: bloomerp.workflowrunstep.status templates/inbox_items/workflow_run.html:19
+msgid "Failed"
+msgstr "Mislukt"
+
+#: bloomerp.applicationfield.field templates/components/forms/initial_data_row.html:10
+msgid "Field"
+msgstr "Veld"
+
+#: bloomerp.policy.field_policy
+msgid "Field Policy"
+msgstr "Veldbeleid"
+
+#: bloomerp.applicationfield.field_type
+msgid "Field Type"
+msgstr "Veldtype"
+
+#: views/access_control/manage_permissions.py:342
+msgid "Field based access control"
+msgstr "Toegangsbeheer op basis van velden"
+
+#: workspaces/analytics_tile/model.py:557
+msgid "Field does not exist"
+msgstr "Veld bestaat niet"
+
+#: workspaces/analytics_tile/model.py:552
+msgid "Field options updated"
+msgstr "Veldopties bijgewerkt"
+
+#: views/access_control/manage_permissions.py:289
+msgid "Field policies can only use permissions selected in step 1."
+msgstr "Veldbeleidsregels kunnen alleen de machtigingen gebruiken die in stap 1 zijn geselecteerd."
+
+#: views/access_control/manage_permissions.py:290
+msgid "Field policy mismatch"
+msgstr "Veldbeleidsregels komen niet overeen"
+
+#: workspaces/analytics_tile/model.py:633
+msgid "Field removed"
+msgstr "Veld verwijderd"
+
+#: workspaces/analytics_tile/model.py:583
+msgid "Field slot does not exist"
+msgstr "Veldpositie bestaat niet"
+
+#: workspaces/analytics_tile/model.py:605
+msgid "Field updated"
+msgstr "Veld bijgewerkt"
+
+#: bloomerp.file.file
+msgid "File"
+msgstr "Bestand"
+
+#: bloomerp.applicationfield.field_type
+msgid "File Field"
+msgstr "Bestandsveld"
+
+#: bloomerp.aiconversation.files bloomerp.apikey.files bloomerp.applicationfield.field_type
+#: bloomerp.documenttemplate.files bloomerp.documenttemplateheader.files
+#: bloomerp.documenttemplatestyling.files bloomerp.emailaccount.files bloomerp.form.files
+#: bloomerp.formsubmission.files bloomerp.inboxfolder.files bloomerp.inboxitem.files
+#: bloomerp.initiative.files bloomerp.sqlquery.files bloomerp.tile.files bloomerp.todo.files
+#: bloomerp.todolabel.files bloomerp.userinboxpreference.files
+msgid "Files"
+msgstr "Bestanden"
+
+#: workspaces/analytics_tile/model.py:215
+msgid "Filter"
+msgstr "Filter"
+
+#: workspaces/analytics_tile/model.py:661
+msgid "Filter added"
+msgstr "Filter toegevoegd"
+
+#: workspaces/analytics_tile/model.py:652
+msgid "Filter already exists"
+msgstr "Filter bestaat al"
+
+#: workspaces/analytics_tile/model.py:684
+msgid "Filter removed"
+msgstr "Filter verwijderd"
+
+#: templates/inbox_items/workflow_run.html:34
+msgid "Finished"
+msgstr "Voltooid"
+
+#: bloomerp.applicationfield.field_type
+msgid "Float Field"
+msgstr "Floatveld"
+
+#: automation/defintion.py:216 bloomerp.workflownode.type
+msgid "Flow"
+msgstr "Flow"
+
+#: bloomerp.file.folder bloomerp.inboxitem.folder
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:50
+#: templates/components/workspaces/tile_builders/links_tile_builder_items.html:41
+msgid "Folder"
+msgstr "Map"
+
+#: workspaces/links_tile/model.py:130
+msgid "Folder added"
+msgstr "Map toegevoegd"
+
+#: components/workspaces/sidebar.py:260
+msgid "Folder created"
+msgstr "Map aangemaakt"
+
+#: bloomerp.documenttemplate.footer
+msgid "Footer"
+msgstr "Voettekst"
+
+#: bloomerp.documenttemplate.footer models/document_templates/document_template.py:145
+msgid "Footer content of the document template."
+msgstr "Voettekst van de documentsjabloon."
+
+#: bloomerp.applicationfield.field_type
+msgid "Foreign Key"
+msgstr "Vreemde sleutel"
+
+#: templates/views/auth/login.html:70
+msgid "Forgot password?"
+msgstr "Wachtwoord vergeten?"
+
+#: bloomerp.formsubmission.form bloomerp.tile.type workspaces/tiles.py:65
+msgid "Form"
+msgstr "Formulier"
+
+#: templates/components/forms/qr_code.html:7
+msgid "Form QR code"
+msgstr "QR-code van formulier"
+
+#: workspaces/analytics_tile/model.py:96
+msgid "Formatter"
+msgstr "Formatter"
+
+#: bloomerp.documenttemplate.free_variables
+msgid "Free Variables"
+msgstr "Vrije variabelen"
+
+#: templates/components/communication/emails/email_editor.html:16
+#, python-format
+msgid "From %(from_email)s"
+msgstr "Van %(from_email)s"
+
+#: bloomerp.workflowedge.from_node
+msgid "From Node"
+msgstr "Van-node"
+
+#: bloomerp.userlistviewpreference.view_type
+msgid "Gantt"
+msgstr "Gantt"
+
+#: templates/components/document_templates/generate_document_template.html:31
+msgid "Generate"
+msgstr "Genereren"
+
+#: templates/views/auth/create_api_token.html:22
+msgid "Generate Token"
+msgstr "Token genereren"
+
+#: bloomerp.applicationfield.field_type
+msgid "Generic Foreign Key"
+msgstr "Algemene vreemde sleutel"
+
+#: bloomerp.applicationfield.field_type
+msgid "Generic IP Address Field"
+msgstr "Algemeen IP-adresveld"
+
+#: bloomerp.applicationfield.field_type
+msgid "Generic Relation"
+msgstr "Algemene relatie"
+
+#: views/access_control/manage_permissions.py:350
+msgid "Give the policy a name and description before saving."
+msgstr "Geef het beleid een naam en beschrijving voordat u het opslaat."
+
+#: bloomerp.policy.global_permissions
+msgid "Global Permissions"
+msgstr "Globale machtigingen"
+
+#: views/access_control/manage_permissions.py:335
+msgid "Global access control"
+msgstr "Globale toegangscontrole"
+
+#: bloomerp.policy.global_permissions models/access_control/policy.py:108
+msgid "Global permissions applied by this policy."
+msgstr "Globale machtigingen die door dit beleid worden toegepast."
+
+#: views/access_control/manage_permissions.py:387
+msgid "Global permissions error"
+msgstr "Fout met globale machtigingen"
+
+#: bloomerp.policy.groups
+msgid "Groups"
+msgstr "Groepen"
+
+#: bloomerp.policy.groups models/access_control/policy.py:101
+msgid "Groups assigned to this access control policy."
+msgstr "Aan deze toegangsbeheerbeleidsregel toegewezen groepen."
+
+#: bloomerp.inbox.shared_with_groups bloomerp.sidebar.shared_with_groups
+#: bloomerp.userdetailviewtabspreference.shared_with_groups
+#: bloomerp.userlistviewpreference.shared_with_groups
+#: bloomerp.userobjectlayoutpreference.shared_with_groups bloomerp.workspace.shared_with_groups
+msgid "Groups with whom this preference is shared."
+msgstr "Groepen waarmee deze voorkeur wordt gedeeld."
+
+#: bloomerp.applicationfield.field_type
+msgid "HStore Field"
+msgstr "HStore-veld"
+
+#: workspaces/analytics_tile/model.py:224
+msgid ""
+"HTML based formatting. The value is injected as {{ value }}, the pre-formatted value as {{ "
+"pre_formatted_value }}."
+msgstr ""
+"HTML-gebaseerde opmaak. De waarde wordt geïnjecteerd als {{ value }}, de vooraf opgemaakte waarde"
+" als {{ pre_formatted_value }}."
+
+#: bloomerp.apikey.key_hash
+msgid "Hashed API key secret. The raw token is only shown when it is created."
+msgstr ""
+"Gehashte API-sleutelgeheim. Het onbewerkte token wordt alleen weergegeven wanneer het wordt "
+"aangemaakt."
+
+#: bloomerp.documenttemplateheader.header
+msgid "Header"
+msgstr "Koptekst"
+
+#: bloomerp.documenttemplate.template_header models/document_templates/document_template.py:142
+msgid "Header of the document template."
+msgstr "Koptekst van de documentsjabloon."
+
+#: bloomerp.documenttemplateheader.height
+msgid "Height"
+msgstr "Hoogte"
+
+#: templates/components/workspaces/tile_builders/canvas_tile_builder.html:24
+msgid "Height in pixels, between 256 and 1600."
+msgstr "Hoogte in pixels, tussen 256 en 1600."
+
+#: bloomerp.documenttemplateheader.height models/document_templates/document_template_header.py:35
+msgid "Height of the header in inches."
+msgstr "Hoogte van de koptekst in inches."
+
+#: bloomerp.sidebaritem.color
+msgid "Hex color code for the sidebar item (e.g. #FF5733)."
+msgstr "Hexadecimale kleurcode voor het item in de zijbalk (bijv. #FF5733)."
+
+#: bloomerp.todo.priority
+msgid "High"
+msgstr "Hoog"
+
+#: templates/cotton/features/dataviews/gant.html:34
+msgid "Hour"
+msgstr "Uur"
+
+#: workspaces/analytics_tile/model.py:142
+msgid "How the series should be drawn."
+msgstr "Hoe de reeks moet worden getekend."
+
+#: bloomerp.activitylog.id bloomerp.applicationfield.id bloomerp.bookmark.id bloomerp.comment.id
+#: bloomerp.fieldpolicy.id bloomerp.filefolder.id bloomerp.inbox.id bloomerp.policy.id
+#: bloomerp.rowpolicy.id bloomerp.rowpolicyrule.id bloomerp.rowpolicyrulepermission.id
+#: bloomerp.sidebar.id bloomerp.sidebaritem.id bloomerp.user.id
+#: bloomerp.userdetailviewtabspreference.id bloomerp.userlistviewpreference.id
+#: bloomerp.userobjectlayoutpreference.id bloomerp.workflow.id bloomerp.workflowedge.id
+#: bloomerp.workflownode.id bloomerp.workflowrun.id bloomerp.workflowrunstep.id bloomerp.workspace.id
+msgid "ID"
+msgstr "ID"
+
+#: bloomerp.emailaccount.provider
+msgid "IMAP / SMTP"
+msgstr "IMAP / SMTP"
+
+#: bloomerp.applicationfield.field_type
+msgid "IP Address Field"
+msgstr "IP-adresveld"
+
+#: bloomerp.sidebaritem.icon bloomerp.tile.icon
+msgid "Icon"
+msgstr "Pictogram"
+
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:46
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:88
+msgid "Icon (optional)"
+msgstr "Pictogram (optioneel)"
+
+#: bloomerp.applicationfield.field_type
+msgid "Icon Field"
+msgstr "Pictogramveld"
+
+#: bloomerp.sidebaritem.icon
+msgid "Icon for the particular sidebar item."
+msgstr "Pictogram voor het betreffende zijbalkitem."
+
+#: bloomerp.aiconversation.id bloomerp.apikey.id bloomerp.documenttemplate.id
+#: bloomerp.documenttemplateheader.id bloomerp.documenttemplatestyling.id bloomerp.emailaccount.id
+#: bloomerp.file.id bloomerp.form.id bloomerp.formsubmission.id bloomerp.inboxfolder.id
+#: bloomerp.inboxitem.id bloomerp.initiative.id bloomerp.sqlquery.id bloomerp.tile.id bloomerp.todo.id
+#: bloomerp.todolabel.id bloomerp.userdetailviewtabitem.id bloomerp.userinboxpreference.id
+msgid "Id"
+msgstr "ID"
+
+#: bloomerp.applicationfield.field_type
+msgid "Image Field"
+msgstr "Afbeeldingsveld"
+
+#: bloomerp.documenttemplateheader.header models/document_templates/document_template_header.py:27
+msgid "Image of the header."
+msgstr "Afbeelding van de koptekst."
+
+#: bloomerp.emailaccount.imap_host
+msgid "Imap Host"
+msgstr "IMAP-host"
+
+#: bloomerp.emailaccount.imap_port
+msgid "Imap Port"
+msgstr "IMAP-poort"
+
+#: bloomerp.emailaccount.imap_security
+msgid "Imap Security"
+msgstr "IMAP-beveiliging"
+
+#: bloomerp.initiative.status bloomerp.todo.status
+msgid "In Progress"
+msgstr "In uitvoering"
+
+#: bloomerp.todo.status
+msgid "In Review"
+msgstr "In beoordeling"
+
+#: bloomerp.inbox bloomerp.inboxfolder.inbox templates/cotton/app/sidebar/body.html:66
+msgid "Inbox"
+msgstr "Postvak IN"
+
+#: bloomerp.inboxfolder
+msgid "Inbox Folder"
+msgstr "Inboxmap"
+
+#: bloomerp.inboxfolder
+msgid "Inbox Folders"
+msgstr "Inboxmappen"
+
+#: bloomerp.inboxitem
+msgid "Inbox Item"
+msgstr "Inboxitem"
+
+#: bloomerp.inboxitem
+msgid "Inbox Items"
+msgstr "Inboxitems"
+
+#: bloomerp.inbox
+msgid "Inboxs"
+msgstr "Inboxen"
+
+#: bloomerp.documenttemplate.include_page_numbers
+msgid "Include Page Numbers"
+msgstr "Paginanummers opnemen"
+
+#: views/communication/create_email_account.py:234
+msgid "Incomplete setup"
+msgstr "Onvolledige configuratie"
+
+#: templates/cotton/ui/inputs/one_to_many/column_actions.html:35
+msgid "Increment first value"
+msgstr "Eerste waarde verhogen"
+
+#: bloomerp.inbox.selected bloomerp.sidebar.selected bloomerp.userdetailviewtabspreference.selected
+#: bloomerp.userlistviewpreference.selected bloomerp.userobjectlayoutpreference.selected
+#: bloomerp.workspace.selected
+msgid ""
+"Indicates if this preference is currently selected for the user. Only one preference per user can"
+" be selected at a time."
+msgstr ""
+"Geeft aan of deze voorkeur momenteel voor de gebruiker is geselecteerd. Er kan slechts één "
+"voorkeur per gebruiker tegelijk worden geselecteerd."
+
+#: bloomerp.inbox.initial_default bloomerp.sidebar.initial_default
+#: bloomerp.userdetailviewtabspreference.initial_default
+#: bloomerp.userlistviewpreference.initial_default bloomerp.userobjectlayoutpreference.initial_default
+#: bloomerp.workspace.initial_default
+msgid ""
+"Indicates if this preference is the initial default for the user. This is used to determine the "
+"user's default preference when they first create an account."
+msgstr ""
+"Geeft aan of deze voorkeur de initiële standaardinstelling voor de gebruiker is. Dit wordt "
+"gebruikt om de standaardvoorkeur van de gebruiker te bepalen wanneer deze voor het eerst een "
+"account aanmaakt."
+
+#: bloomerp.inboxitem.is_read
+msgid "Indicates whether the inbox item has been read by the user."
+msgstr "Geeft aan of het inboxitem door de gebruiker is gelezen."
+
+#: bloomerp.inbox.initial_default bloomerp.sidebar.initial_default
+#: bloomerp.userdetailviewtabspreference.initial_default
+#: bloomerp.userlistviewpreference.initial_default bloomerp.userobjectlayoutpreference.initial_default
+#: bloomerp.workspace.initial_default
+msgid "Initial Default"
+msgstr "Initiële standaardinstelling"
+
+#: bloomerp.form.initial_payload
+msgid "Initial Payload"
+msgstr "Initiële payload"
+
+#: templates/views/forms/builder.html:31
+msgid "Initial data"
+msgstr "Initiële gegevens"
+
+#: components/workspaces/share_workspace.py:45
+msgid "Initial default"
+msgstr "Initiële standaardinstelling"
+
+#: bloomerp.form.initial_payload models/forms/form.py:76
+msgid "Initial payload for the form"
+msgstr "Initiële payload voor het formulier"
+
+#: templates/components/forms/initial_data_value.html:46
+msgid "Initial rows"
+msgstr "Initiële rijen"
+
+#: bloomerp.todo.initiative
+msgid "Initiative"
+msgstr "Initiatief"
+
+#: templates/components/forms/initial_data_value.html:82
+msgid "Input value"
+msgstr "Invoerwaarde"
+
+#: bloomerp.applicationfield.field_type
+msgid "Integer Field"
+msgstr "Integer-veld"
+
+#: templates/views/generic/model/bulk_upload_wizard/confirm_step.html:14
+msgid "Invalid"
+msgstr "Ongeldig"
+
+#: views/access_control/manage_permissions.py:232
+msgid "Invalid field policy"
+msgstr "Ongeldig veldbeleid"
+
+#: views/access_control/manage_permissions.py:223
+msgid "Invalid row policy"
+msgstr "Ongeldig rijbeleid"
+
+#: views/access_control/manage_permissions.py:275
+msgid "Invalid row policy field"
+msgstr "Ongeldig veld voor rijbeleid"
+
+#: bloomerp.formsubmission.ip_address
+msgid "Ip Address"
+msgstr "IP-adres"
+
+#: bloomerp.activitylog.is_create
+msgid "Is Create"
+msgstr "Is aanmaken"
+
+#: bloomerp.sidebaritem.is_folder
+msgid "Is Folder"
+msgstr "Is map"
+
+#: bloomerp.inboxitem.is_read
+msgid "Is Read"
+msgstr "Is gelezen"
+
+#: bloomerp.inboxitem.item_type
+msgid "Item Type"
+msgstr "Itemtype"
+
+#: workspaces/links_tile/model.py:203
+msgid "Item cannot be moved further"
+msgstr "Item kan niet verder worden verplaatst"
+
+#: components/workspaces/sidebar.py:305
+msgid "Item created"
+msgstr "Item aangemaakt"
+
+#: components/workspaces/sidebar.py:397 workspaces/links_tile/model.py:206
+msgid "Item moved"
+msgstr "Item verplaatst"
+
+#: components/workspaces/sidebar.py:368 workspaces/links_tile/model.py:148
+msgid "Item removed"
+msgstr "Item verwijderd"
+
+#: components/workspaces/sidebar.py:346 workspaces/links_tile/model.py:185
+msgid "Item updated"
+msgstr "Item bijgewerkt"
+
+#: bloomerp.applicationfield.field_type
+msgid "JSON Field"
+msgstr "JSON-veld"
+
+#: workspaces/analytics_tile/model.py:313
+msgid "KPI"
+msgstr "KPI"
+
+#: bloomerp.userlistviewpreference.view_type
+msgid "Kanban"
+msgstr "Kanban"
+
+#: bloomerp.apikey.key_hash
+msgid "Key Hash"
+msgstr "Hash van sleutel"
+
+#: bloomerp.apikey.key_prefix
+msgid "Key Prefix"
+msgstr "Sleutelvoorvoegsel"
+
+#: bloomerp.todo.effort
+msgid "L"
+msgstr "L"
+
+#: workspaces/analytics_tile/model.py:72
+msgid "Label"
+msgstr "Label"
+
+#: bloomerp.initiative.labels bloomerp.todo.labels workspaces/analytics_tile/model.py:378
+msgid "Labels"
+msgstr "Labels"
+
+#: bloomerp.initiative.labels models/project_management/initiative.py:109
+msgid "Labels assigned to the initiative"
+msgstr "Aan het initiatief toegewezen labels"
+
+#: bloomerp.todo.labels models/project_management/todo.py:176
+msgid "Labels assigned to the todo"
+msgstr "Aan de taak toegewezen labels"
+
+#: bloomerp.documenttemplate.page_orientation models/document_templates/document_template.py:25
+msgid "Landscape"
+msgstr "Liggend"
+
+#: templates/cotton/app/sidebar/body.html:206
+msgid "Languages"
+msgstr "Talen"
+
+#: bloomerp.emailaccount.last_sync_error
+msgid "Last Sync Error"
+msgstr "Laatste synchronisatiefout"
+
+#: bloomerp.emailaccount.last_sync_finished_at
+msgid "Last Sync Finished At"
+msgstr "Laatste synchronisatie voltooid op"
+
+#: bloomerp.emailaccount.last_sync_started_at
+msgid "Last Sync Started At"
+msgstr "Laatste synchronisatie gestart op"
+
+#: bloomerp.apikey.last_used_at
+msgid "Last Used At"
+msgstr "Laatst gebruikt op"
+
+#: bloomerp.emailaccount.last_validated_at
+msgid "Last Validated At"
+msgstr "Laatst gevalideerd op"
+
+#: bloomerp.form.layout bloomerp.userobjectlayoutpreference.layout bloomerp.workspace.layout
+msgid "Layout"
+msgstr "Indeling"
+
+#: workspaces/analytics_tile/model.py:199
+msgid "Left"
+msgstr "Links"
+
+#: bloomerp.documenttemplateheader.margin_left models/document_templates/document_template_header.py:32
+msgid "Left margin of the header in inches."
+msgstr "Linkermarge van de koptekst in inches."
+
+#: templates/cotton/features/dataviews/calendar.html:56
+msgid "Legend"
+msgstr "Legenda"
+
+#: workspaces/analytics_tile/model.py:191
+msgid "Legend position"
+msgstr "Positie van legenda"
+
+#: bloomerp.documenttemplate.page_size models/document_templates/document_template.py:20
+msgid "Letter"
+msgstr "Letter"
+
+#: templates/cotton/app/theme_selector.html:9
+msgid "Light"
+msgstr "Licht"
+
+#: workspaces/analytics_tile/model.py:146
+msgid "Line"
+msgstr "Lijn"
+
+#: templates/components/forms/qr_code.html:13
+msgid "Link"
+msgstr "Link"
+
+#: workspaces/links_tile/model.py:111
+msgid "Link added"
+msgstr "Link toegevoegd"
+
+#: workspaces/links_tile/model.py:100
+msgid "Link already existed"
+msgstr "Link bestond al"
+
+#: templates/components/forms/qr_code.html:24
+msgid "Link copied to clipboard!"
+msgstr "Link naar klembord gekopieerd!"
+
+#: components/workspaces/sidebar.py:430
+msgid "Link created"
+msgstr "Link aangemaakt"
+
+#: bloomerp.tile.type workspaces/tiles.py:40
+msgid "Links"
+msgstr "Koppelingen"
+
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:20
+msgid "Links and folders"
+msgstr "Koppelingen en mappen"
+
+#: workspaces/links_tile/model.py:59
+msgid "Links can only be nested inside folders"
+msgstr "Koppelingen kunnen alleen in mappen worden genest"
+
+#: workspaces/dataview_tile/form.py:23
+msgid "List view preference"
+msgstr "Voorkeur voor lijstweergave"
+
+#: templates/components/objects/dataview_calendar_events.html:53
+msgid "Load more"
+msgstr "Meer laden"
+
+#: templates/cotton/features/workspaces/container.html:43
+msgid "Loading filters..."
+msgstr "Filters laden..."
+
+#: templates/components/communication/render_inbox_folder_items.html:46
+#: templates/components/objects/dataview_gant_rows.html:85
+#: templates/components/objects/dataview_gant_unscheduled.html:32
+msgid "Loading more…"
+msgstr "Meer laden…"
+
+#: templates/views/forms/builder.html:38
+msgid "Loading..."
+msgstr "Laden..."
+
+#: templates/views/auth/login.html:34
+msgid "Login"
+msgstr "Inloggen"
+
+#: templates/views/auth/login.html:24
+msgid "Login to Your Account"
+msgstr "Log in op uw account"
+
+#: bloomerp.todo.priority
+msgid "Low"
+msgstr "Laag"
+
+#: bloomerp.todo.effort
+msgid "M"
+msgstr "M"
+
+#: views/communication/create_email_account.py:253
+msgid "Mailbox connection failed"
+msgstr "Verbinding met mailbox mislukt"
+
+#: bloomerp.emailaccount.mailboxes
+msgid "Mailboxes"
+msgstr "Postvakken"
+
+#: bloomerp.applicationfield.field_type
+msgid "Many To Many Field"
+msgstr "Veel-op-veelveld"
+
+#: workspaces/analytics_tile/model.py:365
+msgid "Map"
+msgstr "Kaart"
+
+#: bloomerp.documenttemplateheader.margin_bottom
+msgid "Margin Bottom"
+msgstr "Marge onder"
+
+#: bloomerp.documenttemplateheader.margin_left
+msgid "Margin Left"
+msgstr "Marge links"
+
+#: bloomerp.documenttemplateheader.margin_right
+msgid "Margin Right"
+msgstr "Marge rechts"
+
+#: bloomerp.documenttemplateheader.margin_top
+msgid "Margin Top"
+msgstr "Marge boven"
+
+#: bloomerp.documenttemplate.page_margin models/document_templates/document_template.py:163
+msgid "Margin of the document template in inches."
+msgstr "Marge van de documentsjabloon in inches."
+
+#: bloomerp.form.max_submissions
+msgid "Max Submissions"
+msgstr "Maximaal aantal inzendingen"
+
+#: bloomerp.form.max_submissions_per_ip
+msgid "Max Submissions Per Ip"
+msgstr "Maximaal aantal inzendingen per IP-adres"
+
+#: bloomerp.form.max_submissions_per_ip models/forms/form.py:100
+msgid "Maximum number of submissions per IP address"
+msgstr "Maximaal aantal inzendingen per IP-adres"
+
+#: bloomerp.form.max_submissions models/forms/form.py:95
+msgid "Maximum number of submissions possible for the form"
+msgstr "Maximaal mogelijke aantal inzendingen voor het formulier"
+
+#: models/forms/form.py:129
+msgid "Maximum submissions per IP address cannot exceed the total maximum submissions."
+msgstr ""
+"Het maximale aantal inzendingen per IP-adres mag het totale maximale aantal inzendingen niet "
+"overschrijden."
+
+#: bloomerp.todo.priority
+msgid "Medium"
+msgstr "Gemiddeld"
+
+#: bloomerp.applicationfield.meta bloomerp.file.meta
+msgid "Meta"
+msgstr "Meta"
+
+#: workspaces/dataview_tile/form.py:14
+msgid "Model"
+msgstr "Model"
+
+#: bloomerp.workspace.module_id
+msgid "Module Id"
+msgstr "Module-ID"
+
+#: templates/cotton/features/dataviews/gant.html:32
+msgid "Month"
+msgstr "Maand"
+
+#: bloomerp.user.date_view_preference
+msgid "Month-Day-Year (08-15-2000)"
+msgstr "Maand-dag-jaar (08-15-2000)"
+
+#: bloomerp.user.datetime_view_preference
+msgid "Month-Day-Year Hour:Minute (08-15-2000 12:30)"
+msgstr "Maand-dag-jaar Uur:minuut (08-15-2000 12:30)"
+
+#: templates/components/workspaces/tile_builders/links_tile_builder_items.html:23
+msgid "Move down"
+msgstr "Naar beneden verplaatsen"
+
+#: templates/components/workspaces/tile_builders/links_tile_builder_items.html:14
+msgid "Move up"
+msgstr "Naar boven verplaatsen"
+
+#: bloomerp.apikey.name bloomerp.documenttemplate.name bloomerp.documenttemplateheader.name
+#: bloomerp.documenttemplatestyling.name bloomerp.emailaccount.name bloomerp.fieldpolicy.name
+#: bloomerp.file.name bloomerp.filefolder.name bloomerp.form.name bloomerp.inbox.name
+#: bloomerp.initiative.name bloomerp.policy.name bloomerp.rowpolicy.name bloomerp.sidebar.name
+#: bloomerp.sidebaritem.name bloomerp.sqlquery.name bloomerp.tile.name bloomerp.todolabel.name
+#: bloomerp.userdetailviewtabitem.name bloomerp.userdetailviewtabspreference.name
+#: bloomerp.userlistviewpreference.name bloomerp.userobjectlayoutpreference.name bloomerp.workflow.name
+#: bloomerp.workflowedge.name bloomerp.workflownode.name bloomerp.workspace.name
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:42
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:84
+#: templates/components/workspaces/tile_builders/links_tile_builder_items.html:38
+msgid "Name"
+msgstr "Naam"
+
+#: bloomerp.documenttemplatestyling.name models/document_templates/document_template_styling.py:16
+msgid "Name of the document template styling."
+msgstr "Naam van de opmaak van de documentsjabloon."
+
+#: bloomerp.documenttemplate.name models/document_templates/document_template.py:119
+msgid "Name of the document template."
+msgstr "Naam van de documentsjabloon."
+
+#: bloomerp.sidebaritem.name
+msgid "Name of the sidebar item."
+msgstr "Naam van het item in de zijbalk."
+
+#: bloomerp.documenttemplateheader.name models/document_templates/document_template_header.py:25
+msgid "Name of the template header."
+msgstr "Naam van de sjabloonkoptekst."
+
+#: bloomerp.tile.name models/workspaces/tile.py:22
+msgid "Name of the widget"
+msgstr "Naam van de widget"
+
+#: views/access_control/manage_permissions.py:314
+msgid "Name required"
+msgstr "Naam vereist"
+
+#: templates/components/forms/initial_data.html:29
+msgid "New"
+msgstr "Nieuw"
+
+#: components/communication/emails/new_email.py:139
+msgid "New email"
+msgstr "Nieuwe e-mail"
+
+#: components/workspaces/sidebar.py:82
+msgid "New link"
+msgstr "Nieuwe link"
+
+#: bloomerp.emailaccount.next_sync_at
+msgid "Next Sync At"
+msgstr "Volgende synchronisatie op"
+
+#: templates/cotton/features/dataviews/calendar.html:252
+msgid "No calendar items in this period."
+msgstr "Geen agenda-items in deze periode."
+
+#: templates/cotton/features/dataviews/calendar.html:22
+msgid "No date field selected"
+msgstr "Geen datumveld geselecteerd"
+
+#: templates/components/forms/initial_data_value.html:75
+msgid "No editable child fields"
+msgstr "Geen bewerkbare onderliggende velden"
+
+#: templates/components/communication/render_inbox_folder_items.html:20
+msgid "No items found in this folder."
+msgstr "Geen tabbladen in map"
+
+#: workspaces/links_tile/model.py:67 workspaces/links_tile/model.py:142
+#: workspaces/links_tile/model.py:198
+msgid "No link was selected"
+msgstr "Geen link geselecteerd"
+
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:28
+msgid "No links have been added yet."
+msgstr "Er zijn nog geen links toegevoegd."
+
+#: templates/cotton/features/dataviews/card.html:53
+#: templates/cotton/features/dataviews/pivot_table.html:95
+#: templates/cotton/features/dataviews/table.html:112
+msgid "No records found."
+msgstr "Geen records gevonden."
+
+#: templates/widgets/one_to_many_field_widget.html:54
+#: templates/widgets/one_to_many_field_widget.html:96
+msgid "No related objects found."
+msgstr "Geen gerelateerde objecten gevonden."
+
+#: templates/components/global_search.html:136
+msgid "No results found."
+msgstr "Geen resultaten gevonden."
+
+#: templates/components/global_search.html:52
+msgid "No routes found."
+msgstr "Geen routes gevonden."
+
+#: templates/components/objects/dataview_gant_rows.html:67
+msgid "No scheduled records."
+msgstr "Geen geplande records."
+
+#: templates/views/generic/detail/base.html:57
+msgid "No tabs in folder"
+msgstr "Geen tabbladen in map"
+
+#: templates/components/global_search.html:72
+msgid "No users found."
+msgstr "Geen gebruikers gevonden."
+
+#: templates/inbox_items/workflow_run.html:93
+msgid "No workflow graph was available for this execution."
+msgstr "Er was geen workflowgrafiek beschikbaar voor deze uitvoering."
+
+#: bloomerp.workflowrunstep.node
+msgid "Node"
+msgstr "Node"
+
+#: models/automation/workflow_node.py:140
+msgid "Node subtype is required in config"
+msgstr "Subtype van node is vereist in de configuratie"
+
+#: bloomerp.emailaccount.imap_security bloomerp.emailaccount.smtp_security
+msgid "None"
+msgstr "Geen"
+
+#: bloomerp.inboxitem.item_type
+msgid "Notification"
+msgstr "Melding"
+
+#: bloomerp.inboxfolder.type
+msgid "Notifications"
+msgstr "Meldingen"
+
+#: bloomerp.applicationfield.field_type
+msgid "Null Boolean Field"
+msgstr "Null-booleaans veld"
+
+#: bloomerp.emailaccount.oauth_client_id
+msgid "Oauth Client Id"
+msgstr "OAuth-client-ID"
+
+#: bloomerp.emailaccount.oauth_client_secret
+msgid "Oauth Client Secret"
+msgstr "OAuth-clientgeheim"
+
+#: bloomerp.emailaccount.oauth_scopes
+msgid "Oauth Scopes"
+msgstr "OAuth-scopes"
+
+#: bloomerp.emailaccount.oauth_tenant_id
+msgid "Oauth Tenant Id"
+msgstr "OAuth-tenant-ID"
+
+#: bloomerp.activitylog.object bloomerp.bookmark.object
+msgid "Object"
+msgstr "Object"
+
+#: bloomerp.aiconversation.conversation_type
+msgid "Object Bloom AI"
+msgstr "Object Bloom AI"
+
+#: bloomerp.activitylog.object_id bloomerp.bookmark.object_id bloomerp.comment.object_id
+#: bloomerp.file.object_id bloomerp.filefolder.object_id bloomerp.todo.object_id
+msgid "Object Id"
+msgstr "Object-ID"
+
+#: templates/inbox_items/workflow_run.html:55
+msgid "Object no longer available"
+msgstr "Object is niet langer beschikbaar"
+
+#: bloomerp.initiative.status
+msgid "On Hold"
+msgstr "In de wacht"
+
+#: bloomerp.applicationfield.field_type
+msgid "One To Many Field"
+msgstr "Een-op-veelveld"
+
+#: bloomerp.applicationfield.field_type
+msgid "One To One Field"
+msgstr "Een-op-eenveld"
+
+#: bloomerp.applicationfield.field_type
+msgid "One To One User Field"
+msgstr "Een-op-een gebruikersveld"
+
+#: templates/components/workspaces/share_workspace.html:18
+msgid "Only you can manage who has access to this workspace."
+msgstr "Alleen jij kunt beheren wie toegang heeft tot deze werkruimte."
+
+#: templates/inbox_items/workflow_run.html:52
+msgid "Open object"
+msgstr "Object openen"
+
+#: templates/inbox_items/workflow_run.html:102
+msgid "Open workflow run"
+msgstr "Workflowuitvoering openen"
+
+#: bloomerp.form.opens_at
+msgid "Opens At"
+msgstr "Opent op"
+
+#: components/workspaces/preview_workspace_tile.py:356
+msgid "Operation does not exist"
+msgstr "Bewerking bestaat niet"
+
+#: bloomerp.inboxitem.raw_meta_data
+msgid "Optional JSON field to store additional metadata related to the inbox item."
+msgstr "Optioneel JSON-veld om aanvullende metagegevens met betrekking tot het inboxitem op te slaan."
+
+#: workspaces/analytics_tile/model.py:105
+msgid "Optional color for this series, for example #3b82f6."
+msgstr "Optionele kleur voor deze reeks, bijvoorbeeld #3b82f6."
+
+#: bloomerp.inbox.name bloomerp.sidebar.name bloomerp.userdetailviewtabspreference.name
+#: bloomerp.userlistviewpreference.name bloomerp.userobjectlayoutpreference.name
+#: bloomerp.workspace.name
+msgid "Optional name for this preference, for user reference"
+msgstr "Optionele naam voor deze voorkeur, ter referentie voor de gebruiker"
+
+#: bloomerp.inboxitem.related_item_id
+msgid "Optional reference to the source item's ID, if applicable."
+msgstr "Optionele verwijzing naar de ID van het bronitem, indien van toepassing."
+
+#: bloomerp.userlistviewpreference.options
+msgid "Options"
+msgstr "Opties"
+
+#: workspaces/analytics_tile/model.py:527
+msgid "Options updated"
+msgstr "Opties bijgewerkt"
+
+#: templates/views/auth/login.html:46
+msgid "Or continue with"
+msgstr "Of ga door met"
+
+#: bloomerp.documenttemplate.page_orientation models/document_templates/document_template.py:152
+msgid "Orientation of the document template."
+msgstr "Oriëntatie van de documentsjabloon."
+
+#: bloomerp.workflowrunstep.output_file
+msgid "Output File"
+msgstr "Uitvoerbestand"
+
+#: workspaces/analytics_tile/model.py:156
+msgid "Overrides the X-axis label. Leave blank to show no custom axis title."
+msgstr "Overschrijft het label van de X-as. Laat leeg om geen aangepaste astitel weer te geven."
+
+#: workspaces/analytics_tile/model.py:171
+msgid "Overrides the Y-axis label. Leave blank to show no custom axis title."
+msgstr "Overschrijft het label van de Y-as. Laat leeg om geen aangepaste astitel weer te geven."
+
+#: bloomerp.initiative.owner
+msgid "Owner"
+msgstr "Eigenaar"
+
+#: bloomerp.documenttemplate.page_margin
+msgid "Page Margin"
+msgstr "Paginamarge"
+
+#: bloomerp.documenttemplate.page_orientation
+msgid "Page Orientation"
+msgstr "Paginaoriëntatie"
+
+#: bloomerp.documenttemplate.page_size workspaces/analytics_tile/model.py:125
+msgid "Page Size"
+msgstr "Paginaformaat"
+
+#: bloomerp.filefolder.parent bloomerp.sidebaritem.parent bloomerp.userdetailviewtabitem.parent
+msgid "Parent"
+msgstr "Bovenliggend"
+
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:92
+msgid "Parent folder"
+msgstr "Bovenliggende map"
+
+#: bloomerp.emailaccount.password
+msgid "Password"
+msgstr "Wachtwoord"
+
+#: bloomerp.workflowrunstep.status
+msgid "Paused"
+msgstr "Gepauzeerd"
+
+#: bloomerp.activitylog.payload
+msgid "Payload"
+msgstr "Payload"
+
+#: bloomerp.rowpolicyrulepermission.permission
+msgid "Permission"
+msgstr "Machtiging"
+
+#: views/access_control/manage_permissions.py:201
+msgid "Permission required"
+msgstr "Machtiging vereist"
+
+#: bloomerp.rowpolicyrule.permissions
+msgid "Permissions"
+msgstr "Machtigingen"
+
+#: bloomerp.file.persisted bloomerp.formsubmission.persisted
+msgid "Persisted"
+msgstr "Opgeslagen"
+
+#: bloomerp.applicationfield.field_type
+msgid "Phone Number Field"
+msgstr "Telefoonnummerveld"
+
+#: workspaces/analytics_tile/model.py:372
+msgid "Pie Chart"
+msgstr "Cirkeldiagram"
+
+#: bloomerp.userlistviewpreference.view_type
+msgid "Pivot"
+msgstr "Draaitabel"
+
+#: workspaces/analytics_tile/model.py:358
+msgid "Pivot Table"
+msgstr "Draaitabel"
+
+#: workspaces/links_tile/model.py:98 workspaces/links_tile/model.py:169
+msgid "Please add a URL to the link"
+msgstr "Voeg een URL aan de link toe"
+
+#: workspaces/links_tile/model.py:167
+msgid "Please add a name"
+msgstr "Voeg een naam toe"
+
+#: workspaces/links_tile/model.py:126
+msgid "Please add a name to the folder"
+msgstr "Voeg een naam aan de map toe"
+
+#: workspaces/links_tile/model.py:96
+msgid "Please add a name to the link"
+msgstr "Voeg een naam aan de link toe"
+
+#: workspaces/dataview_tile/model.py:44
+msgid "Please correct the data view configuration."
+msgstr "Corrigeer de configuratie van de gegevensweergave."
+
+#: forms/auth.py:43
+#, python-format
+msgid "Please enter a correct %(identifier)s and password. Note that both fields may be case-sensitive."
+msgstr ""
+"Voer een juiste %(identifier)s en een wachtwoord in. Houd er rekening mee dat beide velden "
+"hoofdlettergevoelig kunnen zijn."
+
+#: views/access_control/manage_permissions.py:313
+msgid "Please give the policy a name before saving."
+msgstr "Geef het beleid een naam voordat u het opslaat."
+
+#: views/workspaces/create_tile.py:79
+msgid "Please provide a SQL query before continuing."
+msgstr "Geef een SQL-query op voordat u doorgaat."
+
+#: views/communication/create_email_account.py:158
+msgid "Please review the form."
+msgstr "Controleer het formulier."
+
+#: views/workspaces/create_tile.py:59
+msgid "Please select a tile type to continue."
+msgstr "Selecteer een tegeltype om door te gaan."
+
+#: views/communication/create_email_account.py:147
+msgid "Please select an email provider first."
+msgstr "Selecteer eerst een e-mailprovider."
+
+#: views/communication/create_email_account.py:112
+msgid "Please select an email provider to continue."
+msgstr "Selecteer een e-mailprovider om door te gaan."
+
+#: views/access_control/manage_permissions.py:200
+msgid "Please select at least one global permission before continuing."
+msgstr "Selecteer ten minste één globale machtiging voordat u doorgaat."
+
+#: views/access_control/manage_permissions.py:349
+msgid "Policy details"
+msgstr "Beleidsdetails"
+
+#: views/access_control/manage_permissions.py:394
+msgid "Policy rules error"
+msgstr "Fout in beleidsregels"
+
+#: bloomerp.emailaccount.sync_mode
+msgid "Polling"
+msgstr "Polling"
+
+#: bloomerp.emailaccount.sync_interval_minutes
+msgid "Polling interval used by providers that synchronize on a schedule."
+msgstr "Pollinginterval die wordt gebruikt door providers die volgens een schema synchroniseren."
+
+#: bloomerp.documenttemplate.page_orientation models/document_templates/document_template.py:24
+msgid "Portrait"
+msgstr "Staand"
+
+#: bloomerp.workflownode.pos_x
+msgid "Pos X"
+msgstr "Pos X"
+
+#: bloomerp.workflownode.pos_y
+msgid "Pos Y"
+msgstr "Pos Y"
+
+#: bloomerp.sidebaritem.position bloomerp.userdetailviewtabitem.position
+msgid "Position"
+msgstr "Positie"
+
+#: bloomerp.sidebaritem.position
+msgid "Position of the sidebar item among its siblings. Lower numbers appear first."
+msgstr ""
+"Positie van het zijbalkitem tussen de items op hetzelfde niveau. Lagere nummers worden eerst "
+"weergegeven."
+
+#: bloomerp.applicationfield.field_type
+msgid "Positive Integer Field"
+msgstr "Veld voor positief geheel getal"
+
+#: bloomerp.applicationfield.field_type
+msgid "Positive Small Integer Field"
+msgstr "Veld voor positief klein geheel getal"
+
+#: bloomerp.userdetailviewtabitem.preference
+msgid "Preference"
+msgstr "Voorkeur"
+
+#: workspaces/analytics_tile/model.py:80
+msgid "Prefix"
+msgstr "Voorvoegsel"
+
+#: workspaces/analytics_tile/model.py:314
+msgid ""
+"Presents key performance indicators (KPIs) derived from a custom query in a concise and visually "
+"impactful format, allowing users to quickly assess critical metrics and track progress towards "
+"specific goals."
+msgstr ""
+"Presenteert belangrijke prestatie-indicatoren (KPI's), afgeleid van een aangepaste query, in een "
+"beknopt en visueel krachtig formaat, zodat gebruikers snel kritieke statistieken kunnen "
+"beoordelen en de voortgang naar specifieke doelen kunnen volgen."
+
+#: templates/components/forms/initial_data.html:11
+msgid ""
+"Preset values by selecting a field and filling in the value. A form can have default values for "
+"fields that exist on the form and fields that are hidden from the user."
+msgstr ""
+"Stel waarden vooraf in door een veld te selecteren en de waarde in te vullen. Een formulier kan "
+"standaardwaarden bevatten voor velden die op het formulier staan en voor velden die voor de "
+"gebruiker verborgen zijn."
+
+#: templates/components/document_templates/generate_document_template.html:94
+msgid "Preview"
+msgstr "Voorbeeld"
+
+#: bloomerp.todo.priority
+msgid "Priority"
+msgstr "Prioriteit"
+
+#: templates/views/base_wizard.html:79
+msgid "Processing..."
+msgstr "Verwerken..."
+
+#: views/access_control/manage_permissions.py:274
+msgid "Properties and one-to-many fields cannot be used in row policies."
+msgstr "Eigenschappen en één-op-veel-velden kunnen niet worden gebruikt in rijbeleidsregels."
+
+#: bloomerp.applicationfield.field_type
+msgid "Property"
+msgstr "Eigenschap"
+
+#: bloomerp.filefolder.protected
+msgid "Protected"
+msgstr "Beveiligd"
+
+#: bloomerp.filefolder.protected
+msgid ""
+"Protected folders cannot be edited or deleted through the UI. This is useful for folders that are"
+" automatically created for objects, such as the module-level folders created for files."
+msgstr ""
+"Beveiligde mappen kunnen niet via de gebruikersinterface worden bewerkt of verwijderd. Dit is "
+"nuttig voor mappen die automatisch voor objecten worden aangemaakt, zoals de mappen op "
+"moduleniveau die voor bestanden worden aangemaakt."
+
+#: bloomerp.emailaccount.provider
+msgid "Provider"
+msgstr "Provider"
+
+#: views/communication/create_email_account.py:148
+msgid "Provider required"
+msgstr "Provider vereist"
+
+#: bloomerp.emailaccount.oauth_tenant_id
+msgid "Provider tenant, directory, or workspace identifier when applicable."
+msgstr "Tenant-, directory- of werkruimte-identificatie van de provider, indien van toepassing."
+
+#: bloomerp.emailaccount.sync_cursor
+msgid "Provider-specific cursor/state for incremental synchronization."
+msgstr "Provider-specifieke cursor/status voor incrementele synchronisatie."
+
+#: bloomerp.emailaccount.extra_settings
+msgid "Provider-specific settings that do not have dedicated fields yet."
+msgstr "Provider-specifieke instellingen waarvoor nog geen speciale velden bestaan."
+
+#: workspaces/tiles.py:41
+msgid ""
+"Provides quick access to a collection of internal or external links, allowing users to navigate "
+"efficiently to frequently used resources."
+msgstr ""
+"Biedt snelle toegang tot een verzameling interne of externe links, zodat gebruikers efficiënt "
+"kunnen navigeren naar veelgebruikte bronnen."
+
+#: bloomerp.form.public_embed_enabled
+msgid "Public Embed Enabled"
+msgstr "Openbare embed ingeschakeld"
+
+#: bloomerp.emailaccount.sync_mode
+msgid "Push"
+msgstr "Push"
+
+#: templates/cotton/features/dataviews/gant.html:31
+msgid "Quarter"
+msgstr "Kwartaal"
+
+#: bloomerp.sqlquery.query
+msgid "Query"
+msgstr "Query"
+
+#: views/workspaces/create_tile.py:80
+msgid "Query required"
+msgstr "Query vereist"
+
+#: bloomerp.inboxitem.raw_meta_data
+msgid "Raw Meta Data"
+msgstr "Ruwe metadata"
+
+#: templates/components/communication/emails/email_editor.html:135
+msgid "Ready to send."
+msgstr "Klaar om te verzenden."
+
+#: templates/views/workflows/builder.html:21
+msgid "Recenter"
+msgstr "Opnieuw centreren"
+
+#: models/communication/signature_request.py:30
+msgid "Recipient of the signature request."
+msgstr "Ontvanger van het ondertekeningsverzoek."
+
+#: templates/cotton/features/dataviews/gant.html:52
+msgid "Records"
+msgstr "Records"
+
+#: bloomerp.workflowrunstep.node
+msgid "Reference to node object"
+msgstr "Verwijzing naar node-object"
+
+#: bloomerp.inbox.source_object bloomerp.sidebar.source_object
+#: bloomerp.userdetailviewtabspreference.source_object bloomerp.userlistviewpreference.source_object
+#: bloomerp.userobjectlayoutpreference.source_object bloomerp.workspace.source_object
+msgid ""
+"Reference to the original preference from which this preference was derived. This is used to "
+"track the origin of derived preferences."
+msgstr ""
+"Verwijzing naar de oorspronkelijke voorkeur waarvan deze voorkeur is afgeleid. Dit wordt gebruikt"
+" om de oorsprong van afgeleide voorkeuren bij te houden."
+
+#: bloomerp.emailaccount.refresh_token
+msgid "Refresh Token"
+msgstr "Refresh-token"
+
+#: bloomerp.inboxitem.related_item_id
+msgid "Related Item Id"
+msgstr "ID van gerelateerd item"
+
+#: bloomerp.applicationfield.related_model
+msgid "Related Model"
+msgstr "Gerelateerd model"
+
+#: bloomerp.inboxfolder.related_object_id
+msgid "Related Object Id"
+msgstr "ID van gerelateerd object"
+
+#: bloomerp.applicationfield.related_model models/application_field.py:48
+msgid "Related model for ForeignKey, OneToOneField, ManyToManyField"
+msgstr "Gerelateerd model voor ForeignKey, OneToOneField, ManyToManyField"
+
+#: templates/inbox_items/workflow_run.html:43
+msgid "Related object"
+msgstr "Gerelateerd object"
+
+#: templates/components/workspaces/tile_builders/links_tile_builder_items.html:70
+#: templates/components/workspaces/tile_builders/links_tile_builder_items.html:77
+msgid "Remove"
+msgstr "Verwijderen"
+
+#: templates/components/workspaces/tile_builders/analytics_tile_builder.html:128
+#: templates/components/workspaces/tile_builders/analytics_tile_builder.html:272
+msgid "Remove field"
+msgstr "Veld verwijderen"
+
+#: templates/cotton/ui/inputs/one_to_many/row_actions.html:3
+msgid "Remove row"
+msgstr "Rij verwijderen"
+
+#: templates/widgets/one_to_many_field_widget.html:106
+msgid "Remove selected"
+msgstr "Geselecteerde verwijderen"
+
+#: components/workspaces/preview_workspace_tile.py:190
+#, python-format
+msgid "Rendering error: %(error)s"
+msgstr "Renderingfout: %(error)s"
+
+#: components/communication/emails/reply_to_email.py:72
+msgid "Reply"
+msgstr "Beantwoorden"
+
+#: bloomerp.todo.requested_by
+msgid "Requested By"
+msgstr "Aangevraagd door"
+
+#: templates/cotton/features/document_templates/builder.html:111
+msgid "Required"
+msgstr "Vereist"
+
+#: bloomerp.todo.required_by
+msgid "Required By"
+msgstr "Vereist door"
+
+#: bloomerp.user.username
+msgid "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only."
+msgstr "Verplicht. 150 tekens of minder. Alleen letters, cijfers en @/./+/-/_ alleen."
+
+#: bloomerp.form.requires_authentication
+msgid "Requires Authentication"
+msgstr "Authenticatie vereist"
+
+#: bloomerp.form.requires_review
+msgid "Requires Review"
+msgstr "Beoordeling vereist"
+
+#: templates/mixins/bloomerp_layout_form_mixin.html:95
+#: templates/mixins/bloomerp_layout_form_mixin.html:153 templates/views/base_wizard.html:50
+msgid "Reset"
+msgstr "Resetten"
+
+#: templates/views/auth/login.html:72
+msgid "Reset password"
+msgstr "Wachtwoord opnieuw instellen"
+
+#: bloomerp.apikey.revoked_at
+msgid "Revoked At"
+msgstr "Ingetrokken op"
+
+#: workspaces/analytics_tile/model.py:196
+msgid "Right"
+msgstr "Rechts"
+
+#: bloomerp.documenttemplateheader.margin_right
+#: models/document_templates/document_template_header.py:33
+msgid "Right margin of the header in inches."
+msgstr "Rechtermarge van de koptekst in inches."
+
+#: bloomerp.documenttemplate.content_types models/document_templates/document_template.py:130
+msgid "Root object types that can be used as variables in the document template."
+msgstr "Hoofdobjecttypen die als variabelen in de documentsjabloon kunnen worden gebruikt."
+
+#: bloomerp.policy.row_policy bloomerp.rowpolicyrule.row_policy
+msgid "Row Policy"
+msgstr "Rijbeleid"
+
+#: bloomerp.rowpolicyrulepermission.row_policy_rule
+msgid "Row Policy Rule"
+msgstr "Regel voor rijbeleid"
+
+#: templates/widgets/one_to_many_field_widget.html:32
+msgid "Row actions"
+msgstr "Rijacties"
+
+#: views/access_control/manage_permissions.py:248
+msgid "Row policies can only use permissions selected in step 1."
+msgstr "Rijbeleid kan alleen machtigingen gebruiken die in stap 1 zijn geselecteerd."
+
+#: views/access_control/manage_permissions.py:249
+msgid "Row policy mismatch"
+msgstr "Mismatch in rijbeleid"
+
+#: templates/cotton/features/dataviews/pivot_table.html:25
+#: templates/views/generic/model/bulk_upload_wizard/confirm_step.html:6
+msgid "Rows"
+msgstr "Rijen"
+
+#: bloomerp.fieldpolicy.rule bloomerp.rowpolicyrule.rule
+msgid "Rule"
+msgstr "Regel"
+
+#: bloomerp.workflow.run_asynchronously
+msgid "Run Asynchronously"
+msgstr "Asynchroon uitvoeren"
+
+#: bloomerp.todo.effort
+msgid "S"
+msgstr "S"
+
+#: bloomerp.aiconversation.conversation_type
+msgid "SQL"
+msgstr "SQL"
+
+#: bloomerp.sqlquery
+msgid "SQL Queries"
+msgstr "SQL-query's"
+
+#: bloomerp.sqlquery
+msgid "SQL Query"
+msgstr "SQL-query"
+
+#: bloomerp.sqlquery.query models/workspaces/sql_query.py:31
+msgid "SQL Query to execute"
+msgstr "SQL-query om uit te voeren"
+
+#: bloomerp.emailaccount.imap_security bloomerp.emailaccount.smtp_security
+msgid "SSL/TLS"
+msgstr "SSL/TLS"
+
+#: bloomerp.emailaccount.imap_security bloomerp.emailaccount.smtp_security
+msgid "STARTTLS"
+msgstr "STARTTLS"
+
+#: components/workspaces/sidebar.py:333 components/workspaces/sidebar.py:342
+#: templates/components/forms/initial_data.html:37
+#: templates/components/workspaces/share_workspace.html:42
+#: templates/components/workspaces/tile_builders/links_tile_builder_items.html:64
+#: templates/mixins/bloomerp_layout_form_mixin.html:105
+#: templates/mixins/bloomerp_layout_form_mixin.html:163
+msgid "Save"
+msgstr "Opslaan"
+
+#: bloomerp.documenttemplate.save_to_folder
+msgid "Save To Folder"
+msgstr "Opslaan in map"
+
+#: templates/mixins/bloomerp_layout_form_mixin.html:117
+#: templates/mixins/bloomerp_layout_form_mixin.html:182
+msgid "Save and Create New"
+msgstr "Opslaan en nieuw maken"
+
+#: workspaces/analytics_tile/model.py:147
+msgid "Scatter"
+msgstr "Spreiding"
+
+#: bloomerp.tile.schema
+msgid "Schema"
+msgstr "Schema"
+
+#: templates/cotton/app/sidebar/body.html:41 templates/cotton/features/layout/container.html:92
+msgid "Search"
+msgstr "Zoeken"
+
+#: components/workspaces/share_workspace.py:33
+msgid "Search and add groups whose members should be able to open this workspace."
+msgstr "Zoek groepen en voeg ze toe waarvan de leden deze werkruimte moeten kunnen openen."
+
+#: components/workspaces/share_workspace.py:19
+msgid "Search and add users who should be able to open this workspace."
+msgstr "Zoek gebruikers en voeg ze toe die deze werkruimte moeten kunnen openen."
+
+#: templates/components/workspaces/tile_builders/analytics_tile_builder.html:51
+#: templates/components/workspaces/tile_builders/analytics_tile_builder.html:198
+msgid "Search fields"
+msgstr "Zoekvelden"
+
+#: templates/views/base.html:48
+msgid "Search or type a command"
+msgstr "Zoek of typ een opdracht"
+
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:39
+msgid "Search route names or descriptions, or enter any URL."
+msgstr "Zoek routenamen of beschrijvingen, of voer een URL in."
+
+#: templates/components/global_search.html:6
+msgid "Searching:"
+msgstr "Zoeken:"
+
+#: templates/components/forms/initial_data_row.html:36
+msgid "Select a field"
+msgstr "Selecteer een veld"
+
+#: templates/cotton/features/dataviews/calendar.html:23
+msgid "Select a start date field in the display options."
+msgstr "Selecteer een startdatumveld in de weergaveopties."
+
+#: templates/cotton/features/dataviews/gant.html:6
+msgid "Select a start field and an end field in the display options to configure the Gantt chart."
+msgstr "Selecteer een startveld en een eindveld in de weergaveopties om de Gantt-grafiek te configureren."
+
+#: components/communication/emails/reply_to_email.py:58
+msgid "Select an email before replying."
+msgstr "Selecteer een e-mail voordat u antwoordt."
+
+#: components/communication/emails/new_email.py:68
+msgid "Select an email folder before composing a message."
+msgstr "Selecteer een e-mailmap voordat u een bericht opstelt."
+
+#: templates/cotton/features/dataviews/pivot_table.html:4
+msgid ""
+"Select at least one row field and one value field in the display options to configure the pivot "
+"table."
+msgstr ""
+"Selecteer ten minste één rijveld en één waardeveld in de weergaveopties om de draaitabel te "
+"configureren."
+
+#: templates/components/filters/init.html:15 templates/components/forms/initial_data_row.html:21
+#: templates/components/forms/initial_data_value.html:61
+#: templates/components/workspaces/filters/init.html:8
+msgid "Select field"
+msgstr "Veld selecteren"
+
+#: templates/cotton/features/workspaces/container.html:69
+msgid "Select module"
+msgstr "Module selecteren"
+
+#: templates/components/application_fields/lookup_operators.html:13
+#: templates/components/workspaces/filters/lookup_operators.html:9
+msgid "Select operator"
+msgstr "Operator selecteren"
+
+#: views/workspaces/create_tile.py:200
+msgid "Select or enter a query for your analytics tile"
+msgstr "Selecteer of voer een query in voor uw analysetegel"
+
+#: views/communication/create_email_account.py:202
+msgid "Select provider"
+msgstr "Provider selecteren"
+
+#: views/workspaces/create_tile.py:198
+msgid "Select query"
+msgstr "Query selecteren"
+
+#: templates/components/filters/related_fields_select.html:10
+msgid "Select related field"
+msgstr "Gerelateerd veld selecteren"
+
+#: views/workspaces/create_tile.py:187
+msgid "Select the type of tile you want to create"
+msgstr "Selecteer het type tegel dat u wilt maken"
+
+#: views/workspaces/create_tile.py:185
+msgid "Select type"
+msgstr "Type selecteren"
+
+#: bloomerp.inbox.selected bloomerp.sidebar.selected bloomerp.userdetailviewtabspreference.selected
+#: bloomerp.userlistviewpreference.selected bloomerp.userobjectlayoutpreference.selected
+#: bloomerp.workspace.selected
+msgid "Selected"
+msgstr "Geselecteerd"
+
+#: bloomerp.userinboxpreference.selected_inbox_folder
+msgid "Selected Inbox Folder"
+msgstr "Geselecteerde inboxmap"
+
+#: views/communication/create_email_account.py:113 views/workspaces/create_tile.py:60
+msgid "Selection required"
+msgstr "Selectie vereist"
+
+#: components/communication/emails/new_email.py:140
+msgid "Send"
+msgstr "Verzenden"
+
+#: components/communication/emails/reply_to_email.py:73
+msgid "Send reply"
+msgstr "Antwoord verzenden"
+
+#: models/communication/signature_request.py:46
+msgid "Sender of the signature request."
+msgstr "Afzender van het verzoek om te ondertekenen."
+
+#: bloomerp.workflowrunstep.sequence
+msgid "Sequence"
+msgstr "Volgorde"
+
+#: bloomerp.workflowrunstep.state
+msgid "Serializable workflow execution state captured after this step."
+msgstr "Serialiseerbare status van de workflow-uitvoering die na deze stap is vastgelegd."
+
+#: bloomerp.workflowrunstep.output_file
+msgid "Serialized output produced by this workflow node execution."
+msgstr "Geserialiseerde uitvoer die door deze uitvoering van de workflownode is geproduceerd."
+
+#: templates/cotton/features/document_templates/builder.html:63
+msgid "Settings"
+msgstr "Instellingen"
+
+#: templates/components/workspaces/share_workspace.html:15
+msgid "Share workspace"
+msgstr "Workspace delen"
+
+#: bloomerp.inbox.shared_with_groups bloomerp.sidebar.shared_with_groups
+#: bloomerp.userdetailviewtabspreference.shared_with_groups
+#: bloomerp.userlistviewpreference.shared_with_groups
+#: bloomerp.userobjectlayoutpreference.shared_with_groups bloomerp.workspace.shared_with_groups
+msgid "Shared With Groups"
+msgstr "Gedeeld met groepen"
+
+#: bloomerp.inbox.shared_with_users bloomerp.sidebar.shared_with_users
+#: bloomerp.userdetailviewtabspreference.shared_with_users
+#: bloomerp.userlistviewpreference.shared_with_users
+#: bloomerp.userobjectlayoutpreference.shared_with_users bloomerp.workspace.shared_with_users
+msgid "Shared With Users"
+msgstr "Gedeeld met gebruikers"
+
+#: components/workspaces/share_workspace.py:18
+msgid "Shared with"
+msgstr "Gedeeld met"
+
+#: components/workspaces/share_workspace.py:31
+msgid "Shared with groups"
+msgstr "Gedeeld met groepen"
+
+#: templates/mixins/bloomerp_layout_form_mixin.html:65 templates/views/forms/submit.html:51
+msgid "Show Required Only"
+msgstr "Vereist door"
+
+#: workspaces/analytics_tile/model.py:184
+msgid "Show legend"
+msgstr "Legenda weergeven"
+
+#: templates/components/global_search.html:141
+#, python-format
+msgid "Showing first %(results_limit)s results."
+msgstr "De eerste %(results_limit)s resultaten worden weergegeven."
+
+#: workspaces/analytics_tile/model.py:185
+msgid "Shows the legend when enabled. By default, legends are only shown for multiple series."
+msgstr ""
+"Geeft de legenda weer wanneer deze is ingeschakeld. Standaard worden legenda's alleen weergegeven"
+" voor meerdere reeksen."
+
+#: bloomerp.sidebaritem.sidebar templates/cotton/app/sidebar/body.html:87
+msgid "Sidebar"
+msgstr "Zijbalk"
+
+#: templates/cotton/app/sidebar/body.html:207
+msgid "Sign Out"
+msgstr "Afmelden"
+
+#: bloomerp.documenttemplate.save_to_folder models/document_templates/document_template.py:173
+msgid "Signifies to which folder a file generated from the template needs to be saved upon creation."
+msgstr ""
+"Geeft aan in welke map een uit de sjabloon gegenereerd bestand bij het aanmaken moet worden "
+"opgeslagen."
+
+#: bloomerp.documenttemplate.include_page_numbers models/document_templates/document_template.py:167
+msgid "Signifies whether the page numbers are included or not."
+msgstr "Geeft aan of de paginanummers worden opgenomen."
+
+#: workspaces/analytics_tile/model.py:111
+msgid "Size"
+msgstr "Grootte"
+
+#: bloomerp.documenttemplate.page_size models/document_templates/document_template.py:158
+msgid "Size of the document template."
+msgstr "Grootte van de documentsjabloon."
+
+#: bloomerp.applicationfield.field_type
+msgid "Slug Field"
+msgstr "Slugveld"
+
+#: bloomerp.applicationfield.field_type
+msgid "Small Auto Field"
+msgstr "Klein automatisch veld"
+
+#: bloomerp.applicationfield.field_type
+msgid "Small Integer Field"
+msgstr "Veld voor klein geheel getal"
+
+#: bloomerp.emailaccount.smtp_host
+msgid "Smtp Host"
+msgstr "SMTP-host"
+
+#: bloomerp.emailaccount.smtp_port
+msgid "Smtp Port"
+msgstr "SMTP-poort"
+
+#: bloomerp.emailaccount.smtp_security
+msgid "Smtp Security"
+msgstr "SMTP-beveiliging"
+
+#: bloomerp.inboxitem.snippet
+msgid "Snippet"
+msgstr "Fragment"
+
+#: templates/cotton/ui/inputs/one_to_many/column_actions.html:17
+msgid "Sort ascending"
+msgstr "Oplopend sorteren"
+
+#: templates/cotton/ui/inputs/one_to_many/column_actions.html:22
+msgid "Sort descending"
+msgstr "Aflopend sorteren"
+
+#: bloomerp.activitylog.source
+msgid "Source"
+msgstr "Bron"
+
+#: bloomerp.inbox.source_object bloomerp.sidebar.source_object
+#: bloomerp.userdetailviewtabspreference.source_object bloomerp.userlistviewpreference.source_object
+#: bloomerp.userobjectlayoutpreference.source_object bloomerp.workspace.source_object
+msgid "Source Object"
+msgstr "Bronobject"
+
+#: bloomerp.emailaccount.oauth_scopes
+msgid "Space-separated OAuth scopes requested for this account."
+msgstr "Door spaties gescheiden OAuth-scopes die voor dit account worden aangevraagd."
+
+#: bloomerp.user.user_permissions
+msgid "Specific permissions for this user."
+msgstr "Specifieke machtigingen voor deze gebruiker."
+
+#: bloomerp.userlistviewpreference.split_view_enabled
+msgid "Split View Enabled"
+msgstr "Gesplitste weergave ingeschakeld"
+
+#: workspaces/analytics_tile/model.py:177
+msgid "Stacked"
+msgstr "Gestapeld"
+
+#: workspaces/analytics_tile/model.py:178
+msgid "Stacks multiple Y-axis series when supported by the selected chart type."
+msgstr ""
+"Stapelt meerdere reeksen op de Y-as wanneer dit wordt ondersteund door het geselecteerde "
+"grafiektype."
+
+#: bloomerp.initiative.start_date
+msgid "Start Date"
+msgstr "Startdatum"
+
+#: templates/views/workspaces/bloomerp_workspace_view.html:38
+msgid "Start from scratch"
+msgstr "Vanaf nul beginnen"
+
+#: templates/components/objects/dataview_gant_rows.html:58
+msgid "Start or end date is missing."
+msgstr "Start- of einddatum ontbreekt."
+
+#: templates/components/global_search.html:144
+msgid "Start typing to search."
+msgstr "Begin met typen om te zoeken."
+
+#: bloomerp.workflowrunstep.state
+msgid "State"
+msgstr "Toestand"
+
+#: bloomerp.emailaccount.status bloomerp.initiative.status bloomerp.todo.status
+#: bloomerp.workflowrunstep.status
+msgid "Status"
+msgstr "Status"
+
+#: bloomerp.applicationfield.field_type
+msgid "Status Field"
+msgstr "Statusveld"
+
+#: models/communication/signature_request.py:51
+msgid "Status of the signature request."
+msgstr "Status van het ondertekeningsverzoek."
+
+#: bloomerp.documenttemplate.style_sets
+msgid "Style Sets"
+msgstr "Stijlsets"
+
+#: bloomerp.documenttemplatestyling.styling
+#: templates/cotton/features/document_templates/builder.html:57
+msgid "Styling"
+msgstr "Opmaak"
+
+#: bloomerp.documenttemplate.style_sets models/document_templates/document_template.py:181
+msgid "Styling sets that can be applied to the document template."
+msgstr "Stijlsets die op het documentsjabloon kunnen worden toegepast."
+
+#: workspaces/analytics_tile/model.py:331
+msgid "Sub Value"
+msgstr "Subwaarde"
+
+#: templates/components/communication/emails/email_editor.html:103
+#: templates/components/communication/emails/email_editor.html:110
+msgid "Subject"
+msgstr "Onderwerp"
+
+#: templates/views/forms/submit.html:26
+msgid "Submit a new form"
+msgstr "Een nieuw formulier indienen"
+
+#: workspaces/analytics_tile/model.py:88
+msgid "Suffix"
+msgstr "Achtervoegsel"
+
+#: bloomerp.emailaccount.sync_cursor
+msgid "Sync Cursor"
+msgstr "Synchronisatiecursor"
+
+#: bloomerp.emailaccount.sync_enabled
+msgid "Sync Enabled"
+msgstr "Synchronisatie ingeschakeld"
+
+#: bloomerp.emailaccount.sync_interval_minutes
+msgid "Sync Interval Minutes"
+msgstr "Synchronisatie-interval in minuten"
+
+#: bloomerp.emailaccount.sync_locked_until
+msgid "Sync Locked Until"
+msgstr "Synchronisatie vergrendeld tot"
+
+#: bloomerp.emailaccount.sync_mode
+msgid "Sync Mode"
+msgstr "Synchronisatiemodus"
+
+#: bloomerp.emailaccount.sync_mode
+msgid "Synchronization mode for this account. Defaults to the provider's preferred mode."
+msgstr "Synchronisatiemodus voor dit account. Standaard wordt de voorkeursmodus van de provider gebruikt."
+
+#: bloomerp.userlistviewpreference.view_type workspaces/analytics_tile/model.py:286
+msgid "Table"
+msgstr "Tabel"
+
+#: bloomerp.initiative.target_date
+msgid "Target Date"
+msgstr "Doeldatum"
+
+#: bloomerp.documenttemplate.template
+msgid "Template"
+msgstr "Sjabloon"
+
+#: bloomerp.documenttemplate.template_header
+msgid "Template Header"
+msgstr "Sjabloonkoptekst"
+
+#: bloomerp.tile.type workspaces/tiles.py:48
+msgid "Text"
+msgstr "Tekst"
+
+#: bloomerp.applicationfield.field_type
+msgid "Text Field"
+msgstr "Tekstveld"
+
+#: workspaces/analytics_tile/model.py:89
+msgid "Text that comes after the value"
+msgstr "Tekst die na de waarde komt"
+
+#: workspaces/analytics_tile/model.py:81
+msgid "Text that comes before the value"
+msgstr "Tekst die vóór de waarde komt"
+
+#: bloomerp.workflownode.pos_x models/automation/workflow_node.py:52
+msgid "The X position of the node in the workflow editor."
+msgstr "De X-positie van het knooppunt in de workflow-editor."
+
+#: bloomerp.workflownode.pos_y models/automation/workflow_node.py:56
+msgid "The Y position of the node in the workflow editor."
+msgstr "De Y-positie van het knooppunt in de workflow-editor."
+
+#: bloomerp.apikey.account
+msgid "The account whose permissions this API key uses."
+msgstr "Het account waarvan deze API-sleutel de machtigingen gebruikt."
+
+#: bloomerp.inboxitem.actor
+msgid "The actor or entity associated with the inbox item."
+msgstr "De actor of entiteit die aan het inboxitem is gekoppeld."
+
+#: workspaces/analytics_tile/model.py:294
+msgid "The columns of the table"
+msgstr "De kolommen van de tabel"
+
+#: bloomerp.workflownode.config models/automation/workflow_node.py:47
+msgid "The configuration for the workflow node."
+msgstr "De configuratie voor het workflowknooppunt."
+
+#: bloomerp.applicationfield.content_type models/application_field.py:35
+#: models/communication/mention.py:21
+msgid "The content type (model) this field belongs to."
+msgstr "Het inhoudstype (model) waartoe dit veld behoort."
+
+#: bloomerp.applicationfield.db_table models/application_field.py:61
+msgid "The database table this field belongs to."
+msgstr "De databasetabel waartoe dit veld behoort."
+
+#: bloomerp.form.closes_at models/forms/form.py:110
+msgid "The date and time after which the form will no longer accept submissions."
+msgstr "De datum en tijd waarna het formulier geen inzendingen meer accepteert."
+
+#: bloomerp.form.opens_at models/forms/form.py:105
+msgid "The date and time from which the form will accept submissions."
+msgstr "De datum en tijd vanaf wanneer het formulier inzendingen accepteert."
+
+#: bloomerp.todo.datetime_completed models/project_management/todo.py:166
+msgid "The date and time when the todo was completed"
+msgstr "De datum en tijd waarop de taak is voltooid"
+
+#: bloomerp.todo.required_by models/project_management/todo.py:139
+msgid "The date by which the todo is required"
+msgstr "De datum waarop de taak voltooid moet zijn"
+
+#: bloomerp.user.date_view_preference models/users/user.py:70
+msgid "The date format to be used in the application"
+msgstr "De datumnotatie die in de applicatie moet worden gebruikt"
+
+#: bloomerp.user.datetime_view_preference models/users/user.py:74
+msgid "The datetime format to be used in the application"
+msgstr "De datum- en tijdnotatie die in de applicatie moet worden gebruikt"
+
+#: forms/widgets.py:23
+msgid "The description of the widget. Will be displayed in the widget if provided"
+msgstr "De beschrijving van de widget. Wordt in de widget weergegeven indien opgegeven"
+
+#: bloomerp.todo.effort models/project_management/todo.py:150
+msgid "The effort required for the todo"
+msgstr "De benodigde inspanning voor de taak"
+
+#: views/access_control/manage_permissions.py:231
+msgid "The field policy configuration could not be read. Please review step 2 and try again."
+msgstr ""
+"De configuratie van het veldbeleid kon niet worden gelezen. Controleer stap 2 en probeer het "
+"opnieuw."
+
+#: workspaces/analytics_tile/model.py:254
+msgid "The field to be used for the X-axis of the chart."
+msgstr "Het veld dat voor de X-as van de grafiek moet worden gebruikt."
+
+#: workspaces/analytics_tile/model.py:264
+msgid "The field to be used for the Y-axis of the chart."
+msgstr "Het veld dat voor de Y-as van de grafiek moet worden gebruikt."
+
+#: workspaces/analytics_tile/model.py:380
+msgid "The field used for the pie slice labels."
+msgstr "Het veld dat wordt gebruikt voor de labels van de taartpunten."
+
+#: bloomerp.policy.field_policy models/access_control/policy.py:87
+msgid "The field-level policy associated with this access control policy."
+msgstr "Het veldniveaubeleid dat aan dit toegangsbeheerbeleid is gekoppeld."
+
+#: bloomerp.inboxitem.folder
+msgid "The folder to which this inbox item belongs."
+msgstr "De map waartoe dit inbox-item behoort."
+
+#: workspaces/analytics_tile/model.py:97
+msgid "The formatter applied to this value"
+msgstr "De formatter die op deze waarde wordt toegepast"
+
+#: bloomerp.user.groups
+msgid "The groups this user belongs to. A user will get all permissions granted to each of their groups."
+msgstr ""
+"De groepen waartoe deze gebruiker behoort. Een gebruiker krijgt alle machtigingen die aan elk van"
+" deze groepen zijn verleend."
+
+#: bloomerp.workflowrunstep.action_id
+msgid "The identifier of the action being executed in this step."
+msgstr "De identificatie van de actie die in deze stap wordt uitgevoerd."
+
+#: bloomerp.todo.initiative models/project_management/todo.py:184
+msgid "The initiative this todo belongs to"
+msgstr "Het initiatief waartoe deze taak behoort"
+
+#: workspaces/analytics_tile/model.py:73
+msgid "The label"
+msgstr "Het label"
+
+#: forms/widgets.py:18
+msgid "The name given to the widget"
+msgstr "De naam die aan de widget is gegeven"
+
+#: bloomerp.policy.name models/access_control/policy.py:68
+msgid "The name of the access control policy."
+msgstr "De naam van het toegangsbeheerbeleid."
+
+#: bloomerp.fieldpolicy.name models/access_control/field_policy.py:33
+msgid "The name of the field-level access control policy."
+msgstr "De naam van het toegangsbeheerbeleid op veldniveau."
+
+#: bloomerp.applicationfield.field models/application_field.py:30
+msgid "The name of the field."
+msgstr "De naam van het veld."
+
+#: bloomerp.form.name models/forms/form.py:63
+msgid "The name of the form"
+msgstr "De naam van het formulier"
+
+#: bloomerp.initiative.name models/project_management/initiative.py:93
+msgid "The name of the initiative"
+msgstr "De naam van het initiatief"
+
+#: bloomerp.rowpolicy.name models/access_control/row_policy.py:26
+msgid "The name of the row-level access control policy."
+msgstr "De naam van het toegangsbeheerbeleid op rijniveau."
+
+#: bloomerp.todo.title models/project_management/todo.py:156
+msgid "The name of the todo"
+msgstr "De naam van de taak"
+
+#: bloomerp.workflownode.name models/automation/workflow_node.py:29
+msgid "The name of the workflow node."
+msgstr "De naam van het workflowknooppunt."
+
+#: bloomerp.workflow.name models/automation/workflow.py:74
+msgid "The name of the workflow."
+msgstr "De naam van de workflow."
+
+#: bloomerp.workflowedge.to_node
+msgid "The node where this edge ends."
+msgstr "Het knooppunt waar deze verbinding eindigt."
+
+#: bloomerp.workflowedge.from_node
+msgid "The node where this edge starts."
+msgstr "Het knooppunt waar deze verbinding begint."
+
+#: workspaces/analytics_tile/model.py:126
+msgid "The number of records on each page"
+msgstr "Het aantal records op elke pagina"
+
+#: forms/widgets.py:63
+msgid "The number of rows to display in the table"
+msgstr "Het aantal rijen dat in de tabel wordt weergegeven"
+
+#: workspaces/analytics_tile/model.py:390
+msgid "The numeric field used for the pie slice values."
+msgstr "Het numerieke veld dat wordt gebruikt voor de waarden van de taartpunt."
+
+#: templates/inbox_items/workflow_run.html:107
+msgid ""
+"The original workflow-run record is no longer available. This notification is rendered from its "
+"saved execution snapshot."
+msgstr ""
+"De oorspronkelijke record van de workflowuitvoering is niet langer beschikbaar. Deze melding "
+"wordt weergegeven vanuit de opgeslagen uitvoeringssnapshot."
+
+#: workspaces/analytics_tile/model.py:321
+msgid "The primary value"
+msgstr "De primaire waarde"
+
+#: bloomerp.todo.priority models/project_management/todo.py:143
+msgid "The priority of the todo"
+msgstr "De prioriteit van de todo"
+
+#: models/project_management/todo.py:225
+msgid "The related object does not exist"
+msgstr "Het gerelateerde object bestaat niet"
+
+#: views/access_control/manage_permissions.py:222
+msgid "The row policy configuration could not be read. Please review step 2 and try again."
+msgstr ""
+"De configuratie van het rijbeleid kon niet worden gelezen. Controleer stap 2 en probeer het "
+"opnieuw."
+
+#: bloomerp.rowpolicyrule.row_policy models/access_control/row_policy_rule.py:32
+msgid "The row-level access control policy this rule belongs to."
+msgstr "Het rijgebonden toegangscontrolebeleid waartoe deze regel behoort."
+
+#: bloomerp.policy.row_policy models/access_control/policy.py:80
+msgid "The row-level policy associated with this access control policy."
+msgstr "Het rijgebonden beleid dat aan dit toegangscontrolebeleid is gekoppeld."
+
+#: models/access_control/row_policy.py:39
+msgid "The rule defined for this RowPolicy is invalid."
+msgstr "De regel die voor deze RowPolicy is gedefinieerd, is ongeldig."
+
+#: workspaces/analytics_tile/model.py:333
+msgid "The secondary value that appears below the main value"
+msgstr "De secundaire waarde die onder de hoofdwaarde verschijnt"
+
+#: workspaces/links_tile/model.py:56
+msgid "The selected folder no longer exists"
+msgstr "De geselecteerde map bestaat niet meer"
+
+#: workspaces/links_tile/model.py:71 workspaces/links_tile/model.py:146
+msgid "The selected link no longer exists"
+msgstr "De geselecteerde link bestaat niet meer"
+
+#: bloomerp.workflowrunstep.sequence
+msgid "The sequence number of this step within the workflow run."
+msgstr "Het volgnummer van deze stap binnen de workflowuitvoering."
+
+#: workspaces/analytics_tile/model.py:112
+msgid "The size"
+msgstr "De grootte"
+
+#: forms/widgets.py:13
+msgid "The sql query (data) to use for the query"
+msgstr "De SQL-query (gegevens) die voor de query moet worden gebruikt"
+
+#: bloomerp.workflowrunstep.status
+msgid "The status of this workflow run step."
+msgstr "De status van deze stap van de workflowuitvoering."
+
+#: bloomerp.inboxitem.title
+msgid "The title of the inbox item."
+msgstr "De titel van het inboxitem."
+
+#: automation/defintion.py:54
+msgid "The trigger for a workflow"
+msgstr "De trigger voor een workflow"
+
+#: forms/widgets.py:37
+msgid "The type of output to display for the widget"
+msgstr "Het type uitvoer dat voor de widget moet worden weergegeven"
+
+#: bloomerp.applicationfield.field_type models/application_field.py:40
+msgid "The type of the field."
+msgstr "Het type van het veld."
+
+#: bloomerp.workflownode.type models/automation/workflow_node.py:42
+msgid "The type of the workflow node."
+msgstr "Het type van het workflowknooppunt."
+
+#: bloomerp.tile.type models/workspaces/tile.py:30
+msgid "The type of tile"
+msgstr "Het type tegel"
+
+#: bloomerp.todo.requested_by models/project_management/todo.py:134
+msgid "The user who requested the todo"
+msgstr "De gebruiker die de todo heeft aangevraagd"
+
+#: views/communication/create_email_account.py:233
+msgid "The wizard data is incomplete. Please review the account details."
+msgstr "De wizardgegevens zijn onvolledig. Controleer de accountgegevens."
+
+#: bloomerp.workflowrun.workflow models/automation/workflow_run.py:71
+msgid "The workflow associated with this run."
+msgstr "De workflow die aan deze uitvoering is gekoppeld."
+
+#: bloomerp.workflowrunstep.workflow_run
+msgid "The workflow run that this step belongs to."
+msgstr "De workflowuitvoering waartoe deze stap behoort."
+
+#: templates/cotton/app/sidebar/body.html:205
+msgid "Theme"
+msgstr "Thema"
+
+#: forms/auth.py:45
+msgid "This account is inactive."
+msgstr "Dit account is inactief."
+
+#: components/communication/emails/new_email.py:100
+msgid "This email account has an unsupported provider."
+msgstr "Dit e-mailaccount heeft een niet-ondersteunde provider."
+
+#: components/communication/emails/new_email.py:72
+msgid "This email folder is not connected to an email account."
+msgstr "Deze e-mailmap is niet verbonden met een e-mailaccount."
+
+#: templates/components/objects/bulk_actions.html:66
+#, python-format
+msgid "This permanently deletes the objects in the %(selection_label)s."
+msgstr ""
+"\n"
+"                    Hiermee worden de objecten in %(selection_label)s permanent verwijderd.\n"
+"                "
+
+#: templates/cotton/features/dataviews/pivot_table.html:8
+msgid ""
+"This pivot has too many columns to display safely. Refine the active filters or select fewer "
+"column or value fields."
+msgstr ""
+"Deze draaitabel bevat te veel kolommen om veilig weer te geven. Verfijn de actieve filters of "
+"selecteer minder kolom- of waardevakken."
+
+#: workspaces/analytics_tile/model.py:509
+msgid "Tile type updated"
+msgstr "Tegeltype bijgewerkt"
+
+#: bloomerp.applicationfield.field_type
+msgid "Time Field"
+msgstr "Tijdveld"
+
+#: bloomerp.activitylog.timestamp
+msgid "Timestamp"
+msgstr "Tijdstempel"
+
+#: bloomerp.inboxitem.datetime_received
+msgid "Timestamp when the inbox item was received by its source system."
+msgstr "Tijdstempel waarop het inboxitem door het bronsysteem is ontvangen."
+
+#: bloomerp.aiconversation.conversation_type
+msgid "TinyMCE Content Generator"
+msgstr "TinyMCE-inhoudsgenerator"
+
+#: bloomerp.aiconversation.title bloomerp.inboxitem.title bloomerp.todo.title
+msgid "Title"
+msgstr "Titel"
+
+#: templates/components/communication/emails/email_editor.html:54
+msgid "To"
+msgstr "Aan"
+
+#: bloomerp.workflowedge.to_node
+msgid "To Node"
+msgstr "Naar knooppunt"
+
+#: templates/cotton/features/dataviews/calendar.html:33
+#: templates/cotton/features/dataviews/gant.html:22
+msgid "Today"
+msgstr "Vandaag"
+
+#: models/project_management/todo.py:53
+msgid "Todo marked as completed."
+msgstr "Taak gemarkeerd als voltooid."
+
+#: bloomerp.emailaccount.token_expires_at
+msgid "Token Expires At"
+msgstr "Token verloopt op"
+
+#: workspaces/analytics_tile/model.py:197
+msgid "Top"
+msgstr "Boven"
+
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:52
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:94
+#: templates/components/workspaces/tile_builders/links_tile_builder_items.html:42
+msgid "Top level"
+msgstr "Hoogste niveau"
+
+#: bloomerp.documenttemplateheader.margin_top models/document_templates/document_template_header.py:30
+msgid "Top margin of the header in inches."
+msgstr "Bovenmarge van de koptekst in inches."
+
+#: templates/cotton/features/dataviews/pivot_table.html:42
+#, python-format
+msgid "Total %(value_header)s"
+msgstr "Totaal %(value_header)s"
+
+#: templates/widgets/one_to_many_field_widget.html:63
+msgid "Totals"
+msgstr "Totalen"
+
+#: automation/defintion.py:53 bloomerp.workflownode.type
+msgid "Trigger"
+msgstr "Trigger"
+
+#: bloomerp.inboxfolder.type bloomerp.tile.type bloomerp.workflownode.type
+msgid "Type"
+msgstr "Type"
+
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:37
+#: templates/components/workspaces/tile_builders/links_tile_builder_items.html:36
+msgid "URL"
+msgstr "URL"
+
+#: bloomerp.applicationfield.field_type
+msgid "URL Field"
+msgstr "URL-veld"
+
+#: bloomerp.sidebaritem.url
+msgid "URL that the sidebar item points to."
+msgstr "URL waarnaar het zijbalkitem verwijst."
+
+#: bloomerp.applicationfield.field_type
+msgid "UUID Field"
+msgstr "UUID-veld"
+
+#: templates/cotton/features/dataviews/calendar.html:258
+msgid "Unscheduled"
+msgstr "Niet gepland"
+
+#: templates/cotton/features/dataviews/gant.html:67
+msgid "Unscheduled records"
+msgstr "Niet-geplande records"
+
+#: components/workspaces/preview_workspace_tile.py:202
+msgid "Untitled tile"
+msgstr "Naamloze tegel"
+
+#: bloomerp.aiconversation.updated_by bloomerp.apikey.updated_by bloomerp.comment.updated_by
+#: bloomerp.documenttemplate.updated_by bloomerp.documenttemplateheader.updated_by
+#: bloomerp.documenttemplatestyling.updated_by bloomerp.emailaccount.updated_by
+#: bloomerp.file.updated_by bloomerp.filefolder.updated_by bloomerp.form.updated_by
+#: bloomerp.formsubmission.updated_by bloomerp.inboxfolder.updated_by bloomerp.inboxitem.updated_by
+#: bloomerp.initiative.updated_by bloomerp.policy.updated_by bloomerp.sqlquery.updated_by
+#: bloomerp.tile.updated_by bloomerp.todo.updated_by bloomerp.todolabel.updated_by
+#: bloomerp.userinboxpreference.updated_by bloomerp.workflow.updated_by
+#: bloomerp.workflownode.updated_by
+msgid "Updated By"
+msgstr "Bijgewerkt door"
+
+#: templates/components/files/browser.html:140
+msgid "Upload files"
+msgstr "Bestanden uploaden"
+
+#: bloomerp.todo.priority
+msgid "Urgent"
+msgstr "Urgent"
+
+#: bloomerp.sidebaritem.url bloomerp.userdetailviewtabitem.url
+msgid "Url"
+msgstr "URL"
+
+#: workspaces/dataview_tile/form.py:26
+msgid "Use current preference"
+msgstr "Huidige voorkeur gebruiken"
+
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:21
+msgid "Use the arrows to reorder items"
+msgstr "Gebruik de pijlen om items opnieuw te ordenen"
+
+#: components/workspaces/share_workspace.py:47
+msgid "Use this workspace initially for users who receive it through sharing."
+msgstr "Gebruik deze werkruimte aanvankelijk voor gebruikers die deze via delen ontvangen."
+
+#: bloomerp.aiconversation.user bloomerp.bookmark.user bloomerp.inbox.user bloomerp.sidebar.user
+#: bloomerp.userdetailviewtabspreference.user bloomerp.userinboxpreference.user
+#: bloomerp.userlistviewpreference.user bloomerp.userobjectlayoutpreference.user
+#: bloomerp.workspace.user
+msgid "User"
+msgstr "Gebruiker"
+
+#: bloomerp.applicationfield.field_type
+msgid "User Field"
+msgstr "Gebruikersveld"
+
+#: bloomerp.userinboxpreference
+msgid "User Inbox Preference"
+msgstr "Voorkeur voor gebruikerspostvak"
+
+#: bloomerp.userinboxpreference
+msgid "User Inbox Preferences"
+msgstr "Voorkeuren voor gebruikerspostvak"
+
+#: bloomerp.userobjectlayoutpreference
+msgid "User Object Layout Preference"
+msgstr "Voorkeur voor indeling van gebruikersobjecten"
+
+#: bloomerp.userobjectlayoutpreference
+msgid "User Object Layout Preferences"
+msgstr "Voorkeuren voor indeling van gebruikersobjecten"
+
+#: bloomerp.emailaccount.username
+msgid "Username"
+msgstr "Gebruikersnaam"
+
+#: bloomerp.policy.users
+msgid "Users"
+msgstr "Gebruikers"
+
+#: bloomerp.policy.users models/access_control/policy.py:94
+msgid "Users assigned to this access control policy."
+msgstr "Gebruikers die aan dit toegangscontrolebeleid zijn toegewezen."
+
+#: bloomerp.inbox.shared_with_users bloomerp.sidebar.shared_with_users
+#: bloomerp.userdetailviewtabspreference.shared_with_users
+#: bloomerp.userlistviewpreference.shared_with_users
+#: bloomerp.userobjectlayoutpreference.shared_with_users bloomerp.workspace.shared_with_users
+msgid "Users with whom this preference is shared."
+msgstr "Gebruikers met wie deze voorkeur wordt gedeeld."
+
+#: templates/views/generic/model/bulk_upload_wizard/confirm_step.html:10
+msgid "Valid"
+msgstr "Geldig"
+
+#: bloomerp.emailaccount.validation_error
+msgid "Validation Error"
+msgstr "Validatiefout"
+
+#: templates/components/forms/initial_data_row.html:33
+#: templates/components/forms/initial_data_value.html:96 workspaces/analytics_tile/model.py:319
+msgid "Value"
+msgstr "Waarde"
+
+#: templates/components/forms/initial_data_value.html:25
+msgid "Value on all rows"
+msgstr "Waarde op alle rijen"
+
+#: workspaces/analytics_tile/model.py:388
+msgid "Values"
+msgstr "Waarden"
+
+#: templates/cotton/features/document_templates/builder.html:51
+msgid "Variables"
+msgstr "Variabelen"
+
+#: bloomerp.userlistviewpreference.view_type
+msgid "View Type"
+msgstr "Weergavetype"
+
+#: templates/cotton/ui/inputs/one_to_many/row_actions.html:4
+msgid "View row"
+msgstr "Rij bekijken"
+
+#: bloomerp.apikey.key_prefix
+msgid "Visible token prefix used to identify the API key without storing the raw token."
+msgstr ""
+"Zichtbaar tokenprefix dat wordt gebruikt om de API-sleutel te identificeren zonder het onbewerkte"
+" token op te slaan."
+
+#: workspaces/tiles.py:24
+msgid ""
+"Visualizes data from a custom query and presents it in a structured format such as a chart, KPI, "
+"table, or pie chart."
+msgstr ""
+"Visualiseert gegevens uit een aangepaste query en presenteert deze in een gestructureerde "
+"indeling, zoals een grafiek, KPI, tabel of cirkeldiagram."
+
+#: workspaces/analytics_tile/model.py:373
+msgid ""
+"Visualizes data from a custom query in a pie chart format, allowing users to easily understand "
+"the proportional distribution of different categories or segments within a dataset, making it "
+"ideal for displaying parts of a whole and comparing relative sizes for enhanced insights and "
+"decision-making."
+msgstr ""
+"Visualiseert gegevens uit een aangepaste query in de vorm van een cirkeldiagram, zodat gebruikers"
+" de proportionele verdeling van verschillende categorieën of segmenten binnen een dataset "
+"eenvoudig kunnen begrijpen. Dit is ideaal voor het weergeven van delen van een geheel en het "
+"vergelijken van relatieve groottes voor betere inzichten en besluitvorming."
+
+#: workspaces/analytics_tile/model.py:352
+msgid ""
+"Visualizes data from a custom query in a three-dimensional chart format, providing users with an "
+"immersive and interactive way to explore complex datasets, identify relationships, and gain "
+"deeper insights through a multi-dimensional graphical representation."
+msgstr ""
+"Visualiseert gegevens uit een aangepaste query in de vorm van een driedimensionale grafiek, "
+"waardoor gebruikers complexe datasets op een meeslepende en interactieve manier kunnen verkennen,"
+" relaties kunnen identificeren en diepere inzichten kunnen verkrijgen via een multidimensionale "
+"grafische weergave."
+
+#: workspaces/analytics_tile/model.py:247
+msgid ""
+"Visualizes data from a custom query in a two-dimensional chart format, allowing users to easily "
+"identify trends, patterns, and insights through graphical representation."
+msgstr ""
+"Visualiseert gegevens uit een aangepaste query in een tweedimensionale grafiek, zodat gebruikers "
+"trends, patronen en inzichten eenvoudig kunnen identificeren via een grafische weergave."
+
+#: workspaces/analytics_tile/model.py:366
+msgid ""
+"Visualizes geospatial data from a custom query on an interactive map, enabling users to identify "
+"spatial patterns, trends, and insights by plotting data points, regions, or heatmaps based on "
+"geographic locations for enhanced analysis and decision-making."
+msgstr ""
+"Visualiseert geospatiale gegevens uit een aangepaste query op een interactieve kaart, zodat "
+"gebruikers ruimtelijke patronen, trends en inzichten kunnen identificeren door gegevenspunten, "
+"regio's of heatmaps te plotten op basis van geografische locaties voor verbeterde analyse en "
+"besluitvorming."
+
+#: templates/cotton/features/dataviews/gant.html:33
+msgid "Week"
+msgstr "Week"
+
+#: bloomerp.applicationfield.field_type
+msgid "Week Field"
+msgstr "Weekveld"
+
+#: templates/components/forms/initial_data_value.html:6
+msgid "What should be preset for"
+msgstr "Wat moet vooraf worden ingesteld voor"
+
+#: workspaces/analytics_tile/model.py:192
+msgid "Where the legend should be placed."
+msgstr "Waar de legenda moet worden geplaatst."
+
+#: bloomerp.workflow.run_asynchronously models/automation/workflow.py:78
+msgid "Whether runs asynchronously"
+msgstr "Of deze asynchroon wordt uitgevoerd"
+
+#: bloomerp.aiconversation.auto_named
+msgid "Whether the conversation has been auto-named"
+msgstr "Of aan het gesprek automatisch een naam is gegeven"
+
+#: bloomerp.form.public_embed_enabled models/forms/form.py:90
+msgid "Whether the form can be embedded in a public page."
+msgstr "Of het formulier kan worden ingesloten in een openbare pagina."
+
+#: bloomerp.form.requires_authentication models/forms/form.py:86
+msgid "Whether the form requires an authenticated user in order to be accessible."
+msgstr "Of het formulier een geauthenticeerde gebruiker vereist om toegankelijk te zijn."
+
+#: bloomerp.form.requires_review models/forms/form.py:82
+msgid "Whether the form submission needs to be reviewed before it is persisted."
+msgstr "Of de formulierinzending moet worden gecontroleerd voordat deze wordt opgeslagen."
+
+#: bloomerp.formsubmission.persisted models/forms/form_submission.py:68
+msgid "Whether the form was persisted"
+msgstr "Of de formulierinzending is opgeslagen"
+
+#: bloomerp.workflow.active models/automation/workflow.py:82
+msgid "Whether the workflow is active or not"
+msgstr "Of de workflow actief is of niet"
+
+#: bloomerp.emailaccount.sync_enabled
+msgid "Whether this account should be synchronized automatically."
+msgstr "Of dit account automatisch moet worden gesynchroniseerd."
+
+#: bloomerp.workflow.enable_logging models/automation/workflow.py:86
+msgid ""
+"Whether to enable logging for this workflow. Disabling logging may improve performance but will "
+"result in no detailed execution history being stored."
+msgstr ""
+"Of logboekregistratie voor deze workflow moet worden ingeschakeld. Het uitschakelen van "
+"logboekregistratie kan de prestaties verbeteren, maar zorgt ervoor dat er geen gedetailleerde "
+"uitvoeringsgeschiedenis wordt opgeslagen."
+
+#: bloomerp.workflow bloomerp.workflownode.workflow bloomerp.workflowrun.workflow
+#: models/automation/workflow.py:29
+msgid "Workflow"
+msgstr "Workflow"
+
+#: bloomerp.workflowedge
+msgid "Workflow Edge"
+msgstr "Workflowverbinding"
+
+#: bloomerp.workflowedge
+msgid "Workflow Edges"
+msgstr "Workflowverbindingen"
+
+#: bloomerp.workflownode models/automation/workflow_node.py:23
+msgid "Workflow Node"
+msgstr "Workflownode"
+
+#: bloomerp.workflownode models/automation/workflow_node.py:24
+msgid "Workflow Nodes"
+msgstr "Workflownodes"
+
+#: bloomerp.workflowrun bloomerp.workflowrunstep.workflow_run models/automation/workflow_run.py:24
+msgid "Workflow Run"
+msgstr "Workflowuitvoering"
+
+#: bloomerp.workflowrunstep
+msgid "Workflow Run Step"
+msgstr "Stap van workflowuitvoering"
+
+#: bloomerp.workflowrunstep
+msgid "Workflow Run Steps"
+msgstr "Stappen van workflowuitvoering"
+
+#: bloomerp.workflowrun models/automation/workflow_run.py:25
+msgid "Workflow Runs"
+msgstr "Workflowuitvoeringen"
+
+#: templates/inbox_items/workflow_run.html:7
+msgid "Workflow execution"
+msgstr "Workflowuitvoering"
+
+#: bloomerp.workflow models/automation/workflow.py:30
+msgid "Workflows"
+msgstr "Workflows"
+
+#: templates/components/workspaces/share_workspace.html:36
+msgid "Workspace sharing updated."
+msgstr "Delen van werkruimte bijgewerkt."
+
+#: templates/components/communication/emails/email_editor.html:120
+msgid "Write your message"
+msgstr "Schrijf uw bericht"
+
+#: workspaces/analytics_tile/model.py:252
+msgid "X-Axis"
+msgstr "X-as"
+
+#: workspaces/analytics_tile/model.py:155
+msgid "X-axis label"
+msgstr "Label van de X-as"
+
+#: workspaces/analytics_tile/model.py:162
+msgid "X-axis order"
+msgstr "Volgorde van de X-as"
+
+#: bloomerp.todo.effort
+msgid "XL"
+msgstr "XL"
+
+#: bloomerp.todo.effort
+msgid "XS"
+msgstr "XS"
+
+#: workspaces/analytics_tile/model.py:262
+msgid "Y-Axis"
+msgstr "Y-as"
+
+#: workspaces/analytics_tile/model.py:170
+msgid "Y-axis label"
+msgstr "Label van de Y-as"
+
+#: templates/cotton/features/dataviews/gant.html:30
+msgid "Year"
+msgstr "Jaar"
+
+#: bloomerp.user.date_view_preference
+msgid "Year-Month-Day (2000-08-15)"
+msgstr "Jaar-maand-dag (2000-08-15)"
+
+#: bloomerp.user.datetime_view_preference
+msgid "Year-Month-Day Hour:Minute (2000-08-15 12:30)"
+msgstr "Jaar-maand-dag uur:minuut (2000-08-15 12:30)"
+
+#: models/project_management/todo.py:51
+msgid "You do not have permission to mark this todo as completed."
+msgstr "U hebt geen toestemming om deze todo als voltooid te markeren."
+
+#: templates/cotton/features/dataviews/gant.html:38
+msgid "Zoom in"
+msgstr "Inzoomen"
+
+#: templates/cotton/features/dataviews/gant.html:27
+msgid "Zoom out"
+msgstr "Uitzoomen"
+
+#: bloomerp.user.is_active
+msgid "active"
+msgstr "actief"
+
+#: bloomerp.applicationfield
+msgid "application field"
+msgstr "toepassingsveld"
+
+#: bloomerp.applicationfield
+msgid "application fields"
+msgstr "toepassingsvelden"
+
+#: bloomerp.bookmark
+msgid "bookmark"
+msgstr "bladwijzer"
+
+#: bloomerp.bookmark
+msgid "bookmarks"
+msgstr "bladwijzers"
+
+#: bloomerp.comment
+msgid "comment"
+msgstr "opmerking"
+
+#: bloomerp.comment
+msgid "comments"
+msgstr "opmerkingen"
+
+#: bloomerp.user.date_joined
+msgid "date joined"
+msgstr "datum van indiensttreding"
+
+#: bloomerp.documenttemplate
+msgid "document template"
+msgstr "documentsjabloon"
+
+#: bloomerp.documenttemplateheader
+msgid "document template header"
+msgstr "koptekst van documentsjabloon"
+
+#: bloomerp.documenttemplateheader
+msgid "document template headers"
+msgstr "kopteksten van documentsjabloon"
+
+#: bloomerp.documenttemplatestyling
+msgid "document template styling"
+msgstr "opmaak van documentsjabloon"
+
+#: bloomerp.documenttemplatestyling
+msgid "document template stylings"
+msgstr "opmaken van documentsjabloon"
+
+#: bloomerp.documenttemplate
+msgid "document templates"
+msgstr "documentsjablonen"
+
+#: bloomerp.user.email
+msgid "email address"
+msgstr "e-mailadres"
+
+#: bloomerp.file
+msgid "file"
+msgstr "bestand"
+
+#: bloomerp.filefolder
+msgid "file folder"
+msgstr "bestandsmap"
+
+#: bloomerp.filefolder
+msgid "file folders"
+msgstr "bestandsmappen"
+
+#: bloomerp.file
+msgid "files"
+msgstr "bestanden"
+
+#: bloomerp.user.first_name
+msgid "first name"
+msgstr "voornaam"
+
+#: bloomerp.form
+msgid "form"
+msgstr "formulier"
+
+#: bloomerp.formsubmission
+msgid "form submission"
+msgstr "formulierinzending"
+
+#: bloomerp.formsubmission
+msgid "form submissions"
+msgstr "formulierinzendingen"
+
+#: bloomerp.form
+msgid "forms"
+msgstr "formulieren"
+
+#: bloomerp.user.groups
+msgid "groups"
+msgstr "groepen"
+
+#: bloomerp.initiative
+msgid "initiative"
+msgstr "initiatief"
+
+#: bloomerp.initiative
+msgid "initiatives"
+msgstr "initiatieven"
+
+#: bloomerp.user.last_login
+msgid "last login"
+msgstr "laatste aanmelding"
+
+#: bloomerp.user.last_name
+msgid "last name"
+msgstr "achternaam"
+
+#: views/communication/create_email_account.py:64
+msgid "name@example.com"
+msgstr "name@example.com"
+
+#: templates/views/auth/login.html:73
+msgid "or contact your staff."
+msgstr "of neem contact op met uw personeel."
+
+#: bloomerp.user.password
+msgid "password"
+msgstr "wachtwoord"
+
+#: bloomerp.rowpolicyrulepermission
+msgid "row policy rule permission"
+msgstr "toestemming voor rijbeleidsregel"
+
+#: bloomerp.rowpolicyrulepermission
+msgid "row policy rule permissions"
+msgstr "toestemmingen voor rijbeleidsregels"
+
+#: bloomerp.sidebar
+msgid "sidebar"
+msgstr "zijbalk"
+
+#: bloomerp.sidebaritem
+msgid "sidebar item"
+msgstr "zijbalkitem"
+
+#: bloomerp.sidebaritem
+msgid "sidebar items"
+msgstr "zijbalkitems"
+
+#: bloomerp.sidebar
+msgid "sidebars"
+msgstr "zijbalken"
+
+#: bloomerp.user.is_staff
+msgid "staff status"
+msgstr "medewerkersstatus"
+
+#: bloomerp.user.is_superuser
+msgid "superuser status"
+msgstr "supergebruikersstatus"
+
+#: bloomerp.tile
+msgid "tile"
+msgstr "tegel"
+
+#: bloomerp.tile
+msgid "tiles"
+msgstr "tegels"
+
+#: bloomerp.todo
+msgid "todo"
+msgstr "todo"
+
+#: bloomerp.todolabel
+msgid "todo label"
+msgstr "todo-label"
+
+#: bloomerp.todolabel
+msgid "todo labels"
+msgstr "todo-labels"
+
+#: bloomerp.todo
+msgid "todos"
+msgstr "todo's"
+
+#: bloomerp.user
+msgid "user"
+msgstr "gebruiker"
+
+#: bloomerp.userdetailviewtabitem
+msgid "user detail view tab item"
+msgstr "tabbladitem voor gebruikersdetailweergave"
+
+#: bloomerp.userdetailviewtabitem
+msgid "user detail view tab items"
+msgstr "tabbladitems voor gebruikersdetailweergave"
+
+#: bloomerp.userdetailviewtabspreference
+msgid "user detail view tabs preference"
+msgstr "voorkeur voor tabbladen in gebruikersdetailweergave"
+
+#: bloomerp.userdetailviewtabspreference
+msgid "user detail view tabs preferences"
+msgstr "voorkeuren voor tabbladen in gebruikersdetailweergave"
+
+#: bloomerp.userlistviewpreference
+msgid "user list view preference"
+msgstr "voorkeur voor gebruikerslijstweergave"
+
+#: bloomerp.userlistviewpreference
+msgid "user list view preferences"
+msgstr "voorkeuren voor gebruikerslijstweergave"
+
+#: bloomerp.user.user_permissions
+msgid "user permissions"
+msgstr "gebruikersmachtigingen"
+
+#: bloomerp.user.username
+msgid "username"
+msgstr "gebruikersnaam"
+
+#: bloomerp.user
+msgid "users"
+msgstr "gebruikers"
+
+#: bloomerp.workspace
+msgid "workspace"
+msgstr "werkruimte"
+
+#: bloomerp.workspace
+msgid "workspaces"
+msgstr "werkruimten"
+
+#~ msgid ""
+#~ "\n"
+#~ "                                            Show Required Only\n"
+#~ "                                        "
+#~ msgstr ""
+#~ "\n"
+#~ "                                            Alleen verplichte velden weergeven\n"
+#~ "                                        "
+
+#~ msgid ""
+#~ "\n"
+#~ "                                Show Required Only\n"
+#~ "                            "
+#~ msgstr ""
+#~ "\n"
+#~ "                                Alleen verplichte velden weergeven\n"
+#~ "                            "
+
+#~ msgid ""
+#~ "\n"
+#~ "                            Save\n"
+#~ "                        "
+#~ msgstr ""
+#~ "\n"
+#~ "                            Opslaan\n"
+#~ "                        "
+
+#~ msgid ""
+#~ "\n"
+#~ "                            Save and Create New\n"
+#~ "                        "
+#~ msgstr ""
+#~ "\n"
+#~ "                            Opslaan en nieuw maken\n"
+#~ "                        "
+
+#~ msgid ""
+#~ "\n"
+#~ "                        Back\n"
+#~ "                    "
+#~ msgstr ""
+#~ "\n"
+#~ "                        Terug\n"
+#~ "                    "
+
+#~ msgid ""
+#~ "\n"
+#~ "                        Reset\n"
+#~ "                    "
+#~ msgstr ""
+#~ "\n"
+#~ "                        Resetten\n"
+#~ "                    "
+
+#~ msgid ""
+#~ "\n"
+#~ "                        Save and Create New\n"
+#~ "                    "
+#~ msgstr ""
+#~ "\n"
+#~ "                        Opslaan en nieuw maken\n"
+#~ "                    "
+
+#~ msgid ""
+#~ "\n"
+#~ "                    <p class=\"font-bold text-primary-900\">\n"
+#~ "                        Preview\n"
+#~ "                    </p>\n"
+#~ "                "
+#~ msgstr ""
+#~ "\n"
+#~ "                    <p class=\"font-bold text-primary-900\">\n"
+#~ "                        Voorbeeld\n"
+#~ "                    </p>\n"
+#~ "                "
+
+#~ msgid ""
+#~ "\n"
+#~ "                    No items found in this folder.\n"
+#~ "                "
+#~ msgstr ""
+#~ "\n"
+#~ "                    Geen items gevonden in deze map.\n"
+#~ "                "
+

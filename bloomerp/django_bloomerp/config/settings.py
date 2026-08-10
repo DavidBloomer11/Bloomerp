@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import sys
 
-from bloomerp.config.definition import BloomerpConfig
+from bloomerp.config.definition import BloomerpConfig, BloomerpI18nLLMSettings, BloomerpI18nSettings
 from bloomerp.config.settings import (
     BLOOMERP_APPS,
     BLOOMERP_AUTHENTICATION_BACKENDS,
@@ -185,6 +185,13 @@ CHANNEL_LAYERS = {
 
 BLOOMERP_CONFIG = BloomerpConfig(
     auto_generate_api_endpoints=True,
-    email_secret_key="GqUtCcrykNhXgKQzF2XA9uTHTkqoB8wqpuZ6WfrBJbKrQhWUzG"
+    email_secret_key="GqUtCcrykNhXgKQzF2XA9uTHTkqoB8wqpuZ6WfrBJbKrQhWUzG",
+    i18n = BloomerpI18nSettings(
+        exclude_apps=["bloomerp_modules"],
+        llm=BloomerpI18nLLMSettings(
+            model="gpt-5.6-luna",
+            provider="openai",
+        )
+    )
 )
 

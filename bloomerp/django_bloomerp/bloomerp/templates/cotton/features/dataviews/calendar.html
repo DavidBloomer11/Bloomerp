@@ -1,3 +1,4 @@
+{% load i18n %}
 {% comment %}
 Permission-filtered calendar dataview with day, week, month, year, and list modes.
 {% endcomment %}
@@ -18,8 +19,8 @@ Permission-filtered calendar dataview with day, week, month, year, and list mode
     <div class="flex flex-1 items-center justify-center p-8 text-light">
         <div class="text-center">
             <c-icons.calendar size="48" class="mx-auto mb-2 opacity-50" />
-            <p class="mb-1 text-lg font-medium"><c-i18n.blocktrans>No date field selected</c-i18n.blocktrans></p>
-            <p class="text-sm"><c-i18n.blocktrans>Select a start date field in the display options.</c-i18n.blocktrans></p>
+            <p class="mb-1 text-lg font-medium">{% blocktrans %}No date field selected{% endblocktrans %}</p>
+            <p class="text-sm">{% blocktrans %}Select a start date field in the display options.{% endblocktrans %}</p>
         </div>
     </div>
     {% else %}
@@ -29,7 +30,7 @@ Permission-filtered calendar dataview with day, week, month, year, and list mode
                 <c-icons.chevron_left size="16" />
             </button>
             <button type="button" data-calendar-nav="today" class="btn btn-sm border-gray-200 bg-white">
-                <c-i18n.blocktrans>Today</c-i18n.blocktrans>
+                {% blocktrans %}Today{% endblocktrans %}
             </button>
             <button type="button" data-calendar-nav="next" class="btn btn-sm border-gray-200 bg-white" title="Next period">
                 <c-icons.chevron_right size="16" />
@@ -52,7 +53,7 @@ Permission-filtered calendar dataview with day, week, month, year, and list mode
             {% if calendar_legend %}
             <details class="relative">
                 <summary class="btn btn-sm cursor-pointer list-none border-gray-200 bg-white">
-                    <c-i18n.blocktrans>Legend</c-i18n.blocktrans>
+                    {% blocktrans %}Legend{% endblocktrans %}
                 </summary>
                 <div class="absolute right-0 z-30 mt-1 min-w-44 space-y-1 rounded-xl border border-gray-200 bg-white p-2 shadow-xs">
                     {% for legend_item in calendar_legend %}
@@ -145,7 +146,7 @@ Permission-filtered calendar dataview with day, week, month, year, and list mode
                 {% endfor %}
             </div>
             <div class="relative grid border-b border-gray-200 bg-base {% if view_mode == 'week' %}min-h-16 grid-cols-[4rem_repeat(7,minmax(6rem,1fr))]{% else %}grid-cols-[4rem_1fr]{% endif %}">
-                <div class="p-1 text-right text-xs text-light" {% if view_mode == 'week' %}style="grid-column: 1; grid-row: 1;"{% endif %}><c-i18n.blocktrans>All day</c-i18n.blocktrans></div>
+                <div class="p-1 text-right text-xs text-light" {% if view_mode == 'week' %}style="grid-column: 1; grid-row: 1;"{% endif %}>{% blocktrans %}All day{% endblocktrans %}</div>
                 {% for day_unit in calendar_day_units %}
                 {% with unit=calendar_events_by_unit|get_item:day_unit.key %}
                 <section class="relative min-h-12 border-l border-gray-200 p-1" {% if view_mode == 'week' %}style="grid-column: {{ forloop.counter|add:1 }}; grid-row: 1;"{% endif %} data-calendar-unit="{{ day_unit.key }}" data-calendar-row="-1" data-calendar-column="{{ forloop.counter0 }}" data-calendar-unit-section data-calendar-dropzone>
@@ -248,13 +249,13 @@ Permission-filtered calendar dataview with day, week, month, year, and list mode
             {% endfor %}
         </div>
         {% else %}
-        <p class="p-8 text-center text-light"><c-i18n.blocktrans>No calendar items in this period.</c-i18n.blocktrans></p>
+        <p class="p-8 text-center text-light">{% blocktrans %}No calendar items in this period.{% endblocktrans %}</p>
         {% endif %}
         {% endif %}
     </div>
     {% if calendar_unscheduled_events %}
     <div class="border-t border-gray-200 bg-base p-3" data-calendar-unscheduled-tray>
-        <p class="mb-2 text-xs font-medium uppercase text-light"><c-i18n.blocktrans>Unscheduled</c-i18n.blocktrans></p>
+        <p class="mb-2 text-xs font-medium uppercase text-light">{% blocktrans %}Unscheduled{% endblocktrans %}</p>
         <div class="flex flex-wrap gap-2">
             {% for event in calendar_unscheduled_events %}
             <div

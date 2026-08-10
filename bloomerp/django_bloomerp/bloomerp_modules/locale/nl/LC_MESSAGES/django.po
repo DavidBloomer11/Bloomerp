@@ -1,0 +1,3839 @@
+# Dutch translations for PROJECT.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-08-06 11:22+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: nl\n"
+"Language-Team: nl <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.16.0\n"
+
+#: bloomerp_modules.customerreceipt.payment_method bloomerp_modules.vendorpayment.payment_method
+msgid "ACH"
+msgstr ""
+
+#: bloomerp_modules.salesforecast.source
+msgid "AI"
+msgstr ""
+
+#: bloomerp_modules.attendancerecord.status
+msgid "Absent"
+msgstr ""
+
+#: bloomerp_modules.offer.status
+msgid "Accepted"
+msgstr ""
+
+#: bloomerp_modules.account bloomerp_modules.accountbalance.account bloomerp_modules.activity.account
+#: bloomerp_modules.budget.account bloomerp_modules.contact.account
+#: bloomerp_modules.gltransaction.account bloomerp_modules.journalentryline.account
+#: bloomerp_modules.lead.account bloomerp_modules.opportunity.account
+msgid "Account"
+msgstr ""
+
+#: bloomerp_modules.accountbalance
+msgid "Account Balance"
+msgstr ""
+
+#: bloomerp_modules.accountbalance
+msgid "Account Balances"
+msgstr ""
+
+#: bloomerp_modules.account.account_code
+msgid "Account Code"
+msgstr ""
+
+#: bloomerp_modules.account.account_name bloomerp_modules.bankaccount.account_name
+#: bloomerp_modules.crmaccount.account_name
+msgid "Account Name"
+msgstr ""
+
+#: bloomerp_modules.bankaccount.account_number
+msgid "Account Number"
+msgstr ""
+
+#: bloomerp_modules.account.account_subtype
+msgid "Account Subtype"
+msgstr ""
+
+#: bloomerp_modules.account.account_type bloomerp_modules.bankaccount.account_type
+#: bloomerp_modules.crmaccount.account_type
+msgid "Account Type"
+msgstr ""
+
+#: bloomerp_modules.budget.account
+msgid "Account this budget applies to"
+msgstr ""
+
+#: bloomerp_modules.account
+msgid "Accounts"
+msgstr ""
+
+#: bloomerp_modules.vendor.email
+msgid "Accounts Payable Email"
+msgstr ""
+
+#: bloomerp_modules.leavepolicy.accrual_rate
+msgid "Accrual Rate"
+msgstr ""
+
+#: bloomerp_modules.budget.status bloomerp_modules.customer.status bloomerp_modules.employee.active
+#: bloomerp_modules.employee.status bloomerp_modules.employeecontract.status
+#: bloomerp_modules.equipment.status bloomerp_modules.performancecycle.status
+#: bloomerp_modules.person.status bloomerp_modules.vendor.status
+msgid "Active"
+msgstr ""
+
+#: bloomerp_modules.activity
+msgid "Activities"
+msgstr ""
+
+#: bloomerp_modules.activity
+msgid "Activity"
+msgstr ""
+
+#: bloomerp_modules.activity.activity_type
+msgid "Activity Type"
+msgstr ""
+
+#: bloomerp_modules.productioncost.valuation_method
+msgid "Actual"
+msgstr ""
+
+#: bloomerp_modules.budget.actual_amount
+msgid "Actual Amount"
+msgstr ""
+
+#: bloomerp_modules.maintenanceworkorder.actual_end_date
+#: bloomerp_modules.manufacturingorder.actual_end_date
+msgid "Actual End Date"
+msgstr ""
+
+#: bloomerp_modules.manufacturingorderoperation.actual_end_time
+msgid "Actual End Time"
+msgstr ""
+
+#: bloomerp_modules.manufacturingorderoperation.run_time_minutes_actual
+msgid "Actual Run Time (Minutes)"
+msgstr ""
+
+#: bloomerp_modules.manufacturingorderoperation.setup_time_minutes_actual
+msgid "Actual Setup Time (Minutes)"
+msgstr ""
+
+#: bloomerp_modules.maintenanceworkorder.actual_start_date
+#: bloomerp_modules.manufacturingorder.actual_start_date
+msgid "Actual Start Date"
+msgstr ""
+
+#: bloomerp_modules.manufacturingorderoperation.actual_start_time
+msgid "Actual Start Time"
+msgstr ""
+
+#: bloomerp_modules.budget.actual_amount
+msgid "Actual amount spent/received"
+msgstr ""
+
+#: bloomerp_modules.budget.notes
+msgid "Additional notes about this budget"
+msgstr ""
+
+#: bloomerp_modules.contact.address bloomerp_modules.officelocation.address
+#: bloomerp_modules.warehouse.address
+msgid "Address"
+msgstr ""
+
+#: bloomerp_modules.journal.journal_type
+msgid "Adjusting Journal"
+msgstr ""
+
+#: bloomerp_modules.gltransaction.transaction_type bloomerp_modules.journalentry.source_document_type
+msgid "Adjustment"
+msgstr ""
+
+#: bloomerp_modules.candidate.source
+msgid "Agency"
+msgstr ""
+
+#: bloomerp_modules.account.allow_manual_posting
+msgid "Allow Manual Posting"
+msgstr ""
+
+#: bloomerp_modules.person.person_type
+msgid "Alumni"
+msgstr ""
+
+#: bloomerp_modules.customerreceipt.amount bloomerp_modules.opportunity.amount
+#: bloomerp_modules.vendorpayment.amount
+msgid "Amount"
+msgstr ""
+
+#: bloomerp_modules.application bloomerp_modules.hiringdecision.application
+#: bloomerp_modules.interview.application bloomerp_modules.offer.application
+msgid "Application"
+msgstr ""
+
+#: bloomerp_modules.application
+msgid "Applications"
+msgstr ""
+
+#: bloomerp_modules.application.applied_date
+msgid "Applied Date"
+msgstr ""
+
+#: bloomerp_modules.budget.status bloomerp_modules.journalentry.status
+#: bloomerp_modules.leaverequest.status bloomerp_modules.offerapproval.status
+msgid "Approved"
+msgstr ""
+
+#: bloomerp_modules.journalentry.approved_by bloomerp_modules.leaverequest.approved_by
+msgid "Approved By"
+msgstr ""
+
+#: bloomerp_modules.journalentry.approved_date
+msgid "Approved Date"
+msgstr ""
+
+#: bloomerp_modules.offerapproval.approver
+msgid "Approver"
+msgstr ""
+
+#: bloomerp_modules.accountbalance.as_of_date bloomerp_modules.leavebalance.as_of_date
+msgid "As Of Date"
+msgstr ""
+
+#: bloomerp_modules.account.account_type
+msgid "Asset"
+msgstr ""
+
+#: bloomerp_modules.activity.assigned_to bloomerp_modules.lead.assigned_to
+msgid "Assigned To"
+msgstr ""
+
+#: bloomerp_modules.employee.team
+msgid "Assigned team"
+msgstr ""
+
+#: bloomerp_modules.onboardingtaskassignment.assignee
+msgid "Assignee"
+msgstr ""
+
+#: bloomerp_modules.employee.user
+msgid "Associated user account for login"
+msgstr ""
+
+#: bloomerp_modules.attendancerecord.attendance_date
+msgid "Attendance Date"
+msgstr ""
+
+#: bloomerp_modules.attendancerecord
+msgid "Attendance Record"
+msgstr ""
+
+#: bloomerp_modules.attendancerecord
+msgid "Attendance Records"
+msgstr ""
+
+#: bloomerp_modules.qualitycontrolplanline.test_type bloomerp_modules.qualityinspectionresult.test_type
+msgid "Attribute"
+msgstr ""
+
+#: bloomerp_modules.journal.auto_numbering
+msgid "Auto Numbering"
+msgstr ""
+
+#: bloomerp_modules.account.avatar bloomerp_modules.accountbalance.avatar
+#: bloomerp_modules.activity.avatar bloomerp_modules.application.avatar
+#: bloomerp_modules.attendancerecord.avatar bloomerp_modules.bankaccount.avatar
+#: bloomerp_modules.billofmaterial.avatar bloomerp_modules.billofmaterialline.avatar
+#: bloomerp_modules.budget.avatar bloomerp_modules.candidate.avatar bloomerp_modules.contact.avatar
+#: bloomerp_modules.costcenter.avatar bloomerp_modules.costrate.avatar
+#: bloomerp_modules.crmaccount.avatar bloomerp_modules.customer.avatar
+#: bloomerp_modules.customerinvoice.avatar bloomerp_modules.customerinvoiceline.avatar
+#: bloomerp_modules.customerreceipt.avatar bloomerp_modules.department.avatar
+#: bloomerp_modules.employee.avatar bloomerp_modules.employeecontract.avatar
+#: bloomerp_modules.equipment.avatar bloomerp_modules.exitinterview.avatar
+#: bloomerp_modules.exitreason.avatar bloomerp_modules.fiscalperiod.avatar
+#: bloomerp_modules.gltransaction.avatar bloomerp_modules.goal.avatar
+#: bloomerp_modules.goalprogress.avatar bloomerp_modules.hiringdecision.avatar
+#: bloomerp_modules.hrcostcenter.avatar bloomerp_modules.interview.avatar
+#: bloomerp_modules.interviewfeedback.avatar bloomerp_modules.jobopening.avatar
+#: bloomerp_modules.jobtitle.avatar bloomerp_modules.journal.avatar
+#: bloomerp_modules.journalentry.avatar bloomerp_modules.journalentryline.avatar
+#: bloomerp_modules.lead.avatar bloomerp_modules.leavebalance.avatar
+#: bloomerp_modules.leavepolicy.avatar bloomerp_modules.leaverequest.avatar
+#: bloomerp_modules.leavetype.avatar bloomerp_modules.location.avatar
+#: bloomerp_modules.maintenanceplan.avatar bloomerp_modules.maintenancerequest.avatar
+#: bloomerp_modules.maintenanceworkorder.avatar bloomerp_modules.manufacturingorder.avatar
+#: bloomerp_modules.manufacturingordercomponent.avatar
+#: bloomerp_modules.manufacturingorderoperation.avatar bloomerp_modules.masterproductionschedule.avatar
+#: bloomerp_modules.mrprun.avatar bloomerp_modules.nonconformancereport.avatar
+#: bloomerp_modules.offboardingprocess.avatar bloomerp_modules.offer.avatar
+#: bloomerp_modules.offerapproval.avatar bloomerp_modules.officelocation.avatar
+#: bloomerp_modules.onboardingprocess.avatar bloomerp_modules.onboardingtask.avatar
+#: bloomerp_modules.onboardingtaskassignment.avatar bloomerp_modules.operation.avatar
+#: bloomerp_modules.opportunity.avatar bloomerp_modules.opportunitystage.avatar
+#: bloomerp_modules.overtimerule.avatar bloomerp_modules.peerfeedback.avatar
+#: bloomerp_modules.performancecycle.avatar bloomerp_modules.performancereview.avatar
+#: bloomerp_modules.person.avatar bloomerp_modules.plannedorder.avatar bloomerp_modules.product.avatar
+#: bloomerp_modules.productioncost.avatar bloomerp_modules.productionmove.avatar
+#: bloomerp_modules.productiontimeentry.avatar bloomerp_modules.publicholiday.avatar
+#: bloomerp_modules.qualitycontrolplan.avatar bloomerp_modules.qualitycontrolplanline.avatar
+#: bloomerp_modules.qualityinspection.avatar bloomerp_modules.qualityinspectionresult.avatar
+#: bloomerp_modules.reviewquestion.avatar bloomerp_modules.reviewresponse.avatar
+#: bloomerp_modules.routing.avatar bloomerp_modules.routingoperation.avatar
+#: bloomerp_modules.salesforecast.avatar bloomerp_modules.team.avatar bloomerp_modules.timeentry.avatar
+#: bloomerp_modules.unitofmeasure.avatar bloomerp_modules.vendor.avatar
+#: bloomerp_modules.vendorinvoice.avatar bloomerp_modules.vendorinvoiceline.avatar
+#: bloomerp_modules.vendorpayment.avatar bloomerp_modules.warehouse.avatar
+#: bloomerp_modules.workcenter.avatar bloomerp_modules.workcentercalendar.avatar
+#: bloomerp_modules.workschedule.avatar
+msgid "Avatar"
+msgstr ""
+
+#: bloomerp_modules.productioncost.valuation_method
+msgid "Average"
+msgstr ""
+
+#: bloomerp_modules.leavebalance.balance
+msgid "Balance"
+msgstr ""
+
+#: bloomerp_modules.bankaccount.opening_balance
+msgid "Balance at the start of the current fiscal year"
+msgstr ""
+
+#: bloomerp_modules.account.bank_account bloomerp_modules.bankaccount
+#: bloomerp_modules.customerreceipt.bank_account bloomerp_modules.vendorpayment.bank_account
+msgid "Bank Account"
+msgstr ""
+
+#: bloomerp_modules.bankaccount
+msgid "Bank Accounts"
+msgstr ""
+
+#: bloomerp_modules.bankaccount.bank_name
+msgid "Bank Name"
+msgstr ""
+
+#: bloomerp_modules.account.bank_account
+msgid "Bank account associated to this account"
+msgstr ""
+
+#: bloomerp_modules.gltransaction.batch_number
+msgid "Batch Number"
+msgstr ""
+
+#: bloomerp_modules.billofmaterial bloomerp_modules.billofmaterialline.bom
+#: bloomerp_modules.manufacturingorder.bom
+msgid "Bill of Material"
+msgstr ""
+
+#: bloomerp_modules.billofmaterialline
+msgid "Bill of Material Line"
+msgstr ""
+
+#: bloomerp_modules.billofmaterialline
+msgid "Bill of Material Lines"
+msgstr ""
+
+#: bloomerp_modules.crmaccount.billing_address bloomerp_modules.customer.billing_address
+msgid "Billing Address"
+msgstr ""
+
+#: bloomerp_modules.customer.email
+msgid "Billing Email"
+msgstr ""
+
+#: bloomerp_modules.customer.phone
+msgid "Billing Phone"
+msgstr ""
+
+#: bloomerp_modules.billofmaterial
+msgid "Bills of Material"
+msgstr ""
+
+#: bloomerp_modules.goal.status bloomerp_modules.onboardingtaskassignment.status
+msgid "Blocked"
+msgstr ""
+
+#: bloomerp_modules.bankaccount.branch
+msgid "Branch"
+msgstr ""
+
+#: bloomerp_modules.budget
+msgid "Budget"
+msgstr ""
+
+#: bloomerp_modules.budget.budget_code
+msgid "Budget Code"
+msgstr ""
+
+#: bloomerp_modules.budget.budget_name
+msgid "Budget Name"
+msgstr ""
+
+#: bloomerp_modules.budget.budget_type
+msgid "Budget Type"
+msgstr ""
+
+#: bloomerp_modules.budget.budget_version
+msgid "Budget Version"
+msgstr ""
+
+#: bloomerp_modules.budget.budgeted_amount
+msgid "Budgeted Amount"
+msgstr ""
+
+#: bloomerp_modules.budget.budgeted_amount
+msgid "Budgeted amount for this account and period"
+msgstr ""
+
+#: bloomerp_modules.budget
+msgid "Budgets"
+msgstr ""
+
+#: bloomerp_modules.crmaccount bloomerp_modules.customer.crm_account
+#: bloomerp_modules.vendor.crm_account
+msgid "CRM Account"
+msgstr ""
+
+#: bloomerp_modules.crmaccount
+msgid "CRM Accounts"
+msgstr ""
+
+#: bloomerp_modules.productioncost.calculated_at
+msgid "Calculated At"
+msgstr ""
+
+#: bloomerp_modules.workcenter.calendar
+msgid "Calendar"
+msgstr ""
+
+#: bloomerp_modules.fiscalperiod.quarter
+msgid "Calendar quarter containing the period"
+msgstr ""
+
+#: bloomerp_modules.activity.activity_type
+msgid "Call"
+msgstr ""
+
+#: bloomerp_modules.customerinvoice.status bloomerp_modules.interview.status
+#: bloomerp_modules.journalentry.status bloomerp_modules.leaverequest.status
+#: bloomerp_modules.maintenancerequest.status bloomerp_modules.maintenanceworkorder.status
+#: bloomerp_modules.manufacturingorder.status bloomerp_modules.offboardingprocess.status
+#: bloomerp_modules.onboardingprocess.status bloomerp_modules.plannedorder.status
+#: bloomerp_modules.vendorinvoice.status
+msgid "Cancelled"
+msgstr ""
+
+#: bloomerp_modules.application.candidate bloomerp_modules.candidate
+#: bloomerp_modules.person.person_type
+msgid "Candidate"
+msgstr ""
+
+#: bloomerp_modules.candidate
+msgid "Candidates"
+msgstr ""
+
+#: bloomerp_modules.workcenter.capacity_units
+msgid "Capacity Units"
+msgstr ""
+
+#: bloomerp_modules.budget.budget_type
+msgid "Capital Budget"
+msgstr ""
+
+#: bloomerp_modules.customerreceipt.payment_method bloomerp_modules.vendorpayment.payment_method
+msgid "Card"
+msgstr ""
+
+#: bloomerp_modules.journal.journal_type
+msgid "Cash Disbursements Journal"
+msgstr ""
+
+#: bloomerp_modules.budget.budget_type
+msgid "Cash Flow Budget"
+msgstr ""
+
+#: bloomerp_modules.journal.journal_type
+msgid "Cash Receipts Journal"
+msgstr ""
+
+#: bloomerp_modules.leavetype.category bloomerp_modules.onboardingtask.category
+#: bloomerp_modules.reviewquestion.category bloomerp_modules.unitofmeasure.category
+msgid "Category"
+msgstr ""
+
+#: bloomerp_modules.maintenancerequest.cause
+msgid "Cause"
+msgstr ""
+
+#: bloomerp_modules.workcenter.work_center_type
+msgid "Cell"
+msgstr ""
+
+#: bloomerp_modules.customerreceipt.payment_method bloomerp_modules.vendorpayment.payment_method
+msgid "Check"
+msgstr ""
+
+#: bloomerp_modules.attendancerecord.check_in
+msgid "Check In"
+msgstr ""
+
+#: bloomerp_modules.attendancerecord.check_out
+msgid "Check Out"
+msgstr ""
+
+#: bloomerp_modules.bankaccount.account_type
+msgid "Checking"
+msgstr ""
+
+#: bloomerp_modules.officelocation.city
+msgid "City"
+msgstr ""
+
+#: bloomerp_modules.crmaccount.account_type
+msgid "Classification of the account relationship"
+msgstr ""
+
+#: bloomerp_modules.productiontimeentry.time_type
+msgid "Cleanup"
+msgstr ""
+
+#: bloomerp_modules.opportunity.close_date
+msgid "Close Date"
+msgstr ""
+
+#: bloomerp_modules.budget.status bloomerp_modules.fiscalperiod.status
+#: bloomerp_modules.jobopening.status bloomerp_modules.nonconformancereport.status
+#: bloomerp_modules.performancecycle.status
+msgid "Closed"
+msgstr ""
+
+#: bloomerp_modules.fiscalperiod.closed_by
+msgid "Closed By"
+msgstr ""
+
+#: bloomerp_modules.fiscalperiod.closed_date
+msgid "Closed Date"
+msgstr ""
+
+#: bloomerp_modules.accountbalance.closing_balance
+msgid "Closing Balance"
+msgstr ""
+
+#: bloomerp_modules.jobopening.closing_date
+msgid "Closing Date"
+msgstr ""
+
+#: bloomerp_modules.journal.journal_type
+msgid "Closing Journal"
+msgstr ""
+
+#: bloomerp_modules.billofmaterial.code bloomerp_modules.costcenter.code
+#: bloomerp_modules.department.code bloomerp_modules.equipment.code bloomerp_modules.exitreason.code
+#: bloomerp_modules.hrcostcenter.code bloomerp_modules.jobtitle.code bloomerp_modules.leavetype.code
+#: bloomerp_modules.location.code bloomerp_modules.officelocation.code bloomerp_modules.operation.code
+#: bloomerp_modules.product.code bloomerp_modules.routing.code bloomerp_modules.warehouse.code
+#: bloomerp_modules.workcenter.code
+msgid "Code"
+msgstr ""
+
+#: bloomerp_modules.crmaccount.rating
+msgid "Cold"
+msgstr ""
+
+#: bloomerp_modules.account.comments bloomerp_modules.accountbalance.comments
+#: bloomerp_modules.activity.comments bloomerp_modules.application.comments
+#: bloomerp_modules.attendancerecord.comments bloomerp_modules.bankaccount.comments
+#: bloomerp_modules.billofmaterial.comments bloomerp_modules.billofmaterialline.comments
+#: bloomerp_modules.budget.comments bloomerp_modules.candidate.comments
+#: bloomerp_modules.contact.comments bloomerp_modules.costcenter.comments
+#: bloomerp_modules.costrate.comments bloomerp_modules.crmaccount.comments
+#: bloomerp_modules.customer.comments bloomerp_modules.customerinvoice.comments
+#: bloomerp_modules.customerinvoiceline.comments bloomerp_modules.customerreceipt.comments
+#: bloomerp_modules.department.comments bloomerp_modules.employee.comments
+#: bloomerp_modules.employeecontract.comments bloomerp_modules.equipment.comments
+#: bloomerp_modules.exitinterview.comments bloomerp_modules.exitreason.comments
+#: bloomerp_modules.fiscalperiod.comments bloomerp_modules.gltransaction.comments
+#: bloomerp_modules.goal.comments bloomerp_modules.goalprogress.comments
+#: bloomerp_modules.hiringdecision.comments bloomerp_modules.hrcostcenter.comments
+#: bloomerp_modules.interview.comments bloomerp_modules.interviewfeedback.comments
+#: bloomerp_modules.jobopening.comments bloomerp_modules.jobtitle.comments
+#: bloomerp_modules.journal.comments bloomerp_modules.journalentry.comments
+#: bloomerp_modules.journalentryline.comments bloomerp_modules.lead.comments
+#: bloomerp_modules.leavebalance.comments bloomerp_modules.leavepolicy.comments
+#: bloomerp_modules.leaverequest.comments bloomerp_modules.leavetype.comments
+#: bloomerp_modules.location.comments bloomerp_modules.maintenanceplan.comments
+#: bloomerp_modules.maintenancerequest.comments bloomerp_modules.maintenanceworkorder.comments
+#: bloomerp_modules.manufacturingorder.comments bloomerp_modules.manufacturingordercomponent.comments
+#: bloomerp_modules.manufacturingorderoperation.comments
+#: bloomerp_modules.masterproductionschedule.comments bloomerp_modules.mrprun.comments
+#: bloomerp_modules.nonconformancereport.comments bloomerp_modules.offboardingprocess.comments
+#: bloomerp_modules.offer.comments bloomerp_modules.offerapproval.comments
+#: bloomerp_modules.officelocation.comments bloomerp_modules.onboardingprocess.comments
+#: bloomerp_modules.onboardingtask.comments bloomerp_modules.onboardingtaskassignment.comments
+#: bloomerp_modules.operation.comments bloomerp_modules.opportunity.comments
+#: bloomerp_modules.opportunitystage.comments bloomerp_modules.overtimerule.comments
+#: bloomerp_modules.peerfeedback.comments bloomerp_modules.performancecycle.comments
+#: bloomerp_modules.performancereview.comments bloomerp_modules.person.comments
+#: bloomerp_modules.plannedorder.comments bloomerp_modules.product.comments
+#: bloomerp_modules.productioncost.comments bloomerp_modules.productionmove.comments
+#: bloomerp_modules.productiontimeentry.comments bloomerp_modules.publicholiday.comments
+#: bloomerp_modules.qualitycontrolplan.comments bloomerp_modules.qualitycontrolplanline.comments
+#: bloomerp_modules.qualityinspection.comments bloomerp_modules.qualityinspectionresult.comments
+#: bloomerp_modules.reviewquestion.comments bloomerp_modules.reviewresponse.comments
+#: bloomerp_modules.routing.comments bloomerp_modules.routingoperation.comments
+#: bloomerp_modules.salesforecast.comments bloomerp_modules.team.comments
+#: bloomerp_modules.timeentry.comments bloomerp_modules.unitofmeasure.comments
+#: bloomerp_modules.vendor.comments bloomerp_modules.vendorinvoice.comments
+#: bloomerp_modules.vendorinvoiceline.comments bloomerp_modules.vendorpayment.comments
+#: bloomerp_modules.warehouse.comments bloomerp_modules.workcenter.comments
+#: bloomerp_modules.workcentercalendar.comments bloomerp_modules.workschedule.comments
+msgid "Comments"
+msgstr ""
+
+#: bloomerp_modules.budget.committed_amount
+msgid "Committed Amount"
+msgstr ""
+
+#: bloomerp_modules.lead.company_name
+msgid "Company Name"
+msgstr ""
+
+#: bloomerp_modules.activity.completed bloomerp_modules.goal.status bloomerp_modules.interview.status
+#: bloomerp_modules.maintenancerequest.status bloomerp_modules.manufacturingorderoperation.status
+#: bloomerp_modules.mrprun.status bloomerp_modules.offboardingprocess.status
+#: bloomerp_modules.onboardingprocess.status bloomerp_modules.onboardingtaskassignment.status
+#: bloomerp_modules.performancereview.status
+msgid "Completed"
+msgstr ""
+
+#: bloomerp_modules.activity.completed_at bloomerp_modules.onboardingtaskassignment.completed_at
+msgid "Completed At"
+msgstr ""
+
+#: bloomerp_modules.billofmaterialline.component bloomerp_modules.manufacturingordercomponent.component
+msgid "Component"
+msgstr ""
+
+#: bloomerp_modules.productionmove.move_type
+msgid "Component Issue"
+msgstr ""
+
+#: bloomerp_modules.activity.contact bloomerp_modules.contact bloomerp_modules.lead.contact
+msgid "Contact"
+msgstr ""
+
+#: bloomerp_modules.lead.status
+msgid "Contacted"
+msgstr ""
+
+#: bloomerp_modules.contact
+msgid "Contacts"
+msgstr ""
+
+#: bloomerp_modules.employeecontract.contract_type
+msgid "Contract Type"
+msgstr ""
+
+#: bloomerp_modules.employee.employment_type bloomerp_modules.employeecontract.contract_type
+#: bloomerp_modules.person.person_type
+msgid "Contractor"
+msgstr ""
+
+#: bloomerp_modules.qualitycontrolplanline.control_plan
+msgid "Control Plan"
+msgstr ""
+
+#: bloomerp_modules.lead.status bloomerp_modules.plannedorder.status
+msgid "Converted"
+msgstr ""
+
+#: bloomerp_modules.nonconformancereport.corrective_action
+msgid "Corrective Action"
+msgstr ""
+
+#: bloomerp_modules.budget.cost_center bloomerp_modules.costcenter
+#: bloomerp_modules.costrate.cost_center bloomerp_modules.department.cost_center
+#: bloomerp_modules.employee.cost_center bloomerp_modules.gltransaction.cost_center
+#: bloomerp_modules.journalentryline.cost_center
+msgid "Cost Center"
+msgstr ""
+
+#: bloomerp_modules.costcenter bloomerp_modules.hrcostcenter
+msgid "Cost Centers"
+msgstr ""
+
+#: bloomerp_modules.productioncost.cost_per_unit
+msgid "Cost Per Unit"
+msgstr ""
+
+#: bloomerp_modules.costrate
+msgid "Cost Rate"
+msgstr ""
+
+#: bloomerp_modules.costrate
+msgid "Cost Rates"
+msgstr ""
+
+#: bloomerp_modules.employee.cost_center
+msgid "Cost center for employee expenses"
+msgstr ""
+
+#: bloomerp_modules.gltransaction.cost_center
+msgid "Cost center for tracking"
+msgstr ""
+
+#: bloomerp_modules.journalentryline.cost_center
+msgid "Cost center for tracking purposes"
+msgstr ""
+
+#: bloomerp_modules.account.account_subtype
+msgid "Cost of Goods Sold"
+msgstr ""
+
+#: bloomerp_modules.officelocation.country
+msgid "Country"
+msgstr ""
+
+#: bloomerp_modules.account.created_by bloomerp_modules.accountbalance.created_by
+#: bloomerp_modules.activity.created_by bloomerp_modules.application.created_by
+#: bloomerp_modules.attendancerecord.created_by bloomerp_modules.bankaccount.created_by
+#: bloomerp_modules.billofmaterial.created_by bloomerp_modules.billofmaterialline.created_by
+#: bloomerp_modules.budget.created_by bloomerp_modules.candidate.created_by
+#: bloomerp_modules.contact.created_by bloomerp_modules.costcenter.created_by
+#: bloomerp_modules.costrate.created_by bloomerp_modules.crmaccount.created_by
+#: bloomerp_modules.customer.created_by bloomerp_modules.customerinvoice.created_by
+#: bloomerp_modules.customerinvoiceline.created_by bloomerp_modules.customerreceipt.created_by
+#: bloomerp_modules.department.created_by bloomerp_modules.employee.created_by
+#: bloomerp_modules.employeecontract.created_by bloomerp_modules.equipment.created_by
+#: bloomerp_modules.exitinterview.created_by bloomerp_modules.exitreason.created_by
+#: bloomerp_modules.fiscalperiod.created_by bloomerp_modules.gltransaction.created_by
+#: bloomerp_modules.goal.created_by bloomerp_modules.goalprogress.created_by
+#: bloomerp_modules.hiringdecision.created_by bloomerp_modules.hrcostcenter.created_by
+#: bloomerp_modules.interview.created_by bloomerp_modules.interviewfeedback.created_by
+#: bloomerp_modules.jobopening.created_by bloomerp_modules.jobtitle.created_by
+#: bloomerp_modules.journal.created_by bloomerp_modules.journalentry.created_by
+#: bloomerp_modules.journalentryline.created_by bloomerp_modules.lead.created_by
+#: bloomerp_modules.leavebalance.created_by bloomerp_modules.leavepolicy.created_by
+#: bloomerp_modules.leaverequest.created_by bloomerp_modules.leavetype.created_by
+#: bloomerp_modules.location.created_by bloomerp_modules.maintenanceplan.created_by
+#: bloomerp_modules.maintenancerequest.created_by bloomerp_modules.maintenanceworkorder.created_by
+#: bloomerp_modules.manufacturingorder.created_by
+#: bloomerp_modules.manufacturingordercomponent.created_by
+#: bloomerp_modules.manufacturingorderoperation.created_by
+#: bloomerp_modules.masterproductionschedule.created_by bloomerp_modules.mrprun.created_by
+#: bloomerp_modules.nonconformancereport.created_by bloomerp_modules.offboardingprocess.created_by
+#: bloomerp_modules.offer.created_by bloomerp_modules.offerapproval.created_by
+#: bloomerp_modules.officelocation.created_by bloomerp_modules.onboardingprocess.created_by
+#: bloomerp_modules.onboardingtask.created_by bloomerp_modules.onboardingtaskassignment.created_by
+#: bloomerp_modules.operation.created_by bloomerp_modules.opportunity.created_by
+#: bloomerp_modules.opportunitystage.created_by bloomerp_modules.overtimerule.created_by
+#: bloomerp_modules.peerfeedback.created_by bloomerp_modules.performancecycle.created_by
+#: bloomerp_modules.performancereview.created_by bloomerp_modules.person.created_by
+#: bloomerp_modules.plannedorder.created_by bloomerp_modules.product.created_by
+#: bloomerp_modules.productioncost.created_by bloomerp_modules.productionmove.created_by
+#: bloomerp_modules.productiontimeentry.created_by bloomerp_modules.publicholiday.created_by
+#: bloomerp_modules.qualitycontrolplan.created_by bloomerp_modules.qualitycontrolplanline.created_by
+#: bloomerp_modules.qualityinspection.created_by bloomerp_modules.qualityinspectionresult.created_by
+#: bloomerp_modules.reviewquestion.created_by bloomerp_modules.reviewresponse.created_by
+#: bloomerp_modules.routing.created_by bloomerp_modules.routingoperation.created_by
+#: bloomerp_modules.salesforecast.created_by bloomerp_modules.team.created_by
+#: bloomerp_modules.timeentry.created_by bloomerp_modules.unitofmeasure.created_by
+#: bloomerp_modules.vendor.created_by bloomerp_modules.vendorinvoice.created_by
+#: bloomerp_modules.vendorinvoiceline.created_by bloomerp_modules.vendorpayment.created_by
+#: bloomerp_modules.warehouse.created_by bloomerp_modules.workcenter.created_by
+#: bloomerp_modules.workcentercalendar.created_by bloomerp_modules.workschedule.created_by
+msgid "Created By"
+msgstr ""
+
+#: bloomerp_modules.account.normal_balance bloomerp_modules.bankaccount.account_type
+#: bloomerp_modules.gltransaction.transaction_type
+msgid "Credit"
+msgstr ""
+
+#: bloomerp_modules.gltransaction.credit_amount bloomerp_modules.journalentryline.credit_amount
+msgid "Credit Amount"
+msgstr ""
+
+#: bloomerp_modules.customer.credit_limit
+msgid "Credit Limit"
+msgstr ""
+
+#: bloomerp_modules.accountbalance.credit_total
+msgid "Credit Total"
+msgstr ""
+
+#: bloomerp_modules.gltransaction.credit_amount
+msgid "Credit amount"
+msgstr ""
+
+#: bloomerp_modules.journalentryline.credit_amount
+msgid "Credit amount for this line"
+msgstr ""
+
+#: bloomerp_modules.maintenancerequest.priority
+msgid "Critical"
+msgstr ""
+
+#: bloomerp_modules.account.currency bloomerp_modules.accountbalance.currency
+#: bloomerp_modules.bankaccount.currency bloomerp_modules.budget.currency
+#: bloomerp_modules.customer.currency bloomerp_modules.customerinvoice.currency
+#: bloomerp_modules.customerreceipt.currency bloomerp_modules.employeecontract.currency
+#: bloomerp_modules.gltransaction.currency bloomerp_modules.journalentry.currency
+#: bloomerp_modules.journalentryline.currency bloomerp_modules.offer.currency
+#: bloomerp_modules.vendor.currency bloomerp_modules.vendorinvoice.currency
+#: bloomerp_modules.vendorpayment.currency
+msgid "Currency"
+msgstr ""
+
+#: bloomerp_modules.account.currency
+msgid "Currency used by this account"
+msgstr ""
+
+#: bloomerp_modules.account.account_subtype
+msgid "Current Asset"
+msgstr ""
+
+#: bloomerp_modules.account.account_subtype
+msgid "Current Liability"
+msgstr ""
+
+#: bloomerp_modules.employee.status
+msgid "Current employment status"
+msgstr ""
+
+#: bloomerp_modules.crmaccount.account_type bloomerp_modules.customer
+#: bloomerp_modules.customerinvoice.customer bloomerp_modules.customerreceipt.customer
+msgid "Customer"
+msgstr ""
+
+#: bloomerp_modules.customer.customer_code
+msgid "Customer Code"
+msgstr ""
+
+#: bloomerp_modules.customerinvoice
+msgid "Customer Invoice"
+msgstr ""
+
+#: bloomerp_modules.customerinvoiceline
+msgid "Customer Invoice Line"
+msgstr ""
+
+#: bloomerp_modules.customerinvoiceline
+msgid "Customer Invoice Lines"
+msgstr ""
+
+#: bloomerp_modules.customerinvoice
+msgid "Customer Invoices"
+msgstr ""
+
+#: bloomerp_modules.customer.customer_name
+msgid "Customer Name"
+msgstr ""
+
+#: bloomerp_modules.customerreceipt
+msgid "Customer Receipt"
+msgstr ""
+
+#: bloomerp_modules.customerreceipt
+msgid "Customer Receipts"
+msgstr ""
+
+#: bloomerp_modules.customerinvoice.customer_reference
+msgid "Customer Reference"
+msgstr ""
+
+#: bloomerp_modules.customer
+msgid "Customers"
+msgstr ""
+
+#: bloomerp_modules.publicholiday.date
+msgid "Date"
+msgstr ""
+
+#: bloomerp_modules.nonconformancereport.date_reported
+msgid "Date Reported"
+msgstr ""
+
+#: bloomerp_modules.employee.hire_date
+msgid "Date employment started"
+msgstr ""
+
+#: bloomerp_modules.person.date_of_birth
+msgid "Date of Birth"
+msgstr ""
+
+#: bloomerp_modules.employee.date_of_birth
+msgid "Date of birth"
+msgstr ""
+
+#: bloomerp_modules.journalentry.entry_date
+msgid "Date of the journal entry"
+msgstr ""
+
+#: bloomerp_modules.gltransaction.transaction_date
+msgid "Date of the transaction"
+msgstr ""
+
+#: bloomerp_modules.journalentry.document_date
+msgid "Date shown on the source document"
+msgstr ""
+
+#: bloomerp_modules.journalentry.approved_date
+msgid "Date when entry was approved"
+msgstr ""
+
+#: bloomerp_modules.journalentry.posted_date
+msgid "Date when entry was posted"
+msgstr ""
+
+#: bloomerp_modules.journalentry.posting_date
+msgid "Date when entry was posted to ledger"
+msgstr ""
+
+#: bloomerp_modules.fiscalperiod.closed_date
+msgid "Date when period was closed"
+msgstr ""
+
+#: bloomerp_modules.gltransaction.posting_date
+msgid "Date when transaction was posted"
+msgstr ""
+
+#: bloomerp_modules.account.datetime_created bloomerp_modules.accountbalance.datetime_created
+#: bloomerp_modules.activity.datetime_created bloomerp_modules.application.datetime_created
+#: bloomerp_modules.attendancerecord.datetime_created bloomerp_modules.bankaccount.datetime_created
+#: bloomerp_modules.billofmaterial.datetime_created
+#: bloomerp_modules.billofmaterialline.datetime_created bloomerp_modules.budget.datetime_created
+#: bloomerp_modules.candidate.datetime_created bloomerp_modules.contact.datetime_created
+#: bloomerp_modules.costcenter.datetime_created bloomerp_modules.costrate.datetime_created
+#: bloomerp_modules.crmaccount.datetime_created bloomerp_modules.customer.datetime_created
+#: bloomerp_modules.customerinvoice.datetime_created
+#: bloomerp_modules.customerinvoiceline.datetime_created
+#: bloomerp_modules.customerreceipt.datetime_created bloomerp_modules.department.datetime_created
+#: bloomerp_modules.employee.datetime_created bloomerp_modules.employeecontract.datetime_created
+#: bloomerp_modules.equipment.datetime_created bloomerp_modules.exitinterview.datetime_created
+#: bloomerp_modules.exitreason.datetime_created bloomerp_modules.fiscalperiod.datetime_created
+#: bloomerp_modules.gltransaction.datetime_created bloomerp_modules.goal.datetime_created
+#: bloomerp_modules.goalprogress.datetime_created bloomerp_modules.hiringdecision.datetime_created
+#: bloomerp_modules.hrcostcenter.datetime_created bloomerp_modules.interview.datetime_created
+#: bloomerp_modules.interviewfeedback.datetime_created bloomerp_modules.jobopening.datetime_created
+#: bloomerp_modules.jobtitle.datetime_created bloomerp_modules.journal.datetime_created
+#: bloomerp_modules.journalentry.datetime_created bloomerp_modules.journalentryline.datetime_created
+#: bloomerp_modules.lead.datetime_created bloomerp_modules.leavebalance.datetime_created
+#: bloomerp_modules.leavepolicy.datetime_created bloomerp_modules.leaverequest.datetime_created
+#: bloomerp_modules.leavetype.datetime_created bloomerp_modules.location.datetime_created
+#: bloomerp_modules.maintenanceplan.datetime_created
+#: bloomerp_modules.maintenancerequest.datetime_created
+#: bloomerp_modules.maintenanceworkorder.datetime_created
+#: bloomerp_modules.manufacturingorder.datetime_created
+#: bloomerp_modules.manufacturingordercomponent.datetime_created
+#: bloomerp_modules.manufacturingorderoperation.datetime_created
+#: bloomerp_modules.masterproductionschedule.datetime_created bloomerp_modules.mrprun.datetime_created
+#: bloomerp_modules.nonconformancereport.datetime_created
+#: bloomerp_modules.offboardingprocess.datetime_created bloomerp_modules.offer.datetime_created
+#: bloomerp_modules.offerapproval.datetime_created bloomerp_modules.officelocation.datetime_created
+#: bloomerp_modules.onboardingprocess.datetime_created bloomerp_modules.onboardingtask.datetime_created
+#: bloomerp_modules.onboardingtaskassignment.datetime_created
+#: bloomerp_modules.operation.datetime_created bloomerp_modules.opportunity.datetime_created
+#: bloomerp_modules.opportunitystage.datetime_created bloomerp_modules.overtimerule.datetime_created
+#: bloomerp_modules.peerfeedback.datetime_created bloomerp_modules.performancecycle.datetime_created
+#: bloomerp_modules.performancereview.datetime_created bloomerp_modules.person.datetime_created
+#: bloomerp_modules.plannedorder.datetime_created bloomerp_modules.product.datetime_created
+#: bloomerp_modules.productioncost.datetime_created bloomerp_modules.productionmove.datetime_created
+#: bloomerp_modules.productiontimeentry.datetime_created
+#: bloomerp_modules.publicholiday.datetime_created bloomerp_modules.qualitycontrolplan.datetime_created
+#: bloomerp_modules.qualitycontrolplanline.datetime_created
+#: bloomerp_modules.qualityinspection.datetime_created
+#: bloomerp_modules.qualityinspectionresult.datetime_created
+#: bloomerp_modules.reviewquestion.datetime_created bloomerp_modules.reviewresponse.datetime_created
+#: bloomerp_modules.routing.datetime_created bloomerp_modules.routingoperation.datetime_created
+#: bloomerp_modules.salesforecast.datetime_created bloomerp_modules.team.datetime_created
+#: bloomerp_modules.timeentry.datetime_created bloomerp_modules.unitofmeasure.datetime_created
+#: bloomerp_modules.vendor.datetime_created bloomerp_modules.vendorinvoice.datetime_created
+#: bloomerp_modules.vendorinvoiceline.datetime_created bloomerp_modules.vendorpayment.datetime_created
+#: bloomerp_modules.warehouse.datetime_created bloomerp_modules.workcenter.datetime_created
+#: bloomerp_modules.workcentercalendar.datetime_created bloomerp_modules.workschedule.datetime_created
+msgid "Datetime Created"
+msgstr ""
+
+#: bloomerp_modules.account.datetime_updated bloomerp_modules.accountbalance.datetime_updated
+#: bloomerp_modules.activity.datetime_updated bloomerp_modules.application.datetime_updated
+#: bloomerp_modules.attendancerecord.datetime_updated bloomerp_modules.bankaccount.datetime_updated
+#: bloomerp_modules.billofmaterial.datetime_updated
+#: bloomerp_modules.billofmaterialline.datetime_updated bloomerp_modules.budget.datetime_updated
+#: bloomerp_modules.candidate.datetime_updated bloomerp_modules.contact.datetime_updated
+#: bloomerp_modules.costcenter.datetime_updated bloomerp_modules.costrate.datetime_updated
+#: bloomerp_modules.crmaccount.datetime_updated bloomerp_modules.customer.datetime_updated
+#: bloomerp_modules.customerinvoice.datetime_updated
+#: bloomerp_modules.customerinvoiceline.datetime_updated
+#: bloomerp_modules.customerreceipt.datetime_updated bloomerp_modules.department.datetime_updated
+#: bloomerp_modules.employee.datetime_updated bloomerp_modules.employeecontract.datetime_updated
+#: bloomerp_modules.equipment.datetime_updated bloomerp_modules.exitinterview.datetime_updated
+#: bloomerp_modules.exitreason.datetime_updated bloomerp_modules.fiscalperiod.datetime_updated
+#: bloomerp_modules.gltransaction.datetime_updated bloomerp_modules.goal.datetime_updated
+#: bloomerp_modules.goalprogress.datetime_updated bloomerp_modules.hiringdecision.datetime_updated
+#: bloomerp_modules.hrcostcenter.datetime_updated bloomerp_modules.interview.datetime_updated
+#: bloomerp_modules.interviewfeedback.datetime_updated bloomerp_modules.jobopening.datetime_updated
+#: bloomerp_modules.jobtitle.datetime_updated bloomerp_modules.journal.datetime_updated
+#: bloomerp_modules.journalentry.datetime_updated bloomerp_modules.journalentryline.datetime_updated
+#: bloomerp_modules.lead.datetime_updated bloomerp_modules.leavebalance.datetime_updated
+#: bloomerp_modules.leavepolicy.datetime_updated bloomerp_modules.leaverequest.datetime_updated
+#: bloomerp_modules.leavetype.datetime_updated bloomerp_modules.location.datetime_updated
+#: bloomerp_modules.maintenanceplan.datetime_updated
+#: bloomerp_modules.maintenancerequest.datetime_updated
+#: bloomerp_modules.maintenanceworkorder.datetime_updated
+#: bloomerp_modules.manufacturingorder.datetime_updated
+#: bloomerp_modules.manufacturingordercomponent.datetime_updated
+#: bloomerp_modules.manufacturingorderoperation.datetime_updated
+#: bloomerp_modules.masterproductionschedule.datetime_updated bloomerp_modules.mrprun.datetime_updated
+#: bloomerp_modules.nonconformancereport.datetime_updated
+#: bloomerp_modules.offboardingprocess.datetime_updated bloomerp_modules.offer.datetime_updated
+#: bloomerp_modules.offerapproval.datetime_updated bloomerp_modules.officelocation.datetime_updated
+#: bloomerp_modules.onboardingprocess.datetime_updated bloomerp_modules.onboardingtask.datetime_updated
+#: bloomerp_modules.onboardingtaskassignment.datetime_updated
+#: bloomerp_modules.operation.datetime_updated bloomerp_modules.opportunity.datetime_updated
+#: bloomerp_modules.opportunitystage.datetime_updated bloomerp_modules.overtimerule.datetime_updated
+#: bloomerp_modules.peerfeedback.datetime_updated bloomerp_modules.performancecycle.datetime_updated
+#: bloomerp_modules.performancereview.datetime_updated bloomerp_modules.person.datetime_updated
+#: bloomerp_modules.plannedorder.datetime_updated bloomerp_modules.product.datetime_updated
+#: bloomerp_modules.productioncost.datetime_updated bloomerp_modules.productionmove.datetime_updated
+#: bloomerp_modules.productiontimeentry.datetime_updated
+#: bloomerp_modules.publicholiday.datetime_updated bloomerp_modules.qualitycontrolplan.datetime_updated
+#: bloomerp_modules.qualitycontrolplanline.datetime_updated
+#: bloomerp_modules.qualityinspection.datetime_updated
+#: bloomerp_modules.qualityinspectionresult.datetime_updated
+#: bloomerp_modules.reviewquestion.datetime_updated bloomerp_modules.reviewresponse.datetime_updated
+#: bloomerp_modules.routing.datetime_updated bloomerp_modules.routingoperation.datetime_updated
+#: bloomerp_modules.salesforecast.datetime_updated bloomerp_modules.team.datetime_updated
+#: bloomerp_modules.timeentry.datetime_updated bloomerp_modules.unitofmeasure.datetime_updated
+#: bloomerp_modules.vendor.datetime_updated bloomerp_modules.vendorinvoice.datetime_updated
+#: bloomerp_modules.vendorinvoiceline.datetime_updated bloomerp_modules.vendorpayment.datetime_updated
+#: bloomerp_modules.warehouse.datetime_updated bloomerp_modules.workcenter.datetime_updated
+#: bloomerp_modules.workcentercalendar.datetime_updated bloomerp_modules.workschedule.datetime_updated
+msgid "Datetime Updated"
+msgstr ""
+
+#: bloomerp_modules.account.normal_balance bloomerp_modules.gltransaction.transaction_type
+msgid "Debit"
+msgstr ""
+
+#: bloomerp_modules.gltransaction.debit_amount bloomerp_modules.journalentryline.debit_amount
+msgid "Debit Amount"
+msgstr ""
+
+#: bloomerp_modules.accountbalance.debit_total
+msgid "Debit Total"
+msgstr ""
+
+#: bloomerp_modules.gltransaction.debit_amount
+msgid "Debit amount"
+msgstr ""
+
+#: bloomerp_modules.journalentryline.debit_amount
+msgid "Debit amount for this line"
+msgstr ""
+
+#: bloomerp_modules.hiringdecision.decided_at bloomerp_modules.offerapproval.decided_at
+msgid "Decided At"
+msgstr ""
+
+#: bloomerp_modules.hiringdecision.decided_by
+msgid "Decided By"
+msgstr ""
+
+#: bloomerp_modules.hiringdecision.decision
+msgid "Decision"
+msgstr ""
+
+#: bloomerp_modules.offer.status
+msgid "Declined"
+msgstr ""
+
+#: bloomerp_modules.journal.default_currency
+msgid "Default Currency"
+msgstr ""
+
+#: bloomerp_modules.onboardingtask.default_due_days
+msgid "Default Due Days"
+msgstr ""
+
+#: bloomerp_modules.account.tax_code
+msgid "Default Tax Code"
+msgstr ""
+
+#: bloomerp_modules.product.default_warehouse
+msgid "Default Warehouse"
+msgstr ""
+
+#: bloomerp_modules.account.tax_code
+msgid "Default tax code for transactions posted to the account"
+msgstr ""
+
+#: bloomerp_modules.budget.department bloomerp_modules.contact.department bloomerp_modules.department
+#: bloomerp_modules.employee.department bloomerp_modules.gltransaction.department
+#: bloomerp_modules.jobopening.department bloomerp_modules.journalentryline.department
+#: bloomerp_modules.team.department
+msgid "Department"
+msgstr ""
+
+#: bloomerp_modules.gltransaction.department
+msgid "Department for tracking"
+msgstr ""
+
+#: bloomerp_modules.journalentryline.department
+msgid "Department for tracking purposes"
+msgstr ""
+
+#: bloomerp_modules.employee.department
+msgid "Department or team name"
+msgstr ""
+
+#: bloomerp_modules.department
+msgid "Departments"
+msgstr ""
+
+#: bloomerp_modules.account.description bloomerp_modules.costcenter.description
+#: bloomerp_modules.customerinvoiceline.description bloomerp_modules.department.description
+#: bloomerp_modules.exitreason.description bloomerp_modules.gltransaction.description
+#: bloomerp_modules.goal.description bloomerp_modules.hrcostcenter.description
+#: bloomerp_modules.jobopening.description bloomerp_modules.jobtitle.description
+#: bloomerp_modules.journal.description bloomerp_modules.journalentry.description
+#: bloomerp_modules.journalentryline.description bloomerp_modules.maintenancerequest.description
+#: bloomerp_modules.mrprun.description bloomerp_modules.nonconformancereport.description
+#: bloomerp_modules.onboardingtask.description bloomerp_modules.operation.description
+#: bloomerp_modules.opportunity.description bloomerp_modules.performancecycle.description
+#: bloomerp_modules.product.description bloomerp_modules.routing.description
+#: bloomerp_modules.team.description bloomerp_modules.vendorinvoiceline.description
+#: bloomerp_modules.workcentercalendar.description bloomerp_modules.workschedule.description
+msgid "Description"
+msgstr ""
+
+#: bloomerp_modules.journal.description
+msgid "Description of the journal purpose"
+msgstr ""
+
+#: bloomerp_modules.gltransaction.description bloomerp_modules.journalentry.description
+msgid "Description of the transaction"
+msgstr ""
+
+#: bloomerp_modules.journalentryline.description
+msgid "Description of this line item"
+msgstr ""
+
+#: bloomerp_modules.manufacturingordercomponent.location_destination
+msgid "Destination Location"
+msgstr ""
+
+#: bloomerp_modules.account.account_subtype
+msgid "Detailed account classification"
+msgstr ""
+
+#: bloomerp_modules.account.description
+msgid "Detailed description of the account"
+msgstr ""
+
+#: bloomerp_modules.journalentry.document_date
+msgid "Document Date"
+msgstr ""
+
+#: bloomerp_modules.maintenanceworkorder.status bloomerp_modules.manufacturingorder.status
+msgid "Done"
+msgstr ""
+
+#: bloomerp_modules.productiontimeentry.time_type
+msgid "Downtime"
+msgstr ""
+
+#: bloomerp_modules.budget.status bloomerp_modules.customerinvoice.status
+#: bloomerp_modules.employeecontract.status bloomerp_modules.jobopening.status
+#: bloomerp_modules.journalentry.status bloomerp_modules.maintenanceworkorder.status
+#: bloomerp_modules.manufacturingorder.status bloomerp_modules.mrprun.status
+#: bloomerp_modules.offer.status bloomerp_modules.performancereview.status
+#: bloomerp_modules.vendorinvoice.status
+msgid "Draft"
+msgstr ""
+
+#: bloomerp_modules.activity.due_date bloomerp_modules.customerinvoice.due_date
+#: bloomerp_modules.journalentry.due_date bloomerp_modules.journalentryline.due_date
+#: bloomerp_modules.onboardingtaskassignment.due_date bloomerp_modules.plannedorder.due_date
+#: bloomerp_modules.vendorinvoice.due_date
+msgid "Due Date"
+msgstr ""
+
+#: bloomerp_modules.productiontimeentry.duration_minutes
+msgid "Duration (Minutes)"
+msgstr ""
+
+#: bloomerp_modules.costrate.effective_from
+msgid "Effective From"
+msgstr ""
+
+#: bloomerp_modules.costrate.effective_to
+msgid "Effective To"
+msgstr ""
+
+#: bloomerp_modules.activity.activity_type bloomerp_modules.candidate.email
+#: bloomerp_modules.contact.email bloomerp_modules.lead.email bloomerp_modules.lead.lead_source
+#: bloomerp_modules.person.email
+msgid "Email"
+msgstr ""
+
+#: bloomerp_modules.attendancerecord.employee bloomerp_modules.employee
+#: bloomerp_modules.employeecontract.employee bloomerp_modules.goal.employee
+#: bloomerp_modules.leavebalance.employee bloomerp_modules.leaverequest.employee
+#: bloomerp_modules.offboardingprocess.employee bloomerp_modules.onboardingprocess.employee
+#: bloomerp_modules.peerfeedback.employee bloomerp_modules.performancereview.employee
+#: bloomerp_modules.person.person_type bloomerp_modules.productiontimeentry.employee
+#: bloomerp_modules.timeentry.employee
+msgid "Employee"
+msgstr ""
+
+#: bloomerp_modules.employeecontract
+msgid "Employee Contract"
+msgstr ""
+
+#: bloomerp_modules.employeecontract
+msgid "Employee Contracts"
+msgstr ""
+
+#: bloomerp_modules.employee.job_title
+msgid "Employee role or title"
+msgstr ""
+
+#: bloomerp_modules.employee
+msgid "Employees"
+msgstr ""
+
+#: bloomerp_modules.employee.status
+msgid "Employment Status"
+msgstr ""
+
+#: bloomerp_modules.employee.employment_type
+msgid "Employment Type"
+msgstr ""
+
+#: bloomerp_modules.employeecontract.end_date bloomerp_modules.fiscalperiod.end_date
+#: bloomerp_modules.leaverequest.end_date bloomerp_modules.offboardingprocess.end_date
+#: bloomerp_modules.performancecycle.end_date
+msgid "End Date"
+msgstr ""
+
+#: bloomerp_modules.productiontimeentry.end_time bloomerp_modules.workschedule.end_time
+msgid "End Time"
+msgstr ""
+
+#: bloomerp_modules.employeecontract.end_date
+msgid "End date of the contract"
+msgstr ""
+
+#: bloomerp_modules.fiscalperiod.end_date
+msgid "End date of the fiscal period"
+msgstr ""
+
+#: bloomerp_modules.journalentry.entry_date
+msgid "Entry Date"
+msgstr ""
+
+#: bloomerp_modules.journalentry.entry_number
+msgid "Entry Number"
+msgstr ""
+
+#: bloomerp_modules.equipment bloomerp_modules.maintenanceplan.equipment
+#: bloomerp_modules.maintenancerequest.equipment bloomerp_modules.maintenanceworkorder.equipment
+msgid "Equipment"
+msgstr ""
+
+#: bloomerp_modules.account.account_type
+msgid "Equity"
+msgstr ""
+
+#: bloomerp_modules.lead.estimated_value
+msgid "Estimated Value"
+msgstr ""
+
+#: bloomerp_modules.lead.lead_source
+msgid "Event"
+msgstr ""
+
+#: bloomerp_modules.customerinvoice.exchange_rate bloomerp_modules.gltransaction.exchange_rate
+#: bloomerp_modules.journalentry.exchange_rate bloomerp_modules.journalentryline.exchange_rate
+#: bloomerp_modules.vendorinvoice.exchange_rate
+msgid "Exchange Rate"
+msgstr ""
+
+#: bloomerp_modules.exitinterview
+msgid "Exit Interview"
+msgstr ""
+
+#: bloomerp_modules.exitinterview
+msgid "Exit Interviews"
+msgstr ""
+
+#: bloomerp_modules.exitreason bloomerp_modules.offboardingprocess.exit_reason
+msgid "Exit Reason"
+msgstr ""
+
+#: bloomerp_modules.exitreason
+msgid "Exit Reasons"
+msgstr ""
+
+#: bloomerp_modules.lead.expected_close_date bloomerp_modules.opportunity.expected_close_date
+msgid "Expected Close Date"
+msgstr ""
+
+#: bloomerp_modules.account.account_type
+msgid "Expense"
+msgstr ""
+
+#: bloomerp_modules.vendorinvoiceline.expense_account
+msgid "Expense Account"
+msgstr ""
+
+#: bloomerp_modules.employeecontract.status
+msgid "Expired"
+msgstr ""
+
+#: bloomerp_modules.gltransaction.reference_number
+msgid "External reference number"
+msgstr ""
+
+#: bloomerp_modules.journalentry.reference_number
+msgid "External reference number (invoice, receipt, etc.)"
+msgstr ""
+
+#: bloomerp_modules.qualityinspectionresult.result
+msgid "Fail"
+msgstr ""
+
+#: bloomerp_modules.mrprun.status bloomerp_modules.qualityinspection.status
+msgid "Failed"
+msgstr ""
+
+#: bloomerp_modules.peerfeedback.feedback
+msgid "Feedback"
+msgstr ""
+
+#: bloomerp_modules.account.files bloomerp_modules.accountbalance.files bloomerp_modules.activity.files
+#: bloomerp_modules.application.files bloomerp_modules.attendancerecord.files
+#: bloomerp_modules.bankaccount.files bloomerp_modules.billofmaterial.files
+#: bloomerp_modules.billofmaterialline.files bloomerp_modules.budget.files
+#: bloomerp_modules.candidate.files bloomerp_modules.contact.files bloomerp_modules.costcenter.files
+#: bloomerp_modules.costrate.files bloomerp_modules.crmaccount.files bloomerp_modules.customer.files
+#: bloomerp_modules.customerinvoice.files bloomerp_modules.customerinvoiceline.files
+#: bloomerp_modules.customerreceipt.files bloomerp_modules.department.files
+#: bloomerp_modules.employee.files bloomerp_modules.employeecontract.files
+#: bloomerp_modules.equipment.files bloomerp_modules.exitinterview.files
+#: bloomerp_modules.exitreason.files bloomerp_modules.fiscalperiod.files
+#: bloomerp_modules.gltransaction.files bloomerp_modules.goal.files bloomerp_modules.goalprogress.files
+#: bloomerp_modules.hiringdecision.files bloomerp_modules.hrcostcenter.files
+#: bloomerp_modules.interview.files bloomerp_modules.interviewfeedback.files
+#: bloomerp_modules.jobopening.files bloomerp_modules.jobtitle.files bloomerp_modules.journal.files
+#: bloomerp_modules.journalentry.files bloomerp_modules.journalentryline.files
+#: bloomerp_modules.lead.files bloomerp_modules.leavebalance.files bloomerp_modules.leavepolicy.files
+#: bloomerp_modules.leaverequest.files bloomerp_modules.leavetype.files bloomerp_modules.location.files
+#: bloomerp_modules.maintenanceplan.files bloomerp_modules.maintenancerequest.files
+#: bloomerp_modules.maintenanceworkorder.files bloomerp_modules.manufacturingorder.files
+#: bloomerp_modules.manufacturingordercomponent.files
+#: bloomerp_modules.manufacturingorderoperation.files bloomerp_modules.masterproductionschedule.files
+#: bloomerp_modules.mrprun.files bloomerp_modules.nonconformancereport.files
+#: bloomerp_modules.offboardingprocess.files bloomerp_modules.offer.files
+#: bloomerp_modules.offerapproval.files bloomerp_modules.officelocation.files
+#: bloomerp_modules.onboardingprocess.files bloomerp_modules.onboardingtask.files
+#: bloomerp_modules.onboardingtaskassignment.files bloomerp_modules.operation.files
+#: bloomerp_modules.opportunity.files bloomerp_modules.opportunitystage.files
+#: bloomerp_modules.overtimerule.files bloomerp_modules.peerfeedback.files
+#: bloomerp_modules.performancecycle.files bloomerp_modules.performancereview.files
+#: bloomerp_modules.person.files bloomerp_modules.plannedorder.files bloomerp_modules.product.files
+#: bloomerp_modules.productioncost.files bloomerp_modules.productionmove.files
+#: bloomerp_modules.productiontimeentry.files bloomerp_modules.publicholiday.files
+#: bloomerp_modules.qualitycontrolplan.files bloomerp_modules.qualitycontrolplanline.files
+#: bloomerp_modules.qualityinspection.files bloomerp_modules.qualityinspectionresult.files
+#: bloomerp_modules.reviewquestion.files bloomerp_modules.reviewresponse.files
+#: bloomerp_modules.routing.files bloomerp_modules.routingoperation.files
+#: bloomerp_modules.salesforecast.files bloomerp_modules.team.files bloomerp_modules.timeentry.files
+#: bloomerp_modules.unitofmeasure.files bloomerp_modules.vendor.files
+#: bloomerp_modules.vendorinvoice.files bloomerp_modules.vendorinvoiceline.files
+#: bloomerp_modules.vendorpayment.files bloomerp_modules.warehouse.files
+#: bloomerp_modules.workcenter.files bloomerp_modules.workcentercalendar.files
+#: bloomerp_modules.workschedule.files
+msgid "Files"
+msgstr ""
+
+#: bloomerp_modules.productionmove.move_type
+msgid "Finished Good Receipt"
+msgstr ""
+
+#: bloomerp_modules.candidate.first_name bloomerp_modules.contact.first_name
+#: bloomerp_modules.employee.first_name bloomerp_modules.person.first_name
+msgid "First Name"
+msgstr ""
+
+#: bloomerp_modules.employee.first_name
+msgid "First name of the employee"
+msgstr ""
+
+#: bloomerp_modules.accountbalance.fiscal_period bloomerp_modules.budget.fiscal_period
+#: bloomerp_modules.fiscalperiod bloomerp_modules.gltransaction.fiscal_period
+msgid "Fiscal Period"
+msgstr ""
+
+#: bloomerp_modules.fiscalperiod
+msgid "Fiscal Periods"
+msgstr ""
+
+#: bloomerp_modules.fiscalperiod.fiscal_year
+msgid "Fiscal Year"
+msgstr ""
+
+#: bloomerp_modules.accountbalance.fiscal_period
+msgid "Fiscal period for this balance"
+msgstr ""
+
+#: bloomerp_modules.budget.fiscal_period
+msgid "Fiscal period for this budget"
+msgstr ""
+
+#: bloomerp_modules.gltransaction.fiscal_period
+msgid "Fiscal period when transaction was posted"
+msgstr ""
+
+#: bloomerp_modules.fiscalperiod.fiscal_year
+msgid "Fiscal year this period belongs to"
+msgstr ""
+
+#: bloomerp_modules.account.account_subtype
+msgid "Fixed Asset"
+msgstr ""
+
+#: bloomerp_modules.employeecontract.contract_type
+msgid "Fixed Term"
+msgstr ""
+
+#: bloomerp_modules.masterproductionschedule.source
+msgid "Forecast"
+msgstr ""
+
+#: bloomerp_modules.budget.forecast_amount
+msgid "Forecast Amount"
+msgstr ""
+
+#: bloomerp_modules.salesforecast.forecast_date
+msgid "Forecast Date"
+msgstr ""
+
+#: bloomerp_modules.maintenanceplan.frequency_type
+msgid "Frequency Type"
+msgstr ""
+
+#: bloomerp_modules.maintenanceplan.frequency_value
+msgid "Frequency Value"
+msgstr ""
+
+#: bloomerp_modules.productionmove.location_from
+msgid "From Location"
+msgstr ""
+
+#: bloomerp_modules.employee.employment_type
+msgid "Full Time"
+msgstr ""
+
+#: bloomerp_modules.manufacturingordercomponent.status
+msgid "Fully Issued"
+msgstr ""
+
+#: bloomerp_modules.gltransaction
+msgid "GL Transaction"
+msgstr ""
+
+#: bloomerp_modules.gltransaction
+msgid "GL Transactions"
+msgstr ""
+
+#: bloomerp_modules.journal.journal_type
+msgid "General Journal"
+msgstr ""
+
+#: bloomerp_modules.accountbalance.account bloomerp_modules.gltransaction.account
+msgid "General ledger account"
+msgstr ""
+
+#: bloomerp_modules.journalentryline.account
+msgid "General ledger account for this line"
+msgstr ""
+
+#: bloomerp_modules.goal bloomerp_modules.goalprogress.goal
+msgid "Goal"
+msgstr ""
+
+#: bloomerp_modules.goalprogress
+msgid "Goal Progress"
+msgstr ""
+
+#: bloomerp_modules.goalprogress
+msgid "Goal Progress Updates"
+msgstr ""
+
+#: bloomerp_modules.goal
+msgid "Goals"
+msgstr ""
+
+#: bloomerp_modules.qualityinspection.reference_type
+msgid "Goods Receipt"
+msgstr ""
+
+#: bloomerp_modules.hrcostcenter
+msgid "HR Cost Center"
+msgstr ""
+
+#: bloomerp_modules.lead.priority bloomerp_modules.maintenancerequest.priority
+#: bloomerp_modules.manufacturingorder.priority
+msgid "High"
+msgstr ""
+
+#: bloomerp_modules.hiringdecision.decision bloomerp_modules.interviewfeedback.recommendation
+msgid "Hire"
+msgstr ""
+
+#: bloomerp_modules.employee.hire_date
+msgid "Hire Date"
+msgstr ""
+
+#: bloomerp_modules.application.status bloomerp_modules.candidate.status
+msgid "Hired"
+msgstr ""
+
+#: bloomerp_modules.hiringdecision
+msgid "Hiring Decision"
+msgstr ""
+
+#: bloomerp_modules.hiringdecision
+msgid "Hiring Decisions"
+msgstr ""
+
+#: bloomerp_modules.hiringdecision.decision bloomerp_modules.interviewfeedback.recommendation
+msgid "Hold"
+msgstr ""
+
+#: bloomerp_modules.crmaccount.rating
+msgid "Hot"
+msgstr ""
+
+#: bloomerp_modules.workcenter.hourly_rate
+msgid "Hourly Rate"
+msgstr ""
+
+#: bloomerp_modules.timeentry.hours
+msgid "Hours"
+msgstr ""
+
+#: bloomerp_modules.bankaccount.iban
+msgid "IBAN"
+msgstr ""
+
+#: bloomerp_modules.journalentry.source_document_id
+msgid "ID of the source document"
+msgstr ""
+
+#: bloomerp_modules.account.id bloomerp_modules.accountbalance.id bloomerp_modules.activity.id
+#: bloomerp_modules.application.id bloomerp_modules.attendancerecord.id bloomerp_modules.bankaccount.id
+#: bloomerp_modules.billofmaterial.id bloomerp_modules.billofmaterialline.id bloomerp_modules.budget.id
+#: bloomerp_modules.candidate.id bloomerp_modules.contact.id bloomerp_modules.costcenter.id
+#: bloomerp_modules.costrate.id bloomerp_modules.crmaccount.id bloomerp_modules.customer.id
+#: bloomerp_modules.customerinvoice.id bloomerp_modules.customerinvoiceline.id
+#: bloomerp_modules.customerreceipt.id bloomerp_modules.department.id bloomerp_modules.employee.id
+#: bloomerp_modules.employeecontract.id bloomerp_modules.equipment.id bloomerp_modules.exitinterview.id
+#: bloomerp_modules.exitreason.id bloomerp_modules.fiscalperiod.id bloomerp_modules.gltransaction.id
+#: bloomerp_modules.goal.id bloomerp_modules.goalprogress.id bloomerp_modules.hiringdecision.id
+#: bloomerp_modules.hrcostcenter.id bloomerp_modules.interview.id bloomerp_modules.interviewfeedback.id
+#: bloomerp_modules.jobopening.id bloomerp_modules.jobtitle.id bloomerp_modules.journal.id
+#: bloomerp_modules.journalentry.id bloomerp_modules.journalentryline.id bloomerp_modules.lead.id
+#: bloomerp_modules.leavebalance.id bloomerp_modules.leavepolicy.id bloomerp_modules.leaverequest.id
+#: bloomerp_modules.leavetype.id bloomerp_modules.location.id bloomerp_modules.maintenanceplan.id
+#: bloomerp_modules.maintenancerequest.id bloomerp_modules.maintenanceworkorder.id
+#: bloomerp_modules.manufacturingorder.id bloomerp_modules.manufacturingordercomponent.id
+#: bloomerp_modules.manufacturingorderoperation.id bloomerp_modules.masterproductionschedule.id
+#: bloomerp_modules.mrprun.id bloomerp_modules.nonconformancereport.id
+#: bloomerp_modules.offboardingprocess.id bloomerp_modules.offer.id bloomerp_modules.offerapproval.id
+#: bloomerp_modules.officelocation.id bloomerp_modules.onboardingprocess.id
+#: bloomerp_modules.onboardingtask.id bloomerp_modules.onboardingtaskassignment.id
+#: bloomerp_modules.operation.id bloomerp_modules.opportunity.id bloomerp_modules.opportunitystage.id
+#: bloomerp_modules.overtimerule.id bloomerp_modules.peerfeedback.id
+#: bloomerp_modules.performancecycle.id bloomerp_modules.performancereview.id
+#: bloomerp_modules.person.id bloomerp_modules.plannedorder.id bloomerp_modules.product.id
+#: bloomerp_modules.productioncost.id bloomerp_modules.productionmove.id
+#: bloomerp_modules.productiontimeentry.id bloomerp_modules.publicholiday.id
+#: bloomerp_modules.qualitycontrolplan.id bloomerp_modules.qualitycontrolplanline.id
+#: bloomerp_modules.qualityinspection.id bloomerp_modules.qualityinspectionresult.id
+#: bloomerp_modules.reviewquestion.id bloomerp_modules.reviewresponse.id bloomerp_modules.routing.id
+#: bloomerp_modules.routingoperation.id bloomerp_modules.salesforecast.id bloomerp_modules.team.id
+#: bloomerp_modules.timeentry.id bloomerp_modules.unitofmeasure.id bloomerp_modules.vendor.id
+#: bloomerp_modules.vendorinvoice.id bloomerp_modules.vendorinvoiceline.id
+#: bloomerp_modules.vendorpayment.id bloomerp_modules.warehouse.id bloomerp_modules.workcenter.id
+#: bloomerp_modules.workcentercalendar.id bloomerp_modules.workschedule.id
+msgid "Id"
+msgstr ""
+
+#: bloomerp_modules.nonconformancereport.status
+msgid "In Analysis"
+msgstr ""
+
+#: bloomerp_modules.goal.status bloomerp_modules.maintenancerequest.status
+#: bloomerp_modules.maintenanceworkorder.status bloomerp_modules.manufacturingorder.status
+#: bloomerp_modules.manufacturingorderoperation.status bloomerp_modules.offboardingprocess.status
+#: bloomerp_modules.onboardingprocess.status bloomerp_modules.onboardingtaskassignment.status
+#: bloomerp_modules.qualityinspection.status
+msgid "In Progress"
+msgstr ""
+
+#: bloomerp_modules.performancereview.status
+msgid "In Review"
+msgstr ""
+
+#: bloomerp_modules.customer.status bloomerp_modules.equipment.status bloomerp_modules.person.status
+#: bloomerp_modules.vendor.status
+msgid "Inactive"
+msgstr ""
+
+#: bloomerp_modules.crmaccount.industry
+msgid "Industry"
+msgstr ""
+
+#: bloomerp_modules.location.location_type
+msgid "Input"
+msgstr ""
+
+#: bloomerp_modules.qualityinspectionresult.inspection
+msgid "Inspection"
+msgstr ""
+
+#: bloomerp_modules.qualityinspection.inspection_date
+msgid "Inspection Date"
+msgstr ""
+
+#: bloomerp_modules.qualityinspection.inspector
+msgid "Inspector"
+msgstr ""
+
+#: bloomerp_modules.employee.employment_type bloomerp_modules.employeecontract.contract_type
+msgid "Intern"
+msgstr ""
+
+#: bloomerp_modules.application.status bloomerp_modules.interview
+#: bloomerp_modules.interviewfeedback.interview
+msgid "Interview"
+msgstr ""
+
+#: bloomerp_modules.interviewfeedback
+msgid "Interview Feedback"
+msgstr ""
+
+#: bloomerp_modules.interview.interview_type
+msgid "Interview Type"
+msgstr ""
+
+#: bloomerp_modules.exitinterview.interviewer bloomerp_modules.interview.interviewer
+msgid "Interviewer"
+msgstr ""
+
+#: bloomerp_modules.candidate.status
+msgid "Interviewing"
+msgstr ""
+
+#: bloomerp_modules.interview
+msgid "Interviews"
+msgstr ""
+
+#: bloomerp_modules.customerinvoiceline.invoice bloomerp_modules.journalentry.source_document_type
+#: bloomerp_modules.vendorinvoiceline.invoice
+msgid "Invoice"
+msgstr ""
+
+#: bloomerp_modules.customerinvoice.invoice_date bloomerp_modules.vendorinvoice.invoice_date
+msgid "Invoice Date"
+msgstr ""
+
+#: bloomerp_modules.customerinvoice.invoice_number bloomerp_modules.vendorinvoice.invoice_number
+msgid "Invoice Number"
+msgstr ""
+
+#: bloomerp_modules.account.is_active bloomerp_modules.bankaccount.is_active
+#: bloomerp_modules.billofmaterial.is_active bloomerp_modules.costcenter.is_active
+#: bloomerp_modules.crmaccount.is_active bloomerp_modules.customer.is_active
+#: bloomerp_modules.department.is_active bloomerp_modules.exitreason.is_active
+#: bloomerp_modules.hrcostcenter.is_active bloomerp_modules.jobtitle.is_active
+#: bloomerp_modules.journal.is_active bloomerp_modules.leavetype.is_active
+#: bloomerp_modules.location.is_active bloomerp_modules.maintenanceplan.is_active
+#: bloomerp_modules.officelocation.is_active bloomerp_modules.onboardingtask.is_active
+#: bloomerp_modules.overtimerule.is_active bloomerp_modules.product.is_active
+#: bloomerp_modules.publicholiday.is_active bloomerp_modules.qualitycontrolplan.is_active
+#: bloomerp_modules.reviewquestion.is_active bloomerp_modules.routing.is_active
+#: bloomerp_modules.team.is_active bloomerp_modules.vendor.is_active
+#: bloomerp_modules.workcenter.is_active bloomerp_modules.workschedule.is_active
+msgid "Is Active"
+msgstr ""
+
+#: bloomerp_modules.fiscalperiod.is_adjusting_period
+msgid "Is Adjusting Period"
+msgstr ""
+
+#: bloomerp_modules.warehouse.is_default
+msgid "Is Default"
+msgstr ""
+
+#: bloomerp_modules.masterproductionschedule.is_firm
+msgid "Is Firm"
+msgstr ""
+
+#: bloomerp_modules.opportunitystage.is_lost
+msgid "Is Lost Stage"
+msgstr ""
+
+#: bloomerp_modules.billofmaterialline.is_phantom
+msgid "Is Phantom"
+msgstr ""
+
+#: bloomerp_modules.account.is_system_account
+msgid "Is System Account"
+msgstr ""
+
+#: bloomerp_modules.opportunitystage.is_won
+msgid "Is Won Stage"
+msgstr ""
+
+#: bloomerp_modules.vendorinvoiceline.item_code
+msgid "Item Code"
+msgstr ""
+
+#: bloomerp_modules.candidate.source
+msgid "Job Board"
+msgstr ""
+
+#: bloomerp_modules.application.job_opening bloomerp_modules.jobopening
+msgid "Job Opening"
+msgstr ""
+
+#: bloomerp_modules.jobopening
+msgid "Job Openings"
+msgstr ""
+
+#: bloomerp_modules.contact.title bloomerp_modules.employee.job_title
+#: bloomerp_modules.jobopening.job_title bloomerp_modules.jobtitle
+msgid "Job Title"
+msgstr ""
+
+#: bloomerp_modules.jobtitle
+msgid "Job Titles"
+msgstr ""
+
+#: bloomerp_modules.journal bloomerp_modules.journalentry.journal
+msgid "Journal"
+msgstr ""
+
+#: bloomerp_modules.journal.journal_code
+msgid "Journal Code"
+msgstr ""
+
+#: bloomerp_modules.journalentry
+msgid "Journal Entries"
+msgstr ""
+
+#: bloomerp_modules.customerinvoice.journal_entry bloomerp_modules.customerreceipt.journal_entry
+#: bloomerp_modules.journalentry bloomerp_modules.journalentryline.journal_entry
+#: bloomerp_modules.vendorinvoice.journal_entry bloomerp_modules.vendorpayment.journal_entry
+msgid "Journal Entry"
+msgstr ""
+
+#: bloomerp_modules.gltransaction.journal_entry_line bloomerp_modules.journalentryline
+msgid "Journal Entry Line"
+msgstr ""
+
+#: bloomerp_modules.journalentryline
+msgid "Journal Entry Lines"
+msgstr ""
+
+#: bloomerp_modules.journal.journal_name
+msgid "Journal Name"
+msgstr ""
+
+#: bloomerp_modules.journal.journal_type
+msgid "Journal Type"
+msgstr ""
+
+#: bloomerp_modules.journal
+msgid "Journals"
+msgstr ""
+
+#: bloomerp_modules.costrate.rate_type bloomerp_modules.workcenter.work_center_type
+msgid "Labor"
+msgstr ""
+
+#: bloomerp_modules.productioncost.labor_cost
+msgid "Labor Cost"
+msgstr ""
+
+#: bloomerp_modules.maintenanceplan.last_maintenance_date
+msgid "Last Maintenance Date"
+msgstr ""
+
+#: bloomerp_modules.candidate.last_name bloomerp_modules.contact.last_name
+#: bloomerp_modules.employee.last_name bloomerp_modules.person.last_name
+msgid "Last Name"
+msgstr ""
+
+#: bloomerp_modules.bankaccount.last_reconciled_balance
+msgid "Last Reconciled Balance"
+msgstr ""
+
+#: bloomerp_modules.bankaccount.last_reconciled_date
+msgid "Last Reconciled Date"
+msgstr ""
+
+#: bloomerp_modules.employee.last_name
+msgid "Last name of the employee"
+msgstr ""
+
+#: bloomerp_modules.attendancerecord.status
+msgid "Late"
+msgstr ""
+
+#: bloomerp_modules.lead bloomerp_modules.opportunity.lead bloomerp_modules.opportunity.source
+msgid "Lead"
+msgstr ""
+
+#: bloomerp_modules.lead.lead_name
+msgid "Lead Name"
+msgstr ""
+
+#: bloomerp_modules.lead.lead_source
+msgid "Lead Source"
+msgstr ""
+
+#: bloomerp_modules.product.lead_time_days
+msgid "Lead Time (Days)"
+msgstr ""
+
+#: bloomerp_modules.lead
+msgid "Leads"
+msgstr ""
+
+#: bloomerp_modules.attendancerecord.status
+msgid "Leave"
+msgstr ""
+
+#: bloomerp_modules.leavebalance
+msgid "Leave Balance"
+msgstr ""
+
+#: bloomerp_modules.leavebalance
+msgid "Leave Balances"
+msgstr ""
+
+#: bloomerp_modules.leavepolicy
+msgid "Leave Policies"
+msgstr ""
+
+#: bloomerp_modules.leavepolicy
+msgid "Leave Policy"
+msgstr ""
+
+#: bloomerp_modules.leaverequest
+msgid "Leave Request"
+msgstr ""
+
+#: bloomerp_modules.leaverequest
+msgid "Leave Requests"
+msgstr ""
+
+#: bloomerp_modules.leavebalance.leave_type bloomerp_modules.leavepolicy.leave_type
+#: bloomerp_modules.leaverequest.leave_type bloomerp_modules.leavetype
+msgid "Leave Type"
+msgstr ""
+
+#: bloomerp_modules.leavetype
+msgid "Leave Types"
+msgstr ""
+
+#: bloomerp_modules.crmaccount.account_name
+msgid "Legal or trading name of the account"
+msgstr ""
+
+#: bloomerp_modules.jobtitle.level
+msgid "Level"
+msgstr ""
+
+#: bloomerp_modules.account.account_type
+msgid "Liability"
+msgstr ""
+
+#: bloomerp_modules.customerinvoiceline.line_number bloomerp_modules.gltransaction.line_number
+#: bloomerp_modules.journalentryline.line_number bloomerp_modules.vendorinvoiceline.line_number
+msgid "Line Number"
+msgstr ""
+
+#: bloomerp_modules.customerinvoiceline.line_total bloomerp_modules.vendorinvoiceline.line_total
+msgid "Line Total"
+msgstr ""
+
+#: bloomerp_modules.journalentryline.reference_number
+msgid "Line-specific reference number"
+msgstr ""
+
+#: bloomerp_modules.employeecontract.employee
+msgid "Link to employee"
+msgstr ""
+
+#: bloomerp_modules.interview.location bloomerp_modules.location
+msgid "Location"
+msgstr ""
+
+#: bloomerp_modules.location.location_type
+msgid "Location Type"
+msgstr ""
+
+#: bloomerp_modules.location
+msgid "Locations"
+msgstr ""
+
+#: bloomerp_modules.accountbalance.is_locked bloomerp_modules.fiscalperiod.status
+msgid "Locked"
+msgstr ""
+
+#: bloomerp_modules.account.account_subtype
+msgid "Long Term Liability"
+msgstr ""
+
+#: bloomerp_modules.opportunity.status
+msgid "Lost"
+msgstr ""
+
+#: bloomerp_modules.product.tracking_method
+msgid "Lot"
+msgstr ""
+
+#: bloomerp_modules.manufacturingordercomponent.lot_number
+#: bloomerp_modules.nonconformancereport.lot_number bloomerp_modules.productionmove.lot_number
+#: bloomerp_modules.qualityinspection.lot_number
+msgid "Lot Number"
+msgstr ""
+
+#: bloomerp_modules.lead.priority bloomerp_modules.maintenancerequest.priority
+#: bloomerp_modules.manufacturingorder.priority
+msgid "Low"
+msgstr ""
+
+#: bloomerp_modules.mrprun bloomerp_modules.plannedorder.mrp_run
+msgid "MRP Run"
+msgstr ""
+
+#: bloomerp_modules.mrprun
+msgid "MRP Runs"
+msgstr ""
+
+#: bloomerp_modules.costrate.rate_type bloomerp_modules.workcenter.work_center_type
+msgid "Machine"
+msgstr ""
+
+#: bloomerp_modules.maintenanceplan bloomerp_modules.maintenanceworkorder.maintenance_plan
+msgid "Maintenance Plan"
+msgstr ""
+
+#: bloomerp_modules.maintenanceplan
+msgid "Maintenance Plans"
+msgstr ""
+
+#: bloomerp_modules.maintenancerequest bloomerp_modules.maintenanceworkorder.maintenance_request
+msgid "Maintenance Request"
+msgstr ""
+
+#: bloomerp_modules.maintenancerequest
+msgid "Maintenance Requests"
+msgstr ""
+
+#: bloomerp_modules.maintenanceworkorder
+msgid "Maintenance Work Order"
+msgstr ""
+
+#: bloomerp_modules.maintenanceworkorder
+msgid "Maintenance Work Orders"
+msgstr ""
+
+#: bloomerp_modules.department.manager
+msgid "Manager"
+msgstr ""
+
+#: bloomerp_modules.masterproductionschedule.source bloomerp_modules.salesforecast.source
+msgid "Manual"
+msgstr ""
+
+#: bloomerp_modules.product.type
+msgid "Manufactured"
+msgstr ""
+
+#: bloomerp_modules.equipment.manufacturer
+msgid "Manufacturer"
+msgstr ""
+
+#: bloomerp_modules.plannedorder.order_type
+msgid "Manufacturing"
+msgstr ""
+
+#: bloomerp_modules.manufacturingorder bloomerp_modules.manufacturingordercomponent.manufacturing_order
+#: bloomerp_modules.manufacturingorderoperation.manufacturing_order
+#: bloomerp_modules.productioncost.manufacturing_order
+#: bloomerp_modules.productionmove.manufacturing_order
+#: bloomerp_modules.qualityinspection.reference_type
+msgid "Manufacturing Order"
+msgstr ""
+
+#: bloomerp_modules.manufacturingordercomponent
+msgid "Manufacturing Order Component"
+msgstr ""
+
+#: bloomerp_modules.manufacturingordercomponent
+msgid "Manufacturing Order Components"
+msgstr ""
+
+#: bloomerp_modules.manufacturingorderoperation
+#: bloomerp_modules.productiontimeentry.manufacturing_order_operation
+msgid "Manufacturing Order Operation"
+msgstr ""
+
+#: bloomerp_modules.manufacturingorderoperation
+msgid "Manufacturing Order Operations"
+msgstr ""
+
+#: bloomerp_modules.manufacturingorder
+msgid "Manufacturing Orders"
+msgstr ""
+
+#: bloomerp_modules.budget.budget_type
+msgid "Master Budget"
+msgstr ""
+
+#: bloomerp_modules.masterproductionschedule
+msgid "Master Production Schedule"
+msgstr ""
+
+#: bloomerp_modules.masterproductionschedule
+msgid "Master Production Schedules"
+msgstr ""
+
+#: bloomerp_modules.productioncost.material_cost
+msgid "Material Cost"
+msgstr ""
+
+#: bloomerp_modules.leavepolicy.max_balance
+msgid "Max Balance"
+msgstr ""
+
+#: bloomerp_modules.qualitycontrolplanline.test_type bloomerp_modules.qualityinspectionresult.test_type
+msgid "Measurement"
+msgstr ""
+
+#: bloomerp_modules.lead.priority
+msgid "Medium"
+msgstr ""
+
+#: bloomerp_modules.activity.activity_type
+msgid "Meeting"
+msgstr ""
+
+#: bloomerp_modules.maintenanceplan.frequency_type
+msgid "Meter Based"
+msgstr ""
+
+#: bloomerp_modules.employee.middle_name bloomerp_modules.person.middle_name
+msgid "Middle Name"
+msgstr ""
+
+#: bloomerp_modules.employee.middle_name
+msgid "Middle name of the employee"
+msgstr ""
+
+#: bloomerp_modules.overtimerule.minimum_hours
+msgid "Minimum Hours"
+msgstr ""
+
+#: bloomerp_modules.contact.mobile_phone
+msgid "Mobile Phone"
+msgstr ""
+
+#: bloomerp_modules.productionmove.move_date
+msgid "Move Date"
+msgstr ""
+
+#: bloomerp_modules.routingoperation.move_time_minutes
+msgid "Move Time (Minutes)"
+msgstr ""
+
+#: bloomerp_modules.productionmove.move_type
+msgid "Move Type"
+msgstr ""
+
+#: bloomerp_modules.costcenter.name bloomerp_modules.department.name bloomerp_modules.equipment.name
+#: bloomerp_modules.exitreason.name bloomerp_modules.hrcostcenter.name
+#: bloomerp_modules.leavepolicy.name bloomerp_modules.leavetype.name bloomerp_modules.location.name
+#: bloomerp_modules.maintenanceplan.name bloomerp_modules.officelocation.name
+#: bloomerp_modules.onboardingtask.name bloomerp_modules.operation.name
+#: bloomerp_modules.overtimerule.name bloomerp_modules.performancecycle.name
+#: bloomerp_modules.product.name bloomerp_modules.publicholiday.name
+#: bloomerp_modules.qualitycontrolplan.name bloomerp_modules.routing.name bloomerp_modules.team.name
+#: bloomerp_modules.unitofmeasure.name bloomerp_modules.warehouse.name bloomerp_modules.workcenter.name
+#: bloomerp_modules.workcentercalendar.name bloomerp_modules.workschedule.name
+msgid "Name"
+msgstr ""
+
+#: bloomerp_modules.account.account_name
+msgid "Name of the account"
+msgstr ""
+
+#: bloomerp_modules.budget.budget_name
+msgid "Name of the budget"
+msgstr ""
+
+#: bloomerp_modules.fiscalperiod.period_name
+msgid "Name of the fiscal period"
+msgstr ""
+
+#: bloomerp_modules.journal.journal_name
+msgid "Name of the journal"
+msgstr ""
+
+#: bloomerp_modules.product.name
+msgid "Name of the product"
+msgstr ""
+
+#: bloomerp_modules.accountbalance.net_change
+msgid "Net Change"
+msgstr ""
+
+#: bloomerp_modules.candidate.status bloomerp_modules.lead.status
+msgid "New"
+msgstr ""
+
+#: bloomerp_modules.maintenanceplan.next_due_date
+msgid "Next Due Date"
+msgstr ""
+
+#: bloomerp_modules.journal.next_entry_number
+msgid "Next Entry Number"
+msgstr ""
+
+#: bloomerp_modules.opportunity.next_step
+msgid "Next Step"
+msgstr ""
+
+#: bloomerp_modules.journal.next_entry_number
+msgid "Next available entry number for auto numbering"
+msgstr ""
+
+#: bloomerp_modules.interviewfeedback.recommendation
+msgid "No Hire"
+msgstr ""
+
+#: bloomerp_modules.nonconformancereport
+msgid "Non Conformance Report"
+msgstr ""
+
+#: bloomerp_modules.nonconformancereport
+msgid "Non Conformance Reports"
+msgstr ""
+
+#: bloomerp_modules.product.tracking_method
+msgid "None"
+msgstr ""
+
+#: bloomerp_modules.maintenancerequest.priority bloomerp_modules.manufacturingorder.priority
+msgid "Normal"
+msgstr ""
+
+#: bloomerp_modules.account.normal_balance
+msgid "Normal Balance"
+msgstr ""
+
+#: bloomerp_modules.account.normal_balance
+msgid "Normal balance side for this account type"
+msgstr ""
+
+#: bloomerp_modules.goal.status
+msgid "Not Started"
+msgstr ""
+
+#: bloomerp_modules.activity.notes bloomerp_modules.application.notes
+#: bloomerp_modules.attendancerecord.notes bloomerp_modules.bankaccount.notes
+#: bloomerp_modules.billofmaterial.notes bloomerp_modules.budget.notes bloomerp_modules.candidate.notes
+#: bloomerp_modules.contact.notes bloomerp_modules.customer.notes
+#: bloomerp_modules.customerinvoice.notes bloomerp_modules.customerreceipt.notes
+#: bloomerp_modules.employeecontract.notes bloomerp_modules.equipment.notes
+#: bloomerp_modules.exitinterview.notes bloomerp_modules.fiscalperiod.notes
+#: bloomerp_modules.goalprogress.notes bloomerp_modules.hiringdecision.notes
+#: bloomerp_modules.interview.notes bloomerp_modules.journal.notes bloomerp_modules.journalentry.notes
+#: bloomerp_modules.lead.notes bloomerp_modules.leavepolicy.notes
+#: bloomerp_modules.maintenanceworkorder.notes bloomerp_modules.manufacturingorder.notes
+#: bloomerp_modules.manufacturingorderoperation.notes bloomerp_modules.masterproductionschedule.notes
+#: bloomerp_modules.offboardingprocess.notes bloomerp_modules.offer.notes
+#: bloomerp_modules.offerapproval.notes bloomerp_modules.onboardingprocess.notes
+#: bloomerp_modules.productiontimeentry.notes bloomerp_modules.qualityinspection.notes
+#: bloomerp_modules.qualityinspectionresult.notes bloomerp_modules.salesforecast.notes
+#: bloomerp_modules.timeentry.notes bloomerp_modules.vendor.notes bloomerp_modules.vendorinvoice.notes
+#: bloomerp_modules.vendorpayment.notes
+msgid "Notes"
+msgstr ""
+
+#: bloomerp_modules.maintenancerequest.number bloomerp_modules.maintenanceworkorder.number
+#: bloomerp_modules.manufacturingorder.number bloomerp_modules.nonconformancereport.number
+msgid "Number"
+msgstr ""
+
+#: bloomerp_modules.workcenter.oee_target_percent
+msgid "OEE Target Percent"
+msgstr ""
+
+#: bloomerp_modules.exitinterview.offboarding_process bloomerp_modules.offboardingprocess
+msgid "Offboarding Process"
+msgstr ""
+
+#: bloomerp_modules.offboardingprocess
+msgid "Offboarding Processes"
+msgstr ""
+
+#: bloomerp_modules.application.status bloomerp_modules.offer bloomerp_modules.offerapproval.offer
+msgid "Offer"
+msgstr ""
+
+#: bloomerp_modules.offerapproval
+msgid "Offer Approval"
+msgstr ""
+
+#: bloomerp_modules.offerapproval
+msgid "Offer Approvals"
+msgstr ""
+
+#: bloomerp_modules.offer.offer_date
+msgid "Offer Date"
+msgstr ""
+
+#: bloomerp_modules.candidate.status
+msgid "Offered"
+msgstr ""
+
+#: bloomerp_modules.offer
+msgid "Offers"
+msgstr ""
+
+#: bloomerp_modules.employee.office_location bloomerp_modules.jobopening.location
+#: bloomerp_modules.officelocation bloomerp_modules.publicholiday.location
+msgid "Office Location"
+msgstr ""
+
+#: bloomerp_modules.officelocation
+msgid "Office Locations"
+msgstr ""
+
+#: bloomerp_modules.customer.status bloomerp_modules.jobopening.status bloomerp_modules.vendor.status
+msgid "On Hold"
+msgstr ""
+
+#: bloomerp_modules.employee.status
+msgid "On Leave"
+msgstr ""
+
+#: bloomerp_modules.interview.interview_type
+msgid "On-site"
+msgstr ""
+
+#: bloomerp_modules.onboardingprocess bloomerp_modules.onboardingtaskassignment.onboarding_process
+msgid "Onboarding Process"
+msgstr ""
+
+#: bloomerp_modules.onboardingprocess
+msgid "Onboarding Processes"
+msgstr ""
+
+#: bloomerp_modules.onboardingtask bloomerp_modules.onboardingtaskassignment.onboarding_task
+msgid "Onboarding Task"
+msgstr ""
+
+#: bloomerp_modules.onboardingtaskassignment
+msgid "Onboarding Task Assignment"
+msgstr ""
+
+#: bloomerp_modules.onboardingtaskassignment
+msgid "Onboarding Task Assignments"
+msgstr ""
+
+#: bloomerp_modules.onboardingtask
+msgid "Onboarding Tasks"
+msgstr ""
+
+#: bloomerp_modules.fiscalperiod.status bloomerp_modules.jobopening.status
+#: bloomerp_modules.maintenancerequest.status bloomerp_modules.nonconformancereport.status
+#: bloomerp_modules.opportunity.status
+msgid "Open"
+msgstr ""
+
+#: bloomerp_modules.account.opening_balance bloomerp_modules.accountbalance.opening_balance
+#: bloomerp_modules.bankaccount.opening_balance
+msgid "Opening Balance"
+msgstr ""
+
+#: bloomerp_modules.account.opening_balance
+msgid "Opening balance for the current fiscal year"
+msgstr ""
+
+#: bloomerp_modules.jobopening.openings_count
+msgid "Openings Count"
+msgstr ""
+
+#: bloomerp_modules.budget.budget_type
+msgid "Operating Budget"
+msgstr ""
+
+#: bloomerp_modules.account.account_subtype
+msgid "Operating Expense"
+msgstr ""
+
+#: bloomerp_modules.account.account_subtype
+msgid "Operating Revenue"
+msgstr ""
+
+#: bloomerp_modules.manufacturingorderoperation.operation bloomerp_modules.operation
+#: bloomerp_modules.qualitycontrolplan.operation bloomerp_modules.routingoperation.operation
+msgid "Operation"
+msgstr ""
+
+#: bloomerp_modules.operation
+msgid "Operations"
+msgstr ""
+
+#: bloomerp_modules.opportunity
+msgid "Opportunities"
+msgstr ""
+
+#: bloomerp_modules.activity.opportunity bloomerp_modules.opportunity
+msgid "Opportunity"
+msgstr ""
+
+#: bloomerp_modules.opportunity.opportunity_name
+msgid "Opportunity Name"
+msgstr ""
+
+#: bloomerp_modules.opportunitystage
+msgid "Opportunity Stage"
+msgstr ""
+
+#: bloomerp_modules.opportunitystage
+msgid "Opportunity Stages"
+msgstr ""
+
+#: bloomerp_modules.plannedorder.order_type
+msgid "Order Type"
+msgstr ""
+
+#: bloomerp_modules.candidate.source bloomerp_modules.journalentry.source_document_type
+#: bloomerp_modules.leavetype.category
+msgid "Other"
+msgstr ""
+
+#: bloomerp_modules.account.account_subtype
+msgid "Other Expense"
+msgstr ""
+
+#: bloomerp_modules.account.account_subtype
+msgid "Other Revenue"
+msgstr ""
+
+#: bloomerp_modules.location.location_type
+msgid "Output"
+msgstr ""
+
+#: bloomerp_modules.customerinvoice.outstanding_amount
+#: bloomerp_modules.vendorinvoice.outstanding_amount
+msgid "Outstanding Amount"
+msgstr ""
+
+#: bloomerp_modules.performancereview.overall_rating
+msgid "Overall Rating"
+msgstr ""
+
+#: bloomerp_modules.customerinvoice.status bloomerp_modules.vendorinvoice.status
+msgid "Overdue"
+msgstr ""
+
+#: bloomerp_modules.costrate.rate_type
+msgid "Overhead"
+msgstr ""
+
+#: bloomerp_modules.productioncost.overhead_cost
+msgid "Overhead Cost"
+msgstr ""
+
+#: bloomerp_modules.overtimerule
+msgid "Overtime Rule"
+msgstr ""
+
+#: bloomerp_modules.overtimerule
+msgid "Overtime Rules"
+msgstr ""
+
+#: bloomerp_modules.onboardingprocess.owner bloomerp_modules.opportunity.assigned_to
+msgid "Owner"
+msgstr ""
+
+#: bloomerp_modules.account.account_subtype
+msgid "Owner's Equity"
+msgstr ""
+
+#: bloomerp_modules.customerinvoice.status bloomerp_modules.leavetype.category
+#: bloomerp_modules.vendorinvoice.status bloomerp_modules.vendorpayment.status
+msgid "Paid"
+msgstr ""
+
+#: bloomerp_modules.customerinvoice.paid_amount bloomerp_modules.vendorinvoice.paid_amount
+msgid "Paid Amount"
+msgstr ""
+
+#: bloomerp_modules.mrprun.parameters_json
+msgid "Parameters"
+msgstr ""
+
+#: bloomerp_modules.account.parent_account
+msgid "Parent Account"
+msgstr ""
+
+#: bloomerp_modules.department.parent_department
+msgid "Parent Department"
+msgstr ""
+
+#: bloomerp_modules.account.parent_account
+msgid "Parent account for hierarchical structure"
+msgstr ""
+
+#: bloomerp_modules.employee.employment_type
+msgid "Part Time"
+msgstr ""
+
+#: bloomerp_modules.manufacturingordercomponent.status
+msgid "Partially Issued"
+msgstr ""
+
+#: bloomerp_modules.customerinvoice.status bloomerp_modules.vendorinvoice.status
+msgid "Partially Paid"
+msgstr ""
+
+#: bloomerp_modules.crmaccount.account_type bloomerp_modules.lead.lead_source
+msgid "Partner"
+msgstr ""
+
+#: bloomerp_modules.qualityinspectionresult.result
+msgid "Pass"
+msgstr ""
+
+#: bloomerp_modules.qualityinspection.status
+msgid "Passed"
+msgstr ""
+
+#: bloomerp_modules.journalentry.source_document_type
+msgid "Payment"
+msgstr ""
+
+#: bloomerp_modules.vendorpayment.payment_date
+msgid "Payment Date"
+msgstr ""
+
+#: bloomerp_modules.customerreceipt.payment_method bloomerp_modules.vendorpayment.payment_method
+msgid "Payment Method"
+msgstr ""
+
+#: bloomerp_modules.vendorpayment.payment_number
+msgid "Payment Number"
+msgstr ""
+
+#: bloomerp_modules.customer.payment_terms_days bloomerp_modules.vendor.payment_terms_days
+msgid "Payment Terms Days"
+msgstr ""
+
+#: bloomerp_modules.journal.journal_type
+msgid "Payroll Journal"
+msgstr ""
+
+#: bloomerp_modules.peerfeedback
+msgid "Peer Feedback"
+msgstr ""
+
+#: bloomerp_modules.manufacturingorderoperation.status bloomerp_modules.offerapproval.status
+#: bloomerp_modules.onboardingtaskassignment.status bloomerp_modules.qualityinspection.status
+msgid "Pending"
+msgstr ""
+
+#: bloomerp_modules.journalentry.status
+msgid "Pending Approval"
+msgstr ""
+
+#: bloomerp_modules.person
+msgid "People"
+msgstr ""
+
+#: bloomerp_modules.goal.performance_cycle bloomerp_modules.peerfeedback.performance_cycle
+#: bloomerp_modules.performancecycle bloomerp_modules.performancereview.performance_cycle
+#: bloomerp_modules.reviewquestion.performance_cycle
+msgid "Performance Cycle"
+msgstr ""
+
+#: bloomerp_modules.performancecycle
+msgid "Performance Cycles"
+msgstr ""
+
+#: bloomerp_modules.performancereview bloomerp_modules.reviewresponse.performance_review
+msgid "Performance Review"
+msgstr ""
+
+#: bloomerp_modules.performancereview
+msgid "Performance Reviews"
+msgstr ""
+
+#: bloomerp_modules.fiscalperiod.period_code
+msgid "Period Code"
+msgstr ""
+
+#: bloomerp_modules.fiscalperiod.period_name
+msgid "Period Name"
+msgstr ""
+
+#: bloomerp_modules.fiscalperiod.period_number
+msgid "Period Number"
+msgstr ""
+
+#: bloomerp_modules.fiscalperiod.period_number
+msgid "Period number within the fiscal year"
+msgstr ""
+
+#: bloomerp_modules.employeecontract.contract_type
+msgid "Permanent"
+msgstr ""
+
+#: bloomerp_modules.candidate.person bloomerp_modules.person
+msgid "Person"
+msgstr ""
+
+#: bloomerp_modules.person.person_type
+msgid "Person Type"
+msgstr ""
+
+#: bloomerp_modules.candidate.phone bloomerp_modules.contact.phone
+#: bloomerp_modules.interview.interview_type bloomerp_modules.lead.lead_source
+#: bloomerp_modules.lead.phone bloomerp_modules.officelocation.phone bloomerp_modules.person.phone
+msgid "Phone"
+msgstr ""
+
+#: bloomerp_modules.employee.phone
+msgid "Phone Number"
+msgstr ""
+
+#: bloomerp_modules.manufacturingordercomponent.status bloomerp_modules.offboardingprocess.status
+#: bloomerp_modules.onboardingprocess.status bloomerp_modules.performancecycle.status
+#: bloomerp_modules.plannedorder.status
+msgid "Planned"
+msgstr ""
+
+#: bloomerp_modules.maintenanceworkorder.planned_end_date
+#: bloomerp_modules.manufacturingorder.planned_end_date
+msgid "Planned End Date"
+msgstr ""
+
+#: bloomerp_modules.manufacturingorderoperation.planned_end_time
+msgid "Planned End Time"
+msgstr ""
+
+#: bloomerp_modules.plannedorder
+msgid "Planned Order"
+msgstr ""
+
+#: bloomerp_modules.plannedorder
+msgid "Planned Orders"
+msgstr ""
+
+#: bloomerp_modules.maintenanceworkorder.planned_start_date
+#: bloomerp_modules.manufacturingorder.planned_start_date
+msgid "Planned Start Date"
+msgstr ""
+
+#: bloomerp_modules.manufacturingorderoperation.planned_start_time
+msgid "Planned Start Time"
+msgstr ""
+
+#: bloomerp_modules.customerinvoice.status bloomerp_modules.customerreceipt.status
+#: bloomerp_modules.journalentry.status bloomerp_modules.vendorinvoice.status
+msgid "Posted"
+msgstr ""
+
+#: bloomerp_modules.journalentry.posted_by
+msgid "Posted By"
+msgstr ""
+
+#: bloomerp_modules.jobopening.posted_date bloomerp_modules.journalentry.posted_date
+msgid "Posted Date"
+msgstr ""
+
+#: bloomerp_modules.gltransaction.posting_date bloomerp_modules.journalentry.posting_date
+msgid "Posting Date"
+msgstr ""
+
+#: bloomerp_modules.journal.sequence_prefix
+msgid "Prefix used when numbering entries in this journal"
+msgstr ""
+
+#: bloomerp_modules.attendancerecord.status
+msgid "Present"
+msgstr ""
+
+#: bloomerp_modules.bankaccount.is_primary
+msgid "Primary Account"
+msgstr ""
+
+#: bloomerp_modules.contact.is_primary bloomerp_modules.opportunity.contact
+msgid "Primary Contact"
+msgstr ""
+
+#: bloomerp_modules.crmaccount.primary_email
+msgid "Primary Email"
+msgstr ""
+
+#: bloomerp_modules.crmaccount.primary_phone
+msgid "Primary Phone"
+msgstr ""
+
+#: bloomerp_modules.employee.phone
+msgid "Primary contact phone"
+msgstr ""
+
+#: bloomerp_modules.crmaccount.industry
+msgid "Primary industry sector"
+msgstr ""
+
+#: bloomerp_modules.employee.office_location
+msgid "Primary office location"
+msgstr ""
+
+#: bloomerp_modules.employee.email
+msgid "Primary work email address"
+msgstr ""
+
+#: bloomerp_modules.lead.priority bloomerp_modules.maintenancerequest.priority
+#: bloomerp_modules.manufacturingorder.priority
+msgid "Priority"
+msgstr ""
+
+#: bloomerp_modules.opportunity.probability bloomerp_modules.opportunitystage.probability
+msgid "Probability (%)"
+msgstr ""
+
+#: bloomerp_modules.billofmaterial.product bloomerp_modules.manufacturingorder.product
+#: bloomerp_modules.masterproductionschedule.product bloomerp_modules.nonconformancereport.product
+#: bloomerp_modules.plannedorder.product bloomerp_modules.product
+#: bloomerp_modules.productionmove.product bloomerp_modules.qualitycontrolplan.product
+#: bloomerp_modules.qualityinspection.product bloomerp_modules.salesforecast.product
+msgid "Product"
+msgstr ""
+
+#: bloomerp_modules.customerinvoiceline.product_code
+msgid "Product Code"
+msgstr ""
+
+#: bloomerp_modules.location.location_type
+msgid "Production"
+msgstr ""
+
+#: bloomerp_modules.productioncost
+msgid "Production Cost"
+msgstr ""
+
+#: bloomerp_modules.productioncost
+msgid "Production Costs"
+msgstr ""
+
+#: bloomerp_modules.manufacturingorder.production_location
+msgid "Production Location"
+msgstr ""
+
+#: bloomerp_modules.productionmove
+msgid "Production Move"
+msgstr ""
+
+#: bloomerp_modules.productionmove
+msgid "Production Moves"
+msgstr ""
+
+#: bloomerp_modules.productiontimeentry
+msgid "Production Time Entries"
+msgstr ""
+
+#: bloomerp_modules.productiontimeentry
+msgid "Production Time Entry"
+msgstr ""
+
+#: bloomerp_modules.product
+msgid "Products"
+msgstr ""
+
+#: bloomerp_modules.goalprogress.progress_percent
+msgid "Progress Percent"
+msgstr ""
+
+#: bloomerp_modules.gltransaction.project_code bloomerp_modules.journalentryline.project_code
+msgid "Project Code"
+msgstr ""
+
+#: bloomerp_modules.gltransaction.project_code
+msgid "Project code for tracking"
+msgstr ""
+
+#: bloomerp_modules.journalentryline.project_code
+msgid "Project code for tracking purposes"
+msgstr ""
+
+#: bloomerp_modules.offer.proposed_start_date
+msgid "Proposed Start Date"
+msgstr ""
+
+#: bloomerp_modules.crmaccount.account_type
+msgid "Prospect"
+msgstr ""
+
+#: bloomerp_modules.publicholiday
+msgid "Public Holiday"
+msgstr ""
+
+#: bloomerp_modules.publicholiday
+msgid "Public Holidays"
+msgstr ""
+
+#: bloomerp_modules.plannedorder.order_type
+msgid "Purchase"
+msgstr ""
+
+#: bloomerp_modules.equipment.purchase_date
+msgid "Purchase Date"
+msgstr ""
+
+#: bloomerp_modules.journal.journal_type
+msgid "Purchase Journal"
+msgstr ""
+
+#: bloomerp_modules.vendorinvoice.purchase_order_number
+msgid "Purchase Order Number"
+msgstr ""
+
+#: bloomerp_modules.product.type
+msgid "Purchased"
+msgstr ""
+
+#: bloomerp_modules.lead.status
+msgid "Qualified"
+msgstr ""
+
+#: bloomerp_modules.qualitycontrolplan
+msgid "Quality Control Plan"
+msgstr ""
+
+#: bloomerp_modules.qualitycontrolplanline
+msgid "Quality Control Plan Line"
+msgstr ""
+
+#: bloomerp_modules.qualitycontrolplanline
+msgid "Quality Control Plan Lines"
+msgstr ""
+
+#: bloomerp_modules.qualitycontrolplan
+msgid "Quality Control Plans"
+msgstr ""
+
+#: bloomerp_modules.qualityinspection
+msgid "Quality Inspection"
+msgstr ""
+
+#: bloomerp_modules.qualityinspectionresult
+msgid "Quality Inspection Result"
+msgstr ""
+
+#: bloomerp_modules.qualityinspectionresult
+msgid "Quality Inspection Results"
+msgstr ""
+
+#: bloomerp_modules.qualityinspection
+msgid "Quality Inspections"
+msgstr ""
+
+#: bloomerp_modules.billofmaterial.quantity bloomerp_modules.billofmaterialline.quantity
+#: bloomerp_modules.customerinvoiceline.quantity bloomerp_modules.journalentryline.quantity
+#: bloomerp_modules.masterproductionschedule.quantity bloomerp_modules.plannedorder.quantity
+#: bloomerp_modules.productionmove.quantity bloomerp_modules.salesforecast.quantity
+#: bloomerp_modules.vendorinvoiceline.quantity
+msgid "Quantity"
+msgstr ""
+
+#: bloomerp_modules.manufacturingordercomponent.quantity_issued
+msgid "Quantity Issued"
+msgstr ""
+
+#: bloomerp_modules.manufacturingorder.quantity_planned
+msgid "Quantity Planned"
+msgstr ""
+
+#: bloomerp_modules.manufacturingorder.quantity_produced
+msgid "Quantity Produced"
+msgstr ""
+
+#: bloomerp_modules.manufacturingordercomponent.quantity_required
+msgid "Quantity Required"
+msgstr ""
+
+#: bloomerp_modules.fiscalperiod.quarter
+msgid "Quarter"
+msgstr ""
+
+#: bloomerp_modules.reviewquestion.question_text bloomerp_modules.reviewresponse.question
+msgid "Question"
+msgstr ""
+
+#: bloomerp_modules.routingoperation.queue_time_minutes
+msgid "Queue Time (Minutes)"
+msgstr ""
+
+#: bloomerp_modules.overtimerule.rate_multiplier
+msgid "Rate Multiplier"
+msgstr ""
+
+#: bloomerp_modules.costrate.rate_per_hour
+msgid "Rate Per Hour"
+msgstr ""
+
+#: bloomerp_modules.costrate.rate_type
+msgid "Rate Type"
+msgstr ""
+
+#: bloomerp_modules.journalentry.exchange_rate
+msgid "Rate from the transaction currency to the ledger currency"
+msgstr ""
+
+#: bloomerp_modules.crmaccount.rating bloomerp_modules.interviewfeedback.rating
+#: bloomerp_modules.peerfeedback.rating bloomerp_modules.reviewresponse.rating
+msgid "Rating"
+msgstr ""
+
+#: bloomerp_modules.unitofmeasure.ratio_to_base
+msgid "Ratio to Base"
+msgstr ""
+
+#: bloomerp_modules.leaverequest.reason
+msgid "Reason"
+msgstr ""
+
+#: bloomerp_modules.journalentry.source_document_type
+msgid "Receipt"
+msgstr ""
+
+#: bloomerp_modules.customerreceipt.receipt_date
+msgid "Receipt Date"
+msgstr ""
+
+#: bloomerp_modules.customerreceipt.receipt_number
+msgid "Receipt Number"
+msgstr ""
+
+#: bloomerp_modules.application.status bloomerp_modules.customerreceipt.status
+msgid "Received"
+msgstr ""
+
+#: bloomerp_modules.interviewfeedback.recommendation
+msgid "Recommendation"
+msgstr ""
+
+#: bloomerp_modules.gltransaction.is_reconciled
+msgid "Reconciled"
+msgstr ""
+
+#: bloomerp_modules.gltransaction.reconciliation_date
+msgid "Reconciliation Date"
+msgstr ""
+
+#: bloomerp_modules.journalentry.recurrence_key
+msgid "Recurrence Key"
+msgstr ""
+
+#: bloomerp_modules.journalentry.is_recurring
+msgid "Recurring Entry"
+msgstr ""
+
+#: bloomerp_modules.qualityinspection.reference_id
+msgid "Reference ID"
+msgstr ""
+
+#: bloomerp_modules.customerreceipt.reference_number bloomerp_modules.gltransaction.reference_number
+#: bloomerp_modules.journalentry.reference_number bloomerp_modules.journalentryline.reference_number
+#: bloomerp_modules.vendorpayment.reference_number
+msgid "Reference Number"
+msgstr ""
+
+#: bloomerp_modules.qualityinspection.reference_type
+msgid "Reference Type"
+msgstr ""
+
+#: bloomerp_modules.journalentry.reversed_by
+msgid "Reference to the entry that reverses this one"
+msgstr ""
+
+#: bloomerp_modules.candidate.source bloomerp_modules.lead.lead_source
+#: bloomerp_modules.opportunity.source
+msgid "Referral"
+msgstr ""
+
+#: bloomerp_modules.hiringdecision.decision
+msgid "Reject"
+msgstr ""
+
+#: bloomerp_modules.application.status bloomerp_modules.candidate.status
+#: bloomerp_modules.leaverequest.status bloomerp_modules.offerapproval.status
+msgid "Rejected"
+msgstr ""
+
+#: bloomerp_modules.maintenanceworkorder.status bloomerp_modules.manufacturingorder.status
+msgid "Released"
+msgstr ""
+
+#: bloomerp_modules.opportunity.source
+msgid "Renewal"
+msgstr ""
+
+#: bloomerp_modules.product.reorder_point_quantity
+msgid "Reorder Point Quantity"
+msgstr ""
+
+#: bloomerp_modules.nonconformancereport.reported_by
+msgid "Reported By"
+msgstr ""
+
+#: bloomerp_modules.maintenancerequest.request_date
+msgid "Request Date"
+msgstr ""
+
+#: bloomerp_modules.leaverequest.status
+msgid "Requested"
+msgstr ""
+
+#: bloomerp_modules.maintenancerequest.requested_by
+msgid "Requested By"
+msgstr ""
+
+#: bloomerp_modules.journal.requires_approval bloomerp_modules.leavetype.requires_approval
+msgid "Requires Approval"
+msgstr ""
+
+#: bloomerp_modules.account.requires_reconciliation
+msgid "Requires Reconciliation"
+msgstr ""
+
+#: bloomerp_modules.reviewresponse.response_text
+msgid "Response"
+msgstr ""
+
+#: bloomerp_modules.qualityinspectionresult.result
+msgid "Result"
+msgstr ""
+
+#: bloomerp_modules.application.resume_link
+msgid "Resume Link"
+msgstr ""
+
+#: bloomerp_modules.account.account_subtype
+msgid "Retained Earnings"
+msgstr ""
+
+#: bloomerp_modules.gltransaction.transaction_type
+msgid "Revaluation"
+msgstr ""
+
+#: bloomerp_modules.account.account_type
+msgid "Revenue"
+msgstr ""
+
+#: bloomerp_modules.customerinvoiceline.revenue_account
+msgid "Revenue Account"
+msgstr ""
+
+#: bloomerp_modules.customerreceipt.status
+msgid "Reversed"
+msgstr ""
+
+#: bloomerp_modules.journalentry.reversed_by
+msgid "Reversed By"
+msgstr ""
+
+#: bloomerp_modules.reviewquestion
+msgid "Review Question"
+msgstr ""
+
+#: bloomerp_modules.reviewquestion
+msgid "Review Questions"
+msgstr ""
+
+#: bloomerp_modules.reviewresponse
+msgid "Review Response"
+msgstr ""
+
+#: bloomerp_modules.reviewresponse
+msgid "Review Responses"
+msgstr ""
+
+#: bloomerp_modules.interviewfeedback.reviewer bloomerp_modules.peerfeedback.reviewer
+#: bloomerp_modules.performancereview.reviewer
+msgid "Reviewer"
+msgstr ""
+
+#: bloomerp_modules.nonconformancereport.root_cause
+msgid "Root Cause"
+msgstr ""
+
+#: bloomerp_modules.billofmaterial.routing bloomerp_modules.manufacturingorder.routing
+#: bloomerp_modules.routing bloomerp_modules.routingoperation.routing
+msgid "Routing"
+msgstr ""
+
+#: bloomerp_modules.routingoperation
+msgid "Routing Operation"
+msgstr ""
+
+#: bloomerp_modules.routingoperation
+msgid "Routing Operations"
+msgstr ""
+
+#: bloomerp_modules.routing
+msgid "Routings"
+msgstr ""
+
+#: bloomerp_modules.productiontimeentry.time_type
+msgid "Run"
+msgstr ""
+
+#: bloomerp_modules.mrprun.run_date
+msgid "Run Date"
+msgstr ""
+
+#: bloomerp_modules.routingoperation.run_time_minutes_per_unit
+msgid "Run Time (Minutes/Unit)"
+msgstr ""
+
+#: bloomerp_modules.mrprun.status
+msgid "Running"
+msgstr ""
+
+#: bloomerp_modules.gltransaction.running_balance
+msgid "Running Balance"
+msgstr ""
+
+#: bloomerp_modules.gltransaction.running_balance
+msgid "Running balance after this transaction"
+msgstr ""
+
+#: bloomerp_modules.bankaccount.swift_code
+msgid "SWIFT Code"
+msgstr ""
+
+#: bloomerp_modules.product.safety_stock_quantity
+msgid "Safety Stock Quantity"
+msgstr ""
+
+#: bloomerp_modules.employeecontract.salary bloomerp_modules.offer.salary
+msgid "Salary"
+msgstr ""
+
+#: bloomerp_modules.salesforecast
+msgid "Sales Forecast"
+msgstr ""
+
+#: bloomerp_modules.salesforecast
+msgid "Sales Forecasts"
+msgstr ""
+
+#: bloomerp_modules.journal.journal_type
+msgid "Sales Journal"
+msgstr ""
+
+#: bloomerp_modules.customerinvoice.sales_order_number
+msgid "Sales Order Number"
+msgstr ""
+
+#: bloomerp_modules.masterproductionschedule.source
+msgid "Sales Orders"
+msgstr ""
+
+#: bloomerp_modules.product.sales_price
+msgid "Sales Price"
+msgstr ""
+
+#: bloomerp_modules.qualitycontrolplanline.sample_size
+msgid "Sample Size"
+msgstr ""
+
+#: bloomerp_modules.bankaccount.account_type
+msgid "Savings"
+msgstr ""
+
+#: bloomerp_modules.masterproductionschedule.schedule_date
+msgid "Schedule Date"
+msgstr ""
+
+#: bloomerp_modules.interview.status bloomerp_modules.vendorpayment.status
+msgid "Scheduled"
+msgstr ""
+
+#: bloomerp_modules.exitinterview.scheduled_at bloomerp_modules.interview.scheduled_at
+msgid "Scheduled At"
+msgstr ""
+
+#: bloomerp_modules.location.location_type bloomerp_modules.productionmove.move_type
+msgid "Scrap"
+msgstr ""
+
+#: bloomerp_modules.billofmaterialline.scrap_factor_percent
+msgid "Scrap Factor (%)"
+msgstr ""
+
+#: bloomerp_modules.equipment.status
+msgid "Scrapped"
+msgstr ""
+
+#: bloomerp_modules.application.status bloomerp_modules.candidate.status
+msgid "Screening"
+msgstr ""
+
+#: bloomerp_modules.offer.status
+msgid "Sent"
+msgstr ""
+
+#: bloomerp_modules.billofmaterialline.sequence bloomerp_modules.manufacturingorderoperation.sequence
+#: bloomerp_modules.opportunitystage.sequence bloomerp_modules.qualitycontrolplanline.sequence
+#: bloomerp_modules.routingoperation.sequence
+msgid "Sequence"
+msgstr ""
+
+#: bloomerp_modules.journal.sequence_prefix
+msgid "Sequence Prefix"
+msgstr ""
+
+#: bloomerp_modules.journalentryline.line_number
+msgid "Sequential line number within the entry"
+msgstr ""
+
+#: bloomerp_modules.journalentry.entry_number
+msgid "Sequential number within the journal"
+msgstr ""
+
+#: bloomerp_modules.product.tracking_method
+msgid "Serial"
+msgstr ""
+
+#: bloomerp_modules.equipment.serial_number bloomerp_modules.manufacturingordercomponent.serial_number
+#: bloomerp_modules.productionmove.serial_number
+msgid "Serial Number"
+msgstr ""
+
+#: bloomerp_modules.product.type
+msgid "Service"
+msgstr ""
+
+#: bloomerp_modules.productiontimeentry.time_type
+msgid "Setup"
+msgstr ""
+
+#: bloomerp_modules.routingoperation.setup_time_minutes
+msgid "Setup Time (Minutes)"
+msgstr ""
+
+#: bloomerp_modules.crmaccount.shipping_address
+msgid "Shipping Address"
+msgstr ""
+
+#: bloomerp_modules.leavetype.category
+msgid "Sick"
+msgstr ""
+
+#: bloomerp_modules.employeecontract.signed_date
+msgid "Signed Date"
+msgstr ""
+
+#: bloomerp_modules.manufacturingorderoperation.status
+msgid "Skipped"
+msgstr ""
+
+#: bloomerp_modules.maintenancerequest.solution
+msgid "Solution"
+msgstr ""
+
+#: bloomerp_modules.candidate.source bloomerp_modules.masterproductionschedule.source
+#: bloomerp_modules.opportunity.source bloomerp_modules.salesforecast.source
+msgid "Source"
+msgstr ""
+
+#: bloomerp_modules.manufacturingorder.source_document bloomerp_modules.plannedorder.source_document
+msgid "Source Document"
+msgstr ""
+
+#: bloomerp_modules.journalentry.source_document_id
+msgid "Source Document ID"
+msgstr ""
+
+#: bloomerp_modules.journalentry.source_document_type
+msgid "Source Document Type"
+msgstr ""
+
+#: bloomerp_modules.nonconformancereport.source_inspection
+msgid "Source Inspection"
+msgstr ""
+
+#: bloomerp_modules.manufacturingordercomponent.location_source
+msgid "Source Location"
+msgstr ""
+
+#: bloomerp_modules.journalentry.source_system
+msgid "Source System"
+msgstr ""
+
+#: bloomerp_modules.gltransaction.journal_entry_line
+msgid "Source journal entry line for this transaction"
+msgstr ""
+
+#: bloomerp_modules.opportunity.stage
+msgid "Stage"
+msgstr ""
+
+#: bloomerp_modules.opportunitystage.stage_name
+msgid "Stage Name"
+msgstr ""
+
+#: bloomerp_modules.productioncost.valuation_method
+msgid "Standard"
+msgstr ""
+
+#: bloomerp_modules.product.standard_cost
+msgid "Standard Cost"
+msgstr ""
+
+#: bloomerp_modules.product.standard_lot_size
+msgid "Standard Lot Size"
+msgstr ""
+
+#: bloomerp_modules.employeecontract.start_date bloomerp_modules.fiscalperiod.start_date
+#: bloomerp_modules.leaverequest.start_date bloomerp_modules.offboardingprocess.start_date
+#: bloomerp_modules.onboardingprocess.start_date bloomerp_modules.performancecycle.start_date
+msgid "Start Date"
+msgstr ""
+
+#: bloomerp_modules.productiontimeentry.start_time bloomerp_modules.workschedule.start_time
+msgid "Start Time"
+msgstr ""
+
+#: bloomerp_modules.employeecontract.start_date
+msgid "Start date of the contract"
+msgstr ""
+
+#: bloomerp_modules.fiscalperiod.start_date
+msgid "Start date of the fiscal period"
+msgstr ""
+
+#: bloomerp_modules.employee.start_week
+msgid "Start week"
+msgstr ""
+
+#: bloomerp_modules.application.status bloomerp_modules.attendancerecord.status
+#: bloomerp_modules.budget.status bloomerp_modules.candidate.status bloomerp_modules.customer.status
+#: bloomerp_modules.customerinvoice.status bloomerp_modules.customerreceipt.status
+#: bloomerp_modules.employeecontract.status bloomerp_modules.equipment.status
+#: bloomerp_modules.fiscalperiod.status bloomerp_modules.goal.status bloomerp_modules.interview.status
+#: bloomerp_modules.jobopening.status bloomerp_modules.journalentry.status bloomerp_modules.lead.status
+#: bloomerp_modules.leaverequest.status bloomerp_modules.maintenancerequest.status
+#: bloomerp_modules.maintenanceworkorder.status bloomerp_modules.manufacturingorder.status
+#: bloomerp_modules.manufacturingordercomponent.status
+#: bloomerp_modules.manufacturingorderoperation.status bloomerp_modules.mrprun.status
+#: bloomerp_modules.nonconformancereport.status bloomerp_modules.offboardingprocess.status
+#: bloomerp_modules.offer.status bloomerp_modules.offerapproval.status
+#: bloomerp_modules.onboardingprocess.status bloomerp_modules.onboardingtaskassignment.status
+#: bloomerp_modules.opportunity.status bloomerp_modules.performancecycle.status
+#: bloomerp_modules.performancereview.status bloomerp_modules.person.status
+#: bloomerp_modules.plannedorder.status bloomerp_modules.qualityinspection.status
+#: bloomerp_modules.vendor.status bloomerp_modules.vendorinvoice.status
+#: bloomerp_modules.vendorpayment.status
+msgid "Status"
+msgstr ""
+
+#: bloomerp_modules.budget.status
+msgid "Status of the budget"
+msgstr ""
+
+#: bloomerp_modules.fiscalperiod.status
+msgid "Status of the fiscal period"
+msgstr ""
+
+#: bloomerp_modules.journalentry.status
+msgid "Status of the journal entry"
+msgstr ""
+
+#: bloomerp_modules.location.location_type
+msgid "Stock"
+msgstr ""
+
+#: bloomerp_modules.activity.subject
+msgid "Subject"
+msgstr ""
+
+#: bloomerp_modules.customerinvoice.subtotal bloomerp_modules.vendorinvoice.subtotal
+msgid "Subtotal"
+msgstr ""
+
+#: bloomerp_modules.plannedorder.suggested_start_date
+msgid "Suggested Start Date"
+msgstr ""
+
+#: bloomerp_modules.performancereview.summary
+msgid "Summary"
+msgstr ""
+
+#: bloomerp_modules.unitofmeasure.symbol
+msgid "Symbol"
+msgstr ""
+
+#: bloomerp_modules.salesforecast.source
+msgid "System"
+msgstr ""
+
+#: bloomerp_modules.goal.target_date
+msgid "Target Date"
+msgstr ""
+
+#: bloomerp_modules.qualitycontrolplanline.target_value
+msgid "Target Value"
+msgstr ""
+
+#: bloomerp_modules.activity.activity_type
+msgid "Task"
+msgstr ""
+
+#: bloomerp_modules.customerinvoice.tax_amount bloomerp_modules.customerinvoiceline.tax_amount
+#: bloomerp_modules.journalentryline.tax_amount bloomerp_modules.vendorinvoice.tax_amount
+#: bloomerp_modules.vendorinvoiceline.tax_amount
+msgid "Tax Amount"
+msgstr ""
+
+#: bloomerp_modules.journalentryline.tax_code
+msgid "Tax Code"
+msgstr ""
+
+#: bloomerp_modules.customer.tax_number bloomerp_modules.vendor.tax_number
+msgid "Tax Number"
+msgstr ""
+
+#: bloomerp_modules.customerinvoiceline.tax_rate bloomerp_modules.journalentryline.tax_rate
+#: bloomerp_modules.vendorinvoiceline.tax_rate
+msgid "Tax Rate"
+msgstr ""
+
+#: bloomerp_modules.journalentryline.tax_amount
+msgid "Tax amount for this line"
+msgstr ""
+
+#: bloomerp_modules.journalentryline.tax_code
+msgid "Tax code for this line item"
+msgstr ""
+
+#: bloomerp_modules.employee.team bloomerp_modules.team
+msgid "Team"
+msgstr ""
+
+#: bloomerp_modules.team.lead
+msgid "Team Lead"
+msgstr ""
+
+#: bloomerp_modules.team
+msgid "Teams"
+msgstr ""
+
+#: bloomerp_modules.employee.status bloomerp_modules.employeecontract.status
+msgid "Terminated"
+msgstr ""
+
+#: bloomerp_modules.qualitycontrolplanline.test_name bloomerp_modules.qualityinspectionresult.test_name
+msgid "Test Name"
+msgstr ""
+
+#: bloomerp_modules.qualitycontrolplanline.test_type bloomerp_modules.qualityinspectionresult.test_type
+msgid "Test Type"
+msgstr ""
+
+#: bloomerp_modules.journalentryline.journal_entry
+msgid "The journal entry this line belongs to"
+msgstr ""
+
+#: bloomerp_modules.journalentry.journal
+msgid "The journal this entry belongs to"
+msgstr ""
+
+#: bloomerp_modules.employee.start_week
+msgid "The week the employee started"
+msgstr ""
+
+#: bloomerp_modules.maintenanceplan.frequency_type
+msgid "Time Based"
+msgstr ""
+
+#: bloomerp_modules.timeentry
+msgid "Time Entries"
+msgstr ""
+
+#: bloomerp_modules.timeentry
+msgid "Time Entry"
+msgstr ""
+
+#: bloomerp_modules.productiontimeentry.time_type
+msgid "Time Type"
+msgstr ""
+
+#: bloomerp_modules.workcentercalendar.timezone
+msgid "Timezone"
+msgstr ""
+
+#: bloomerp_modules.goal.title bloomerp_modules.jobopening.title bloomerp_modules.jobtitle.title
+msgid "Title"
+msgstr ""
+
+#: bloomerp_modules.productionmove.location_to
+msgid "To Location"
+msgstr ""
+
+#: bloomerp_modules.qualitycontrolplanline.tolerance_minus
+msgid "Tolerance Minus"
+msgstr ""
+
+#: bloomerp_modules.qualitycontrolplanline.tolerance_plus
+msgid "Tolerance Plus"
+msgstr ""
+
+#: bloomerp_modules.customerinvoice.total_amount bloomerp_modules.vendorinvoice.total_amount
+msgid "Total Amount"
+msgstr ""
+
+#: bloomerp_modules.productioncost.total_cost
+msgid "Total Cost"
+msgstr ""
+
+#: bloomerp_modules.journalentry.total_credit
+msgid "Total Credit"
+msgstr ""
+
+#: bloomerp_modules.journalentry.total_debit
+msgid "Total Debit"
+msgstr ""
+
+#: bloomerp_modules.journalentry.total_credit
+msgid "Total credit amount for this entry"
+msgstr ""
+
+#: bloomerp_modules.journalentry.total_debit
+msgid "Total debit amount for this entry"
+msgstr ""
+
+#: bloomerp_modules.product.tracking_method
+msgid "Tracking Method"
+msgstr ""
+
+#: bloomerp_modules.gltransaction.transaction_date
+msgid "Transaction Date"
+msgstr ""
+
+#: bloomerp_modules.gltransaction.transaction_type
+msgid "Transaction Type"
+msgstr ""
+
+#: bloomerp_modules.gltransaction.transaction_type bloomerp_modules.journalentry.source_document_type
+msgid "Transfer"
+msgstr ""
+
+#: bloomerp_modules.product.type
+msgid "Type"
+msgstr ""
+
+#: bloomerp_modules.account.account_type
+msgid "Type of account (Asset, Liability, Equity, Revenue, Expense)"
+msgstr ""
+
+#: bloomerp_modules.budget.budget_type
+msgid "Type of budget"
+msgstr ""
+
+#: bloomerp_modules.employee.employment_type
+msgid "Type of employment"
+msgstr ""
+
+#: bloomerp_modules.journal.journal_type
+msgid "Type of journal (General, Sales, Purchase, Cash, etc.)"
+msgstr ""
+
+#: bloomerp_modules.journalentry.source_document_type
+msgid "Type of source document"
+msgstr ""
+
+#: bloomerp_modules.account.account_code
+msgid "Unique account code or number"
+msgstr ""
+
+#: bloomerp_modules.budget.budget_code
+msgid "Unique code for the budget"
+msgstr ""
+
+#: bloomerp_modules.fiscalperiod.period_code
+msgid "Unique code for the fiscal period"
+msgstr ""
+
+#: bloomerp_modules.journal.journal_code
+msgid "Unique identifier for the journal"
+msgstr ""
+
+#: bloomerp_modules.customerinvoiceline.unit_price bloomerp_modules.journalentryline.unit_price
+#: bloomerp_modules.vendorinvoiceline.unit_price
+msgid "Unit Price"
+msgstr ""
+
+#: bloomerp_modules.billofmaterialline.uom bloomerp_modules.manufacturingorder.uom
+#: bloomerp_modules.manufacturingordercomponent.uom bloomerp_modules.product.uom
+#: bloomerp_modules.productionmove.uom bloomerp_modules.unitofmeasure
+msgid "Unit of Measure"
+msgstr ""
+
+#: bloomerp_modules.unitofmeasure
+msgid "Units of Measure"
+msgstr ""
+
+#: bloomerp_modules.leavetype.category
+msgid "Unpaid"
+msgstr ""
+
+#: bloomerp_modules.lead.status
+msgid "Unqualified"
+msgstr ""
+
+#: bloomerp_modules.goalprogress.update_date
+msgid "Update Date"
+msgstr ""
+
+#: bloomerp_modules.account.updated_by bloomerp_modules.accountbalance.updated_by
+#: bloomerp_modules.activity.updated_by bloomerp_modules.application.updated_by
+#: bloomerp_modules.attendancerecord.updated_by bloomerp_modules.bankaccount.updated_by
+#: bloomerp_modules.billofmaterial.updated_by bloomerp_modules.billofmaterialline.updated_by
+#: bloomerp_modules.budget.updated_by bloomerp_modules.candidate.updated_by
+#: bloomerp_modules.contact.updated_by bloomerp_modules.costcenter.updated_by
+#: bloomerp_modules.costrate.updated_by bloomerp_modules.crmaccount.updated_by
+#: bloomerp_modules.customer.updated_by bloomerp_modules.customerinvoice.updated_by
+#: bloomerp_modules.customerinvoiceline.updated_by bloomerp_modules.customerreceipt.updated_by
+#: bloomerp_modules.department.updated_by bloomerp_modules.employee.updated_by
+#: bloomerp_modules.employeecontract.updated_by bloomerp_modules.equipment.updated_by
+#: bloomerp_modules.exitinterview.updated_by bloomerp_modules.exitreason.updated_by
+#: bloomerp_modules.fiscalperiod.updated_by bloomerp_modules.gltransaction.updated_by
+#: bloomerp_modules.goal.updated_by bloomerp_modules.goalprogress.updated_by
+#: bloomerp_modules.hiringdecision.updated_by bloomerp_modules.hrcostcenter.updated_by
+#: bloomerp_modules.interview.updated_by bloomerp_modules.interviewfeedback.updated_by
+#: bloomerp_modules.jobopening.updated_by bloomerp_modules.jobtitle.updated_by
+#: bloomerp_modules.journal.updated_by bloomerp_modules.journalentry.updated_by
+#: bloomerp_modules.journalentryline.updated_by bloomerp_modules.lead.updated_by
+#: bloomerp_modules.leavebalance.updated_by bloomerp_modules.leavepolicy.updated_by
+#: bloomerp_modules.leaverequest.updated_by bloomerp_modules.leavetype.updated_by
+#: bloomerp_modules.location.updated_by bloomerp_modules.maintenanceplan.updated_by
+#: bloomerp_modules.maintenancerequest.updated_by bloomerp_modules.maintenanceworkorder.updated_by
+#: bloomerp_modules.manufacturingorder.updated_by
+#: bloomerp_modules.manufacturingordercomponent.updated_by
+#: bloomerp_modules.manufacturingorderoperation.updated_by
+#: bloomerp_modules.masterproductionschedule.updated_by bloomerp_modules.mrprun.updated_by
+#: bloomerp_modules.nonconformancereport.updated_by bloomerp_modules.offboardingprocess.updated_by
+#: bloomerp_modules.offer.updated_by bloomerp_modules.offerapproval.updated_by
+#: bloomerp_modules.officelocation.updated_by bloomerp_modules.onboardingprocess.updated_by
+#: bloomerp_modules.onboardingtask.updated_by bloomerp_modules.onboardingtaskassignment.updated_by
+#: bloomerp_modules.operation.updated_by bloomerp_modules.opportunity.updated_by
+#: bloomerp_modules.opportunitystage.updated_by bloomerp_modules.overtimerule.updated_by
+#: bloomerp_modules.peerfeedback.updated_by bloomerp_modules.performancecycle.updated_by
+#: bloomerp_modules.performancereview.updated_by bloomerp_modules.person.updated_by
+#: bloomerp_modules.plannedorder.updated_by bloomerp_modules.product.updated_by
+#: bloomerp_modules.productioncost.updated_by bloomerp_modules.productionmove.updated_by
+#: bloomerp_modules.productiontimeentry.updated_by bloomerp_modules.publicholiday.updated_by
+#: bloomerp_modules.qualitycontrolplan.updated_by bloomerp_modules.qualitycontrolplanline.updated_by
+#: bloomerp_modules.qualityinspection.updated_by bloomerp_modules.qualityinspectionresult.updated_by
+#: bloomerp_modules.reviewquestion.updated_by bloomerp_modules.reviewresponse.updated_by
+#: bloomerp_modules.routing.updated_by bloomerp_modules.routingoperation.updated_by
+#: bloomerp_modules.salesforecast.updated_by bloomerp_modules.team.updated_by
+#: bloomerp_modules.timeentry.updated_by bloomerp_modules.unitofmeasure.updated_by
+#: bloomerp_modules.vendor.updated_by bloomerp_modules.vendorinvoice.updated_by
+#: bloomerp_modules.vendorinvoiceline.updated_by bloomerp_modules.vendorpayment.updated_by
+#: bloomerp_modules.warehouse.updated_by bloomerp_modules.workcenter.updated_by
+#: bloomerp_modules.workcentercalendar.updated_by bloomerp_modules.workschedule.updated_by
+msgid "Updated By"
+msgstr ""
+
+#: bloomerp_modules.opportunity.source
+msgid "Upsell"
+msgstr ""
+
+#: bloomerp_modules.employee.user
+msgid "User Account"
+msgstr ""
+
+#: bloomerp_modules.journalentry.approved_by
+msgid "User who approved this entry"
+msgstr ""
+
+#: bloomerp_modules.fiscalperiod.closed_by
+msgid "User who closed this period"
+msgstr ""
+
+#: bloomerp_modules.journalentry.posted_by
+msgid "User who posted this entry"
+msgstr ""
+
+#: bloomerp_modules.billofmaterial.valid_from
+msgid "Valid From"
+msgstr ""
+
+#: bloomerp_modules.billofmaterial.valid_to
+msgid "Valid To"
+msgstr ""
+
+#: bloomerp_modules.productioncost.valuation_method
+msgid "Valuation Method"
+msgstr ""
+
+#: bloomerp_modules.qualityinspectionresult.value_numeric
+msgid "Value Numeric"
+msgstr ""
+
+#: bloomerp_modules.qualityinspectionresult.value_text
+msgid "Value Text"
+msgstr ""
+
+#: bloomerp_modules.budget.variance_amount
+msgid "Variance Amount"
+msgstr ""
+
+#: bloomerp_modules.budget.variance_percentage
+msgid "Variance Percentage"
+msgstr ""
+
+#: bloomerp_modules.budget.variance_percentage
+msgid "Variance as percentage of budget"
+msgstr ""
+
+#: bloomerp_modules.budget.variance_amount
+msgid "Variance between budget and actual"
+msgstr ""
+
+#: bloomerp_modules.crmaccount.account_type bloomerp_modules.vendor
+#: bloomerp_modules.vendorinvoice.vendor bloomerp_modules.vendorpayment.vendor
+msgid "Vendor"
+msgstr ""
+
+#: bloomerp_modules.vendor.address
+msgid "Vendor Address"
+msgstr ""
+
+#: bloomerp_modules.vendor.vendor_code
+msgid "Vendor Code"
+msgstr ""
+
+#: bloomerp_modules.vendorinvoice
+msgid "Vendor Invoice"
+msgstr ""
+
+#: bloomerp_modules.vendorinvoiceline
+msgid "Vendor Invoice Line"
+msgstr ""
+
+#: bloomerp_modules.vendorinvoiceline
+msgid "Vendor Invoice Lines"
+msgstr ""
+
+#: bloomerp_modules.vendorinvoice
+msgid "Vendor Invoices"
+msgstr ""
+
+#: bloomerp_modules.vendor.vendor_name
+msgid "Vendor Name"
+msgstr ""
+
+#: bloomerp_modules.vendorpayment
+msgid "Vendor Payment"
+msgstr ""
+
+#: bloomerp_modules.vendorpayment
+msgid "Vendor Payments"
+msgstr ""
+
+#: bloomerp_modules.vendor.phone
+msgid "Vendor Phone"
+msgstr ""
+
+#: bloomerp_modules.vendorinvoice.vendor_reference
+msgid "Vendor Reference"
+msgstr ""
+
+#: bloomerp_modules.vendor
+msgid "Vendors"
+msgstr ""
+
+#: bloomerp_modules.billofmaterial.version
+msgid "Version"
+msgstr ""
+
+#: bloomerp_modules.interview.interview_type
+msgid "Video"
+msgstr ""
+
+#: bloomerp_modules.vendorpayment.status
+msgid "Voided"
+msgstr ""
+
+#: bloomerp_modules.location.warehouse bloomerp_modules.manufacturingorder.warehouse
+#: bloomerp_modules.warehouse
+msgid "Warehouse"
+msgstr ""
+
+#: bloomerp_modules.warehouse
+msgid "Warehouses"
+msgstr ""
+
+#: bloomerp_modules.crmaccount.rating
+msgid "Warm"
+msgstr ""
+
+#: bloomerp_modules.lead.lead_source
+msgid "Web"
+msgstr ""
+
+#: bloomerp_modules.candidate.source bloomerp_modules.crmaccount.website
+msgid "Website"
+msgstr ""
+
+#: bloomerp_modules.account.requires_reconciliation
+msgid "Whether activity on this account should be reconciled"
+msgstr ""
+
+#: bloomerp_modules.journal.auto_numbering
+msgid "Whether entries are automatically numbered"
+msgstr ""
+
+#: bloomerp_modules.journal.requires_approval
+msgid "Whether entries in this journal require approval"
+msgstr ""
+
+#: bloomerp_modules.account.is_active
+msgid "Whether the account is active"
+msgstr ""
+
+#: bloomerp_modules.employee.active
+msgid "Whether the employee is currently active"
+msgstr ""
+
+#: bloomerp_modules.journal.is_active
+msgid "Whether the journal is active"
+msgstr ""
+
+#: bloomerp_modules.account.is_system_account
+msgid "Whether this is a system-controlled account"
+msgstr ""
+
+#: bloomerp_modules.fiscalperiod.is_adjusting_period
+msgid "Whether this is an adjusting period"
+msgstr ""
+
+#: bloomerp_modules.account.allow_manual_posting
+msgid "Whether users can post directly to this account"
+msgstr ""
+
+#: bloomerp_modules.customerreceipt.payment_method bloomerp_modules.vendorpayment.payment_method
+msgid "Wire"
+msgstr ""
+
+#: bloomerp_modules.opportunity.status
+msgid "Won"
+msgstr ""
+
+#: bloomerp_modules.costrate.work_center bloomerp_modules.equipment.work_center
+#: bloomerp_modules.manufacturingorderoperation.work_center bloomerp_modules.operation.work_center
+#: bloomerp_modules.workcenter
+msgid "Work Center"
+msgstr ""
+
+#: bloomerp_modules.workcentercalendar
+msgid "Work Center Calendar"
+msgstr ""
+
+#: bloomerp_modules.workcentercalendar
+msgid "Work Center Calendars"
+msgstr ""
+
+#: bloomerp_modules.workcenter.work_center_type
+msgid "Work Center Type"
+msgstr ""
+
+#: bloomerp_modules.workcenter
+msgid "Work Centers"
+msgstr ""
+
+#: bloomerp_modules.timeentry.work_date
+msgid "Work Date"
+msgstr ""
+
+#: bloomerp_modules.workschedule.work_days
+msgid "Work Days"
+msgstr ""
+
+#: bloomerp_modules.employee.email
+msgid "Work Email"
+msgstr ""
+
+#: bloomerp_modules.workschedule
+msgid "Work Schedule"
+msgstr ""
+
+#: bloomerp_modules.workschedule
+msgid "Work Schedules"
+msgstr ""
+
+#: bloomerp_modules.timeentry.work_type
+msgid "Work Type"
+msgstr ""
+
+#: bloomerp_modules.fiscalperiod.is_year_end
+msgid "Year End Period"
+msgstr ""
+
+#: bloomerp_modules.accountbalance.year_to_date_balance
+msgid "Year To Date Balance"
+msgstr ""
+
+#: bloomerp_modules.accountbalance.year_to_date_credit
+msgid "Year To Date Credit"
+msgstr ""
+
+#: bloomerp_modules.accountbalance.year_to_date_debit
+msgid "Year To Date Debit"
+msgstr ""
+

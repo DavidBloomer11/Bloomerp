@@ -1,6 +1,7 @@
+{% load i18n %}
 <div class="p-3">
     <label for="canvas-tile-height" class="mb-1 block text-sm font-medium text-dark">
-        <c-i18n.blocktrans>Canvas height</c-i18n.blocktrans>
+        {% blocktrans %}Canvas height{% endblocktrans %}
     </label>
     <input
         id="canvas-tile-height"
@@ -20,6 +21,6 @@
         hx-trigger="change delay:250ms"
     />
     <p class="mt-1 text-xs text-muted">
-        <c-i18n.blocktrans>Height in pixels, between 256 and 1600.</c-i18n.blocktrans>
+        {% blocktrans %}Height in pixels, between 256 and 1600.{% endblocktrans %}
     </p>
 </div>

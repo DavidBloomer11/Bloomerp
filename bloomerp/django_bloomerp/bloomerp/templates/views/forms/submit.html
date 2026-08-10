@@ -1,5 +1,6 @@
 {% extends "views/base.html" %}
 
+{% load i18n %}
 {% load static %}
 
 {% block body %}
@@ -22,7 +23,7 @@
 
             <c-ui.text.text>{{ form_submission_message }}</c-ui.text.text>
             <a href="{{ request.path }}" class="btn btn-sm btn-primary">
-                <c-i18n.blocktrans>Submit a new form</c-i18n.blocktrans>
+                {% blocktrans %}Submit a new form{% endblocktrans %}
             </a>
 
         {% elif form_submission_error_message %}
@@ -47,9 +48,9 @@
                                     aria-pressed="false">
                                     <i class="fa fa-asterisk"></i>
                                     <span data-toggle-non-required-fields-label>
-                                        <c-i18n.blocktrans>
+                                        {% blocktrans trimmed %}
                                             Show Required Only
-                                        </c-i18n.blocktrans>
+                                        {% endblocktrans %}
                                     </span>
                                 </button>
                             </c-ui.shortcut_tooltip>

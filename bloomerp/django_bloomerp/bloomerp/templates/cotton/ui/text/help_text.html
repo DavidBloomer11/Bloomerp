@@ -1,3 +1,4 @@
+{% load i18n %}
 {% comment %}
 help_text
 
@@ -14,6 +15,6 @@ Slots:
 
 
 <p class="text-gray-600 text-sm text-xs mt-1 {{ class }}">
-    <c-i18n.blocktrans>{{ slot }}</c-i18n.blocktrans>
+    {% translate slot %}
 </p>
 

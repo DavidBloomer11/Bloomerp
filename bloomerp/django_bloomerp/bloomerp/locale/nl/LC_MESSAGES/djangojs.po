@@ -1,0 +1,45 @@
+# Dutch translations for PROJECT.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-08-06 11:43+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: nl\n"
+"Language-Team: nl <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.16.0\n"
+
+#: static_src/ts/components/layouts/BaseSectionedLayoutContainer.ts:358
+msgid "Add row below"
+msgstr "Rij hieronder toevoegen"
+
+#: static_src/ts/components/layouts/BaseSectionedLayoutContainer.ts:359
+msgid "Drag row"
+msgstr "Rij verslepen"
+
+#: static_src/ts/components/layouts/BaseSectionedLayoutContainer.ts:360
+msgid "Remove row"
+msgstr "Rij verwijderen"
+
+#: static_src/ts/components/layouts/BaseSectionedLayoutContainer.ts:357
+msgid "Row title"
+msgstr "Rijtitel"
+
+#: static_src/ts/components/detail_view_components/ObjectCRUDViewContainer.ts:522
+msgid "Show All Fields"
+msgstr "Alle velden weergeven"
+
+#: static_src/ts/components/detail_view_components/ObjectCRUDViewContainer.ts:521
+msgid "Show Required Only"
+msgstr "Alleen verplichte velden weergeven"
+

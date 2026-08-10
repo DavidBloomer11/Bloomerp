@@ -47,7 +47,7 @@
                         hx-swap="outerHTML"
                         hx-get="{{ request.path }}?reset_wizard=true"
                         >
-                        <c-i18n.blocktrans>Reset</c-i18n.blocktrans>
+                        {% blocktrans %}Reset{% endblocktrans %}
                     </button>
                     {% endif %}
                     {% if step_index > 0 %}

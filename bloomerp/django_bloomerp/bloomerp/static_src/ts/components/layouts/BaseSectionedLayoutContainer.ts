@@ -1,5 +1,6 @@
 import htmx from "htmx.org";
 import Sortable, { type SortableEvent } from "sortablejs";
+import { t } from "../../utils/i18n";
 
 import BaseComponent, { componentIdentifier, getComponent, initComponents } from "../BaseComponent";
 import { Modal } from "../Modal";
@@ -353,6 +354,10 @@ export default abstract class BaseSectionedLayoutContainer<TItem extends BaseSec
             </div>
             <div class="workspace-row__grid" data-layout-grid style="grid-template-columns: repeat(${row.columns}, minmax(0, 1fr));"></div>
         `;
+        rowEl.querySelector<HTMLInputElement>("[data-row-title-input]")!.placeholder = t("Row title");
+        rowEl.querySelector<HTMLElement>("[data-add-row]")!.title = t("Add row below");
+        rowEl.querySelector<HTMLElement>("[data-row-drag-handle]")!.title = t("Drag row");
+        rowEl.querySelector<HTMLElement>("[data-remove-row]")!.title = t("Remove row");
 
         return rowEl;
     }

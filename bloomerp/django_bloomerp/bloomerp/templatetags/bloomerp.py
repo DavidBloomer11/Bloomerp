@@ -2,6 +2,7 @@ import json
 
 import bleach
 from django import template
+from django.conf import settings
 from django.db.models import Model
 from django.http import HttpRequest
 from bloomerp.models.definition import ObjectAction, ObjectHTML, ObjectModalAction
@@ -20,6 +21,7 @@ from bloomerp.models import Bookmark, AbstractBloomerpUser, ApplicationField
 import uuid
 from django.template.loader import render_to_string
 from bloomerp.field_types import FieldType
+from bloomerp.config.settings import BLOOMERP_LANGUAGES
 from bloomerp.services.sectioned_layout_services import (
     build_crud_layout_field_context,
     dump_layout_json as dump_layout_json_service,
@@ -47,6 +49,12 @@ ACTIVITY_LOG_ALLOWED_ATTRIBUTES = {
     "a": ["href", "title"],
 }
 ACTIVITY_LOG_ALLOWED_PROTOCOLS = ["http", "https", "mailto"]
+
+
+@register.simple_tag
+def get_bloomerp_languages() -> list[tuple[str, str]]:
+    """Return the languages exposed by BloomERP's language selector."""
+    return getattr(settings, "BLOOMERP_LANGUAGES", BLOOMERP_LANGUAGES)
 
 
 @register.filter

@@ -6,7 +6,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import FieldDoesNotExist
 from django.db.models.query import QuerySet
 from typing import Any, Optional, Type
-from django.utils.translation import gettext_lazy as _
+from django.utils.encoding import force_str
+from django.utils.translation import gettext, gettext_lazy as _
 from bloomerp.field_types.types import FieldType
 
 class ApplicationField(models.Model):
@@ -177,7 +178,17 @@ class ApplicationField(models.Model):
     
     @property
     def title(self):
-        return self.field.replace("_", " ").title()
+        try:
+            model_field = self._get_model_field()
+        except FieldDoesNotExist:
+            return gettext(self.field.replace("_", " ").title())
+
+        declared_label = getattr(model_field, "_verbose_name", None)
+        if declared_label is not None:
+            # gettext_lazy values resolve here; plain strings can still be supplied
+            # by an extension app and resolved from the extracted model catalog.
+            return gettext(force_str(declared_label))
+        return gettext(self.field.replace("_", " ").title())
     
     @staticmethod
     def get_for_content_type_id(content_type_id: int) -> QuerySet:

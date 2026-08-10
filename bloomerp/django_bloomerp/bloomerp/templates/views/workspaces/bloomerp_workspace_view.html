@@ -1,3 +1,4 @@
+{% load i18n %}
 {% if workspace %}
     <c-features.workspaces.container 
         :workspace="workspace" 
@@ -24,7 +25,7 @@
                         name="action"
                         value="create_default"
                     >
-                        <c-i18n.blocktrans>Create default</c-i18n.blocktrans>
+                        {% blocktrans %}Create default{% endblocktrans %}
                     </button>
                 </form>
             {% endif %}
@@ -34,7 +35,7 @@
                 hx-target="#main-content"
                 hx-push-url="true"
             >
-                <c-i18n.blocktrans>Start from scratch</c-i18n.blocktrans>
+                {% blocktrans %}Start from scratch{% endblocktrans %}
             </button>
         </div>
     </c-ui.center_page_element>

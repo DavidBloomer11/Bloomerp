@@ -1,3 +1,4 @@
+{% load i18n %}
 {% for row in gant_unscheduled_rows %}
 <div
     class="flex min-w-40 max-w-64 items-center gap-2 rounded-xl border border-gray-200 bg-base px-3 py-2 text-sm text-dark shadow-xs {% if row.can_edit_start and row.can_edit_end %}cursor-grab active:cursor-grabbing{% else %}cursor-not-allowed opacity-60{% endif %}"
@@ -14,7 +15,7 @@
 {% empty %}
     {% if not gant_unscheduled_page_obj or gant_unscheduled_page_obj.number == 1 %}
     <div class="py-2 text-xs text-gray-500" data-gant-unscheduled-empty>
-        <c-i18n.blocktrans>All visible records are scheduled.</c-i18n.blocktrans>
+        {% blocktrans %}All visible records are scheduled.{% endblocktrans %}
     </div>
     {% endif %}
 {% endfor %}
@@ -28,6 +29,6 @@
     hx-target="this"
     hx-swap="outerHTML"
 >
-    <c-i18n.blocktrans>Loading more…</c-i18n.blocktrans>
+    {% blocktrans %}Loading more…{% endblocktrans %}
 </div>
 {% endif %}

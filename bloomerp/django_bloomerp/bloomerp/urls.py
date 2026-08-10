@@ -2,6 +2,7 @@ import logging
 
 from django.apps import apps
 from django.contrib.auth import views as auth_views
+from django.views.i18n import JSONCatalog
 from django.urls import include, path,  register_converter
 from django.urls import NoReverseMatch
 from rest_framework.response import Response
@@ -126,6 +127,12 @@ urlpatterns = [
     # login URL
     path(login_url, BloomerpLoginView.as_view(), name='login'),
     path(logout_url, auth_views.LogoutView.as_view(next_page=reverse_lazy('login')), name='logout'),
+    path("i18n/", include("django.conf.urls.i18n")),
+    path(
+        "i18n/catalog.json",
+        JSONCatalog.as_view(domain="djangojs"),
+        name="bloomerp_javascript_catalog",
+    ),
 ]
 
 if allauth_is_enabled():
