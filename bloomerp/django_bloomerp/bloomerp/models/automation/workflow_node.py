@@ -160,13 +160,9 @@ class WorkflowNode(
         Returns:
             QuerySet["WorkflowNode"]: QuerySet of WorkflowNode objects matching the trigger subtype.
         """
-        return WorkflowNode.objects.filter(
-            config__sub_type=trigger_subtype,
-            workflow__active=True,
-        )
+        return WorkflowNode.objects.filter(config__sub_type=trigger_subtype)
 
     
     
-
 
 
