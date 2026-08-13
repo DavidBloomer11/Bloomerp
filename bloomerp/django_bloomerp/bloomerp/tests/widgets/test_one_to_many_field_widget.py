@@ -161,6 +161,8 @@ class TestCreateView(BaseBloomerpModelTestCase):
         self.assertEqual(len(boolean_inputs), 2)
         self.assertIn("checked", boolean_inputs[0].attrs)
         self.assertNotIn("checked", boolean_inputs[1].attrs)
+        self.assertIn("text-primary", boolean_inputs[0].get("class", []))
+        self.assertNotIn("bg-transparent", boolean_inputs[0].get("class", []))
         self.assertEqual(
             soup.select_one('[data-one-to-many-column="is_folder"]')["data-column-kind"],
             "boolean",
