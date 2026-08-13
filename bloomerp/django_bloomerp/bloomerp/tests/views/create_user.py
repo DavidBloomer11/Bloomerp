@@ -96,6 +96,9 @@ class TestCreateUserView(BaseBloomerpModelTestCase):
         self.assertContains(response, 'name="username"')
         self.assertContains(response, 'name="password1"')
         self.assertContains(response, 'name="password2"')
+        self.assertContains(response, 'enctype="multipart/form-data"')
+        self.assertContains(response, 'hx-encoding="multipart/form-data"')
+        self.assertContains(response, 'hx-push-url="true"')
 
     def test_create_route_is_bound_to_the_active_user_model(self):
         match = resolve(self.get_url())

@@ -4,9 +4,12 @@
     <form
         method="post"
         action="{{ request.path }}"
+        enctype="multipart/form-data"
         hx-post="{{ request.path }}"
+        hx-encoding="multipart/form-data"
         hx-target="#main-content"
         hx-swap="innerHTML"
+        hx-push-url="true"
         class="space-y-4"
     >
         {% csrf_token %}
