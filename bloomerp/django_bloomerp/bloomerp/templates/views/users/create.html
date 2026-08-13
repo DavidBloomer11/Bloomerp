@@ -1,0 +1,25 @@
+{% load crispy_forms_tags %}
+
+<c-ui.container class="mt-16 max-w-3xl">
+    <form
+        method="post"
+        action="{{ request.path }}"
+        hx-post="{{ request.path }}"
+        hx-target="#main-content"
+        hx-swap="innerHTML"
+        class="space-y-4"
+    >
+        {% csrf_token %}
+        <c-ui.text.title>
+            <c-i18n.blocktrans>Create user</c-i18n.blocktrans>
+        </c-ui.text.title>
+
+        <div>
+            {{ form|crispy }}
+        </div>
+
+        <button class="btn btn-primary" type="submit">
+            <c-i18n.blocktrans>Create user</c-i18n.blocktrans>
+        </button>
+    </form>
+</c-ui.container>
