@@ -68,6 +68,7 @@ export class BloomerpTextEditor extends BaseWidget {
     private editorId:string;
     private includeToolbar:boolean = true;
     private editorRootSelector:string = '';
+    private hostClickHandler: ((event: MouseEvent) => void) | null = null;
 
     // Extra commands
     public slashExtraActions:string[] = []
@@ -151,6 +152,11 @@ export class BloomerpTextEditor extends BaseWidget {
         window.addEventListener(TEXT_EDITOR_TOOLBAR_VISIBILITY_EVENT, this.toolbarVisibilityHandler);
 
         this.editor.setRootElement(editorRef);
+        this.hostClickHandler = (event: MouseEvent) => {
+            if (event.target !== this.element) return;
+            this.editor?.focus();
+        };
+        this.element.addEventListener('click', this.hostClickHandler);
         this.isInitializing = true;
         this.setValue(this.hiddenInput?.value ?? '', false);
 
@@ -188,6 +194,11 @@ export class BloomerpTextEditor extends BaseWidget {
     }
 
     public destroy(): void {
+        if (this.hostClickHandler) {
+            this.element?.removeEventListener('click', this.hostClickHandler);
+            this.hostClickHandler = null;
+        }
+
         if (this.toolbarVisibilityHandler) {
             window.removeEventListener(
                 TEXT_EDITOR_TOOLBAR_VISIBILITY_EVENT,

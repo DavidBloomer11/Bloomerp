@@ -187,14 +187,18 @@ class TestOneToManyWidgetE2E(TestCrudE2EMixin, BaseE2ETestCase):
 
     def test_text_editors_update_their_own_one_to_many_rows(self):
         """
-        Use case: Edit text-editor fields in two newly added one-to-many rows.
+        Use case: Edit text-editor fields in two server-rendered one-to-many rows.
         Expected result: Each editor updates only the hidden input in its own row.
         """
-        # 1. Open an empty country form and add two customer rows.
-        self.goto(self.get_base_url())
-        add_row_button = self.get_widget().get_by_role("button", name="Add row")
-        add_row_button.click()
-        add_row_button.click()
+        # 1. Open a country form with two text-editor rows already rendered.
+        self.goto(
+            self.get_url_with_rows(
+                [
+                    {"description": "First customer description"},
+                    {"description": "Second customer description"},
+                ]
+            )
+        )
         expect(self.get_rows()).to_have_count(2)
 
         # 2. Enter different content in each row's text editor.
@@ -204,8 +208,17 @@ class TestOneToManyWidgetE2E(TestCrudE2EMixin, BaseE2ETestCase):
         second_editor = self.get_rows().nth(1).locator(
             '[data-one-to-many-cell="description"] .bloomerp-text-editor'
         )
-        first_editor.fill("First customer description")
-        second_editor.fill("Second customer description")
+        first_editor.focus()
+        expect(first_editor).to_be_focused()
+        second_editor_wrapper = self.get_rows().nth(1).locator(
+            '[data-one-to-many-cell="description"] '
+            '[bloomerp-component="bloomerp-text-editor"]'
+        )
+        second_editor_wrapper.dispatch_event("click")
+        expect(second_editor).to_be_focused()
+        expect(first_editor).not_to_be_focused()
+        first_editor.fill("Updated first customer description")
+        second_editor.fill("Updated second customer description")
 
         # 3. Verify each editor synchronized its own row's form input.
         first_value = self.get_rows().nth(0).locator(
@@ -214,10 +227,10 @@ class TestOneToManyWidgetE2E(TestCrudE2EMixin, BaseE2ETestCase):
         second_value = self.get_rows().nth(1).locator(
             '[data-one-to-many-cell="description"] [data-text-editor-input="true"]'
         ).input_value()
-        self.assertIn("First customer description", first_value)
-        self.assertNotIn("Second customer description", first_value)
-        self.assertIn("Second customer description", second_value)
-        self.assertNotIn("First customer description", second_value)
+        self.assertIn("Updated first customer description", first_value)
+        self.assertNotIn("Updated second customer description", first_value)
+        self.assertIn("Updated second customer description", second_value)
+        self.assertNotIn("Updated first customer description", second_value)
 
     def test_preview_icon_previews_and_opens_persisted_row(self):
         """
