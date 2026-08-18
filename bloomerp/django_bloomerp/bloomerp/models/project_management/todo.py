@@ -124,6 +124,8 @@ class Todo(BloomerpModel):
         null=True,
         blank=True,
         related_name='todos',
+        verbose_name=_("Assigned To"),
+        help_text=_("The user to whom the todo is assigned")
         )
     requested_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
@@ -131,49 +133,58 @@ class Todo(BloomerpModel):
         blank=True, 
         on_delete=models.CASCADE, 
         related_name='requested_todos', 
+        verbose_name=_("Requested By"),
         help_text=_("The user who requested the todo")
         )
     required_by = models.DateField(
         null=True, 
         blank=True,
+        verbose_name=_("Required By"),
         help_text=_("The date by which the todo is required")
         )
     priority = models.CharField(
         max_length=20,
         help_text=_("The priority of the todo"), 
         choices=TodoPriority.choices,
-        default=TodoPriority.MEDIUM
+        default=TodoPriority.MEDIUM,
+        verbose_name=_("Priority")
         )
     effort = models.IntegerField(
         null=True, 
         blank=True,
         help_text=_("The effort required for the todo"),
         choices=TodoEffort.choices,
-        default=TodoEffort.M
+        default=TodoEffort.M,
+        verbose_name=_("Effort")
         )
     title = models.CharField(
         max_length=255, 
-        help_text=_("The name of the todo")
+        help_text=_("The name of the todo"),
+        verbose_name=_("Title")
         )
     content = TextEditorField(
         blank=True, 
-        null=True
+        null=True,
+        verbose_name=_("Content")
         )
     datetime_completed = models.DateTimeField(
         null=True, 
         blank=True,
         editable=False,
-        help_text=_("The date and time when the todo was completed")
+        help_text=_("The date and time when the todo was completed"),
+        verbose_name=_("Date Completed")
         )
     status = models.CharField(
         max_length=50, 
         choices=TodoStatus.choices,
-        default=TodoStatus.BACKLOG
+        default=TodoStatus.BACKLOG,
+        verbose_name=_("Status")
         )
     labels = models.ManyToManyField(
         'bloomerp.TodoLabel',
         blank=True,
-        help_text=_("Labels assigned to the todo")
+        help_text=_("Labels assigned to the todo"),
+        verbose_name=_("Labels")
         )
     initiative = models.ForeignKey(
         'bloomerp.Initiative',
@@ -181,13 +192,30 @@ class Todo(BloomerpModel):
         null=True,
         blank=True,
         related_name='todos',
-        help_text=_("The initiative this todo belongs to")
+        help_text=_("The initiative this todo belongs to"),
+        verbose_name=_("Initiative")
         )
 
     # For if the todo is related to a model
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
-    object_id = models.CharField(max_length=36, null=True, blank=True) # In order to support both UUID and integer primary keys
-    content_object = GenericForeignKey("content_type", "object_id")
+    content_type = models.ForeignKey(
+        ContentType,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        verbose_name=_("Content Type"),
+        help_text=_("The content type of the related object"),
+    )
+    object_id = models.CharField(
+        max_length=36,
+        null=True,
+        blank=True,
+        help_text=_("The ID of the related object"),
+        verbose_name=_("Object ID"),
+    ) # In order to support both UUID and integer primary keys
+    content_object = GenericForeignKey(
+        "content_type", 
+        "object_id"
+    )
 
     @property
     def content_safe(self):

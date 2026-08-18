@@ -71,6 +71,7 @@ class WorkflowRun(
         help_text=_("The workflow associated with this run."),
         editable=False,
         related_name="runs",
+        verbose_name=_("Workflow"),
     )
     
     def __str__(self):

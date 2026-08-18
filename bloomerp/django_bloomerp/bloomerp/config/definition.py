@@ -96,11 +96,18 @@ class BloomerpI18nLLMSettings(BaseModel):
     batch_size: int = Field(default=30, ge=1, le=100)
 
 
+class BloomerpAppI18nSettings(BaseModel):
+    """Internationalization metadata owned by an installed Django app."""
+
+    source_language: str
+
+
 class BloomerpI18nSettings(BaseModel):
     """Extraction, translation and compilation settings for installed apps."""
 
     source_language: str = "en"
     languages: list[str] = Field(default_factory=list)
+    app_source_languages: dict[str, str] = Field(default_factory=dict)
     apps: Literal["auto"] | list[str] = "auto"
     exclude_apps: list[str] = Field(default_factory=list)
     frontend_globs: list[str] = Field(

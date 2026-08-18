@@ -1,3 +1,5 @@
+from tabnanny import verbose
+
 from django.conf import settings
 from django.db import models
 from django.db.models import Count
@@ -89,23 +91,48 @@ class Initiative(BloomerpModel):
         max_length=20,
         choices=InitiativeStatus.choices,
         default=InitiativeStatus.BACKLOG,
+        verbose_name=_("Status")
     )
-    name = models.CharField(max_length=255, help_text=_("The name of the initiative"))
-    description = models.TextField(blank=True, null=True)
-    start_date = models.DateField(blank=True, null=True)
-    target_date = models.DateField(blank=True, null=True)
-    completed_at = models.DateTimeField(blank=True, null=True, editable=False)
+    name = models.CharField(
+        max_length=255,
+        verbose_name=_("Name"),
+        help_text=_("The name of the initiative")
+    )
+    description = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name=_("Description"),
+        help_text=_("A detailed description of the initiative")
+    )
+    start_date = models.DateField(
+        blank=True, 
+        null=True,
+        verbose_name=_("Start Date"),
+    )
+    target_date = models.DateField(
+        blank=True, 
+        null=True,
+        verbose_name=_("Target Date"),    
+    )
+    completed_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        editable=False,
+        verbose_name=_("Completed At"),
+    )
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
         related_name="owned_initiatives",
+        verbose_name=_("Owner"),
     )
     labels = models.ManyToManyField(
         "bloomerp.TodoLabel",
         blank=True,
         related_name="initiatives",
+        verbose_name=_("Labels"),
         help_text=_("Labels assigned to the initiative"),
     )
 

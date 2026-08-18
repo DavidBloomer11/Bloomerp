@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-06 11:43+0000\n"
+"POT-Creation-Date: 2026-08-18 17:18+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: nl\n"
@@ -72,7 +72,12 @@ msgstr "Een beschrijving van het toegangscontrolebeleid."
 msgid "A descriptive name for the edge."
 msgstr "Een beschrijvende naam voor de verbinding."
 
-#: automation/defintion.py:217
+# | msgid "The name of the initiative"
+#: bloomerp.initiative.description models/project_management/initiative.py:105
+msgid "A detailed description of the initiative"
+msgstr "De naam van het initiatief"
+
+#: automation/defintion.py:224
 msgid "A flow node to branch the workflow"
 msgstr "Een flownode om de workflow te vertakken"
 
@@ -116,6 +121,14 @@ msgstr "API-sleutels"
 msgid "Access Control Field Policies"
 msgstr "Toegangsbeheer-veldbeleidsregels"
 
+msgctxt "bloomerp:route:name"
+msgid "Access Control Field Policies"
+msgstr "Veldbeleid voor toegangsbeheer"
+
+msgctxt "bloomerp:route:description"
+msgid "Access Control Field Policies relationship for {model}"
+msgstr "Relatie voor veldbeleid voor toegangsbeheer voor {model}"
+
 #: bloomerp.fieldpolicy models/access_control/field_policy.py:23
 msgid "Access Control Field Policy"
 msgstr "Toegangsbeheer-veldbeleidsregel"
@@ -124,6 +137,14 @@ msgstr "Toegangsbeheer-veldbeleidsregel"
 msgid "Access Control Policies"
 msgstr "Toegangsbeheerbeleidsregels"
 
+msgctxt "bloomerp:route:name"
+msgid "Access Control Policies"
+msgstr "Beleid voor toegangsbeheer"
+
+msgctxt "bloomerp:route:description"
+msgid "Access Control Policies relationship for {model}"
+msgstr "Relatie voor beleid voor toegangsbeheer voor {model}"
+
 #: bloomerp.policy models/access_control/policy.py:30
 msgid "Access Control Policy"
 msgstr "Toegangsbeheerbeleidsregel"
@@ -131,6 +152,14 @@ msgstr "Toegangsbeheerbeleidsregel"
 #: bloomerp.rowpolicy models/access_control/row_policy.py:17
 msgid "Access Control Row Policies"
 msgstr "Toegangsbeheer-rijbeleidsregels"
+
+msgctxt "bloomerp:route:name"
+msgid "Access Control Row Policies"
+msgstr "Rijbeleid voor toegangsbeheer"
+
+msgctxt "bloomerp:route:description"
+msgid "Access Control Row Policies relationship for {model}"
+msgstr "Relatie voor rijbeleid voor toegangsbeheer voor {model}"
 
 #: bloomerp.rowpolicy models/access_control/row_policy.py:16
 msgid "Access Control Row Policy"
@@ -144,6 +173,14 @@ msgstr "Regel voor toegangsbeheer-rijbeleid"
 msgid "Access Control Row Policy Rules"
 msgstr "Regels voor toegangsbeheer-rijbeleid"
 
+msgctxt "bloomerp:route:name"
+msgid "Access Control Row Policy Rules"
+msgstr "Regels voor rijbeleid voor toegangsbeheer"
+
+msgctxt "bloomerp:route:description"
+msgid "Access Control Row Policy Rules relationship for {model}"
+msgstr "Relatie voor regels voor rijbeleid voor toegangsbeheer voor {model}"
+
 #: bloomerp.emailaccount.access_token
 msgid "Access Token"
 msgstr "Toegangstoken"
@@ -151,6 +188,14 @@ msgstr "Toegangstoken"
 #: bloomerp.apikey.account
 msgid "Account"
 msgstr "Account"
+
+msgctxt "bloomerp:route:name"
+msgid "Account Balances"
+msgstr "Accountsaldi"
+
+msgctxt "bloomerp:route:description"
+msgid "Account Balances relationship for {model}"
+msgstr "Relatie voor accountsaldi voor {model}"
 
 #: templates/cotton/app/sidebar/body.html:202
 msgid "Account Settings"
@@ -164,23 +209,41 @@ msgstr "Accountgegevens vereisen aandacht"
 msgid "Accounting inbox"
 msgstr "Boekhoudinbox"
 
-#: automation/defintion.py:103 bloomerp.activitylog.action bloomerp.workflownode.type
+msgctxt "bloomerp:route:name"
+msgid "Accounts"
+msgstr "Accounts"
+
+msgctxt "bloomerp:route:description"
+msgid "Accounts relationship for {model}"
+msgstr "Relatie voor accounts voor {model}"
+
+#: automation/defintion.py:110 bloomerp.activitylog.action bloomerp.workflownode.type
 msgid "Action"
 msgstr "Actie"
 
-#: bloomerp.workflowrunstep.action_id
-msgid "Action Id"
+# | msgid "Action Id"
+#: bloomerp.workflowrunstep.action_id models/automation/workflow_run_step.py:38
+msgid "Action ID"
 msgstr "Actie-ID"
 
 #: templates/components/files/browser.html:190
 msgid "Actions"
 msgstr "Acties"
 
-#: bloomerp.emailaccount.status bloomerp.workflow.active
+#: bloomerp.emailaccount.status bloomerp.workflow.active models/automation/workflow.py:85
 msgid "Active"
 msgstr "Actief"
 
-#: templates/views/generic/detail/base.html:132
+msgctxt "bloomerp:route:name"
+msgid "Activities"
+msgstr "Activiteiten"
+
+msgctxt "bloomerp:route:description"
+msgid "Activities relationship for {model}"
+msgstr "Relatie voor activiteiten voor {model}"
+
+#: bloomerp.user.detail_sidebar_view_preference models/users/user.py:68
+#: templates/views/generic/detail/base.html:134
 msgid "Activity"
 msgstr "Activiteit"
 
@@ -191,6 +254,14 @@ msgstr "Activiteitenlogboek"
 #: bloomerp.activitylog
 msgid "Activity Logs"
 msgstr "Activiteitenlogboeken"
+
+msgctxt "bloomerp:route:name"
+msgid "Activity Logs"
+msgstr "Activiteitenlogboeken"
+
+msgctxt "bloomerp:route:description"
+msgid "Activity Logs relationship for {model}"
+msgstr "Relatie voor activiteitenlogboeken voor {model}"
 
 #: bloomerp.activitylog.actor bloomerp.inboxitem.actor
 msgid "Actor"
@@ -260,6 +331,14 @@ msgstr "Beheerpagina"
 msgid "Advanced formatting"
 msgstr "Geavanceerde opmaak"
 
+msgctxt "bloomerp:route:name"
+msgid "Ai Conversations"
+msgstr "AI-gesprekken"
+
+msgctxt "bloomerp:route:description"
+msgid "Ai Conversations relationship for {model}"
+msgstr "Relatie voor AI-gesprekken voor {model}"
+
 #: bloomerp.inboxfolder.type
 #: templates/views/access_control/manage_permissions/wizard_object_access_control.html:56
 msgid "All"
@@ -277,7 +356,7 @@ msgstr "Hele dag"
 msgid "All visible records are scheduled."
 msgstr "Alle zichtbare records zijn ingepland."
 
-#: automation/defintion.py:104
+#: automation/defintion.py:111
 msgid "An action to perform"
 msgstr "Een uit te voeren actie"
 
@@ -289,9 +368,33 @@ msgstr "Er is een item vereist."
 msgid "Analytics Tile"
 msgstr "Analysetegel"
 
+msgctxt "bloomerp:route:name"
+msgid "Api Keys"
+msgstr "API-sleutels"
+
+msgctxt "bloomerp:route:description"
+msgid "Api Keys relationship for {model}"
+msgstr "Relatie voor API-sleutels voor {model}"
+
 #: workspaces/analytics_tile/model.py:217
 msgid "Applicable filter on this field"
 msgstr "Toepasselijk filter voor dit veld"
+
+msgctxt "bloomerp:route:name"
+msgid "Application Fields"
+msgstr "Applicatievelden"
+
+msgctxt "bloomerp:route:description"
+msgid "Application Fields relationship for {model}"
+msgstr "Relatie voor applicatievelden voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Applications"
+msgstr "Applicaties"
+
+msgctxt "bloomerp:route:description"
+msgid "Applications relationship for {model}"
+msgstr "Relatie voor applicaties voor {model}"
 
 #: bloomerp.aiconversation.args
 msgid "Args"
@@ -301,7 +404,7 @@ msgstr "Argumenten"
 msgid "Array Field"
 msgstr "Arrayveld"
 
-#: bloomerp.todo.assigned_to
+#: bloomerp.todo.assigned_to models/project_management/todo.py:127
 msgid "Assigned To"
 msgstr "Toegewezen aan"
 
@@ -312,6 +415,14 @@ msgstr "Bijvoegen"
 #: templates/inbox_items/email.html:7
 msgid "Attachments"
 msgstr "Bijlagen"
+
+msgctxt "bloomerp:route:name"
+msgid "Attendance Records"
+msgstr "Aanwezigheidsregistraties"
+
+msgctxt "bloomerp:route:description"
+msgid "Attendance Records relationship for {model}"
+msgstr "Relatie voor aanwezigheidsregistraties voor {model}"
 
 #: bloomerp.applicationfield.field_type
 msgid "Auto Field"
@@ -334,6 +445,10 @@ msgstr "Automatisch invullen"
 msgid "Automatic"
 msgstr "Automatisch"
 
+msgctxt "bloomerp:route:description"
+msgid "Available Modules"
+msgstr "Beschikbare modules"
+
 #: bloomerp.emailaccount.avatar bloomerp.form.avatar bloomerp.inboxfolder.avatar
 #: bloomerp.inboxitem.avatar bloomerp.sqlquery.avatar bloomerp.tile.avatar bloomerp.user.avatar
 #: bloomerp.userinboxpreference.avatar
@@ -348,6 +463,14 @@ msgstr "Terug"
 #: bloomerp.initiative.status bloomerp.todo.status
 msgid "Backlog"
 msgstr "Backlog"
+
+msgctxt "bloomerp:route:name"
+msgid "Bank Accounts"
+msgstr "Bankrekeningen"
+
+msgctxt "bloomerp:route:description"
+msgid "Bank Accounts relationship for {model}"
+msgstr "Relatie voor bankrekeningen voor {model}"
 
 #: workspaces/analytics_tile/model.py:148
 msgid "Bar"
@@ -365,6 +488,22 @@ msgstr "Groot automatisch veld"
 msgid "Big Integer Field"
 msgstr "Groot geheel getalveld"
 
+msgctxt "bloomerp:route:name"
+msgid "Bill Of Material Lines"
+msgstr "Stuklijstregels"
+
+msgctxt "bloomerp:route:description"
+msgid "Bill Of Material Lines relationship for {model}"
+msgstr "Relatie van stuklijstregels voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Bills Of Material"
+msgstr "Stuklijsten"
+
+msgctxt "bloomerp:route:description"
+msgid "Bills Of Material relationship for {model}"
+msgstr "Relatie van stuklijsten voor {model}"
+
 #: bloomerp.applicationfield.field_type
 msgid "Binary Field"
 msgstr "Binair veld"
@@ -381,6 +520,14 @@ msgstr "Bloomerp-bestandsveld"
 msgid "Bookmarks"
 msgstr "Bladwijzers"
 
+msgctxt "bloomerp:route:name"
+msgid "Bookmarks"
+msgstr "Bladwijzers"
+
+msgctxt "bloomerp:route:description"
+msgid "Bookmarks relationship for {model}"
+msgstr "Relatie van bladwijzers voor {model}"
+
 #: bloomerp.applicationfield.field_type
 msgid "Boolean Field"
 msgstr "Booleaans veld"
@@ -394,9 +541,29 @@ msgstr "Onderkant"
 msgid "Bottom margin of the header in inches."
 msgstr "Onderste marge van de koptekst in inches."
 
+msgctxt "bloomerp:route:name"
+msgid "Budgets"
+msgstr "Budgetten"
+
+msgctxt "bloomerp:route:description"
+msgid "Budgets relationship for {model}"
+msgstr "Relatie van budgetten voor {model}"
+
 #: views/workspaces/create_tile.py:164
 msgid "Build tile"
 msgstr "Tegel bouwen"
+
+msgctxt "bloomerp:route:name"
+msgid "Builder"
+msgstr "Bouwer"
+
+msgctxt "bloomerp:route:name"
+msgid "Bulk Upload {model}"
+msgstr "Bulkupload {model}"
+
+msgctxt "bloomerp:route:description"
+msgid "Bulk upload objects from {model}"
+msgstr "Objecten bulksgewijs uploaden vanuit {model}"
 
 #: bloomerp.emailaccount.mailboxes
 msgid "Cached list of folders/mailboxes for this account."
@@ -413,6 +580,14 @@ msgstr "Geannuleerd"
 #: bloomerp.todo.status bloomerp.workflowrunstep.status
 msgid "Cancelled"
 msgstr "Geannuleerd"
+
+msgctxt "bloomerp:route:name"
+msgid "Candidates"
+msgstr "Kandidaten"
+
+msgctxt "bloomerp:route:description"
+msgid "Candidates relationship for {model}"
+msgstr "Relatie van kandidaten voor {model}"
 
 #: bloomerp.tile.type workspaces/tiles.py:32
 msgid "Canvas"
@@ -437,6 +612,16 @@ msgstr "Wijzigen"
 #: templates/views/generic/model/bulk_upload_wizard/confirm_step.html:20
 msgid "Changed rows"
 msgstr "Gewijzigde rijen"
+
+# | msgid "Change"
+#: models/communication/channel_member.py:31
+msgid "Channel"
+msgstr "Wijzigen"
+
+# | msgid "Content Type"
+#: models/communication/channel.py:17
+msgid "Channel Type"
+msgstr "Inhoudstype"
 
 #: bloomerp.applicationfield.field_type
 msgid "Char Field"
@@ -478,7 +663,8 @@ msgstr "Codeveld"
 msgid "Code Generator"
 msgstr "Codegenerator"
 
-#: bloomerp.sidebaritem.color bloomerp.todolabel.color workspaces/analytics_tile/model.py:104
+#: bloomerp.sidebaritem.color bloomerp.todolabel.color models/project_management/todo_label.py:37
+#: workspaces/analytics_tile/model.py:104
 msgid "Color"
 msgstr "Kleur"
 
@@ -503,7 +689,8 @@ msgstr "Door komma's gescheiden volgorde voor tekstwaarden op de X-as, bijvoorbe
 #: bloomerp.emailaccount.comments bloomerp.form.comments bloomerp.formsubmission.comments
 #: bloomerp.inboxfolder.comments bloomerp.inboxitem.comments bloomerp.initiative.comments
 #: bloomerp.sqlquery.comments bloomerp.tile.comments bloomerp.todo.comments bloomerp.todolabel.comments
-#: bloomerp.userinboxpreference.comments templates/views/generic/detail/base.html:141
+#: bloomerp.user.detail_sidebar_view_preference bloomerp.userinboxpreference.comments
+#: models/users/user.py:69 templates/views/generic/detail/base.html:144
 msgid "Comments"
 msgstr "Opmerkingen"
 
@@ -512,7 +699,7 @@ msgstr "Opmerkingen"
 msgid "Completed"
 msgstr "Voltooid"
 
-#: bloomerp.initiative.completed_at
+#: bloomerp.initiative.completed_at models/project_management/initiative.py:121
 msgid "Completed At"
 msgstr "Voltooid op"
 
@@ -532,7 +719,16 @@ msgstr "Configureer rij- en veldregels met alleen de globale machtigingen die in
 msgid "Configure the details of your tile and preview what it looks like."
 msgstr "Configureer de details van je tegel en bekijk een voorbeeld van hoe deze eruitziet."
 
-#: bloomerp.comment.content bloomerp.todo.content
+msgctxt "bloomerp:route:name"
+msgid "Contacts"
+msgstr "Contactpersonen"
+
+msgctxt "bloomerp:route:description"
+msgid "Contacts relationship for {model}"
+msgstr "Relatie van contactpersonen voor {model}"
+
+#: bloomerp.comment.content bloomerp.todo.content models/communication/channel_message.py:18
+#: models/communication/comment.py:34 models/project_management/todo.py:168
 msgid "Content"
 msgstr "Inhoud"
 
@@ -546,7 +742,8 @@ msgstr "Inhoudsobject"
 #: bloomerp.file.content_type bloomerp.filefolder.content_type bloomerp.form.content_type
 #: bloomerp.rowpolicy.content_type bloomerp.todo.content_type
 #: bloomerp.userdetailviewtabspreference.content_type bloomerp.userlistviewpreference.content_type
-#: bloomerp.userobjectlayoutpreference.content_type
+#: bloomerp.userobjectlayoutpreference.content_type models/communication/comment.py:23
+#: models/project_management/todo.py:205
 msgid "Content Type"
 msgstr "Inhoudstype"
 
@@ -587,6 +784,22 @@ msgstr "Branchnaam kopiëren"
 msgid "Copy first value"
 msgstr "Eerste waarde kopiëren"
 
+msgctxt "bloomerp:route:name"
+msgid "Cost Centers"
+msgstr "Kostenplaatsen"
+
+msgctxt "bloomerp:route:description"
+msgid "Cost Centers relationship for {model}"
+msgstr "Relatie van kostenplaatsen voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Cost Rates"
+msgstr "Kostentarieven"
+
+msgctxt "bloomerp:route:description"
+msgid "Cost Rates relationship for {model}"
+msgstr "Relatie van kostentarieven voor {model}"
+
 #: views/access_control/manage_permissions.py:400
 msgid "Could not save policy"
 msgstr "Beleid kon niet worden opgeslagen"
@@ -595,13 +808,49 @@ msgstr "Beleid kon niet worden opgeslagen"
 msgid "Create"
 msgstr "Maken"
 
-#: templates/views/generic/detail/base.html:154
+msgctxt "bloomerp:route:name"
+msgid "Create API Key"
+msgstr "API-sleutel aanmaken"
+
+msgctxt "bloomerp:route:name"
+msgid "Create Policy for {model}"
+msgstr "Beleid voor {model} aanmaken"
+
+msgctxt "bloomerp:route:name"
+msgid "Create Tile"
+msgstr "Tegel aanmaken"
+
+#: templates/views/generic/detail/base.html:157
 msgid "Create Todo"
 msgstr "Taak maken"
+
+msgctxt "bloomerp:route:name"
+msgid "Create User for Object"
+msgstr "Gebruiker voor object aanmaken"
+
+msgctxt "bloomerp:route:description"
+msgid "Create a new email account"
+msgstr "Een nieuw e-mailaccount aanmaken"
+
+msgctxt "bloomerp:route:description"
+msgid "Create a new object from User"
+msgstr "Een nieuw object vanuit gebruiker aanmaken"
+
+msgctxt "bloomerp:route:description"
+msgid "Create a new object from {model}"
+msgstr "Een nieuw object vanuit {model} aanmaken"
+
+msgctxt "bloomerp:route:description"
+msgid "Create a new tile for the workspace"
+msgstr "Een nieuwe tegel voor de werkruimte aanmaken"
 
 #: views/communication/create_email_account.py:223
 msgid "Create account"
 msgstr "Account maken"
+
+msgctxt "bloomerp:route:description"
+msgid "Create an access control policies for {model}"
+msgstr "Toegangsbeheerbeleid voor {model} aanmaken"
 
 #: templates/views/workspaces/bloomerp_workspace_view.html:28
 msgid "Create default"
@@ -619,6 +868,14 @@ msgstr "Maak rijen die worden weergegeven wanneer het formulier wordt geopend."
 msgid "Create tile"
 msgstr "Tegel maken"
 
+msgctxt "bloomerp:route:name"
+msgid "Create user"
+msgstr "Gebruiker aanmaken"
+
+msgctxt "bloomerp:route:name"
+msgid "Create {model}"
+msgstr "{model} aanmaken"
+
 #: bloomerp.aiconversation.created_by bloomerp.apikey.created_by bloomerp.comment.created_by
 #: bloomerp.documenttemplate.created_by bloomerp.documenttemplateheader.created_by
 #: bloomerp.documenttemplatestyling.created_by bloomerp.emailaccount.created_by
@@ -631,7 +888,15 @@ msgstr "Tegel maken"
 msgid "Created By"
 msgstr "Gemaakt door"
 
-#: templates/cotton/app/sidebar/body.html:251
+msgctxt "bloomerp:route:name"
+msgid "Crm Accounts"
+msgstr "CRM-accounts"
+
+msgctxt "bloomerp:route:description"
+msgid "Crm Accounts relationship for {model}"
+msgstr "Relatie van CRM-accounts voor {model}"
+
+#: templates/cotton/app/sidebar/body.html:247
 msgid "Current language"
 msgstr "Huidige taal"
 
@@ -642,6 +907,38 @@ msgstr "Aangepaste CSS-opmaak voor de documentsjabloon."
 #: bloomerp.documenttemplate.custom_styling
 msgid "Custom Styling"
 msgstr "Aangepaste opmaak"
+
+msgctxt "bloomerp:route:name"
+msgid "Customer Invoice Lines"
+msgstr "Regels van klantfacturen"
+
+msgctxt "bloomerp:route:description"
+msgid "Customer Invoice Lines relationship for {model}"
+msgstr "Relatie van regels van klantfacturen voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Customer Invoices"
+msgstr "Klantfacturen"
+
+msgctxt "bloomerp:route:description"
+msgid "Customer Invoices relationship for {model}"
+msgstr "Relatie van klantfacturen voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Customer Receipts"
+msgstr "Klantontvangsten"
+
+msgctxt "bloomerp:route:description"
+msgid "Customer Receipts relationship for {model}"
+msgstr "Relatie van klantontvangsten voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Customers"
+msgstr "Klanten"
+
+msgctxt "bloomerp:route:description"
+msgid "Customers relationship for {model}"
+msgstr "Relatie van klanten voor {model}"
 
 #: templates/cotton/app/theme_selector.html:14
 msgid "Dark"
@@ -659,6 +956,11 @@ msgstr "Gegevensweergave"
 msgid "Data view updated"
 msgstr "Gegevensweergave bijgewerkt"
 
+# | msgid "Datetime Completed"
+#: bloomerp.todo.datetime_completed models/project_management/todo.py:175
+msgid "Date Completed"
+msgstr "Datum/tijd voltooid"
+
 #: bloomerp.applicationfield.field_type
 msgid "Date Field"
 msgstr "Datumveld"
@@ -674,10 +976,6 @@ msgstr "Datum en tijd waarop het document is ondertekend."
 #: bloomerp.applicationfield.field_type
 msgid "DateTime Field"
 msgstr "Datum/tijdveld"
-
-#: bloomerp.todo.datetime_completed
-msgid "Datetime Completed"
-msgstr "Datum/tijd voltooid"
 
 #: bloomerp.aiconversation.datetime_created bloomerp.apikey.datetime_created
 #: bloomerp.bookmark.datetime_created bloomerp.comment.datetime_created
@@ -717,11 +1015,11 @@ msgstr "Datum/tijd bijgewerkt"
 msgid "Datetime View Preference"
 msgstr "Voorkeur voor datum/tijdweergave"
 
-#: bloomerp.user.date_view_preference
+#: bloomerp.user.date_view_preference models/users/user.py:47
 msgid "Day-Month-Year (15-08-2000)"
 msgstr "Dag-maand-jaar (15-08-2000)"
 
-#: bloomerp.user.datetime_view_preference
+#: bloomerp.user.datetime_view_preference models/users/user.py:55
 msgid "Day-Month-Year Hour:Minute (15-08-2000 12:30)"
 msgstr "Dag-maand-jaar Uur:minuut (15-08-2000 12:30)"
 
@@ -762,12 +1060,28 @@ msgstr "Verwijderen"
 msgid "Delete %(delete_count)s object(s)"
 msgstr "%(delete_count)s object(en) verwijderen"
 
+msgctxt "bloomerp:route:description"
+msgid "Delete an object from {model}"
+msgstr "Een object uit {model} verwijderen"
+
 #: templates/components/forms/initial_data_row.html:46
 msgid "Delete value"
 msgstr "Waarde verwijderen"
 
+msgctxt "bloomerp:route:name"
+msgid "Delete {model}"
+msgstr "{model} verwijderen"
+
+msgctxt "bloomerp:route:name"
+msgid "Departments"
+msgstr "Afdelingen"
+
+msgctxt "bloomerp:route:description"
+msgid "Departments relationship for {model}"
+msgstr "Relatie van afdelingen voor {model}"
+
 #: bloomerp.form.description bloomerp.initiative.description bloomerp.policy.description
-#: bloomerp.tile.description
+#: bloomerp.tile.description models/project_management/initiative.py:104
 msgid "Description"
 msgstr "Beschrijving"
 
@@ -791,6 +1105,10 @@ msgstr ""
 "Geeft aan of deze gebruiker als actief moet worden beschouwd. Schakel dit uit in plaats van "
 "accounts te verwijderen."
 
+#: bloomerp.user.detail_sidebar_view_preference
+msgid "Detail Sidebar View Preference"
+msgstr "Voorkeur voor weergave van detailzijbalk"
+
 #: templates/inbox_items/workflow_run.html:100
 msgid "Detailed run logging is still available."
 msgstr "Gedetailleerde uitvoerlogging is nog steeds beschikbaar."
@@ -798,6 +1116,14 @@ msgstr "Gedetailleerde uitvoerlogging is nog steeds beschikbaar."
 #: services/detail_view_services.py:408
 msgid "Details"
 msgstr "Details"
+
+msgctxt "bloomerp:route:name"
+msgid "Details"
+msgstr "Details"
+
+msgctxt "bloomerp:route:description"
+msgid "Different document templates"
+msgstr "Verschillende documentsjablonen"
 
 #: bloomerp.userlistviewpreference.display_fields
 msgid "Display Fields"
@@ -842,9 +1168,41 @@ msgstr "Geeft eenvoudige markdown-inhoud weer, zoals notities, instructies of re
 msgid "Document Template Generator"
 msgstr "Generator voor documentsjablonen"
 
+msgctxt "bloomerp:route:name"
+msgid "Document Template Headers"
+msgstr "Kopteksten van documentsjablonen"
+
+msgctxt "bloomerp:route:description"
+msgid "Document Template Headers relationship for {model}"
+msgstr "Relatie van kopteksten van documentsjablonen voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Document Template Stylings"
+msgstr "Stijlen van documentsjablonen"
+
+msgctxt "bloomerp:route:description"
+msgid "Document Template Stylings relationship for {model}"
+msgstr "Relatie van stijlen van documentsjablonen voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Document Templates"
+msgstr "Documentsjablonen"
+
+msgctxt "bloomerp:route:description"
+msgid "Document Templates relationship for {model}"
+msgstr "Relatie van documentsjablonen voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Document templates"
+msgstr "Documentsjablonen"
+
 #: templates/components/forms/qr_code.html:38 templates/views/sdk/download.html:39
 msgid "Download"
 msgstr "Downloaden"
+
+msgctxt "bloomerp:route:name"
+msgid "Download SDK"
+msgstr "SDK downloaden"
 
 #: bloomerp.emailaccount.status
 msgid "Draft"
@@ -876,7 +1234,11 @@ msgstr "Duurveld"
 msgid "Edit"
 msgstr "Bewerken"
 
-#: bloomerp.todo.effort
+msgctxt "bloomerp:route:description"
+msgid "Edit a document template with the builder"
+msgstr "Een documentsjabloon bewerken met de builder"
+
+#: bloomerp.todo.effort models/project_management/todo.py:158
 msgid "Effort"
 msgstr "Inspanning"
 
@@ -891,6 +1253,14 @@ msgstr "E-mailaccount"
 #: bloomerp.emailaccount
 msgid "Email Accounts"
 msgstr "E-mailaccounts"
+
+msgctxt "bloomerp:route:name"
+msgid "Email Accounts"
+msgstr "E-mailaccounts"
+
+msgctxt "bloomerp:route:description"
+msgid "Email Accounts relationship for {model}"
+msgstr "Relatie van e-mailaccounts voor {model}"
 
 #: bloomerp.emailaccount.email_address
 msgid "Email Address"
@@ -921,7 +1291,23 @@ msgstr "E-mailverificatie is vereist voordat dit account toegang kan krijgen tot
 msgid "Emails"
 msgstr "E-mails"
 
-#: bloomerp.workflow.enable_logging
+msgctxt "bloomerp:route:name"
+msgid "Employee Contracts"
+msgstr "Arbeidscontracten"
+
+msgctxt "bloomerp:route:description"
+msgid "Employee Contracts relationship for {model}"
+msgstr "Relatie van arbeidscontracten voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Employees"
+msgstr "Werknemers"
+
+msgctxt "bloomerp:route:description"
+msgid "Employees relationship for {model}"
+msgstr "Relatie met werknemers voor {model}"
+
+#: bloomerp.workflow.enable_logging models/automation/workflow.py:90
 msgid "Enable Logging"
 msgstr "Logboekregistratie inschakelen"
 
@@ -949,6 +1335,14 @@ msgstr ""
 msgid "Enter the connection details for this mailbox."
 msgstr "Voer de verbindingsgegevens voor deze mailbox in."
 
+msgctxt "bloomerp:route:name"
+msgid "Equipment"
+msgstr "Apparatuur"
+
+msgctxt "bloomerp:route:description"
+msgid "Equipment relationship for {model}"
+msgstr "Relatie met apparatuur voor {model}"
+
 #: bloomerp.emailaccount.status
 msgid "Error"
 msgstr "Fout"
@@ -968,6 +1362,22 @@ msgstr "Uitvoeringsgrafiek"
 #: templates/inbox_items/workflow_run.html:26
 msgid "Execution time"
 msgstr "Uitvoeringstijd"
+
+msgctxt "bloomerp:route:name"
+msgid "Exit Interviews"
+msgstr "Exitgesprekken"
+
+msgctxt "bloomerp:route:description"
+msgid "Exit Interviews relationship for {model}"
+msgstr "Relatie met exitgesprekken voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Exit Reasons"
+msgstr "Redenen voor vertrek"
+
+msgctxt "bloomerp:route:description"
+msgid "Exit Reasons relationship for {model}"
+msgstr "Relatie met redenen voor vertrek voor {model}"
 
 #: bloomerp.apikey.expires_at
 msgid "Expires At"
@@ -1037,6 +1447,14 @@ msgstr "Bestand"
 msgid "File Field"
 msgstr "Bestandsveld"
 
+msgctxt "bloomerp:route:name"
+msgid "File Folders"
+msgstr "Bestandsmappen"
+
+msgctxt "bloomerp:route:description"
+msgid "File Folders relationship for {model}"
+msgstr "Relatie met bestandsmappen voor {model}"
+
 #: bloomerp.aiconversation.files bloomerp.apikey.files bloomerp.applicationfield.field_type
 #: bloomerp.documenttemplate.files bloomerp.documenttemplateheader.files
 #: bloomerp.documenttemplatestyling.files bloomerp.emailaccount.files bloomerp.form.files
@@ -1045,6 +1463,14 @@ msgstr "Bestandsveld"
 #: bloomerp.todolabel.files bloomerp.userinboxpreference.files
 msgid "Files"
 msgstr "Bestanden"
+
+msgctxt "bloomerp:route:name"
+msgid "Files"
+msgstr "Bestanden"
+
+msgctxt "bloomerp:route:description"
+msgid "Files for object for {model} model"
+msgstr "Bestanden voor object voor {model}-model"
 
 #: workspaces/analytics_tile/model.py:215
 msgid "Filter"
@@ -1066,11 +1492,19 @@ msgstr "Filter verwijderd"
 msgid "Finished"
 msgstr "Voltooid"
 
+msgctxt "bloomerp:route:name"
+msgid "Fiscal Periods"
+msgstr "Boekperioden"
+
+msgctxt "bloomerp:route:description"
+msgid "Fiscal Periods relationship for {model}"
+msgstr "Relatie met boekperioden voor {model}"
+
 #: bloomerp.applicationfield.field_type
 msgid "Float Field"
 msgstr "Floatveld"
 
-#: automation/defintion.py:216 bloomerp.workflownode.type
+#: automation/defintion.py:223 bloomerp.workflownode.type
 msgid "Flow"
 msgstr "Flow"
 
@@ -1108,13 +1542,33 @@ msgstr "Wachtwoord vergeten?"
 msgid "Form"
 msgstr "Formulier"
 
+msgctxt "bloomerp:route:name"
+msgid "Form Builder"
+msgstr "Formulierbouwer"
+
 #: templates/components/forms/qr_code.html:7
 msgid "Form QR code"
 msgstr "QR-code van formulier"
 
+msgctxt "bloomerp:route:name"
+msgid "Form Submissions"
+msgstr "Formulierinzendingen"
+
+msgctxt "bloomerp:route:description"
+msgid "Form Submissions relationship for {model}"
+msgstr "Relatie met formulierinzendingen voor {model}"
+
 #: workspaces/analytics_tile/model.py:96
 msgid "Formatter"
 msgstr "Formatter"
+
+msgctxt "bloomerp:route:name"
+msgid "Forms"
+msgstr "Formulieren"
+
+msgctxt "bloomerp:route:description"
+msgid "Forms relationship for {model}"
+msgstr "Relatie met formulieren voor {model}"
 
 #: bloomerp.documenttemplate.free_variables
 msgid "Free Variables"
@@ -1137,9 +1591,17 @@ msgstr "Gantt"
 msgid "Generate"
 msgstr "Genereren"
 
+msgctxt "bloomerp:route:name"
+msgid "Generate PDF"
+msgstr "PDF genereren"
+
 #: templates/views/auth/create_api_token.html:22
 msgid "Generate Token"
 msgstr "Token genereren"
+
+msgctxt "bloomerp:route:description"
+msgid "Generate pdf from document template"
+msgstr "PDF genereren vanuit documentsjabloon"
 
 #: bloomerp.applicationfield.field_type
 msgid "Generic Foreign Key"
@@ -1157,6 +1619,14 @@ msgstr "Algemene relatie"
 msgid "Give the policy a name and description before saving."
 msgstr "Geef het beleid een naam en beschrijving voordat u het opslaat."
 
+msgctxt "bloomerp:route:name"
+msgid "Gl Transactions"
+msgstr "Grootboektransacties"
+
+msgctxt "bloomerp:route:description"
+msgid "Gl Transactions relationship for {model}"
+msgstr "Relatie met grootboektransacties voor {model}"
+
 #: bloomerp.policy.global_permissions
 msgid "Global Permissions"
 msgstr "Globale machtigingen"
@@ -1172,6 +1642,22 @@ msgstr "Globale machtigingen die door dit beleid worden toegepast."
 #: views/access_control/manage_permissions.py:387
 msgid "Global permissions error"
 msgstr "Fout met globale machtigingen"
+
+msgctxt "bloomerp:route:name"
+msgid "Goal Progress Updates"
+msgstr "Updates van doelvoortgang"
+
+msgctxt "bloomerp:route:description"
+msgid "Goal Progress Updates relationship for {model}"
+msgstr "Relatie met updates van doelvoortgang voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Goals"
+msgstr "Doelen"
+
+msgctxt "bloomerp:route:description"
+msgid "Goals relationship for {model}"
+msgstr "Relatie met doelen voor {model}"
 
 #: bloomerp.policy.groups
 msgid "Groups"
@@ -1233,6 +1719,14 @@ msgstr "Hexadecimale kleurcode voor het item in de zijbalk (bijv. #FF5733)."
 #: bloomerp.todo.priority
 msgid "High"
 msgstr "Hoog"
+
+msgctxt "bloomerp:route:name"
+msgid "Hiring Decisions"
+msgstr "Wervingsbeslissingen"
+
+msgctxt "bloomerp:route:description"
+msgid "Hiring Decisions relationship for {model}"
+msgstr "Relatie met wervingsbeslissingen voor {model}"
 
 #: templates/cotton/features/dataviews/gant.html:34
 msgid "Hour"
@@ -1313,9 +1807,17 @@ msgstr "In uitvoering"
 msgid "In Review"
 msgstr "In beoordeling"
 
+#: bloomerp.comment.object_id models/communication/comment.py:28
+msgid "In order to support both UUID and integer primary keys"
+msgstr "Om zowel UUID- als integer-primary keys te ondersteunen"
+
 #: bloomerp.inbox bloomerp.inboxfolder.inbox templates/cotton/app/sidebar/body.html:66
 msgid "Inbox"
 msgstr "Postvak IN"
+
+msgctxt "bloomerp:route:name"
+msgid "Inbox"
+msgstr "Inbox"
 
 #: bloomerp.inboxfolder
 msgid "Inbox Folder"
@@ -1325,6 +1827,14 @@ msgstr "Inboxmap"
 msgid "Inbox Folders"
 msgstr "Inboxmappen"
 
+msgctxt "bloomerp:route:name"
+msgid "Inbox Folders"
+msgstr "Inboxmappen"
+
+msgctxt "bloomerp:route:description"
+msgid "Inbox Folders relationship for {model}"
+msgstr "Relatie van inboxmappen voor {model}"
+
 #: bloomerp.inboxitem
 msgid "Inbox Item"
 msgstr "Inboxitem"
@@ -1333,9 +1843,25 @@ msgstr "Inboxitem"
 msgid "Inbox Items"
 msgstr "Inboxitems"
 
+msgctxt "bloomerp:route:name"
+msgid "Inbox Items"
+msgstr "Inboxitems"
+
+msgctxt "bloomerp:route:description"
+msgid "Inbox Items relationship for {model}"
+msgstr "Relatie van inboxitems voor {model}"
+
 #: bloomerp.inbox
 msgid "Inboxs"
 msgstr "Inboxen"
+
+msgctxt "bloomerp:route:name"
+msgid "Inboxs"
+msgstr "Inboxen"
+
+msgctxt "bloomerp:route:description"
+msgid "Inboxs relationship for {model}"
+msgstr "Relatie van inboxen voor {model}"
 
 #: bloomerp.documenttemplate.include_page_numbers
 msgid "Include Page Numbers"
@@ -1371,6 +1897,11 @@ msgstr ""
 "gebruikt om de standaardvoorkeur van de gebruiker te bepalen wanneer deze voor het eerst een "
 "account aanmaakt."
 
+# | msgid "Indicates whether the inbox item has been read by the user."
+#: models/communication/channel.py:23
+msgid "Indicates whether the channel is currently active."
+msgstr "Geeft aan of het inboxitem door de gebruiker is gelezen."
+
 #: bloomerp.inboxitem.is_read
 msgid "Indicates whether the inbox item has been read by the user."
 msgstr "Geeft aan of het inboxitem door de gebruiker is gelezen."
@@ -1402,9 +1933,17 @@ msgstr "Initiële payload voor het formulier"
 msgid "Initial rows"
 msgstr "Initiële rijen"
 
-#: bloomerp.todo.initiative
+#: bloomerp.todo.initiative models/project_management/todo.py:196
 msgid "Initiative"
 msgstr "Initiatief"
+
+msgctxt "bloomerp:route:name"
+msgid "Initiatives"
+msgstr "Initiatieven"
+
+msgctxt "bloomerp:route:description"
+msgid "Initiatives relationship for {model}"
+msgstr "Relatie van initiatieven voor {model}"
 
 #: templates/components/forms/initial_data_value.html:82
 msgid "Input value"
@@ -1413,6 +1952,22 @@ msgstr "Invoerwaarde"
 #: bloomerp.applicationfield.field_type
 msgid "Integer Field"
 msgstr "Integer-veld"
+
+msgctxt "bloomerp:route:name"
+msgid "Interview Feedback"
+msgstr "Interviewfeedback"
+
+msgctxt "bloomerp:route:description"
+msgid "Interview Feedback relationship for {model}"
+msgstr "Relatie van interviewfeedback voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Interviews"
+msgstr "Sollicitatiegesprekken"
+
+msgctxt "bloomerp:route:description"
+msgid "Interviews relationship for {model}"
+msgstr "Relatie van sollicitatiegesprekken voor {model}"
 
 #: templates/views/generic/model/bulk_upload_wizard/confirm_step.html:14
 msgid "Invalid"
@@ -1433,6 +1988,11 @@ msgstr "Ongeldig veld voor rijbeleid"
 #: bloomerp.formsubmission.ip_address
 msgid "Ip Address"
 msgstr "IP-adres"
+
+# | msgid "Active"
+#: models/communication/channel.py:24
+msgid "Is Active"
+msgstr "Actief"
 
 #: bloomerp.activitylog.is_create
 msgid "Is Create"
@@ -1474,6 +2034,46 @@ msgstr "Item bijgewerkt"
 msgid "JSON Field"
 msgstr "JSON-veld"
 
+msgctxt "bloomerp:route:name"
+msgid "Job Openings"
+msgstr "Vacatures"
+
+msgctxt "bloomerp:route:description"
+msgid "Job Openings relationship for {model}"
+msgstr "Relatie van vacatures voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Job Titles"
+msgstr "Functietitels"
+
+msgctxt "bloomerp:route:description"
+msgid "Job Titles relationship for {model}"
+msgstr "Relatie van functietitels voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Journal Entries"
+msgstr "Journaalposten"
+
+msgctxt "bloomerp:route:description"
+msgid "Journal Entries relationship for {model}"
+msgstr "Relatie van journaalposten voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Journal Entry Lines"
+msgstr "Regels van journaalposten"
+
+msgctxt "bloomerp:route:description"
+msgid "Journal Entry Lines relationship for {model}"
+msgstr "Relatie van regels van journaalposten voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Journals"
+msgstr "Journalen"
+
+msgctxt "bloomerp:route:description"
+msgid "Journals relationship for {model}"
+msgstr "Relatie van journalen voor {model}"
+
 #: workspaces/analytics_tile/model.py:313
 msgid "KPI"
 msgstr "KPI"
@@ -1498,15 +2098,16 @@ msgstr "L"
 msgid "Label"
 msgstr "Label"
 
-#: bloomerp.initiative.labels bloomerp.todo.labels workspaces/analytics_tile/model.py:378
+#: bloomerp.initiative.labels bloomerp.todo.labels models/project_management/initiative.py:135
+#: models/project_management/todo.py:187 workspaces/analytics_tile/model.py:378
 msgid "Labels"
 msgstr "Labels"
 
-#: bloomerp.initiative.labels models/project_management/initiative.py:109
+#: bloomerp.initiative.labels models/project_management/initiative.py:136
 msgid "Labels assigned to the initiative"
 msgstr "Aan het initiatief toegewezen labels"
 
-#: bloomerp.todo.labels models/project_management/todo.py:176
+#: bloomerp.todo.labels models/project_management/todo.py:186
 msgid "Labels assigned to the todo"
 msgstr "Aan de taak toegewezen labels"
 
@@ -1517,6 +2118,10 @@ msgstr "Liggend"
 #: templates/cotton/app/sidebar/body.html:206
 msgid "Languages"
 msgstr "Talen"
+
+#: models/communication/channel_member.py:52
+msgid "Last Read Message"
+msgstr "Laatst gelezen bericht"
 
 #: bloomerp.emailaccount.last_sync_error
 msgid "Last Sync Error"
@@ -1541,6 +2146,46 @@ msgstr "Laatst gevalideerd op"
 #: bloomerp.form.layout bloomerp.userobjectlayoutpreference.layout bloomerp.workspace.layout
 msgid "Layout"
 msgstr "Indeling"
+
+msgctxt "bloomerp:route:name"
+msgid "Leads"
+msgstr "Leads"
+
+msgctxt "bloomerp:route:description"
+msgid "Leads relationship for {model}"
+msgstr "Relatie van leads voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Leave Balances"
+msgstr "Verlofsaldi"
+
+msgctxt "bloomerp:route:description"
+msgid "Leave Balances relationship for {model}"
+msgstr "Relatie van verlofsaldi voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Leave Policies"
+msgstr "Verlofregelingen"
+
+msgctxt "bloomerp:route:description"
+msgid "Leave Policies relationship for {model}"
+msgstr "Relatie van verlofregelingen voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Leave Requests"
+msgstr "Verlofaanvragen"
+
+msgctxt "bloomerp:route:description"
+msgid "Leave Requests relationship for {model}"
+msgstr "Relatie voor verlofaanvragen voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Leave Types"
+msgstr "Verloftypen"
+
+msgctxt "bloomerp:route:description"
+msgid "Leave Types relationship for {model}"
+msgstr "Relatie voor verloftypen voor {model}"
 
 #: workspaces/analytics_tile/model.py:199
 msgid "Left"
@@ -1602,6 +2247,18 @@ msgstr "Koppelingen en mappen"
 msgid "Links can only be nested inside folders"
 msgstr "Koppelingen kunnen alleen in mappen worden genest"
 
+msgctxt "bloomerp:route:description"
+msgid "List of all files across the application."
+msgstr "Lijst van alle bestanden in de hele applicatie."
+
+msgctxt "bloomerp:route:description"
+msgid "List of records for {model} model"
+msgstr "Lijst met records voor model {model}"
+
+msgctxt "bloomerp:route:description"
+msgid "List of your workspaces"
+msgstr "Lijst van uw werkruimten"
+
 #: workspaces/dataview_tile/form.py:23
 msgid "List view preference"
 msgstr "Voorkeur voor lijstweergave"
@@ -1623,6 +2280,22 @@ msgstr "Meer laden…"
 #: templates/views/forms/builder.html:38
 msgid "Loading..."
 msgstr "Laden..."
+
+msgctxt "bloomerp:route:name"
+msgid "Locations"
+msgstr "Locaties"
+
+msgctxt "bloomerp:route:description"
+msgid "Locations relationship for {model}"
+msgstr "Relatie voor locaties voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Log Entries"
+msgstr "Logboekvermeldingen"
+
+msgctxt "bloomerp:route:description"
+msgid "Log Entries relationship for {model}"
+msgstr "Relatie voor logboekvermeldingen voor {model}"
 
 #: templates/views/auth/login.html:34
 msgid "Login"
@@ -1647,6 +2320,58 @@ msgstr "Verbinding met mailbox mislukt"
 #: bloomerp.emailaccount.mailboxes
 msgid "Mailboxes"
 msgstr "Postvakken"
+
+msgctxt "bloomerp:route:name"
+msgid "Maintenance Plans"
+msgstr "Onderhoudsplannen"
+
+msgctxt "bloomerp:route:description"
+msgid "Maintenance Plans relationship for {model}"
+msgstr "Relatie voor onderhoudsplannen voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Maintenance Requests"
+msgstr "Onderhoudsaanvragen"
+
+msgctxt "bloomerp:route:description"
+msgid "Maintenance Requests relationship for {model}"
+msgstr "Relatie voor onderhoudsaanvragen voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Maintenance Work Orders"
+msgstr "Onderhoudswerkorders"
+
+msgctxt "bloomerp:route:description"
+msgid "Maintenance Work Orders relationship for {model}"
+msgstr "Relatie voor onderhoudswerkorders voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "ManageAccessControlForModelView"
+msgstr "ToegangsbeheerVoorModelWeergave"
+
+msgctxt "bloomerp:route:name"
+msgid "Manufacturing Order Components"
+msgstr "Componenten van productieorders"
+
+msgctxt "bloomerp:route:description"
+msgid "Manufacturing Order Components relationship for {model}"
+msgstr "Relatie voor componenten van productieorders voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Manufacturing Order Operations"
+msgstr "Bewerkingen van productieorders"
+
+msgctxt "bloomerp:route:description"
+msgid "Manufacturing Order Operations relationship for {model}"
+msgstr "Relatie voor bewerkingen van productieorders voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Manufacturing Orders"
+msgstr "Productieorders"
+
+msgctxt "bloomerp:route:description"
+msgid "Manufacturing Orders relationship for {model}"
+msgstr "Relatie voor productieorders voor {model}"
 
 #: bloomerp.applicationfield.field_type
 msgid "Many To Many Field"
@@ -1675,6 +2400,14 @@ msgstr "Marge boven"
 #: bloomerp.documenttemplate.page_margin models/document_templates/document_template.py:163
 msgid "Margin of the document template in inches."
 msgstr "Marge van de documentsjabloon in inches."
+
+msgctxt "bloomerp:route:name"
+msgid "Master Production Schedules"
+msgstr "Hoofdproductieplanningen"
+
+msgctxt "bloomerp:route:description"
+msgid "Master Production Schedules relationship for {model}"
+msgstr "Relatie voor hoofdproductieplanningen voor {model}"
 
 #: bloomerp.form.max_submissions
 msgid "Max Submissions"
@@ -1714,15 +2447,19 @@ msgstr "Model"
 msgid "Module Id"
 msgstr "Module-ID"
 
+msgctxt "bloomerp:route:name"
+msgid "Modules"
+msgstr "Modules"
+
 #: templates/cotton/features/dataviews/gant.html:32
 msgid "Month"
 msgstr "Maand"
 
-#: bloomerp.user.date_view_preference
+#: bloomerp.user.date_view_preference models/users/user.py:48
 msgid "Month-Day-Year (08-15-2000)"
 msgstr "Maand-dag-jaar (08-15-2000)"
 
-#: bloomerp.user.datetime_view_preference
+#: bloomerp.user.datetime_view_preference models/users/user.py:59
 msgid "Month-Day-Year Hour:Minute (08-15-2000 12:30)"
 msgstr "Maand-dag-jaar Uur:minuut (08-15-2000 12:30)"
 
@@ -1734,6 +2471,22 @@ msgstr "Naar beneden verplaatsen"
 msgid "Move up"
 msgstr "Naar boven verplaatsen"
 
+msgctxt "bloomerp:route:name"
+msgid "Mrp Runs"
+msgstr "MRP-runs"
+
+msgctxt "bloomerp:route:description"
+msgid "Mrp Runs relationship for {model}"
+msgstr "Relatie voor MRP-runs voor {model}"
+
+#: models/communication/channel_member.py:57
+msgid "Muted Until"
+msgstr "Gedempt tot"
+
+msgctxt "bloomerp:route:name"
+msgid "My workspaces"
+msgstr "Mijn werkruimten"
+
 #: bloomerp.apikey.name bloomerp.documenttemplate.name bloomerp.documenttemplateheader.name
 #: bloomerp.documenttemplatestyling.name bloomerp.emailaccount.name bloomerp.fieldpolicy.name
 #: bloomerp.file.name bloomerp.filefolder.name bloomerp.form.name bloomerp.inbox.name
@@ -1742,6 +2495,8 @@ msgstr "Naar boven verplaatsen"
 #: bloomerp.userdetailviewtabitem.name bloomerp.userdetailviewtabspreference.name
 #: bloomerp.userlistviewpreference.name bloomerp.userobjectlayoutpreference.name bloomerp.workflow.name
 #: bloomerp.workflowedge.name bloomerp.workflownode.name bloomerp.workspace.name
+#: models/automation/workflow.py:75 models/project_management/initiative.py:98
+#: models/project_management/todo_label.py:33
 #: templates/components/workspaces/tile_builders/links_tile_builder.html:42
 #: templates/components/workspaces/tile_builders/links_tile_builder.html:84
 #: templates/components/workspaces/tile_builders/links_tile_builder_items.html:38
@@ -1836,7 +2591,7 @@ msgstr "Geen routes gevonden."
 msgid "No scheduled records."
 msgstr "Geen geplande records."
 
-#: templates/views/generic/detail/base.html:57
+#: templates/views/generic/detail/base.html:58
 msgid "No tabs in folder"
 msgstr "Geen tabbladen in map"
 
@@ -1848,13 +2603,21 @@ msgstr "Geen gebruikers gevonden."
 msgid "No workflow graph was available for this execution."
 msgstr "Er was geen workflowgrafiek beschikbaar voor deze uitvoering."
 
-#: bloomerp.workflowrunstep.node
+#: bloomerp.workflowrunstep.node models/automation/workflow_run_step.py:66
 msgid "Node"
 msgstr "Node"
 
 #: models/automation/workflow_node.py:140
 msgid "Node subtype is required in config"
 msgstr "Subtype van node is vereist in de configuratie"
+
+msgctxt "bloomerp:route:name"
+msgid "Non Conformance Reports"
+msgstr "Meldingen van non-conformiteit"
+
+msgctxt "bloomerp:route:description"
+msgid "Non Conformance Reports relationship for {model}"
+msgstr "Relatie van meldingen van non-conformiteit voor {model}"
 
 #: bloomerp.emailaccount.imap_security bloomerp.emailaccount.smtp_security
 msgid "None"
@@ -1896,8 +2659,14 @@ msgstr "Object"
 msgid "Object Bloom AI"
 msgstr "Object Bloom AI"
 
-#: bloomerp.activitylog.object_id bloomerp.bookmark.object_id bloomerp.comment.object_id
-#: bloomerp.file.object_id bloomerp.filefolder.object_id bloomerp.todo.object_id
+# | msgid "Object Id"
+#: bloomerp.comment.object_id bloomerp.todo.object_id models/communication/comment.py:27
+#: models/project_management/todo.py:213
+msgid "Object ID"
+msgstr "Object-ID"
+
+#: bloomerp.activitylog.object_id bloomerp.bookmark.object_id bloomerp.file.object_id
+#: bloomerp.filefolder.object_id
 msgid "Object Id"
 msgstr "Object-ID"
 
@@ -1905,9 +2674,65 @@ msgstr "Object-ID"
 msgid "Object no longer available"
 msgstr "Object is niet langer beschikbaar"
 
+msgctxt "bloomerp:route:name"
+msgid "Offboarding Processes"
+msgstr "Uitstroomprocessen"
+
+msgctxt "bloomerp:route:description"
+msgid "Offboarding Processes relationship for {model}"
+msgstr "Relatie van uitstroomprocessen voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Offer Approvals"
+msgstr "Goedkeuringen van aanbiedingen"
+
+msgctxt "bloomerp:route:description"
+msgid "Offer Approvals relationship for {model}"
+msgstr "Relatie van goedkeuringen van aanbiedingen voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Offers"
+msgstr "Aanbiedingen"
+
+msgctxt "bloomerp:route:description"
+msgid "Offers relationship for {model}"
+msgstr "Relatie van aanbiedingen voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Office Locations"
+msgstr "Kantoorlocaties"
+
+msgctxt "bloomerp:route:description"
+msgid "Office Locations relationship for {model}"
+msgstr "Relatie van kantoorlocaties voor {model}"
+
 #: bloomerp.initiative.status
 msgid "On Hold"
 msgstr "In de wacht"
+
+msgctxt "bloomerp:route:name"
+msgid "Onboarding Processes"
+msgstr "Onboardingprocessen"
+
+msgctxt "bloomerp:route:description"
+msgid "Onboarding Processes relationship for {model}"
+msgstr "Relatie van onboardingprocessen voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Onboarding Task Assignments"
+msgstr "Toewijzingen van onboardingtaken"
+
+msgctxt "bloomerp:route:description"
+msgid "Onboarding Task Assignments relationship for {model}"
+msgstr "Relatie van toewijzingen van onboardingtaken voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Onboarding Tasks"
+msgstr "Onboardingtaken"
+
+msgctxt "bloomerp:route:description"
+msgid "Onboarding Tasks relationship for {model}"
+msgstr "Relatie van onboardingtaken voor {model}"
 
 #: bloomerp.applicationfield.field_type
 msgid "One To Many Field"
@@ -1940,6 +2765,30 @@ msgstr "Opent op"
 #: components/workspaces/preview_workspace_tile.py:356
 msgid "Operation does not exist"
 msgstr "Bewerking bestaat niet"
+
+msgctxt "bloomerp:route:name"
+msgid "Operations"
+msgstr "Bedrijfsvoering"
+
+msgctxt "bloomerp:route:description"
+msgid "Operations relationship for {model}"
+msgstr "Relatie van bedrijfsvoering voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Opportunities"
+msgstr "Verkoopkansen"
+
+msgctxt "bloomerp:route:description"
+msgid "Opportunities relationship for {model}"
+msgstr "Relatie van verkoopkansen voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Opportunity Stages"
+msgstr "Fasen van verkoopkansen"
+
+msgctxt "bloomerp:route:description"
+msgid "Opportunity Stages relationship for {model}"
+msgstr "Relatie van fasen van verkoopkansen voor {model}"
 
 #: bloomerp.inboxitem.raw_meta_data
 msgid "Optional JSON field to store additional metadata related to the inbox item."
@@ -1975,7 +2824,7 @@ msgstr "Of ga door met"
 msgid "Orientation of the document template."
 msgstr "Oriëntatie van de documentsjabloon."
 
-#: bloomerp.workflowrunstep.output_file
+#: bloomerp.workflowrunstep.output_file models/automation/workflow_run_step.py:58
 msgid "Output File"
 msgstr "Uitvoerbestand"
 
@@ -1987,7 +2836,23 @@ msgstr "Overschrijft het label van de X-as. Laat leeg om geen aangepaste astitel
 msgid "Overrides the Y-axis label. Leave blank to show no custom axis title."
 msgstr "Overschrijft het label van de Y-as. Laat leeg om geen aangepaste astitel weer te geven."
 
-#: bloomerp.initiative.owner
+msgctxt "bloomerp:route:name"
+msgid "Overtime Rules"
+msgstr "Overwerkregels"
+
+msgctxt "bloomerp:route:description"
+msgid "Overtime Rules relationship for {model}"
+msgstr "Relatie van overwerkregels voor {model}"
+
+msgctxt "bloomerp:route:description"
+msgid "Overview of object from {model} model"
+msgstr "Overzicht van object uit het model {model}"
+
+msgctxt "bloomerp:route:description"
+msgid "Overview of profile"
+msgstr "Overzicht van profiel"
+
+#: bloomerp.initiative.owner models/project_management/initiative.py:129
 msgid "Owner"
 msgstr "Eigenaar"
 
@@ -2005,6 +2870,11 @@ msgstr "Paginaformaat"
 
 #: bloomerp.filefolder.parent bloomerp.sidebaritem.parent bloomerp.userdetailviewtabitem.parent
 msgid "Parent"
+msgstr "Bovenliggend item"
+
+# | msgid "Parent"
+#: models/communication/channel_message.py:36
+msgid "Parent Message"
 msgstr "Bovenliggend"
 
 #: templates/components/workspaces/tile_builders/links_tile_builder.html:92
@@ -2023,6 +2893,46 @@ msgstr "Gepauzeerd"
 msgid "Payload"
 msgstr "Payload"
 
+msgctxt "bloomerp:route:name"
+msgid "Peer Feedback"
+msgstr "Feedback van collega's"
+
+msgctxt "bloomerp:route:description"
+msgid "Peer Feedback relationship for {model}"
+msgstr "Relatie van feedback van collega's voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "People"
+msgstr "Personen"
+
+msgctxt "bloomerp:route:description"
+msgid "People relationship for {model}"
+msgstr "Relatie voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Performance Cycles"
+msgstr "Prestatiecycli"
+
+msgctxt "bloomerp:route:description"
+msgid "Performance Cycles relationship for {model}"
+msgstr "Relatie voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Performance Reviews"
+msgstr "Prestatiebeoordelingen"
+
+msgctxt "bloomerp:route:description"
+msgid "Performance Reviews relationship for {model}"
+msgstr "Relatie voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Periodic Tasks"
+msgstr "Periodieke taken"
+
+msgctxt "bloomerp:route:description"
+msgid "Periodic Tasks relationship for {model}"
+msgstr "Relatie voor {model}"
+
 #: bloomerp.rowpolicyrulepermission.permission
 msgid "Permission"
 msgstr "Machtiging"
@@ -2034,6 +2944,14 @@ msgstr "Machtiging vereist"
 #: bloomerp.rowpolicyrule.permissions
 msgid "Permissions"
 msgstr "Machtigingen"
+
+msgctxt "bloomerp:route:name"
+msgid "Permissions"
+msgstr "Machtigingen"
+
+msgctxt "bloomerp:route:description"
+msgid "Permissions relationship for {model}"
+msgstr "Relatie voor {model}"
 
 #: bloomerp.file.persisted bloomerp.formsubmission.persisted
 msgid "Persisted"
@@ -2054,6 +2972,14 @@ msgstr "Draaitabel"
 #: workspaces/analytics_tile/model.py:358
 msgid "Pivot Table"
 msgstr "Draaitabel"
+
+msgctxt "bloomerp:route:name"
+msgid "Planned Orders"
+msgstr "Geplande orders"
+
+msgctxt "bloomerp:route:description"
+msgid "Planned Orders relationship for {model}"
+msgstr "Relatie voor {model}"
 
 #: workspaces/links_tile/model.py:98 workspaces/links_tile/model.py:169
 msgid "Please add a URL to the link"
@@ -2187,13 +3113,49 @@ msgstr ""
 msgid "Preview"
 msgstr "Voorbeeld"
 
-#: bloomerp.todo.priority
+#: bloomerp.todo.priority models/project_management/todo.py:150
 msgid "Priority"
 msgstr "Prioriteit"
 
 #: templates/views/base_wizard.html:79
 msgid "Processing..."
 msgstr "Verwerken..."
+
+msgctxt "bloomerp:route:name"
+msgid "Production Costs"
+msgstr "Productiekosten"
+
+msgctxt "bloomerp:route:description"
+msgid "Production Costs relationship for {model}"
+msgstr "Relatie voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Production Moves"
+msgstr "Productiebewegingen"
+
+msgctxt "bloomerp:route:description"
+msgid "Production Moves relationship for {model}"
+msgstr "Relatie voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Production Time Entries"
+msgstr "Productietijdregistraties"
+
+msgctxt "bloomerp:route:description"
+msgid "Production Time Entries relationship for {model}"
+msgstr "Relatie voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Products"
+msgstr "Producten"
+
+msgctxt "bloomerp:route:description"
+msgid "Products relationship for {model}"
+msgstr "Relatie voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Profile"
+msgstr "Profiel"
 
 #: views/access_control/manage_permissions.py:274
 msgid "Properties and one-to-many fields cannot be used in row policies."
@@ -2248,9 +3210,49 @@ msgstr ""
 msgid "Public Embed Enabled"
 msgstr "Openbare embed ingeschakeld"
 
+msgctxt "bloomerp:route:name"
+msgid "Public Holidays"
+msgstr "Feestdagen"
+
+msgctxt "bloomerp:route:description"
+msgid "Public Holidays relationship for {model}"
+msgstr "Relatie voor {model}"
+
 #: bloomerp.emailaccount.sync_mode
 msgid "Push"
 msgstr "Push"
+
+msgctxt "bloomerp:route:name"
+msgid "Quality Control Plan Lines"
+msgstr "Regels voor kwaliteitscontroleplannen"
+
+msgctxt "bloomerp:route:description"
+msgid "Quality Control Plan Lines relationship for {model}"
+msgstr "Relatie voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Quality Control Plans"
+msgstr "Kwaliteitscontroleplannen"
+
+msgctxt "bloomerp:route:description"
+msgid "Quality Control Plans relationship for {model}"
+msgstr "Relatie voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Quality Inspection Results"
+msgstr "Resultaten van kwaliteitsinspecties"
+
+msgctxt "bloomerp:route:description"
+msgid "Quality Inspection Results relationship for {model}"
+msgstr "Relatie voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Quality Inspections"
+msgstr "Kwaliteitsinspecties"
+
+msgctxt "bloomerp:route:description"
+msgid "Quality Inspections relationship for {model}"
+msgstr "Relatie voor kwaliteitsinspecties voor {model}"
 
 #: templates/cotton/features/dataviews/gant.html:31
 msgid "Quarter"
@@ -2284,7 +3286,7 @@ msgstr "Ontvanger van het ondertekeningsverzoek."
 msgid "Records"
 msgstr "Records"
 
-#: bloomerp.workflowrunstep.node
+#: bloomerp.workflowrunstep.node models/automation/workflow_run_step.py:65
 msgid "Reference to node object"
 msgstr "Verwijzing naar node-object"
 
@@ -2349,7 +3351,7 @@ msgstr "Renderingfout: %(error)s"
 msgid "Reply"
 msgstr "Beantwoorden"
 
-#: bloomerp.todo.requested_by
+#: bloomerp.todo.requested_by models/project_management/todo.py:136
 msgid "Requested By"
 msgstr "Aangevraagd door"
 
@@ -2357,7 +3359,7 @@ msgstr "Aangevraagd door"
 msgid "Required"
 msgstr "Vereist"
 
-#: bloomerp.todo.required_by
+#: bloomerp.todo.required_by models/project_management/todo.py:142
 msgid "Required By"
 msgstr "Vereist door"
 
@@ -2382,6 +3384,46 @@ msgstr "Resetten"
 msgid "Reset password"
 msgstr "Wachtwoord opnieuw instellen"
 
+msgctxt "bloomerp:route:name"
+msgid "Reset password"
+msgstr "Wachtwoord opnieuw instellen"
+
+msgctxt "bloomerp:route:description"
+msgid "Reset password for a user"
+msgstr "Wachtwoord voor een gebruiker opnieuw instellen"
+
+msgctxt "bloomerp:route:description"
+msgid "Reset password for a user by admin"
+msgstr "Wachtwoord voor een gebruiker door een beheerder opnieuw instellen"
+
+msgctxt "bloomerp:route:name"
+msgid "Reset password for user (admin)"
+msgstr "Wachtwoord voor gebruiker (beheerder) opnieuw instellen"
+
+msgctxt "bloomerp:route:name"
+msgid "Review Questions"
+msgstr "Beoordelingsvragen"
+
+msgctxt "bloomerp:route:description"
+msgid "Review Questions relationship for {model}"
+msgstr "Relatie voor beoordelingsvragen voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Review Responses"
+msgstr "Beoordelingsantwoorden"
+
+msgctxt "bloomerp:route:description"
+msgid "Review Responses relationship for {model}"
+msgstr "Relatie voor beoordelingsantwoorden voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Review Submission"
+msgstr "Inzending beoordelen"
+
+msgctxt "bloomerp:route:description"
+msgid "Review a form submission"
+msgstr "Een formulierinzending beoordelen"
+
 #: bloomerp.apikey.revoked_at
 msgid "Revoked At"
 msgstr "Ingetrokken op"
@@ -2395,9 +3437,29 @@ msgstr "Rechts"
 msgid "Right margin of the header in inches."
 msgstr "Rechtermarge van de koptekst in inches."
 
+#: models/communication/channel_member.py:43
+msgid "Role"
+msgstr "Rol"
+
 #: bloomerp.documenttemplate.content_types models/document_templates/document_template.py:130
 msgid "Root object types that can be used as variables in the document template."
 msgstr "Hoofdobjecttypen die als variabelen in de documentsjabloon kunnen worden gebruikt."
+
+msgctxt "bloomerp:route:name"
+msgid "Routing Operations"
+msgstr "Routeringsbewerkingen"
+
+msgctxt "bloomerp:route:description"
+msgid "Routing Operations relationship for {model}"
+msgstr "Relatie voor routeringsbewerkingen voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Routings"
+msgstr "Routeringen"
+
+msgctxt "bloomerp:route:description"
+msgid "Routings relationship for {model}"
+msgstr "Relatie voor routeringen voor {model}"
 
 #: bloomerp.policy.row_policy bloomerp.rowpolicyrule.row_policy
 msgid "Row Policy"
@@ -2406,6 +3468,14 @@ msgstr "Rijbeleid"
 #: bloomerp.rowpolicyrulepermission.row_policy_rule
 msgid "Row Policy Rule"
 msgstr "Regel voor rijbeleid"
+
+msgctxt "bloomerp:route:name"
+msgid "Row Policy Rule Permissions"
+msgstr "Machtigingen voor rijbeleidsregels"
+
+msgctxt "bloomerp:route:description"
+msgid "Row Policy Rule Permissions relationship for {model}"
+msgstr "Relatie voor machtigingen voor rijbeleidsregels voor {model}"
 
 #: templates/widgets/one_to_many_field_widget.html:32
 msgid "Row actions"
@@ -2428,7 +3498,7 @@ msgstr "Rijen"
 msgid "Rule"
 msgstr "Regel"
 
-#: bloomerp.workflow.run_asynchronously
+#: bloomerp.workflow.run_asynchronously models/automation/workflow.py:80
 msgid "Run Asynchronously"
 msgstr "Asynchroon uitvoeren"
 
@@ -2459,6 +3529,14 @@ msgstr "SSL/TLS"
 #: bloomerp.emailaccount.imap_security bloomerp.emailaccount.smtp_security
 msgid "STARTTLS"
 msgstr "STARTTLS"
+
+msgctxt "bloomerp:route:name"
+msgid "Sales Forecasts"
+msgstr "Verkoopprognoses"
+
+msgctxt "bloomerp:route:description"
+msgid "Sales Forecasts relationship for {model}"
+msgstr "Relatie voor verkoopprognoses voor {model}"
 
 #: components/workspaces/sidebar.py:333 components/workspaces/sidebar.py:342
 #: templates/components/forms/initial_data.html:37
@@ -2604,19 +3682,24 @@ msgstr "Verzenden"
 msgid "Send reply"
 msgstr "Antwoord verzenden"
 
+# | msgid "Send"
+#: models/communication/channel_message.py:26
+msgid "Sender"
+msgstr "Verzenden"
+
 #: models/communication/signature_request.py:46
 msgid "Sender of the signature request."
 msgstr "Afzender van het verzoek om te ondertekenen."
 
-#: bloomerp.workflowrunstep.sequence
+#: bloomerp.workflowrunstep.sequence models/automation/workflow_run_step.py:33
 msgid "Sequence"
 msgstr "Volgorde"
 
-#: bloomerp.workflowrunstep.state
+#: bloomerp.workflowrunstep.state models/automation/workflow_run_step.py:50
 msgid "Serializable workflow execution state captured after this step."
 msgstr "Serialiseerbare status van de workflow-uitvoering die na deze stap is vastgelegd."
 
-#: bloomerp.workflowrunstep.output_file
+#: bloomerp.workflowrunstep.output_file models/automation/workflow_run_step.py:57
 msgid "Serialized output produced by this workflow node execution."
 msgstr "Geserialiseerde uitvoer die door deze uitvoering van de workflownode is geproduceerd."
 
@@ -2672,6 +3755,22 @@ msgstr ""
 #: bloomerp.sidebaritem.sidebar templates/cotton/app/sidebar/body.html:87
 msgid "Sidebar"
 msgstr "Zijbalk"
+
+msgctxt "bloomerp:route:name"
+msgid "Sidebar Items"
+msgstr "Zijbalkitems"
+
+msgctxt "bloomerp:route:description"
+msgid "Sidebar Items relationship for {model}"
+msgstr "Relatie voor zijbalkitems voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Sidebars"
+msgstr "Zijbalken"
+
+msgctxt "bloomerp:route:description"
+msgid "Sidebars relationship for {model}"
+msgstr "Relatie voor zijbalken voor {model}"
 
 #: templates/cotton/app/sidebar/body.html:207
 msgid "Sign Out"
@@ -2753,6 +3852,14 @@ msgstr "Specifieke machtigingen voor deze gebruiker."
 msgid "Split View Enabled"
 msgstr "Gesplitste weergave ingeschakeld"
 
+msgctxt "bloomerp:route:name"
+msgid "Sql Queries"
+msgstr "SQL-query's"
+
+msgctxt "bloomerp:route:description"
+msgid "Sql Queries relationship for {model}"
+msgstr "Relatie voor SQL-query's voor {model}"
+
 #: workspaces/analytics_tile/model.py:177
 msgid "Stacked"
 msgstr "Gestapeld"
@@ -2763,7 +3870,7 @@ msgstr ""
 "Stapelt meerdere reeksen op de Y-as wanneer dit wordt ondersteund door het geselecteerde "
 "grafiektype."
 
-#: bloomerp.initiative.start_date
+#: bloomerp.initiative.start_date models/project_management/initiative.py:110
 msgid "Start Date"
 msgstr "Startdatum"
 
@@ -2779,12 +3886,13 @@ msgstr "Start- of einddatum ontbreekt."
 msgid "Start typing to search."
 msgstr "Begin met typen om te zoeken."
 
-#: bloomerp.workflowrunstep.state
+#: bloomerp.workflowrunstep.state models/automation/workflow_run_step.py:51
 msgid "State"
 msgstr "Toestand"
 
 #: bloomerp.emailaccount.status bloomerp.initiative.status bloomerp.todo.status
-#: bloomerp.workflowrunstep.status
+#: bloomerp.workflowrunstep.status models/automation/workflow_run_step.py:45
+#: models/project_management/initiative.py:94 models/project_management/todo.py:181
 msgid "Status"
 msgstr "Status"
 
@@ -2817,6 +3925,14 @@ msgstr "Subwaarde"
 #: templates/components/communication/emails/email_editor.html:110
 msgid "Subject"
 msgstr "Onderwerp"
+
+msgctxt "bloomerp:route:name"
+msgid "Submit"
+msgstr "Verzenden"
+
+msgctxt "bloomerp:route:description"
+msgid "Submit a form"
+msgstr "Een formulier verzenden"
 
 #: templates/views/forms/submit.html:26
 msgid "Submit a new form"
@@ -2854,9 +3970,17 @@ msgstr "Synchronisatiemodus voor dit account. Standaard wordt de voorkeursmodus 
 msgid "Table"
 msgstr "Tabel"
 
-#: bloomerp.initiative.target_date
+#: bloomerp.initiative.target_date models/project_management/initiative.py:115
 msgid "Target Date"
 msgstr "Doeldatum"
+
+msgctxt "bloomerp:route:name"
+msgid "Teams"
+msgstr "Teams"
+
+msgctxt "bloomerp:route:description"
+msgid "Teams relationship for {model}"
+msgstr "Relatie voor teams voor {model}"
 
 #: bloomerp.documenttemplate.template
 msgid "Template"
@@ -2865,6 +3989,10 @@ msgstr "Sjabloon"
 #: bloomerp.documenttemplate.template_header
 msgid "Template Header"
 msgstr "Sjabloonkoptekst"
+
+msgctxt "bloomerp:route:name"
+msgid "TestView"
+msgstr "Testweergave"
 
 #: bloomerp.tile.type workspaces/tiles.py:48
 msgid "Text"
@@ -2881,6 +4009,11 @@ msgstr "Tekst die na de waarde komt"
 #: workspaces/analytics_tile/model.py:81
 msgid "Text that comes before the value"
 msgstr "Tekst die vóór de waarde komt"
+
+# | msgid "The name of the todo"
+#: bloomerp.todo.object_id models/project_management/todo.py:212
+msgid "The ID of the related object"
+msgstr "De naam van de taak"
 
 #: bloomerp.workflownode.pos_x models/automation/workflow_node.py:52
 msgid "The X position of the node in the workflow editor."
@@ -2911,6 +4044,11 @@ msgstr "De configuratie voor het workflowknooppunt."
 msgid "The content type (model) this field belongs to."
 msgstr "Het inhoudstype (model) waartoe dit veld behoort."
 
+# | msgid "The content type (model) this field belongs to."
+#: bloomerp.todo.content_type models/project_management/todo.py:206
+msgid "The content type of the related object"
+msgstr "Het inhoudstype (model) waartoe dit veld behoort."
+
 #: bloomerp.applicationfield.db_table models/application_field.py:61
 msgid "The database table this field belongs to."
 msgstr "De databasetabel waartoe dit veld behoort."
@@ -2923,19 +4061,19 @@ msgstr "De datum en tijd waarna het formulier geen inzendingen meer accepteert."
 msgid "The date and time from which the form will accept submissions."
 msgstr "De datum en tijd vanaf wanneer het formulier inzendingen accepteert."
 
-#: bloomerp.todo.datetime_completed models/project_management/todo.py:166
+#: bloomerp.todo.datetime_completed models/project_management/todo.py:174
 msgid "The date and time when the todo was completed"
 msgstr "De datum en tijd waarop de taak is voltooid"
 
-#: bloomerp.todo.required_by models/project_management/todo.py:139
+#: bloomerp.todo.required_by models/project_management/todo.py:143
 msgid "The date by which the todo is required"
 msgstr "De datum waarop de taak voltooid moet zijn"
 
-#: bloomerp.user.date_view_preference models/users/user.py:70
+#: bloomerp.user.date_view_preference models/users/user.py:87
 msgid "The date format to be used in the application"
 msgstr "De datumnotatie die in de applicatie moet worden gebruikt"
 
-#: bloomerp.user.datetime_view_preference models/users/user.py:74
+#: bloomerp.user.datetime_view_preference models/users/user.py:94
 msgid "The datetime format to be used in the application"
 msgstr "De datum- en tijdnotatie die in de applicatie moet worden gebruikt"
 
@@ -2943,7 +4081,11 @@ msgstr "De datum- en tijdnotatie die in de applicatie moet worden gebruikt"
 msgid "The description of the widget. Will be displayed in the widget if provided"
 msgstr "De beschrijving van de widget. Wordt in de widget weergegeven indien opgegeven"
 
-#: bloomerp.todo.effort models/project_management/todo.py:150
+#: bloomerp.user.detail_sidebar_view_preference models/users/user.py:101
+msgid "The detail view sidebar panel to show first"
+msgstr "Het zijbalkpaneel van de detailweergave dat als eerste moet worden weergegeven"
+
+#: bloomerp.todo.effort models/project_management/todo.py:155
 msgid "The effort required for the todo"
 msgstr "De benodigde inspanning voor de taak"
 
@@ -2983,11 +4125,15 @@ msgstr ""
 "De groepen waartoe deze gebruiker behoort. Een gebruiker krijgt alle machtigingen die aan elk van"
 " deze groepen zijn verleend."
 
-#: bloomerp.workflowrunstep.action_id
+msgctxt "bloomerp:route:description"
+msgid "The homepage for the {module} module."
+msgstr "De startpagina voor de module {module}."
+
+#: bloomerp.workflowrunstep.action_id models/automation/workflow_run_step.py:37
 msgid "The identifier of the action being executed in this step."
 msgstr "De identificatie van de actie die in deze stap wordt uitgevoerd."
 
-#: bloomerp.todo.initiative models/project_management/todo.py:184
+#: bloomerp.todo.initiative models/project_management/todo.py:195
 msgid "The initiative this todo belongs to"
 msgstr "Het initiatief waartoe deze taak behoort"
 
@@ -3015,7 +4161,7 @@ msgstr "De naam van het veld."
 msgid "The name of the form"
 msgstr "De naam van het formulier"
 
-#: bloomerp.initiative.name models/project_management/initiative.py:93
+#: bloomerp.initiative.name models/project_management/initiative.py:99
 msgid "The name of the initiative"
 msgstr "De naam van het initiatief"
 
@@ -3023,7 +4169,7 @@ msgstr "De naam van het initiatief"
 msgid "The name of the row-level access control policy."
 msgstr "De naam van het toegangsbeheerbeleid op rijniveau."
 
-#: bloomerp.todo.title models/project_management/todo.py:156
+#: bloomerp.todo.title models/project_management/todo.py:162
 msgid "The name of the todo"
 msgstr "De naam van de taak"
 
@@ -3067,11 +4213,11 @@ msgstr ""
 msgid "The primary value"
 msgstr "De primaire waarde"
 
-#: bloomerp.todo.priority models/project_management/todo.py:143
+#: bloomerp.todo.priority models/project_management/todo.py:147
 msgid "The priority of the todo"
 msgstr "De prioriteit van de todo"
 
-#: models/project_management/todo.py:225
+#: models/project_management/todo.py:253
 msgid "The related object does not exist"
 msgstr "Het gerelateerde object bestaat niet"
 
@@ -3105,7 +4251,7 @@ msgstr "De geselecteerde map bestaat niet meer"
 msgid "The selected link no longer exists"
 msgstr "De geselecteerde link bestaat niet meer"
 
-#: bloomerp.workflowrunstep.sequence
+#: bloomerp.workflowrunstep.sequence models/automation/workflow_run_step.py:32
 msgid "The sequence number of this step within the workflow run."
 msgstr "Het volgnummer van deze stap binnen de workflowuitvoering."
 
@@ -3117,7 +4263,7 @@ msgstr "De grootte"
 msgid "The sql query (data) to use for the query"
 msgstr "De SQL-query (gegevens) die voor de query moet worden gebruikt"
 
-#: bloomerp.workflowrunstep.status
+#: bloomerp.workflowrunstep.status models/automation/workflow_run_step.py:44
 msgid "The status of this workflow run step."
 msgstr "De status van deze stap van de workflowuitvoering."
 
@@ -3145,7 +4291,12 @@ msgstr "Het type van het workflowknooppunt."
 msgid "The type of tile"
 msgstr "Het type tegel"
 
-#: bloomerp.todo.requested_by models/project_management/todo.py:134
+# | msgid "The date by which the todo is required"
+#: bloomerp.todo.assigned_to models/project_management/todo.py:128
+msgid "The user to whom the todo is assigned"
+msgstr "De datum waarop de taak voltooid moet zijn"
+
+#: bloomerp.todo.requested_by models/project_management/todo.py:137
 msgid "The user who requested the todo"
 msgstr "De gebruiker die de todo heeft aangevraagd"
 
@@ -3157,7 +4308,7 @@ msgstr "De wizardgegevens zijn onvolledig. Controleer de accountgegevens."
 msgid "The workflow associated with this run."
 msgstr "De workflow die aan deze uitvoering is gekoppeld."
 
-#: bloomerp.workflowrunstep.workflow_run
+#: bloomerp.workflowrunstep.workflow_run models/automation/workflow_run_step.py:29
 msgid "The workflow run that this step belongs to."
 msgstr "De workflowuitvoering waartoe deze stap behoort."
 
@@ -3197,6 +4348,22 @@ msgstr ""
 msgid "Tile type updated"
 msgstr "Tegeltype bijgewerkt"
 
+msgctxt "bloomerp:route:name"
+msgid "Tiles"
+msgstr "Tegels"
+
+msgctxt "bloomerp:route:description"
+msgid "Tiles relationship for {model}"
+msgstr "Relatie van tegels voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Time Entries"
+msgstr "Tijdregistraties"
+
+msgctxt "bloomerp:route:description"
+msgid "Time Entries relationship for {model}"
+msgstr "Relatie van tijdregistraties voor {model}"
+
 #: bloomerp.applicationfield.field_type
 msgid "Time Field"
 msgstr "Tijdveld"
@@ -3214,6 +4381,7 @@ msgid "TinyMCE Content Generator"
 msgstr "TinyMCE-inhoudsgenerator"
 
 #: bloomerp.aiconversation.title bloomerp.inboxitem.title bloomerp.todo.title
+#: models/project_management/todo.py:163
 msgid "Title"
 msgstr "Titel"
 
@@ -3230,9 +4398,29 @@ msgstr "Naar knooppunt"
 msgid "Today"
 msgstr "Vandaag"
 
+msgctxt "bloomerp:route:name"
+msgid "Todo Labels"
+msgstr "Takenlabels"
+
+msgctxt "bloomerp:route:description"
+msgid "Todo Labels relationship for {model}"
+msgstr "Relatie van takenlabels voor {model}"
+
 #: models/project_management/todo.py:53
 msgid "Todo marked as completed."
 msgstr "Taak gemarkeerd als voltooid."
+
+msgctxt "bloomerp:route:name"
+msgid "Todos"
+msgstr "Taken"
+
+msgctxt "bloomerp:route:description"
+msgid "Todos related to a specific object"
+msgstr "Taken die aan een specifiek object zijn gerelateerd"
+
+msgctxt "bloomerp:route:description"
+msgid "Todos relationship for {model}"
+msgstr "Relatie van taken voor {model}"
 
 #: bloomerp.emailaccount.token_expires_at
 msgid "Token Expires At"
@@ -3286,6 +4474,14 @@ msgstr "URL waarnaar het zijbalkitem verwijst."
 msgid "UUID Field"
 msgstr "UUID-veld"
 
+msgctxt "bloomerp:route:name"
+msgid "Units Of Measure"
+msgstr "Meeteenheden"
+
+msgctxt "bloomerp:route:description"
+msgid "Units Of Measure relationship for {model}"
+msgstr "Relatie van meeteenheden voor {model}"
+
 #: templates/cotton/features/dataviews/calendar.html:258
 msgid "Unscheduled"
 msgstr "Niet gepland"
@@ -3297,6 +4493,26 @@ msgstr "Niet-geplande records"
 #: components/workspaces/preview_workspace_tile.py:202
 msgid "Untitled tile"
 msgstr "Naamloze tegel"
+
+msgctxt "bloomerp:route:name"
+msgid "Update"
+msgstr "Bijwerken"
+
+msgctxt "bloomerp:route:name"
+msgid "Update Tile"
+msgstr "Tegel bijwerken"
+
+msgctxt "bloomerp:route:description"
+msgid "Update a workflow"
+msgstr "Een workflow bijwerken"
+
+msgctxt "bloomerp:route:description"
+msgid "Update this policy"
+msgstr "Dit beleid bijwerken"
+
+msgctxt "bloomerp:route:description"
+msgid "Update this tile"
+msgstr "Deze tegel bijwerken"
 
 #: bloomerp.aiconversation.updated_by bloomerp.apikey.updated_by bloomerp.comment.updated_by
 #: bloomerp.documenttemplate.updated_by bloomerp.documenttemplateheader.updated_by
@@ -3337,9 +4553,25 @@ msgstr "Gebruik deze werkruimte aanvankelijk voor gebruikers die deze via delen 
 #: bloomerp.aiconversation.user bloomerp.bookmark.user bloomerp.inbox.user bloomerp.sidebar.user
 #: bloomerp.userdetailviewtabspreference.user bloomerp.userinboxpreference.user
 #: bloomerp.userlistviewpreference.user bloomerp.userobjectlayoutpreference.user
-#: bloomerp.workspace.user
+#: bloomerp.workspace.user models/communication/channel_member.py:37
 msgid "User"
 msgstr "Gebruiker"
+
+msgctxt "bloomerp:route:name"
+msgid "User Detail View Tab Items"
+msgstr "Tabbladitems van de gebruikersdetailweergave"
+
+msgctxt "bloomerp:route:description"
+msgid "User Detail View Tab Items relationship for {model}"
+msgstr "Relatie van tabbladitems van de gebruikersdetailweergave voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "User Detail View Tabs Preferences"
+msgstr "Voorkeuren voor tabbladen van de gebruikersdetailweergave"
+
+msgctxt "bloomerp:route:description"
+msgid "User Detail View Tabs Preferences relationship for {model}"
+msgstr "Relatie van voorkeuren voor tabbladen van de gebruikersdetailweergave voor {model}"
 
 #: bloomerp.applicationfield.field_type
 msgid "User Field"
@@ -3353,6 +4585,22 @@ msgstr "Voorkeur voor gebruikerspostvak"
 msgid "User Inbox Preferences"
 msgstr "Voorkeuren voor gebruikerspostvak"
 
+msgctxt "bloomerp:route:name"
+msgid "User Inbox Preferences"
+msgstr "Voorkeuren voor de gebruikersinbox"
+
+msgctxt "bloomerp:route:description"
+msgid "User Inbox Preferences relationship for {model}"
+msgstr "Relatie van voorkeuren voor de gebruikersinbox voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "User List View Preferences"
+msgstr "Voorkeuren voor de gebruikerslijstweergave"
+
+msgctxt "bloomerp:route:description"
+msgid "User List View Preferences relationship for {model}"
+msgstr "Relatie van voorkeuren voor de gebruikerslijstweergave voor {model}"
+
 #: bloomerp.userobjectlayoutpreference
 msgid "User Object Layout Preference"
 msgstr "Voorkeur voor indeling van gebruikersobjecten"
@@ -3360,6 +4608,14 @@ msgstr "Voorkeur voor indeling van gebruikersobjecten"
 #: bloomerp.userobjectlayoutpreference
 msgid "User Object Layout Preferences"
 msgstr "Voorkeuren voor indeling van gebruikersobjecten"
+
+msgctxt "bloomerp:route:name"
+msgid "User Object Layout Preferences"
+msgstr "Voorkeuren voor de objectindeling van de gebruiker"
+
+msgctxt "bloomerp:route:description"
+msgid "User Object Layout Preferences relationship for {model}"
+msgstr "Relatie van voorkeuren voor de objectindeling van de gebruiker voor {model}"
 
 #: bloomerp.emailaccount.username
 msgid "Username"
@@ -3404,6 +4660,38 @@ msgstr "Waarden"
 #: templates/cotton/features/document_templates/builder.html:51
 msgid "Variables"
 msgstr "Variabelen"
+
+msgctxt "bloomerp:route:name"
+msgid "Vendor Invoice Lines"
+msgstr "Factuurregels van leveranciers"
+
+msgctxt "bloomerp:route:description"
+msgid "Vendor Invoice Lines relationship for {model}"
+msgstr "Relatie van factuurregels van leveranciers voor {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Vendor Invoices"
+msgstr "Leveranciersfacturen"
+
+msgctxt "bloomerp:route:description"
+msgid "Vendor Invoices relationship for {model}"
+msgstr "Relatie voor leveranciersfacturen van {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Vendor Payments"
+msgstr "Leveranciersbetalingen"
+
+msgctxt "bloomerp:route:description"
+msgid "Vendor Payments relationship for {model}"
+msgstr "Relatie voor leveranciersbetalingen van {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Vendors"
+msgstr "Leveranciers"
+
+msgctxt "bloomerp:route:description"
+msgid "Vendors relationship for {model}"
+msgstr "Relatie voor leveranciers van {model}"
 
 #: bloomerp.userlistviewpreference.view_type
 msgid "View Type"
@@ -3469,6 +4757,14 @@ msgstr ""
 "regio's of heatmaps te plotten op basis van geografische locaties voor verbeterde analyse en "
 "besluitvorming."
 
+msgctxt "bloomerp:route:name"
+msgid "Warehouses"
+msgstr "Magazijnen"
+
+msgctxt "bloomerp:route:description"
+msgid "Warehouses relationship for {model}"
+msgstr "Relatie voor magazijnen van {model}"
+
 #: templates/cotton/features/dataviews/gant.html:33
 msgid "Week"
 msgstr "Week"
@@ -3485,7 +4781,7 @@ msgstr "Wat moet vooraf worden ingesteld voor"
 msgid "Where the legend should be placed."
 msgstr "Waar de legenda moet worden geplaatst."
 
-#: bloomerp.workflow.run_asynchronously models/automation/workflow.py:78
+#: bloomerp.workflow.run_asynchronously models/automation/workflow.py:79
 msgid "Whether runs asynchronously"
 msgstr "Of deze asynchroon wordt uitgevoerd"
 
@@ -3509,7 +4805,7 @@ msgstr "Of de formulierinzending moet worden gecontroleerd voordat deze wordt op
 msgid "Whether the form was persisted"
 msgstr "Of de formulierinzending is opgeslagen"
 
-#: bloomerp.workflow.active models/automation/workflow.py:82
+#: bloomerp.workflow.active models/automation/workflow.py:84
 msgid "Whether the workflow is active or not"
 msgstr "Of de workflow actief is of niet"
 
@@ -3517,7 +4813,7 @@ msgstr "Of de workflow actief is of niet"
 msgid "Whether this account should be synchronized automatically."
 msgstr "Of dit account automatisch moet worden gesynchroniseerd."
 
-#: bloomerp.workflow.enable_logging models/automation/workflow.py:86
+#: bloomerp.workflow.enable_logging models/automation/workflow.py:89
 msgid ""
 "Whether to enable logging for this workflow. Disabling logging may improve performance but will "
 "result in no detailed execution history being stored."
@@ -3526,8 +4822,32 @@ msgstr ""
 "logboekregistratie kan de prestaties verbeteren, maar zorgt ervoor dat er geen gedetailleerde "
 "uitvoeringsgeschiedenis wordt opgeslagen."
 
+msgctxt "bloomerp:route:name"
+msgid "Work Center Calendars"
+msgstr "Werkcentrumkalenders"
+
+msgctxt "bloomerp:route:description"
+msgid "Work Center Calendars relationship for {model}"
+msgstr "Relatie voor werkcentrumkalenders van {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Work Centers"
+msgstr "Werkcentra"
+
+msgctxt "bloomerp:route:description"
+msgid "Work Centers relationship for {model}"
+msgstr "Relatie voor werkcentra van {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "Work Schedules"
+msgstr "Werkschema's"
+
+msgctxt "bloomerp:route:description"
+msgid "Work Schedules relationship for {model}"
+msgstr "Relatie voor werkschema's van {model}"
+
 #: bloomerp.workflow bloomerp.workflownode.workflow bloomerp.workflowrun.workflow
-#: models/automation/workflow.py:29
+#: models/automation/workflow.py:29 models/automation/workflow_run.py:74
 msgid "Workflow"
 msgstr "Workflow"
 
@@ -3539,6 +4859,14 @@ msgstr "Workflowverbinding"
 msgid "Workflow Edges"
 msgstr "Workflowverbindingen"
 
+msgctxt "bloomerp:route:name"
+msgid "Workflow Edges"
+msgstr "Workflowranden"
+
+msgctxt "bloomerp:route:description"
+msgid "Workflow Edges relationship for {model}"
+msgstr "Relatie voor workflowranden van {model}"
+
 #: bloomerp.workflownode models/automation/workflow_node.py:23
 msgid "Workflow Node"
 msgstr "Workflownode"
@@ -3547,7 +4875,16 @@ msgstr "Workflownode"
 msgid "Workflow Nodes"
 msgstr "Workflownodes"
 
+msgctxt "bloomerp:route:name"
+msgid "Workflow Nodes"
+msgstr "Workflowknooppunten"
+
+msgctxt "bloomerp:route:description"
+msgid "Workflow Nodes relationship for {model}"
+msgstr "Relatie voor workflowknooppunten van {model}"
+
 #: bloomerp.workflowrun bloomerp.workflowrunstep.workflow_run models/automation/workflow_run.py:24
+#: models/automation/workflow_run_step.py:28
 msgid "Workflow Run"
 msgstr "Workflowuitvoering"
 
@@ -3559,9 +4896,25 @@ msgstr "Stap van workflowuitvoering"
 msgid "Workflow Run Steps"
 msgstr "Stappen van workflowuitvoering"
 
+msgctxt "bloomerp:route:name"
+msgid "Workflow Run Steps"
+msgstr "Workflowuitvoeringsstappen"
+
+msgctxt "bloomerp:route:description"
+msgid "Workflow Run Steps relationship for {model}"
+msgstr "Relatie voor workflowuitvoeringsstappen van {model}"
+
 #: bloomerp.workflowrun models/automation/workflow_run.py:25
 msgid "Workflow Runs"
 msgstr "Workflowuitvoeringen"
+
+msgctxt "bloomerp:route:name"
+msgid "Workflow Runs"
+msgstr "Workflowuitvoeringen"
+
+msgctxt "bloomerp:route:description"
+msgid "Workflow Runs relationship for {model}"
+msgstr "Relatie voor workflowuitvoeringen van {model}"
 
 #: templates/inbox_items/workflow_run.html:7
 msgid "Workflow execution"
@@ -3571,9 +4924,25 @@ msgstr "Workflowuitvoering"
 msgid "Workflows"
 msgstr "Workflows"
 
+msgctxt "bloomerp:route:name"
+msgid "Workflows"
+msgstr "Workflows"
+
+msgctxt "bloomerp:route:description"
+msgid "Workflows relationship for {model}"
+msgstr "Relatie voor workflows van {model}"
+
 #: templates/components/workspaces/share_workspace.html:36
 msgid "Workspace sharing updated."
 msgstr "Delen van werkruimte bijgewerkt."
+
+msgctxt "bloomerp:route:name"
+msgid "Workspaces"
+msgstr "Werkruimten"
+
+msgctxt "bloomerp:route:description"
+msgid "Workspaces relationship for {model}"
+msgstr "Relatie voor werkruimten van {model}"
 
 #: templates/components/communication/emails/email_editor.html:120
 msgid "Write your message"
@@ -3611,11 +4980,11 @@ msgstr "Label van de Y-as"
 msgid "Year"
 msgstr "Jaar"
 
-#: bloomerp.user.date_view_preference
+#: bloomerp.user.date_view_preference models/users/user.py:49
 msgid "Year-Month-Day (2000-08-15)"
 msgstr "Jaar-maand-dag (2000-08-15)"
 
-#: bloomerp.user.datetime_view_preference
+#: bloomerp.user.datetime_view_preference models/users/user.py:63
 msgid "Year-Month-Day Hour:Minute (2000-08-15 12:30)"
 msgstr "Jaar-maand-dag uur:minuut (2000-08-15 12:30)"
 
@@ -3634,6 +5003,10 @@ msgstr "Uitzoomen"
 #: bloomerp.user.is_active
 msgid "active"
 msgstr "actief"
+
+msgctxt "bloomerp:route:name"
+msgid "api_sql_accessible_tables"
+msgstr "api_sql_toegankelijke_tabellen"
 
 #: bloomerp.applicationfield
 msgid "application field"
@@ -3859,9 +5232,21 @@ msgstr "gebruikers"
 msgid "workspace"
 msgstr "werkruimte"
 
+msgctxt "bloomerp:route:name"
+msgid "workspace"
+msgstr "werkruimte"
+
 #: bloomerp.workspace
 msgid "workspaces"
 msgstr "werkruimten"
+
+msgctxt "bloomerp:route:name"
+msgid "{model} List"
+msgstr "Lijst van {model}"
+
+msgctxt "bloomerp:route:name"
+msgid "{module}"
+msgstr "{module}"
 
 #~ msgid ""
 #~ "\n"

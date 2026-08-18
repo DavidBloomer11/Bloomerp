@@ -18,6 +18,7 @@ from bloomerp.i18n.catalogs import (
     save_catalog,
 )
 from bloomerp.i18n.models import model_messages
+from bloomerp.i18n.routes import route_messages
 
 
 @contextmanager
@@ -57,6 +58,19 @@ def extract_model_messages(
     source_language: str,
 ) -> int:
     messages = model_messages(app, source_language)
+    return sum(
+        merge_messages(
+            catalog_path(Path(app.path), language, "django"),
+            language,
+            "django",
+            messages,
+        )
+        for language in languages
+    )
+
+
+def extract_route_messages(app: AppConfig, languages: list[str]) -> int:
+    messages = route_messages(app)
     return sum(
         merge_messages(
             catalog_path(Path(app.path), language, "django"),

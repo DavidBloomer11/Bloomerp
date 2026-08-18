@@ -28,7 +28,7 @@
             {% if item.icon %}
                 <i class="{{ item.icon }} me-2"></i>
             {% endif %}
-            {{ item.label | safe }}
+            {{ item.label | title | safe }}
         </label>
 
         <!--Controls-->

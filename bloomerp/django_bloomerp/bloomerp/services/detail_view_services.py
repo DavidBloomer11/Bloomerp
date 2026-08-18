@@ -364,7 +364,7 @@ def get_router_detail_tabs(model: type[Model]) -> list[dict]:
         tabs.append(
             {
                 "key": route.url_name,
-                "name": route.name,
+                "name": route.localized_name,
                 "url": route.url_name,
                 "path": route.path,
                 "requires_pk": True,

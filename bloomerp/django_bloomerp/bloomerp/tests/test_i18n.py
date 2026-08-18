@@ -11,8 +11,12 @@ from django.test import SimpleTestCase
 from django.urls import reverse
 from django.utils.translation import override
 
-from bloomerp.config.definition import BloomerpConfig, BloomerpI18nSettings
-from bloomerp.i18n.apps import discover_translatable_apps
+from bloomerp.config.definition import (
+    BloomerpAppI18nSettings,
+    BloomerpConfig,
+    BloomerpI18nSettings,
+)
+from bloomerp.i18n.apps import discover_translatable_apps, get_app_source_language
 from bloomerp.i18n.catalogs import (
     approve_translated_messages,
     merge_messages,
@@ -22,8 +26,12 @@ from bloomerp.i18n.catalogs import (
     validate_message,
 )
 from bloomerp.i18n.models import model_messages
+from bloomerp.i18n.languages import catalog_locale, normalize_language_code
+from bloomerp.i18n.routes import route_messages
 from bloomerp.i18n.translator import TranslationBatch, TranslationResult, translate_catalog
+from bloomerp.management.commands.bloomerp_i18n import Command as I18nCommand
 from bloomerp.models.application_field import ApplicationField
+from bloomerp.router import BloomerpRoute, BloomerpRouteRegistry, RouteType, ViewType
 
 
 class TestI18nConfiguration(SimpleTestCase):
@@ -54,6 +62,137 @@ class TestI18nConfiguration(SimpleTestCase):
         self.assertIn("bloomerp", labels)
         self.assertNotIn("channels", labels)
         self.assertNotIn("auth", labels)
+
+    def test_app_source_language_prefers_project_override_then_app_metadata(self):
+        app = SimpleNamespace(
+            label="vendas",
+            name="empresa.vendas",
+            bloomerp_i18n=BloomerpAppI18nSettings(source_language="pt_BR"),
+        )
+
+        self.assertEqual(
+            get_app_source_language(app, BloomerpI18nSettings()),
+            "pt-br",
+        )
+        self.assertEqual(
+            get_app_source_language(
+                app,
+                BloomerpI18nSettings(app_source_languages={"vendas": "pt-PT"}),
+            ),
+            "pt-pt",
+        )
+
+    def test_command_calculates_translation_targets_per_app(self):
+        english_app = SimpleNamespace(
+            label="bloomerp",
+            name="bloomerp",
+            bloomerp_i18n=BloomerpAppI18nSettings(source_language="en-us"),
+        )
+        portuguese_app = SimpleNamespace(
+            label="vendas",
+            name="empresa.vendas",
+            bloomerp_i18n=BloomerpAppI18nSettings(source_language="pt"),
+        )
+        config = BloomerpI18nSettings(languages=["en-us", "pt", "de"])
+        command = I18nCommand()
+
+        resolved = command._app_languages(
+            [english_app, portuguese_app],
+            command._languages(config.languages, None),
+            config,
+        )
+
+        self.assertEqual(resolved[0][1:], ("en-us", ["pt", "de"]))
+        self.assertEqual(resolved[1][1:], ("pt", ["en_US", "de"]))
+
+    def test_regional_language_codes_have_runtime_and_catalog_forms(self):
+        self.assertEqual(normalize_language_code("pt_BR"), "pt-br")
+        self.assertEqual(catalog_locale("pt-br"), "pt_BR")
+
+    def test_route_localization_translates_template_before_model_formatting(self):
+        model = SimpleNamespace(_meta=SimpleNamespace(verbose_name="Cliente"))
+        route = BloomerpRoute(
+            path="/clientes/",
+            route_type=RouteType.MODEL,
+            name="Cliente List",
+            url_name="clientes_model",
+            view_type=ViewType.FUNCTION,
+            view=lambda request: None,
+            model=model,
+            name_message="{model} list",
+            owner_app_label="vendas",
+        )
+
+        with patch(
+            "bloomerp.router.pgettext",
+            side_effect=lambda context, message: (
+                "Lista de {model}" if message == "{model} list" else message
+            ),
+        ):
+            self.assertEqual(route.localized_name, "Lista de Cliente")
+
+    def test_route_extraction_uses_owner_and_context_without_decorator_gettext(self):
+        route = BloomerpRoute(
+            path="/clientes/",
+            route_type=RouteType.APP,
+            name="Clientes",
+            url_name="clientes",
+            view_type=ViewType.FUNCTION,
+            view=lambda request: None,
+            description="Consultar e gerir clientes.",
+            name_message="Clientes",
+            description_message="Consultar e gerir clientes.",
+            owner_app_label="vendas",
+        )
+        app = SimpleNamespace(label="vendas")
+
+        with patch("bloomerp.i18n.routes.router.get_routes", return_value=[route]):
+            messages = route_messages(app)
+
+        self.assertEqual(
+            {(item["context"], item["message"]) for item in messages},
+            {
+                ("vendas:route:name", "Clientes"),
+                ("vendas:route:description", "Consultar e gerir clientes."),
+            },
+        )
+
+    def test_route_url_name_stays_stable_when_display_name_is_translated(self):
+        registry = BloomerpRouteRegistry()
+
+        @registry.register(
+            path="/clientes/",
+            name="Clientes",
+            url_name="clientes",
+        )
+        def clientes_view(request):
+            return None
+
+        route = registry.routes[0]
+        with patch(
+            "bloomerp.router.pgettext",
+            side_effect=lambda _context, message: (
+                "Customers" if message == "Clientes" else message
+            ),
+        ):
+            self.assertEqual(route.localized_name, "Customers")
+
+        self.assertEqual(route.url_name, "clientes")
+
+    def test_component_routes_default_to_non_translatable_and_non_searchable(self):
+        registry = BloomerpRouteRegistry()
+
+        @registry.register(
+            path="components/clientes/",
+            name="components_clientes",
+            url_name="components_clientes",
+        )
+        def clientes_component(request):
+            return None
+
+        route = registry.routes[0]
+        self.assertFalse(route.translatable)
+        self.assertFalse(route.searchable)
 
     def test_catalog_merge_handles_references_without_line_numbers(self):
         with TemporaryDirectory() as directory:

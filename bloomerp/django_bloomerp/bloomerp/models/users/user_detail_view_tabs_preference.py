@@ -120,7 +120,7 @@ class UserDetailViewTabsPreference(BasePreference):
             route_name = route.url_name
             options.append(
                 {
-                    "name": route.name,
+                    "name": route.localized_name,
                     "url": PK_ROUTE_ARGUMENT.sub("{{pk}}", route.path),
                     "is_relationship": route_name.endswith("_relationship"),
                     "priority": cls._default_route_priority(route_name),

@@ -1,6 +1,8 @@
 from bloomerp.models.base_bloomerp_model import BloomerpModel
 from django.db import models
 from django.conf import settings
+from django.utils.translation import gettext_lazy as _
+
 
 class ChannelMember(BloomerpModel):
     class Meta:
@@ -26,16 +28,19 @@ class ChannelMember(BloomerpModel):
         "Channel",
         on_delete=models.CASCADE,
         related_name="memberships",
+        verbose_name=_("Channel"),
     )
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="channel_memberships",
+        verbose_name=_("User"),
     )
     role = models.CharField(
         max_length=20,
         choices=Role.choices,
         default=Role.MEMBER,
+        verbose_name=_("Role"),
     )
 
     last_read_message = models.ForeignKey(
@@ -44,10 +49,12 @@ class ChannelMember(BloomerpModel):
         null=True,
         blank=True,
         related_name="+",
+        verbose_name=_("Last Read Message"),
     )
     muted_until = models.DateTimeField(
         null=True, 
-        blank=True
+        blank=True,
+        verbose_name=_("Muted Until")
     )
 
         

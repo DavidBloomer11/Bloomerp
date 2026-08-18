@@ -4,7 +4,8 @@ from typing import Iterable
 from django.apps import AppConfig, apps
 from django.conf import settings
 
-from bloomerp.config.definition import BloomerpI18nSettings
+from bloomerp.config.definition import BloomerpAppI18nSettings, BloomerpI18nSettings
+from bloomerp.i18n.languages import normalize_language_code
 
 NON_PROJECT_PATH_PARTS = {
     ".tox",
@@ -55,6 +56,27 @@ def discover_translatable_apps(
         ],
         key=lambda app: app.name,
     )
+
+
+def get_app_source_language(
+    app: AppConfig,
+    config: BloomerpI18nSettings,
+) -> str:
+    """Resolve an app's source language with project overrides taking priority."""
+
+    override = config.app_source_languages.get(app.label)
+    if override is None:
+        override = config.app_source_languages.get(app.name)
+    if override:
+        return normalize_language_code(override)
+
+    app_settings = getattr(app, "bloomerp_i18n", None)
+    if isinstance(app_settings, dict):
+        app_settings = BloomerpAppI18nSettings.model_validate(app_settings)
+    if isinstance(app_settings, BloomerpAppI18nSettings):
+        return normalize_language_code(app_settings.source_language)
+
+    return normalize_language_code(config.source_language)
 
 
 def _is_project_app_path(app_path: Path, base_dir: Path) -> bool:

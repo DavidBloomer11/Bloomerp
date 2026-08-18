@@ -21,6 +21,7 @@ from bloomerp.config.settings import (
     BLOOMERP_SITE_ID,
     BLOOMERP_USER_MODEL,
     REST_FRAMEWORK,
+    BLOOMERP_LANGUAGES
 )
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -187,7 +188,9 @@ BLOOMERP_CONFIG = BloomerpConfig(
     auto_generate_api_endpoints=True,
     email_secret_key="GqUtCcrykNhXgKQzF2XA9uTHTkqoB8wqpuZ6WfrBJbKrQhWUzG",
     i18n = BloomerpI18nSettings(
+        source_language="en",
         exclude_apps=["bloomerp_modules"],
+        languages=[i[0] for i in BLOOMERP_LANGUAGES],
         llm=BloomerpI18nLLMSettings(
             model="gpt-5.6-luna",
             provider="openai",

@@ -5,7 +5,7 @@ from pathlib import Path
 from django.core.management import BaseCommand, CommandError, call_command
 
 from bloomerp.config.definition import get_bloomerp_config
-from bloomerp.i18n.apps import discover_translatable_apps
+from bloomerp.i18n.apps import discover_translatable_apps, get_app_source_language
 from bloomerp.i18n.catalogs import (
     approve_translated_messages,
     catalog_path,
@@ -16,9 +16,11 @@ from bloomerp.i18n.catalogs import (
 from bloomerp.i18n.extraction import (
     extract_django_messages,
     extract_model_messages,
+    extract_route_messages,
     extract_typescript_messages,
     working_directory,
 )
+from bloomerp.i18n.languages import catalog_locale, unique_languages
 from bloomerp.i18n.translator import translate_catalog
 
 
@@ -42,45 +44,61 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         config = get_bloomerp_config().i18n
-        languages = self._languages(config.languages, config.source_language, options["languages"])
+        languages = self._languages(config.languages, options["languages"])
         try:
             app_configs = discover_translatable_apps(config, options["apps"])
         except LookupError as exc:
             raise CommandError(str(exc)) from exc
         if not app_configs:
             raise CommandError("No translatable apps were discovered.")
+        app_languages = self._app_languages(app_configs, languages, config)
 
         action = options["action"]
         if action in {"extract", "sync"}:
-            self._extract(app_configs, languages, config, options)
+            self._extract(app_languages, config, options)
         if action == "translate" or (action == "sync" and not options["no_translate"]):
-            self._translate(app_configs, languages, config, options)
+            self._translate(app_languages, config, options)
         if action == "approve" or (action == "compile" and options["accept_machine"]):
-            self._approve(app_configs, languages)
+            self._approve(app_languages)
         if action in {"validate", "sync"}:
-            self._validate(app_configs, languages)
+            self._validate(app_languages)
         if action in {"compile", "sync"}:
-            self._compile(app_configs, languages)
+            self._compile(app_languages)
 
-    def _languages(self, configured, source_language, requested):
+    def _languages(self, configured, requested):
         if requested:
             languages = requested
         elif configured:
             languages = configured
         else:
             languages = []
-        languages = list(dict.fromkeys(language for language in languages if language != source_language))
+        languages = unique_languages(languages)
         if not languages:
             raise CommandError("Configure i18n.languages or pass --languages.")
         return languages
 
-    def _extract(self, app_configs, languages, config, options):
+    def _app_languages(self, app_configs, languages, config):
+        app_languages = []
         for app in app_configs:
-            self.stdout.write(f"Extracting {app.name}")
+            source_language = get_app_source_language(app, config)
+            targets = [
+                catalog_locale(language)
+                for language in languages
+                if language != source_language
+            ]
+            app_languages.append((app, source_language, targets))
+        return app_languages
+
+    def _extract(self, app_languages, config, options):
+        for app, source_language, languages in app_languages:
+            if not languages:
+                continue
+            self.stdout.write(f"Extracting {app.name} (source: {source_language})")
             try:
                 extract_django_messages(app, languages, verbosity=max(self.verbosity - 1, 0))
                 if not options["skip_models"]:
-                    extract_model_messages(app, languages, config.source_language)
+                    extract_model_messages(app, languages, source_language)
+                extract_route_messages(app, languages)
                 if not options["skip_frontend"]:
                     extract_typescript_messages(app, languages, config)
             except (OSError, RuntimeError) as exc:
@@ -94,7 +112,7 @@ class Command(BaseCommand):
         self._verbosity = options.get("verbosity", 1)
         return super().execute(*args, **options)
 
-    def _translate(self, app_configs, languages, config, options):
+    def _translate(self, app_languages, config, options):
         llm_settings = config.llm.model_copy(
             update={
                 key: value
@@ -105,7 +123,7 @@ class Command(BaseCommand):
                 if value
             }
         )
-        for app in app_configs:
+        for app, source_language, languages in app_languages:
             for language in languages:
                 for domain in ("django", "djangojs"):
                     path = catalog_path(Path(app.path), language, domain)
@@ -116,7 +134,7 @@ class Command(BaseCommand):
                         count = translate_catalog(
                             catalog,
                             language,
-                            config.source_language,
+                            source_language,
                             llm_settings,
                             include_fuzzy=options["include_fuzzy"],
                             mark_fuzzy=(
@@ -130,9 +148,9 @@ class Command(BaseCommand):
                         save_catalog(catalog, path)
                         self.stdout.write(f"Translated {count} messages in {path}")
 
-    def _validate(self, app_configs, languages):
+    def _validate(self, app_languages):
         failures = []
-        for app in app_configs:
+        for app, _source_language, languages in app_languages:
             for language in languages:
                 for domain in ("django", "djangojs"):
                     path = catalog_path(Path(app.path), language, domain)
@@ -146,9 +164,9 @@ class Command(BaseCommand):
             raise CommandError("Invalid translations:\n" + "\n".join(failures))
         self.stdout.write(self.style.SUCCESS("Translation catalogs are valid."))
 
-    def _approve(self, app_configs, languages):
+    def _approve(self, app_languages):
         approved = 0
-        for app in app_configs:
+        for app, _source_language, languages in app_languages:
             for language in languages:
                 for domain in ("django", "djangojs"):
                     path = catalog_path(Path(app.path), language, domain)
@@ -161,8 +179,10 @@ class Command(BaseCommand):
                         approved += count
         self.stdout.write(self.style.SUCCESS(f"Approved {approved} translated messages."))
 
-    def _compile(self, app_configs, languages):
-        for app in app_configs:
+    def _compile(self, app_languages):
+        for app, _source_language, languages in app_languages:
+            if not languages:
+                continue
             if not (Path(app.path) / "locale").exists():
                 continue
             with working_directory(Path(app.path)):

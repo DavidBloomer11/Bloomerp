@@ -200,8 +200,6 @@
         <!-- Profile -->
         <div class="mt-auto pt-3">
             {% translate "Account Settings" as account_settings_label %}
-            {% translate "Admin page" as admin_page_label %}
-            {% translate "Bookmarks" as bookmarks_label %}
             {% translate "Theme" as theme_label %}
             {% translate "Languages" as languages_label %}
             {% translate "Sign Out" as sign_out_label %}
@@ -219,18 +217,10 @@
                                 hx_get="{% url 'users_my_profile_overview' %}" hx_target="#main-content"
                                 hx_swap="innerHTML" hx_push_url="true" />
 
-                            {% if request.user.is_staff %}
-                            <c-ui.dropdown.item text="{{ admin_page_label }}" icon="bi bi-hammer" href="/admin/" />
-                            {% endif %}
-
-                            <c-ui.dropdown.item text="{{ bookmarks_label }}" icon="bi bi-bookmark"
-                                hx_get="{% url 'bookmarks_user_bookmarks' %}" hx_target="#main-content"
-                                hx_swap="innerHTML" hx_push_url="true" />
-
                             <c-ui.dropdown.submenu text="{{ theme_label }}" icon="bi bi-circle-half" direction="left">
                                 <c-app.theme_selector />
                             </c-ui.dropdown.submenu>
-
+                            
                             {% get_current_language as current_language %}
                             {% get_bloomerp_languages as available_languages %}
                             {% get_language_info_list for available_languages as languages %}

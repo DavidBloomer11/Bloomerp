@@ -1,0 +1,45 @@
+# Portuguese translations for PROJECT.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-08-18 17:18+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: pt\n"
+"Language-Team: pt <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.16.0\n"
+
+#: static_src/ts/components/layouts/BaseSectionedLayoutContainer.ts:358
+msgid "Add row below"
+msgstr "Adicionar linha abaixo"
+
+#: static_src/ts/components/layouts/BaseSectionedLayoutContainer.ts:359
+msgid "Drag row"
+msgstr "Arrastar linha"
+
+#: static_src/ts/components/layouts/BaseSectionedLayoutContainer.ts:360
+msgid "Remove row"
+msgstr "Remover linha"
+
+#: static_src/ts/components/layouts/BaseSectionedLayoutContainer.ts:357
+msgid "Row title"
+msgstr "Título da linha"
+
+#: static_src/ts/components/detail_view_components/ObjectCRUDViewContainer.ts:522
+msgid "Show All Fields"
+msgstr "Mostrar todos os campos"
+
+#: static_src/ts/components/detail_view_components/ObjectCRUDViewContainer.ts:521
+msgid "Show Required Only"
+msgstr "Mostrar apenas os obrigatórios"
+

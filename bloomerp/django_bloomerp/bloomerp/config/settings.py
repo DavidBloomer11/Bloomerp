@@ -165,8 +165,15 @@ BLOOMERP_MIDDLEWARE = [
 ]
 
 BLOOMERP_LANGUAGES = [
-    ("en-us", "English"),
+    ("en", "English"),
     ("nl", "Nederlands"),
+    ("fr", "Français"),
+    ("de", "Deutsch"),
+    ("es", "Español"),
+    ("it", "Italiano"),
+    ("pt", "Português"),
+    ("ru", "Русский"),
+    ("pl", "Polski"),
 ]
 
 if _has_allauth():

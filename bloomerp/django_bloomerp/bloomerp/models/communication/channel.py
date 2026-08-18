@@ -1,6 +1,6 @@
 from django.db import models
 from bloomerp.models.base_bloomerp_model import BloomerpModel
-
+from django.utils.translation import gettext_lazy as _
 
 
 class Channel(BloomerpModel):
@@ -13,11 +13,13 @@ class Channel(BloomerpModel):
     channel_type = models.CharField(
         max_length=255, 
         null=False, 
-        blank=False
+        blank=False,
+        verbose_name=_("Channel Type")
     )
     
     # Content related fields
     is_active = models.BooleanField(
         default=True,
-        help_text="Indicates whether the channel is currently active."
+        help_text=_("Indicates whether the channel is currently active."),
+        verbose_name=_("Is Active")
     )

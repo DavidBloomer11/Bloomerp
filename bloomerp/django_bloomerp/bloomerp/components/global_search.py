@@ -33,6 +33,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.urls import NoReverseMatch
+from django.utils.encoding import force_str
+import unicodedata
 
 
 from bloomerp.models.application_field import ApplicationField
@@ -67,7 +69,8 @@ def _split_query_and_suffix(value: str) -> tuple[str, str]:
     return value[:split_idx].strip(), value[split_idx:].strip()
 
 def _normalize_key(value: str) -> str:
-    return (value or "").strip().lower().replace("-", "_")
+    normalized = unicodedata.normalize("NFKC", force_str(value or ""))
+    return normalized.strip().casefold().replace("-", "_")
 
 def _ensure_module_registry_models() -> None:
     # Ensure dynamic models are mapped into the registry for search.
@@ -294,19 +297,20 @@ def global_search(request: HttpRequest) -> HttpResponse:
             if base_query:
                 matched_routes = []
                 for route in router.get_routes():
-                    if route.name.startswith("components_"):
-                        continue
-                    if route.path.startswith("/api/"):
+                    if not route.searchable:
                         continue
                     
                     # We don't want to include routes that require arguments in the global search, as they cannot be directly navigated to without additional input. This is because the global search is designed for quick navigation, and including routes with required arguments could lead to confusion or dead ends in the search results.
                     if route.nr_of_args() > 0:
                         continue
 
-                    route_name = route.name or ""
-                    route_desc = route.description or ""
+                    route_name = route.localized_name
+                    route_desc = route.localized_description
                     route_path = route.path or ""
-                    if base_query.lower() not in f"{route_name} {route_desc} {route_path}".lower():
+                    route_search_text = " ".join(
+                        [route_name, route_desc, route.url_name or "", route_path]
+                    )
+                    if _normalize_key(base_query) not in _normalize_key(route_search_text):
                         continue
 
                     route_url = None
@@ -497,4 +501,3 @@ def global_search(request: HttpRequest) -> HttpResponse:
                 
 
     return render(request, "components/global_search.html", context)
-    

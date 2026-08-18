@@ -50,7 +50,7 @@ class HtmxMixin(GetPreferenceMixin):
     def _resolve_route_title(self) -> str:
         route = self._resolve_current_route()
         if route and getattr(route, "name", None):
-            return route.name
+            return route.localized_name
         return "Home"
 
     def _resolve_detail_object(self, context: dict):
@@ -92,7 +92,7 @@ class HtmxMixin(GetPreferenceMixin):
         route_type = self._normalize_route_type(route.route_type)
         module = getattr(route, "module", None)
         model = getattr(route, "model", None)
-        route_name = route.name or "Route"
+        route_name = route.localized_name or "Route"
         module_key = (module.full_id or module.id) if module else None
         module_lineage = module_registry.get_lineage(module_key) if module_key else []
         module_url = f"/{module.route_path}/" if module and module.route_path else None

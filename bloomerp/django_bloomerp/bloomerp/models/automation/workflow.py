@@ -71,19 +71,23 @@ class Workflow(
     
     name = models.CharField(
         max_length=255,
-        help_text=_("The name of the workflow.")
+        help_text=_("The name of the workflow."),
+        verbose_name=_("Name")
         )
     run_asynchronously = models.BooleanField(
         default=False,
-        help_text=_("Whether runs asynchronously")
+        help_text=_("Whether runs asynchronously"),
+        verbose_name=_("Run Asynchronously")
     )
     active = models.BooleanField(
         default=True,
-        help_text=_("Whether the workflow is active or not")
+        help_text=_("Whether the workflow is active or not"),
+        verbose_name=_("Active")
     )
     enable_logging = models.BooleanField(
         default=False,
-        help_text=_("Whether to enable logging for this workflow. Disabling logging may improve performance but will result in no detailed execution history being stored.")
+        help_text=_("Whether to enable logging for this workflow. Disabling logging may improve performance but will result in no detailed execution history being stored."),
+        verbose_name=_("Enable Logging")
     )
     
     def get_trigger(self) -> "WorkflowNode |None":
