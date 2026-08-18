@@ -104,6 +104,7 @@ class BaseBloomerpDetailView(BaseBloomerpView, BloomerpModelContextMixin, Detail
             
         content_type = ContentType.objects.get_for_model(self.model)
         context["detail_view_content_type_id"] = content_type.pk
+        context["detail_sidebar_view"] = self.request.user.detail_sidebar_view_preference
         context["can_change_avatar"] = self._can_change_avatar(content_type)
         tabs_preference = self.detail_tabs_preference
         preference_manager = PreferenceManager(self.request.user)
