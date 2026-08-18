@@ -7,6 +7,7 @@
 	bloomerp-component="detail-view-frame"
 	class="grid gap-6 xl:h-full xl:min-h-0 xl:overflow-hidden xl:gap-0 {% if include_detail_aside %}xl:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)_auto]{% else %}xl:grid-cols-[minmax(0,1fr)_auto]{% endif %}"
 	data-detail-view-grid
+	data-sidebar-preference-url="{% url 'components_detail_sidebar_preference' %}"
 >
 
 	<section class="min-w-0 xl:h-full xl:min-h-0 xl:overflow-hidden">
@@ -123,6 +124,7 @@
 					<div class="flex flex-wrap justify-center gap-2">
 						<button 
 							class="btn btn-secondary btn-sm"
+							data-detail-sidebar-view="activity"
 							hx-get="{% url 'components_activity_log' %}?content_type_id={{ content_type_id }}&object_id={{ object.id }}"
 							hx-target="#object-sidesection"
 							hx-animation	
@@ -132,6 +134,7 @@
 						</button>
 						<button 
 							class="btn btn-secondary btn-sm"
+							data-detail-sidebar-view="comments"
 							hx-get="{% url 'components_comments' content_type_id=content_type_id object_id=object.id %}"
 							hx-target="#object-sidesection"
 							hx-animation	
@@ -158,7 +161,8 @@
 						{% endfor %}
 					</div>
 					<div
-						hx-get="{% url 'components_activity_log' %}?content_type_id={{ content_type_id }}&object_id={{ object.id }}" 
+						data-detail-sidebar-loader
+						hx-get="{% if detail_sidebar_view == 'comments' %}{% url 'components_comments' content_type_id=content_type_id object_id=object.id %}{% else %}{% url 'components_activity_log' %}?content_type_id={{ content_type_id }}&object_id={{ object.id }}{% endif %}"
 						hx-target="#object-sidesection" 
 						hx-trigger="load"
 						hx-swap="innerHTML"
