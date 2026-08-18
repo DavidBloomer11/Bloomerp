@@ -1321,7 +1321,7 @@ export default abstract class BaseSectionedLayoutContainer<TItem extends BaseSec
     protected isInteractiveTarget(target: HTMLElement): boolean {
         return Boolean(
             target.closest(
-                "input, textarea, select, option, button, a, [contenteditable=\"true\"], [data-row-controls], [data-layout-item-controls], [data-layout-sidebar-item]",
+                "input, textarea, select, option, button, a, [contenteditable=\"true\"], [bloomerp-component=\"bloomerp-text-editor\"], [data-row-controls], [data-layout-item-controls], [data-layout-sidebar-item]",
             ),
         );
     }

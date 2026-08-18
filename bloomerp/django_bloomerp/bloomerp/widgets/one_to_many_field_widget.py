@@ -123,9 +123,18 @@ class OneToManyFieldWidget(widgets.Widget):
         row_index,
         default_values=None,
     ):
-        cell_attrs = {
-            "class": "one-to-many-field-widget__input input input-sm w-full border-0 bg-transparent px-2 py-1 shadow-none focus:bg-white",
-        }
+        widget = application_field.get_widget()
+        if isinstance(widget, widgets.CheckboxInput):
+            input_classes = (
+                "one-to-many-field-widget__input h-5 w-5 cursor-pointer rounded "
+                "border-gray-400 text-primary focus:ring-primary"
+            )
+        else:
+            input_classes = (
+                "one-to-many-field-widget__input input input-sm w-full border-0 "
+                "bg-transparent px-2 py-1 shadow-none focus:bg-white"
+            )
+        cell_attrs = {"class": input_classes}
         if attrs and attrs.get("disabled"):
             cell_attrs["disabled"] = "disabled"
         if attrs and attrs.get("readonly"):
@@ -136,7 +145,6 @@ class OneToManyFieldWidget(widgets.Widget):
             application_field=application_field,
             default_values=default_values,
         )
-        widget = application_field.get_widget()
         return widget.render(
             name=f"{name}__{row_index}__{application_field.field}",
             value=value,
@@ -176,6 +184,8 @@ class OneToManyFieldWidget(widgets.Widget):
         except Exception:
             return "text"
 
+        if isinstance(model_field, models.BooleanField):
+            return "boolean"
         if isinstance(model_field, models.DateField):
             return "date"
         if isinstance(

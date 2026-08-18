@@ -673,6 +673,7 @@ class FieldType(Enum):
         model_field_cls=models.ForeignKey,
         lookups=[
             Lookup.EQUALS,
+            Lookup.NOT_EQUALS,
             Lookup.IN,
             Lookup.FOREIGN_ADVANCED,
             Lookup.IS_NULL,
@@ -700,6 +701,7 @@ class FieldType(Enum):
         lookups=[
             Lookup.IS_NULL,
             Lookup.EQUALS,
+            Lookup.NOT_EQUALS,
             Lookup.IN,
         ],
         default_model_field_args={
@@ -720,6 +722,7 @@ class FieldType(Enum):
         model_field_cls=models.ManyToManyField,
         lookups=[
             Lookup.EQUALS,
+            Lookup.NOT_EQUALS,
             Lookup.IS_NULL,
             Lookup.IN,
         ],

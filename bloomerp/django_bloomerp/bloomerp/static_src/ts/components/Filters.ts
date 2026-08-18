@@ -8,6 +8,8 @@ import { formatFilterLabel, formatFilterTooltip } from "@/utils/filterLabels";
 export const LOOKUP_LABELS : Map<string, string> = new Map([
     ["exact", "is"],
     ["equals", "is"],
+    ["not_equals", "is not"],
+    ["ne", "is not"],
     ["icontains", "contains"],
     ["contains", "contains"],
     ["startswith", "starts with"],

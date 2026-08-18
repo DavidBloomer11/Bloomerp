@@ -26,7 +26,10 @@ def run_workflow_async(workflow_id, trigger_data, start_node_id=None):
         serialize_workflow_run_result,
     )
 
-    workflow = Workflow.objects.get(id=workflow_id)
+    workflow = Workflow.objects.filter(id=workflow_id, active=True).first()
+    if workflow is None:
+        return None
+
     deserialized_trigger_data = _deserialize_trigger_data(trigger_data)
     start_node = (
         workflow.nodes.get(id=start_node_id)

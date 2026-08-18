@@ -79,7 +79,7 @@ def _equals_widget(application_field: "ApplicationField") -> forms.Widget:
     match application_field.field_type_enum:
         case FieldType.BOOLEAN_FIELD:
             return forms.Select(choices=[("true", "True"), ("false", "False")], attrs={"class": "select w-full"})
-        case FieldType.FOREIGN_KEY:
+        case FieldType.FOREIGN_KEY | FieldType.ONE_TO_ONE_FIELD:
             return ForeignFieldWidget(model=application_field.related_model.model_class(), attrs={"class": "input w-full"})
         case FieldType.MANY_TO_MANY_FIELD:
             return ForeignFieldWidget(model=application_field.related_model.model_class(), attrs={"class": "input w-full", "is_m2m": True})
@@ -230,6 +230,9 @@ def _simple_filter_classes(
 
 
 def _not_equals_filter_class(application_field: "ApplicationField", lookup: "LookupDefinition") -> dict[str, django_filters.Filter]:
+    if _is_relation_choice_field(application_field):
+        return _relation_filter_class(application_field, lookup, exclude=True)
+
     def filter_not_equal(queryset: QuerySet, name: str, value):
         if value in django_filters.constants.EMPTY_VALUES:
             return queryset
@@ -257,7 +260,12 @@ def _relative_date_filter_class(application_field: "ApplicationField", lookup: "
     }
 
 
-def _relation_filter_class(application_field: "ApplicationField", lookup: "LookupDefinition") -> dict[str, django_filters.Filter]:
+def _relation_filter_class(
+    application_field: "ApplicationField",
+    lookup: "LookupDefinition",
+    *,
+    exclude: bool = False,
+) -> dict[str, django_filters.Filter]:
     related_model = application_field.get_related_model()
     if related_model is None:
         return {}
@@ -268,13 +276,18 @@ def _relation_filter_class(application_field: "ApplicationField", lookup: "Looku
             "queryset": related_model.objects.all(),
             "to_field_name": "id",
             "distinct": True,
+            "exclude": exclude,
         }
     elif lookup.id == "in":
         filter_cls = django_filters.ModelMultipleChoiceFilter
-        kwargs = {"queryset": related_model.objects.all(), "widget": django_filters.widgets.CSVWidget}
+        kwargs = {
+            "queryset": related_model.objects.all(),
+            "widget": django_filters.widgets.CSVWidget,
+            "exclude": exclude,
+        }
     else:
         filter_cls = django_filters.ModelChoiceFilter
-        kwargs = {"queryset": related_model.objects.all()}
+        kwargs = {"queryset": related_model.objects.all(), "exclude": exclude}
 
     return {
         name: filter_cls(field_name=application_field.field, **kwargs)

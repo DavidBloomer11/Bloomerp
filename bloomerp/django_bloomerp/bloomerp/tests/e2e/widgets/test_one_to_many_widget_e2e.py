@@ -17,7 +17,13 @@ from bloomerp.utils.models import get_create_view_url
 
 class TestOneToManyWidgetE2E(TestCrudE2EMixin, BaseE2ETestCase):
     create_foreign_models = True
-    inline_fields = ["first_name", "customer_type", "age", "date_joined"]
+    inline_fields = [
+        "first_name",
+        "customer_type",
+        "age",
+        "date_joined",
+        "description",
+    ]
 
     def extendedE2ESetup(self) -> None:
         """Expose Country.customers as an editable one-to-many test widget."""
@@ -178,6 +184,53 @@ class TestOneToManyWidgetE2E(TestCrudE2EMixin, BaseE2ETestCase):
 
         # 4. Verify cloning preserves the explicit value and does not replace it with the default.
         self.assertEqual(self.get_column_values("age"), ["30", "42", "30"])
+
+    def test_text_editors_update_their_own_one_to_many_rows(self):
+        """
+        Use case: Edit text-editor fields in two server-rendered one-to-many rows.
+        Expected result: Each editor updates only the hidden input in its own row.
+        """
+        # 1. Open a country form with two text-editor rows already rendered.
+        self.goto(
+            self.get_url_with_rows(
+                [
+                    {"description": "First customer description"},
+                    {"description": "Second customer description"},
+                ]
+            )
+        )
+        expect(self.get_rows()).to_have_count(2)
+
+        # 2. Enter different content in each row's text editor.
+        first_editor = self.get_rows().nth(0).locator(
+            '[data-one-to-many-cell="description"] .bloomerp-text-editor'
+        )
+        second_editor = self.get_rows().nth(1).locator(
+            '[data-one-to-many-cell="description"] .bloomerp-text-editor'
+        )
+        first_editor.focus()
+        expect(first_editor).to_be_focused()
+        second_editor_wrapper = self.get_rows().nth(1).locator(
+            '[data-one-to-many-cell="description"] '
+            '[bloomerp-component="bloomerp-text-editor"]'
+        )
+        second_editor_wrapper.dispatch_event("click")
+        expect(second_editor).to_be_focused()
+        expect(first_editor).not_to_be_focused()
+        first_editor.fill("Updated first customer description")
+        second_editor.fill("Updated second customer description")
+
+        # 3. Verify each editor synchronized its own row's form input.
+        first_value = self.get_rows().nth(0).locator(
+            '[data-one-to-many-cell="description"] [data-text-editor-input="true"]'
+        ).input_value()
+        second_value = self.get_rows().nth(1).locator(
+            '[data-one-to-many-cell="description"] [data-text-editor-input="true"]'
+        ).input_value()
+        self.assertIn("Updated first customer description", first_value)
+        self.assertNotIn("Updated second customer description", first_value)
+        self.assertIn("Updated second customer description", second_value)
+        self.assertNotIn("Updated first customer description", second_value)
 
     def test_preview_icon_previews_and_opens_persisted_row(self):
         """

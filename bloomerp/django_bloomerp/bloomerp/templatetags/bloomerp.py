@@ -529,8 +529,9 @@ def render_object_action(
                 '<button class="btn btn-xs btn-{style}" '
                 'hx-get="{url}" '
                 'hx-target="#bloomerp-general-use-modal-body" '
-                'bloomerp-set-modal-title-for="bloomerp-general-use-modal"'
-                'bloomerp-set-modal-title-to="{title}"'
+                'bloomerp-set-modal-title-for="bloomerp-general-use-modal" '
+                'bloomerp-set-modal-title-to="{title}" '
+                'bloomerp-set-modal-size-to="{size}" '
                 'bloomerp-open-modal="bloomerp-general-use-modal">'
                 '{label}'
                 '</button>'
@@ -539,6 +540,7 @@ def render_object_action(
             url=action.endpoint(object),
             label=action.label,
             title=action.modal_title,
+            size=action.modal_size,
         )
 
     if content_type_id is None:

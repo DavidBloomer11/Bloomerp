@@ -25,7 +25,7 @@ User = get_user_model()
     models=User
 )
 class UserCreateView(BaseBloomerpView, SuccessMessageMixin, FormView):
-    template_name = "views/generic/detail/create.html"
+    template_name = "views/users/create.html"
     fields = None
     model = User
     exclude = []

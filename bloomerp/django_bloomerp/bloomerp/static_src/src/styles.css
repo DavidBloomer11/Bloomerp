@@ -195,7 +195,7 @@
     color: var(--color-zinc-100);
   }
 
-  .dark .input,
+  .dark .input:not([type='checkbox']):not([type='radio']),
   .dark .select,
   .dark .node-input,
   .dark .node-select {
@@ -895,20 +895,20 @@
 */
 @layer utilities {
     /*Default utilities*/
-    .input {
+    .input:not([type='checkbox']):not([type='radio']) {
       @apply px-3 py-2 text-sm border border-gray-200 rounded-xl focus:ring-1 focus:ring-primary focus:border-primary bg-white
     }
 
     /* Input size variants */
-    .input-sm {
+    .input-sm:not([type='checkbox']):not([type='radio']) {
       @apply px-2 py-1 text-xs
     }
 
-    .input-lg {
+    .input-lg:not([type='checkbox']):not([type='radio']) {
       @apply px-4 py-3 
     }
 
-    .input:disabled {
+    .input:disabled:not([type='checkbox']):not([type='radio']) {
       @apply bg-gray-100 cursor-not-allowed
     }
 
@@ -1361,6 +1361,39 @@ Dashboard
   top: 0;
   left: 0;
   white-space: pre-wrap;
+}
+
+/*
+  Text editor toolbar visibility
+*/
+
+[data-text-editor-toolbar] {
+  max-height: 100rem;
+  opacity: 1;
+  transition: max-height 220ms ease, opacity 180ms ease, margin-bottom 220ms ease;
+}
+
+[data-text-editor-toolbar][data-toolbar-hidden="true"] {
+  max-height: 0;
+  margin-bottom: 0 !important;
+  opacity: 0;
+  overflow: hidden !important;
+  pointer-events: none;
+}
+
+[data-text-editor-toolbar-reveal] {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 10;
+  opacity: 0.2;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+[data-text-editor-toolbar-reveal]:hover,
+[data-text-editor-toolbar-reveal]:focus-visible {
+  opacity: 1;
+  transform: scale(1.05);
 }
 
 /*

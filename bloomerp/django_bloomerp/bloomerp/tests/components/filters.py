@@ -139,6 +139,26 @@ class TestFilterComponent(BaseBloomerpModelTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'value="is_null"', html=False)
 
+    def test_lookup_operators_include_not_equals_for_foreign_key_fields(self):
+        """
+        Use case: A user selects an operator for a foreign-key filter.
+        Expected result: Not Equals is available as a relation filter operator.
+        """
+        # 1. Request the lookup operators for a foreign-key application field.
+        application_field = ApplicationField.get_by_field(self.CustomerModel, "country")
+        url = reverse(
+            "components_filters_lookup_operators",
+            kwargs={
+                "content_type_id": application_field.content_type_id,
+                "application_field_id": application_field.id,
+            },
+        )
+        response = self.client.get(url)
+
+        # 2. Verify the new relation operator is exposed by the filter UI.
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'value="not_equals"', html=False)
+
     def test_lookup_operators_include_relative_date_options_for_date_fields(self):
         application_field = ApplicationField.get_by_field(self.EventModel, "starts_on")
         url = reverse(
