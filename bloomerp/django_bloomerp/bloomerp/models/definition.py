@@ -269,6 +269,8 @@ class ObjectModalAction(BaseModel):
     should_render_func:Callable[[HttpRequest, Model], bool] = lambda req, obj : True
     
     modal_title:Optional[str] = ""
+
+    modal_size:Literal["sm", "md", "lg", "xl", "full"] = "md"
     
     
 
