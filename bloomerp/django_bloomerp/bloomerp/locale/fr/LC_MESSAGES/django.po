@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-19 09:10+0000\n"
+"POT-Creation-Date: 2026-08-19 09:17+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fr\n"
@@ -5164,3 +5164,4 @@ msgstr "Relation {related_model_plural} pour {model}"
 
 #~ msgid "workspaces"
 #~ msgstr "espaces de travail"
+
