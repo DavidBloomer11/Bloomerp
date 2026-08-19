@@ -11,6 +11,7 @@ import FilterContainer, { FilterEntriesContainer, getFiltersFromUrl } from "../F
 export default class WorkspaceContainer extends BaseSectionedLayoutContainer<WorkspaceTile> {
     private workspaceApplyFiltersHandler: ((event: Event) => void) | null = null;
     private workspaceFilterParams = new URLSearchParams(window.location.search);
+    private tileResizeObserver: ResizeObserver | null = null;
 
     public override initialize(): void {
         super.initialize();
@@ -21,6 +22,13 @@ export default class WorkspaceContainer extends BaseSectionedLayoutContainer<Wor
             ?.addEventListener("click", this.workspaceApplyFiltersHandler);
 
         this.renderWorkspaceFilters();
+        this.setupTileResizeObserver();
+        this.items.forEach((item) => {
+            if (item.element) {
+                this.observeTileResize(item.element);
+                this.scheduleTileResize(item.element);
+            }
+        });
     }
 
     protected override shouldApplyFocusedItemClass(): boolean {
@@ -61,6 +69,7 @@ export default class WorkspaceContainer extends BaseSectionedLayoutContainer<Wor
             }
 
             this.scheduleTileResize(existingElement);
+            this.observeTileResize(existingElement);
             this.reindexItems();
             return;
         }
@@ -94,6 +103,7 @@ export default class WorkspaceContainer extends BaseSectionedLayoutContainer<Wor
         }
 
         this.scheduleTileResize(renderedElement);
+        this.observeTileResize(renderedElement);
         this.reindexItems();
     }
 
@@ -104,6 +114,8 @@ export default class WorkspaceContainer extends BaseSectionedLayoutContainer<Wor
                 ?.removeEventListener("click", this.workspaceApplyFiltersHandler);
         }
 
+        this.tileResizeObserver?.disconnect();
+        this.tileResizeObserver = null;
         super.destroy();
     }
 
@@ -201,6 +213,7 @@ export default class WorkspaceContainer extends BaseSectionedLayoutContainer<Wor
         this.reindexItems();
         this.items.forEach((item) => {
             if (item.element) {
+                this.observeTileResize(item.element);
                 this.scheduleTileResize(item.element);
             }
         });
@@ -282,19 +295,50 @@ export default class WorkspaceContainer extends BaseSectionedLayoutContainer<Wor
     private scheduleTileResize(tileElement: HTMLElement): void {
         const resizePlots = (): void => {
             const plotElements = Array.from(tileElement.querySelectorAll<HTMLElement>(".js-plotly-plot"));
-            const plotly = (window as typeof window & { Plotly?: { Plots?: { resize: (element: HTMLElement) => void } } }).Plotly;
+            const plotly = (window as typeof window & {
+                Plotly?: {
+                    relayout?: (
+                        element: HTMLElement,
+                        layout: { width: number; height: number },
+                    ) => Promise<void>;
+                };
+            }).Plotly;
 
             plotElements.forEach((plotElement) => {
-                plotly?.Plots?.resize?.(plotElement);
+                if (plotElement.clientWidth === 0 || plotElement.clientHeight === 0) return;
+                void plotly?.relayout?.(plotElement, {
+                    width: plotElement.clientWidth,
+                    height: plotElement.clientHeight,
+                });
             });
-            window.dispatchEvent(new Event("resize"));
         };
 
-        requestAnimationFrame(() => {
+        const resizeOnNextFrame = (passesRemaining: number): void => {
             requestAnimationFrame(() => {
                 resizePlots();
+                if (passesRemaining > 1) {
+                    resizeOnNextFrame(passesRemaining - 1);
+                }
+            });
+        };
+
+        resizeOnNextFrame(3);
+    }
+
+    private setupTileResizeObserver(): void {
+        if (typeof ResizeObserver === "undefined") return;
+
+        this.tileResizeObserver = new ResizeObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.target instanceof HTMLElement) {
+                    this.scheduleTileResize(entry.target);
+                }
             });
         });
+    }
+
+    private observeTileResize(tileElement: HTMLElement): void {
+        this.tileResizeObserver?.observe(tileElement);
     }
 
     public toggleEditMode(): void {

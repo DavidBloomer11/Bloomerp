@@ -2,7 +2,7 @@ from django.utils.translation import gettext_lazy as _, gettext_noop
 from typing import Any
 
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Case, IntegerField, QuerySet, When
 from django.urls import reverse
 
@@ -11,6 +11,7 @@ from bloomerp.models.mixins.content_layout_model_mixin import ContentLayoutModel
 from bloomerp.models.users.base_preference import BasePreference
 from bloomerp.models.users.user import AbstractBloomerpUser
 from bloomerp.models.workspaces.tile import Tile
+from bloomerp.modules.definition import module_registry
 
 
 class Workspace(ContentLayoutModelMixin, BasePreference):
@@ -66,6 +67,47 @@ class Workspace(ContentLayoutModelMixin, BasePreference):
                 module_id="sales",
             )
         """
+        module_id = scope.get("module_id")
+        module = module_registry.get(module_id) if module_id else None
+
+        if module is not None and module.workspaces:
+            from bloomerp.services.workspace_services import create_or_update_default_tiles
+
+            tiles_by_native_id = create_or_update_default_tiles(
+                registry=module_registry,
+            )
+            selected_workspace = None
+
+            with transaction.atomic():
+                for workspace_definition in module.workspaces:
+                    layout = workspace_definition.model_copy(deep=True)
+                    for row in layout.rows:
+                        for item in row.items:
+                            native_tile_id = str(item.id).strip()
+                            tile = tiles_by_native_id.get(native_tile_id)
+                            if tile is None:
+                                raise ValueError(
+                                    f"Workspace '{workspace_definition.name}' references "
+                                    f"unknown tile id '{native_tile_id}'."
+                                )
+                            item.id = str(tile.pk)
+
+                    workspace = cls.objects.create(
+                        user=user,
+                        name=workspace_definition.name,
+                        module_id=module_id,
+                        layout=layout.model_dump(mode="json"),
+                        selected=workspace_definition.is_default,
+                    )
+                    if workspace.selected:
+                        selected_workspace = workspace
+
+            if selected_workspace is None:
+                raise ValueError(
+                    f"Module '{module_id}' does not define a default workspace."
+                )
+            return selected_workspace
+
         return cls.objects.create(
             user=user,
             name="Default",

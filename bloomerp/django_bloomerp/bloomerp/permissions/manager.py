@@ -566,6 +566,30 @@ class UserPolicyManager:
             tables_and_fields[model] = accessible_fields
 
         return tables_and_fields
+    
+    def get_accessible_models(self, permissions: list[str] | list[BloomerpPermission] | str | BloomerpPermission, match: PermissionMatch = PermissionMatch.ANY) -> list[Type[models.Model]]:
+        """Returns a list of models for which the user has access based on the provided permissions.
+
+        Args:
+            permissions (list[str] | list[BloomerpPermission] | str | BloomerpPermission): The permissions to check.
+            match (PermissionMatch, optional): Whether all or any requested permissions must match. Defaults to PermissionMatch.ANY.
+        """
+        if getattr(self.user, "is_superuser", False):
+            return list(apps.get_models())
+        
+        accessible_models: list[Type[models.Model]] = []
+        row_policies = self.get_row_policies().select_related("content_type")
+        for row_policy in row_policies:
+            content_type = row_policy.content_type
+            model: Type[models.Model] | None = content_type.model_class()
+            if model is None:
+                continue
+            
+            if self.has_global_permission(model, permissions=permissions, match=match):
+                accessible_models.append(model)
+                
+        return accessible_models
+        
         
     def get_accessible_sql_query(
         self,

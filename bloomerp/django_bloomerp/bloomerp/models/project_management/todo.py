@@ -1,7 +1,8 @@
-from django.db import models
+from django.db import connection, models
 from django.http import HttpRequest, HttpResponse
 from slugify import slugify
 from bloomerp.model_fields.text_editor_field import TextEditorField
+from bloomerp.model_fields.user_field import UserField
 from bloomerp.models import BloomerpModel
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _, gettext_noop
@@ -11,10 +12,14 @@ from django.core.exceptions import ValidationError
 
 from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.definition import BloomerpModelConfig, ObjectAction, ObjectHTML
+from bloomerp.utils.models import get_list_view_url
+from bloomerp.workspaces.analytics_tile.model import AnalyticsTileFilter, FieldConfig
 from bloomerp.permissions.definition import BloomerpPermission
 from bloomerp.utils.requests import render_message
 from bloomerp.workspaces.analytics_tile.model import AnalyticsTileConfig
 from bloomerp.workspaces.form_tile import render
+from bloomerp.workspaces.analytics_tile.model import AnalyticsTileType
+
 
 class TodoPriority(models.TextChoices):
     URGENT = ('urgent', _('Urgent'))
@@ -41,6 +46,23 @@ class TodoStatus(models.TextChoices):
     DUPLICATE = ('duplicate', _('Duplicate'))
 
 
+def _average_completion_speed_query() -> str:
+    if connection.vendor == "sqlite":
+        duration_expression = (
+            "julianday(datetime_completed) - julianday(datetime_created)"
+        )
+    else:
+        duration_expression = (
+            "EXTRACT(EPOCH FROM (datetime_completed - datetime_created)) / 86400.0"
+        )
+
+    return f"""
+        SELECT {duration_expression} AS completion_days
+        FROM bloomerp_todo
+        WHERE datetime_completed IS NOT NULL
+    """
+
+
 def _mark_as_completed(request:HttpRequest, object:"Todo") -> HttpResponse:
     """
     Marks the todo as completed and sets the datetime_completed field to the current time.
@@ -63,7 +85,7 @@ class Todo(BloomerpModel):
     The todo model is for Bloomerp's internal project management module.
     """
     bloomerp_config = BloomerpModelConfig(
-        module="misc",
+        module="todos_and_initiatives",
         layout=FieldLayout(
             rows=[
                 LayoutRow(
@@ -110,6 +132,197 @@ class Todo(BloomerpModel):
                 execution_func=_mark_as_completed
             )
         ],
+        tiles=[
+            AnalyticsTileConfig(
+                type=AnalyticsTileType.KPI.value.key,
+                id="todos:number_of_todos",
+                name="Number of todos",
+                description="Total number of visible todos.",
+                query="SELECT * FROM bloomerp_todo",
+                icon="fa-solid fa-list-check",
+                fields={
+                    "value": [
+                        FieldConfig(
+                            name="id",
+                            opts={
+                                "aggregator": "COUNT",
+                                "formatter": "INTEGER",
+                            },
+                        )
+                    ]
+                },
+                filters=[
+                    AnalyticsTileFilter(
+                        field="status",
+                        type="text",
+                    )
+                ]
+            ),
+            AnalyticsTileConfig(
+                type=AnalyticsTileType.KPI.value.key,
+                id="todos:open_todos",
+                name="Open todos",
+                description="Todos that still require action.",
+                query="""
+                    SELECT COUNT(*) AS open_count
+                    FROM bloomerp_todo
+                    WHERE status NOT IN ('completed', 'cancelled', 'duplicate')
+                """,
+                icon="fa-solid fa-hourglass-half",
+                fields={
+                    "value": [
+                        FieldConfig(
+                            name="open_count",
+                            opts={
+                                "aggregator": "FIRST",
+                                "formatter": "INTEGER",
+                            },
+                        )
+                    ]
+                },
+                opts={
+                    "advanced_formatting_value" : """<a href='{% url 'todos_model' %}?status'>{{ var_open_count }}</a>"""
+                }
+            ),
+            AnalyticsTileConfig(
+                type=AnalyticsTileType.KPI.value.key,
+                id="todos:completion_rate",
+                name="Completion rate",
+                description="Share of visible todos marked as completed.",
+                query="""
+                    SELECT COALESCE(
+                        1.0 * SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END)
+                        / NULLIF(COUNT(*), 0),
+                        0
+                    ) AS completion_rate
+                    FROM bloomerp_todo
+                """,
+                icon="fa-solid fa-circle-check",
+                fields={
+                    "value": [
+                        FieldConfig(
+                            name="completion_rate",
+                            opts={
+                                "aggregator": "FIRST",
+                                "formatter": "PERCENTAGE",
+                            },
+                        )
+                    ]
+                },
+            ),
+            AnalyticsTileConfig(
+                type=AnalyticsTileType.KPI.value.key,
+                id="todos:average_completion_speed",
+                name="Average completion speed",
+                description="Average elapsed time for completed todos.",
+                query=_average_completion_speed_query(),
+                icon="fa-solid fa-stopwatch",
+                fields={
+                    "value": [
+                        FieldConfig(
+                            name="completion_days",
+                            opts={
+                                "aggregator": "AVG",
+                                "formatter": "DOUBLE_US",
+                                "suffix": " days",
+                            },
+                        )
+                    ]
+                },
+            ),
+            AnalyticsTileConfig(
+                type=AnalyticsTileType.PIE_CHART.value.key,
+                id="todos:status_distribution",
+                name="Todos by status",
+                description="Distribution of visible todos across workflow states.",
+                query="""
+                    SELECT
+                        CASE status
+                            WHEN 'backlog' THEN 'Backlog'
+                            WHEN 'in_progress' THEN 'In progress'
+                            WHEN 'in_review' THEN 'In review'
+                            WHEN 'completed' THEN 'Completed'
+                            WHEN 'cancelled' THEN 'Cancelled'
+                            WHEN 'duplicate' THEN 'Duplicate'
+                            ELSE status
+                        END AS status_label,
+                        1 AS todo_count
+                    FROM bloomerp_todo
+                """,
+                icon="fa-solid fa-chart-pie",
+                fields={
+                    "labels": [FieldConfig(name="status_label")],
+                    "values": [
+                        FieldConfig(
+                            name="todo_count",
+                            opts={"label": "Todos", "formatter": "INTEGER"},
+                        )
+                    ],
+                },
+                opts={"legend_position": "right", "show_legend": True},
+            ),
+            AnalyticsTileConfig(
+                type=AnalyticsTileType.TWO_DIM_CHART.value.key,
+                id="todos:priority_distribution",
+                name="Todos by priority",
+                description="Current workload grouped by priority.",
+                query="""
+                    SELECT
+                        CASE priority
+                            WHEN 'urgent' THEN 'Urgent'
+                            WHEN 'high' THEN 'High'
+                            WHEN 'medium' THEN 'Medium'
+                            WHEN 'low' THEN 'Low'
+                            ELSE priority
+                        END AS priority_label,
+                        1 AS todo_count
+                    FROM bloomerp_todo
+                """,
+                icon="fa-solid fa-chart-column",
+                fields={
+                    "x_axis": [FieldConfig(name="priority_label")],
+                    "y_axis": [
+                        FieldConfig(
+                            name="todo_count",
+                            opts={"label": "Todos", "color": "#f59e0b"},
+                        )
+                    ],
+                },
+                opts={
+                    "chart_type": "bar",
+                    "x_axis_order": "Urgent,High,Medium,Low",
+                    "show_legend": False,
+                },
+            ),
+            AnalyticsTileConfig(
+                type=AnalyticsTileType.TWO_DIM_CHART.value.key,
+                id="todos:completion_trend",
+                name="Todo completion trend",
+                description="Completed todos grouped by completion date.",
+                query="""
+                    SELECT
+                        CAST(datetime_completed AS DATE) AS completion_date,
+                        1 AS completed_count
+                    FROM bloomerp_todo
+                    WHERE datetime_completed IS NOT NULL
+                """,
+                icon="fa-solid fa-chart-line",
+                fields={
+                    "x_axis": [FieldConfig(name="completion_date")],
+                    "y_axis": [
+                        FieldConfig(
+                            name="completed_count",
+                            opts={"label": "Completed", "color": "#10b981"},
+                        )
+                    ],
+                },
+                opts={
+                    "chart_type": "line",
+                    "x_axis_label": "Completion date",
+                    "show_legend": False,
+                },
+            ),
+        ]
     )
 
     class Meta(BloomerpModel.Meta):
@@ -121,8 +334,7 @@ class Todo(BloomerpModel):
     avatar = None
     allow_string_search = False # Do not allow string search for todos (we dont want to-do's to be searchable in the search bar)
 
-    assigned_to = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
+    assigned_to = UserField(
         on_delete=models.CASCADE, 
         null=True,
         blank=True,
@@ -130,8 +342,7 @@ class Todo(BloomerpModel):
         verbose_name=_("Assigned To"),
         help_text=_("The user to whom the todo is assigned")
         )
-    requested_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
+    requested_by = UserField( 
         null=True, 
         blank=True, 
         on_delete=models.CASCADE, 

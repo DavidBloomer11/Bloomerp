@@ -15,6 +15,7 @@ from bloomerp.workspaces.base import (
 
 class Link(BaseModel):
     url: str = ""
+    url_name: str = ""
     name: str
     icon: str = ""
     is_internal: bool = False

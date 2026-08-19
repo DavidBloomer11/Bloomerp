@@ -5,8 +5,9 @@ from pathlib import Path
 import yaml
 from django.core.management.base import BaseCommand
 
-from bloomerp.modules.definition import FieldConfig, ModelConfig, ModuleConfig
+from bloomerp.modules.definition import ModuleConfig
 from bloomerp_modules.utils.dynamic_config_builder import DynamicConfigBuilder
+from bloomerp_modules.utils.reader import FieldConfig, ModelConfig
 
 
 class Command(BaseCommand):

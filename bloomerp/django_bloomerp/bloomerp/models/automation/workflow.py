@@ -8,6 +8,7 @@ from bloomerp.models.mixins.user_stamp_model_mixin import UserStampModelMixin
 from bloomerp.models.mixins import TimestampModelMixin
 from django.utils.translation import gettext_lazy as _, gettext_noop
 from bloomerp.automation.defintion import WorkflowNodeType
+from bloomerp.workspaces.analytics_tile.model import AnalyticsTileConfig, AnalyticsTileType, FieldConfig
 
 if TYPE_CHECKING:
     from bloomerp.models.automation.workflow_node import WorkflowNode
@@ -66,7 +67,92 @@ class Workflow(
         ),
         detail_view_settings=DetailViewSettings(
             skip_views=["document_templates", "files"]
-        )
+        ),
+        tiles=[
+            AnalyticsTileConfig(
+                id="workflow:number_of_workflows",
+                type=AnalyticsTileType.KPI.value.key,
+                name="Active workflows",
+                description="Active workflows, with the total number of workflows shown below.",
+                icon="fa-solid fa-robot",
+                query="""
+                    SELECT
+                        COALESCE(SUM(CASE WHEN active THEN 1 ELSE 0 END), 0) AS active_count,
+                        COUNT(*) AS total_count
+                    FROM bloomerp_workflow
+                """,
+                fields={
+                    "value": [
+                        FieldConfig(
+                            name="active_count",
+                            opts={
+                                "aggregator": "FIRST",
+                                "formatter": "INTEGER",
+                            },
+                        )
+                    ],
+                    "sub_value": [
+                        FieldConfig(
+                            name="total_count",
+                            opts={
+                                "aggregator": "FIRST",
+                                "formatter": "INTEGER",
+                                "suffix": " total",
+                            },
+                        )
+                    ],
+                },
+            ),
+            AnalyticsTileConfig(
+                id="workflow:configuration_attention",
+                type=AnalyticsTileType.TABLE.value.key,
+                name="Workflow configuration attention",
+                description="Inactive workflows, workflows without a trigger, and workflows that have never run.",
+                icon="fa-solid fa-screwdriver-wrench",
+                query="""
+                    SELECT
+                        workflow.id AS workflow_id,
+                        workflow.name AS workflow_name,
+                        CASE
+                            WHEN NOT workflow.active THEN 'Inactive'
+                            WHEN NOT EXISTS (
+                                SELECT 1
+                                FROM bloomerp_workflow_node node
+                                WHERE node.workflow_id = workflow.id
+                                  AND node.type = 'TRIGGER'
+                            ) THEN 'Missing trigger'
+                            ELSE 'Never run'
+                        END AS issue
+                    FROM bloomerp_workflow workflow
+                    WHERE NOT workflow.active
+                       OR NOT EXISTS (
+                            SELECT 1
+                            FROM bloomerp_workflow_node node
+                            WHERE node.workflow_id = workflow.id
+                              AND node.type = 'TRIGGER'
+                       )
+                       OR NOT EXISTS (
+                            SELECT 1
+                            FROM bloomerp_workflow_run run
+                            WHERE run.workflow_id = workflow.id
+                       )
+                    ORDER BY workflow.name
+                """,
+                fields={
+                    "columns": [
+                        FieldConfig(
+                            name="workflow_name",
+                            opts={
+                                "label": "Workflow",
+                                "advanced_formatting": """<a href="{% url 'workflows_detail_overview' pk=var_workflow_id %}">{{ var_workflow_name }}</a>""",
+                            },
+                        ),
+                        FieldConfig(name="issue", opts={"label": "Issue"}),
+                    ]
+                },
+                opts={"page_size": 10},
+            ),
+        ]
     )
     
     name = models.CharField(

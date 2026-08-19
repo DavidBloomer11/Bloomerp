@@ -1,15 +1,79 @@
+import json
 import inspect
 from typing import Any, Callable, Literal, Optional, Type
 
 from django.http import HttpRequest, HttpResponse
 from bloomerp.config.definition import BloomerpConfig
-from bloomerp.models.base_bloomerp_model import FieldLayout
-from bloomerp.field_types import Lookup
-from pydantic import BaseModel, Field, field_validator
+from bloomerp.field_types.lookups import Lookup
+from bloomerp.workspaces.base import BaseTileConfig
+from pydantic import BaseModel, Field, SerializeAsAny, field_validator
 from django.conf import settings
 from django.db.models import Model
 
-from bloomerp.workspaces.base import BaseTileConfig
+class LayoutItem(BaseModel):
+    id: int | str
+    colspan: int = 1
+    config: dict = Field(default_factory=dict)
+
+    icon: str | None = None
+    label: Optional[str] = None
+    is_visible: bool = True
+    content: Optional[str] = None
+    component_name: Optional[str] = None
+    border: bool = False
+    edit_url: Optional[str] = None
+    search_keywords: Optional[str] = None
+    extra_attrs: Optional[dict] = Field(default_factory=dict)
+
+    @property
+    def config_json(self) -> str:
+        return json.dumps(self.config)
+
+    def set_content(self, content: str):
+        self.content = content
+
+
+class LayoutRow(BaseModel):
+    columns: int
+    items: list[LayoutItem] = Field(default_factory=list)
+    title: Optional[str] = None
+
+
+class BaseLayout(BaseModel):
+    """Base layout class for defining layouts in Bloomerp.
+
+    This class serves as a base for other layout classes, providing common
+    attributes and methods that can be extended or overridden by subclasses.
+    """
+
+    name: str = "Default"
+    is_default: bool = True
+    rows: list[LayoutRow] = Field(default_factory=list)
+
+
+class FieldLayout(BaseLayout):
+    pass
+
+class WorkspaceLayout(BaseLayout):
+    pass
+
+
+def validate_declarative_tile_configs(
+    tiles: list[BaseTileConfig],
+    *,
+    owner: str,
+) -> list[BaseTileConfig]:
+    """Require stable, unique IDs for tiles declared in configuration."""
+    seen_ids: set[str] = set()
+    for tile in tiles:
+        tile_id = (tile.id or "").strip()
+        if not tile_id:
+            raise ValueError(f"Every tile declared on {owner} must have an id.")
+        if tile_id in seen_ids:
+            raise ValueError(f"Duplicate tile id '{tile_id}' declared on {owner}.")
+        tile.id = tile_id
+        seen_ids.add(tile_id)
+    return tiles
 
 class ApiFilterRule(BaseModel):
     field: str
@@ -268,7 +332,7 @@ class ObjectModalAction(BaseModel):
     modal_title:Optional[str] = ""
 
     modal_size:Literal["sm", "md", "lg", "xl", "full"] = "md"
-        
+
 class ModelViewSettings(BaseModel):
     """
     Optional settings for on the model level
@@ -288,6 +352,7 @@ class BloomerpModelConfig(BaseModel):
     Settings are:
         - module: the canonical module to which this model belongs.
         - layout: a layout object defining how the default CRUD layout for users is.
+        - tiles: reusable tile configurations associated with this model.
         - string_search_fields: optional field paths used by the shared string search service.
 
     Usage
@@ -304,6 +369,8 @@ class BloomerpModelConfig(BaseModel):
     module: str | type | None = None
 
     layout: Optional[FieldLayout] = None
+
+    tiles: list[SerializeAsAny[BaseTileConfig]] = Field(default_factory=list)
 
     allow_string_search: bool = True
 
@@ -322,6 +389,17 @@ class BloomerpModelConfig(BaseModel):
     model_view_settings : Optional[ModelViewSettings] = None 
     
     object_actions : Optional[list[ObjectAction | ObjectHTML | ObjectModalAction]] = None
+
+    @field_validator("tiles")
+    @classmethod
+    def validate_tiles(
+        cls,
+        value: list[BaseTileConfig],
+    ) -> list[BaseTileConfig]:
+        return validate_declarative_tile_configs(
+            value,
+            owner=cls.__name__,
+        )
     
     
     

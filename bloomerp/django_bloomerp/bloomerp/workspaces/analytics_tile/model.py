@@ -8,7 +8,7 @@ from django.forms import BooleanField, CharField, ChoiceField, Field, Form
 from django.http import HttpRequest, QueryDict
 from django.utils.translation import gettext_lazy as _
 from enum import Enum
-from pydantic import BaseModel, Field as PydanticField
+from pydantic import BaseModel, Field as PydanticField, field_validator
 import re
 
 from bloomerp.services.sql_services import DatabaseTable
@@ -432,7 +432,28 @@ class AnalyticsTileConfig(BaseTileConfig):
     type: str  # Must be one of the supported types
     fields: dict[str, list[FieldConfig]] = PydanticField(default_factory=dict)
     opts: dict = PydanticField(default_factory=dict)
-    filters: dict[str, AnalyticsTileFilter] = PydanticField(default_factory=dict)
+    filters: list[AnalyticsTileFilter] = PydanticField(default_factory=list)
+
+    @field_validator("filters", mode="before")
+    @classmethod
+    def normalize_filters(cls, value):
+        """Accept legacy field-keyed schemas while storing filters as a list."""
+        if value is None:
+            return []
+        if isinstance(value, dict):
+            return list(value.values())
+        return value
+
+    @field_validator("filters")
+    @classmethod
+    def validate_unique_filter_fields(
+        cls,
+        value: list[AnalyticsTileFilter],
+    ) -> list[AnalyticsTileFilter]:
+        fields = [filter_config.field for filter_config in value]
+        if len(fields) != len(set(fields)):
+            raise ValueError("Analytics tile filter fields must be unique.")
+        return value
     
     @classmethod
     def get_default(cls, *args, **kwargs) -> Self:
@@ -448,7 +469,7 @@ class AnalyticsTileConfig(BaseTileConfig):
             type=AnalyticsTileType.KPI.value.key,
             fields={},
             opts={},
-            filters={},
+            filters=[],
         )
     
     @classmethod
@@ -645,15 +666,21 @@ class AddFilterHandler(TileOperationHandler):
 
     @staticmethod
     def handle(config: AnalyticsTileConfig, data: AddFilterOperation):
-        filters = dict(config.filters or {})
-        if data.field in filters:
+        filters = list(config.filters or [])
+        if any(filter_config.field == data.field for filter_config in filters):
             return TileOperationHandlerRespone(
                 config,
                 _("Filter already exists"),
                 "warning"
             )
         
-        filters[data.field] = AnalyticsTileFilter(field=data.field, type=data.type, is_variable=False)
+        filters.append(
+            AnalyticsTileFilter(
+                field=data.field,
+                type=data.type,
+                is_variable=False,
+            )
+        )
         config.filters = filters
 
         return TileOperationHandlerRespone(
@@ -673,11 +700,11 @@ class RemoveFilterHandler(TileOperationHandler):
 
     @staticmethod
     def handle(config: AnalyticsTileConfig, data: RemoveFilterOperation):
-        filters = dict(config.filters or {})
-        if data.field in filters:
-            del filters[data.field]
-
-        config.filters = filters
+        config.filters = [
+            filter_config
+            for filter_config in config.filters
+            if filter_config.field != data.field
+        ]
 
         return TileOperationHandlerRespone(
             config,
@@ -802,7 +829,7 @@ def get_filtered_query(config:AnalyticsTileConfig, params:QueryDict) -> str:
     Returns:
         str: the modified query
     """
-    filters = config.filters or {}
+    filters = config.filters or []
     if not filters:
         return config.query
 
@@ -851,10 +878,11 @@ def _strip_trailing_query_semicolon(query: str) -> str:
 
 
 def _resolve_filter_lookup(
-    filters: dict[str, AnalyticsTileFilter],
+    filters: list[AnalyticsTileFilter],
     param_key: str,
 ) -> tuple[AnalyticsTileFilter | None, Lookup | None]:
-    for filter_key, filter_config in filters.items():
+    for filter_config in filters:
+        filter_key = filter_config.field
         if param_key == filter_key:
             return filter_config, Lookup.EQUALS
 
