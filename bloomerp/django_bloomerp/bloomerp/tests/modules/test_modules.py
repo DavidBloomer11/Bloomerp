@@ -72,6 +72,50 @@ class AutomationDashboardQueryTests(TransactionTestCase):
 
 
 class ModuleWorkspaceDefinitionTests(SimpleTestCase):
+    def test_users_dashboard_provides_simple_management_shortcuts(self):
+        registry = ModuleRegistry()
+        registry.register(UsersModule.to_config())
+
+        registry.validate_workspace_tile_references()
+
+        module = registry.get("users")
+        workspace = module.workspaces[0]
+        workspace_tile_ids = [
+            str(item.id)
+            for row in workspace.rows
+            for item in row.items
+        ]
+        resolved_tiles = {
+            tile_id: registry.get_tile_for_module("users", tile_id)
+            for tile_id in workspace_tile_ids
+        }
+
+        self.assertEqual(workspace.name, "Users & Permissions overview")
+        self.assertTrue(workspace.is_default)
+        self.assertEqual([row.title for row in workspace.rows], ["Quick access"])
+        self.assertEqual(
+            workspace_tile_ids,
+            [
+                "users:user-management",
+                "users:permission-management",
+            ],
+        )
+        self.assertTrue(all(resolved_tiles.values()))
+        self.assertEqual(
+            [
+                link.url_name
+                for link in resolved_tiles["users:user-management"].links
+            ],
+            ["users_model", "users_add"],
+        )
+        self.assertEqual(
+            [
+                link.url_name
+                for link in resolved_tiles["users:permission-management"].links
+            ],
+            ["groups_model", "access_control_policies_model"],
+        )
+
     def test_automation_dashboard_resolves_operational_tiles_and_uses_safe_queries(self):
         registry = ModuleRegistry()
         registry.register(AutomationModule.to_config())
