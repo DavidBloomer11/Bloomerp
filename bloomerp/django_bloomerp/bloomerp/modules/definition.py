@@ -139,11 +139,14 @@ class ModuleRegistry:
     def __init__(self):
         self.items: dict[str, ModuleConfig] = {}
         self._module_models: dict[str, dict[str, type[Model]]] = {}
+        self._declared_route_paths: dict[int, str] = {}
 
     def register(self, module: ModuleConfig) -> None:
         module_key = module.full_id or module.id
         if module_key in self.items:
             logger.warning("Module with ID '%s' already exists. Overwriting.", module_key)
+        if module.route_path:
+            self._declared_route_paths[id(module)] = module.route_path.strip("/")
         self.items[module_key] = module
 
     def get(self, module_id: str | None) -> ModuleConfig | None:
@@ -339,6 +342,7 @@ class ModuleRegistry:
     def clear(self) -> None:
         self.items.clear()
         self._module_models.clear()
+        self._declared_route_paths.clear()
 
     def __len__(self) -> int:
         return len(self.items)
@@ -429,23 +433,37 @@ class ModuleRegistry:
                 f"{module.parent_module_id}.{module.id}" if module.parent_module_id else module.id
             )
 
+        self.items = {
+            module.full_id or module.id: module
+            for module in self.items.values()
+        }
+
         for module in self.items.values():
             lineage = self.get_lineage(module.full_id or module.id)
             if not lineage:
-                module.route_path = module.id.lower()
+                module.route_path = (
+                    self._declared_route_paths.get(id(module))
+                    or module.id.lower()
+                )
                 module.root_module_id = module.full_id or module.id
                 module.depth = 0
                 continue
 
-            module.route_path = "/".join(item.id.lower() for item in lineage)
+            route_path = ""
+            for lineage_module in lineage:
+                declared_path = self._declared_route_paths.get(id(lineage_module))
+                if declared_path:
+                    route_path = declared_path
+                else:
+                    route_path = "/".join(
+                        part
+                        for part in (route_path, lineage_module.id.lower())
+                        if part
+                    )
+
+            module.route_path = route_path
             module.root_module_id = lineage[0].full_id or lineage[0].id
             module.depth = len(lineage) - 1
-
-        rebuilt_items: dict[str, ModuleConfig] = {}
-        for module in self.items.values():
-            module_key = module.full_id or module.id
-            rebuilt_items[module_key] = module
-        self.items = rebuilt_items
 
 
 module_registry = ModuleRegistry()

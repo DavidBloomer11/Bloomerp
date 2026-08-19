@@ -9,6 +9,7 @@ class TodosAndInitiatives(BloomerpModule):
     code = "todos"
     description = "Manage todos and initiatives within the ERP system."
     icon = "fa fa-tasks"
+    route_path = "todos-and-initiatives"
 
     tiles = [
         LinkTileConfig(
@@ -24,7 +25,7 @@ class TodosAndInitiatives(BloomerpModule):
                 ),
                 Link(
                     name="My todo's",
-                    url="/todos_and_initiatives/todos?assigned_to={{current_user.id}}"
+                    url="/todos-and-initiatives/todos?assigned_to={{current_user.id}}",
                 ),
                 Link(
                     name="Create a todo",

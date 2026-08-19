@@ -1,4 +1,8 @@
+from types import SimpleNamespace
+
+from django.template.loader import render_to_string
 from django.test import SimpleTestCase, TransactionTestCase
+from django.urls import reverse
 from pydantic import ValidationError
 
 from bloomerp.tests.utils.dynamic_models import create_test_models
@@ -414,6 +418,71 @@ class TestModules(TransactionTestCase):
         self.assertEqual(module.id, "plain")
         self.assertEqual(module.name, "Plain")
         self.assertEqual(module.code, "plain")
+
+    def test_declared_route_path_survives_hierarchy_rebuild(self):
+        class TodosModule(BloomerpModule):
+            id = "todos_and_initiatives"
+            name = "Todos & Initiatives"
+            code = "todos"
+            route_path = "todos-and-initiatives"
+
+        registry = ModuleRegistry()
+        registry.register(TodosModule.to_config())
+        registry._rebuild_hierarchy_metadata()
+
+        module = registry.get("todos_and_initiatives")
+
+        self.assertEqual(module.route_path, "todos-and-initiatives")
+
+    def test_descendant_route_uses_declared_parent_path(self):
+        class OperationsModule(BloomerpModule):
+            id = "operations"
+            name = "Operations"
+            route_path = "business-operations"
+
+        class PlanningModule(BloomerpModule):
+            id = "planning"
+            name = "Planning"
+            parent_module_id = "operations"
+
+        registry = ModuleRegistry()
+        registry.register(OperationsModule.to_config())
+        registry.register(PlanningModule.to_config())
+        registry._rebuild_hierarchy_metadata()
+
+        self.assertEqual(
+            registry.get("operations.planning").route_path,
+            "business-operations/planning",
+        )
+
+    def test_home_module_link_uses_resolved_route_path(self):
+        html = render_to_string(
+            "views/workspaces/bloomerp_home_view.html",
+            {
+                "modules": [
+                    SimpleNamespace(
+                        id="todos_and_initiatives",
+                        route_path="todos-and-initiatives",
+                        name="Todos & Initiatives",
+                        description="Manage todos and initiatives.",
+                        icon="fa-tasks",
+                    )
+                ]
+            },
+        )
+
+        self.assertIn('hx-get="/todos-and-initiatives/"', html)
+        self.assertNotIn('hx-get="/todos_and_initiatives/"', html)
+
+    def test_generated_model_routes_use_declared_module_path(self):
+        self.assertEqual(
+            reverse("todos_model"),
+            "/todos-and-initiatives/todos/",
+        )
+        self.assertEqual(
+            reverse("initiatives_model"),
+            "/todos-and-initiatives/initiatives/",
+        )
 
     def test_bloomerp_model_config_accepts_module_class(self):
         """Model config can reference a module authoring class directly."""

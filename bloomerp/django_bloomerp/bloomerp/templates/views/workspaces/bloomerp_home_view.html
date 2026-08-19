@@ -9,7 +9,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-8 justify-center">
             {% for module in modules %}
                 <a
-                    hx-get="/{{ module.id }}/"
+                    hx-get="/{{ module.route_path|default:module.id }}/"
                     hx-target="#main-content"
                     hx-push-url="true"
                     hx-swap="innerHTML"
