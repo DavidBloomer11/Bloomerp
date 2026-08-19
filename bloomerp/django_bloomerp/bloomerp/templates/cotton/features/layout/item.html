@@ -1,5 +1,5 @@
 <div
-    class="layout-item group relative flex flex-col gap-1{% if item.border %} layout-item--bordered{% endif %}{% if layout_edit_mode %} layout-item--editing{% endif %}{% if non_required_fields_visible|default:'true'|lower != 'true' and not is_required and not errors %} hidden{% endif %}"
+    class="layout-item group relative flex min-w-0 flex-col gap-1{% if item.border %} layout-item--bordered{% endif %}{% if layout_edit_mode %} layout-item--editing{% endif %}{% if non_required_fields_visible|default:'true'|lower != 'true' and not is_required and not errors %} hidden{% endif %}"
 
     id="layout-field-{{ item.id }}"
 
@@ -74,7 +74,7 @@
         <!--End controls-->
     </div>
 
-    <div class="layout-item__body" data-layout-item-body>
+    <div class="layout-item__body min-w-0" data-layout-item-body>
         {{ item.content | safe }}
     </div>
 

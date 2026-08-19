@@ -10,6 +10,11 @@ from django.utils.translation import gettext_lazy as _, gettext_noop
 from bloomerp.form_fields.behavior import BehaviorAction, BehaviorConfig, BehaviorRule
 from bloomerp.models.base_bloomerp_model import BloomerpModel, FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.definition import BloomerpModelConfig
+from bloomerp.workspaces.analytics_tile.model import (
+    AnalyticsTileConfig,
+    AnalyticsTileType,
+    FieldConfig,
+)
 
 
 class InitiativeStatus(models.TextChoices):
@@ -26,7 +31,7 @@ class Initiative(BloomerpModel):
     """
 
     bloomerp_config = BloomerpModelConfig(
-        module="misc",
+        module="todos_and_initiatives",
         layout=FieldLayout(
             rows=[
                 LayoutRow(
@@ -79,6 +84,41 @@ class Initiative(BloomerpModel):
             ]
         ),
         string_search_fields=["name", "description"],
+        tiles=[
+            AnalyticsTileConfig(
+                type=AnalyticsTileType.PIE_CHART.value.key,
+                id="initiatives:status_distribution",
+                name="Initiatives by status",
+                description="Distribution of visible initiatives across states.",
+                query="""
+                    SELECT
+                        CASE status
+                            WHEN 'backlog' THEN 'Backlog'
+                            WHEN 'in_progress' THEN 'In progress'
+                            WHEN 'on_hold' THEN 'On hold'
+                            WHEN 'completed' THEN 'Completed'
+                            WHEN 'canceled' THEN 'Canceled'
+                            ELSE status
+                        END AS status_label,
+                        1 AS initiative_count
+                    FROM bloomerp_initiative
+                """,
+                icon="fa-solid fa-bullseye",
+                fields={
+                    "labels": [FieldConfig(name="status_label")],
+                    "values": [
+                        FieldConfig(
+                            name="initiative_count",
+                            opts={
+                                "label": "Initiatives",
+                                "formatter": "INTEGER",
+                            },
+                        )
+                    ],
+                },
+                opts={"legend_position": "right", "show_legend": True},
+            )
+        ],
     )
 
     class Meta(BloomerpModel.Meta):

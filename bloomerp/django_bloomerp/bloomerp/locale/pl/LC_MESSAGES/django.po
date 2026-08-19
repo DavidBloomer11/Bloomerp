@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-19 09:17+0000\n"
+"POT-Creation-Date: 2026-08-19 14:13+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pl\n"
@@ -121,7 +121,7 @@ msgstr "Opis zasad kontroli dostępu."
 msgid "A descriptive name for the edge."
 msgstr "Opisowa nazwa krawędzi."
 
-#: bloomerp.initiative.description models/project_management/initiative.py:107
+#: bloomerp.initiative.description models/project_management/initiative.py:147
 msgid "A detailed description of the initiative"
 msgstr "Nazwa inicjatywy"
 
@@ -253,7 +253,7 @@ msgstr "Identyfikator akcji"
 msgid "Actions"
 msgstr "Akcje"
 
-#: bloomerp.emailaccount.status bloomerp.workflow.active models/automation/workflow.py:85
+#: bloomerp.emailaccount.status bloomerp.workflow.active models/automation/workflow.py:171
 #: models/communication/email_account.py:28
 msgid "Active"
 msgstr "Aktywne"
@@ -402,12 +402,12 @@ msgstr "Pola aplikacji"
 msgid "Application Fields"
 msgstr "Pola aplikacji"
 
-#: models/automation/workflow_run.py:54
+#: models/automation/workflow_run.py:134
 msgid "Approve"
 msgstr "Zatwierdź"
 
 # | msgid "Open workflow run"
-#: models/automation/workflow_run.py:62
+#: models/automation/workflow_run.py:142
 msgid "Approve workflow continuation"
 msgstr "Otwórz przebieg przepływu pracy"
 
@@ -424,7 +424,7 @@ msgstr "Pole tablicowe"
 msgid "Ascending"
 msgstr "Sortuj rosnąco"
 
-#: bloomerp.todo.assigned_to models/project_management/todo.py:130
+#: bloomerp.todo.assigned_to models/project_management/todo.py:342
 msgid "Assigned To"
 msgstr "Przypisano do"
 
@@ -440,7 +440,7 @@ msgstr "Załączniki"
 msgid "Auto Field"
 msgstr "Pole automatyczne"
 
-#: bloomerp.tile.auto_generated models/workspaces/tile.py:46
+#: bloomerp.tile.auto_generated models/workspaces/tile.py:54
 msgid "Auto Generated"
 msgstr "Wygenerowane automatycznie"
 
@@ -461,7 +461,6 @@ msgctxt "bloomerp:module:name"
 msgid "Automation"
 msgstr "Automatyzacja"
 
-#: route:bloomerp_home_view
 msgctxt "bloomerp:route:description"
 msgid "Available Modules"
 msgstr "Dostępne moduły"
@@ -489,8 +488,8 @@ msgstr "Średnia"
 msgid "Back"
 msgstr "Wstecz"
 
-#: bloomerp.initiative.status bloomerp.todo.status models/project_management/initiative.py:16
-#: models/project_management/todo.py:36
+#: bloomerp.initiative.status bloomerp.todo.status models/project_management/initiative.py:21
+#: models/project_management/todo.py:41
 msgid "Backlog"
 msgstr "Backlog"
 
@@ -553,12 +552,12 @@ msgid "Bloomerp File Field"
 msgstr "Pole pliku Bloomerp"
 
 # | msgid "Bloomerp File Field"
-#: models/base_bloomerp_model.py:61
+#: models/base_bloomerp_model.py:28
 msgid "Bloomerp Model"
 msgstr "Pole pliku Bloomerp"
 
 # | msgid "Bloomerp File Field"
-#: models/base_bloomerp_model.py:62
+#: models/base_bloomerp_model.py:29
 msgid "Bloomerp Models"
 msgstr "Pole pliku Bloomerp"
 
@@ -598,7 +597,6 @@ msgstr "Dolny margines nagłówka w calach."
 msgid "Build tile"
 msgstr "Utwórz kafelek"
 
-#: route:workflows_detail_builder
 msgctxt "bloomerp:route:name"
 msgid "Builder"
 msgstr "Kreator"
@@ -607,12 +605,10 @@ msgstr "Kreator"
 msgid "Bulk"
 msgstr "Masowe"
 
-#: route:log_entries_bulk_upload
 msgctxt "bloomerp:route:name"
 msgid "Bulk Upload {model}"
 msgstr "Masowe przesyłanie {model}"
 
-#: route:log_entries_bulk_upload
 msgctxt "bloomerp:route:description"
 msgid "Bulk upload objects from {model}"
 msgstr "Masowe przesyłanie obiektów z {model}"
@@ -629,12 +625,12 @@ msgstr "Oblicz wiersz sum podsumowujący na podstawie tej strony lub całego prz
 msgid "Calendar"
 msgstr "Kalendarz"
 
-#: bloomerp.initiative.status models/project_management/initiative.py:20
+#: bloomerp.initiative.status models/project_management/initiative.py:25
 msgid "Canceled"
 msgstr "Anulowano"
 
 #: bloomerp.todo.status bloomerp.workflowrunstep.status models/automation/workflow_run_step.py:10
-#: models/project_management/todo.py:40
+#: models/project_management/todo.py:45
 msgid "Cancelled"
 msgstr "Anulowano"
 
@@ -776,12 +772,12 @@ msgid "Comments"
 msgstr "Komentarze"
 
 #: bloomerp.initiative.status bloomerp.todo.status bloomerp.workflowrunstep.status
-#: models/automation/workflow_run_step.py:8 models/project_management/initiative.py:19
-#: models/project_management/todo.py:39 templates/inbox_items/workflow_run.html:14
+#: models/automation/workflow_run_step.py:8 models/project_management/initiative.py:24
+#: models/project_management/todo.py:44 templates/inbox_items/workflow_run.html:14
 msgid "Completed"
 msgstr "Ukończono"
 
-#: bloomerp.initiative.completed_at models/project_management/initiative.py:123
+#: bloomerp.initiative.completed_at models/project_management/initiative.py:163
 msgid "Completed At"
 msgstr "Ukończono o"
 
@@ -790,7 +786,7 @@ msgid "Config"
 msgstr "Konfiguracja"
 
 # | msgid "Configure account"
-#: models/automation/workflow.py:44
+#: models/automation/workflow.py:45
 msgid "Configuration"
 msgstr "Skonfiguruj konto"
 
@@ -807,7 +803,7 @@ msgid "Configure the details of your tile and preview what it looks like."
 msgstr "Skonfiguruj szczegóły kafelka i zobacz podgląd jego wyglądu."
 
 #: bloomerp.comment.content bloomerp.todo.content models/communication/channel_message.py:18
-#: models/communication/comment.py:36 models/project_management/todo.py:171
+#: models/communication/comment.py:36 models/project_management/todo.py:382
 msgid "Content"
 msgstr "Treść"
 
@@ -832,7 +828,7 @@ msgstr "Obiekt treści"
 #: bloomerp.userobjectlayoutpreference.content_type models/access_control/field_policy.py:29
 #: models/access_control/row_policy.py:21 models/activity_log.py:60 models/application_field.py:39
 #: models/communication/comment.py:25 models/communication/mention.py:24 models/files/file.py:54
-#: models/files/file_folder.py:38 models/forms/form.py:78 models/project_management/todo.py:208
+#: models/files/file_folder.py:38 models/forms/form.py:78 models/project_management/todo.py:419
 #: models/users/base_view_preference.py:25 models/users/bookmark.py:26
 #: models/users/user_detail_view_tabs_preference.py:56
 msgid "Content Type"
@@ -875,18 +871,10 @@ msgstr "Kopiuj nazwę gałęzi"
 msgid "Copy first value"
 msgstr "Kopiuj pierwszą wartość"
 
-msgctxt "bloomerp:module:name"
-msgid "Core"
-msgstr "Rdzeń"
-
 # | msgid "Details"
 #: models/document_templates/document_template.py:104 models/forms/form.py:26
 msgid "Core Details"
 msgstr "Szczegóły"
-
-msgctxt "bloomerp:module:description"
-msgid "Core functionalities and features of the ERP system."
-msgstr "Podstawowe funkcje i możliwości systemu ERP."
 
 #: views/access_control/manage_permissions.py:400
 msgid "Could not save policy"
@@ -902,17 +890,14 @@ msgstr "Konto"
 msgid "Create"
 msgstr "Utwórz"
 
-#: route:api_keys_add
 msgctxt "bloomerp:route:name"
 msgid "Create API Key"
 msgstr "Utwórz klucz API"
 
-#: route:log_entries_create_policy_for_log_entry
 msgctxt "bloomerp:route:name"
 msgid "Create Policy for {model}"
 msgstr "Utwórz politykę dla {model}"
 
-#: route:create_tile
 msgctxt "bloomerp:route:name"
 msgid "Create Tile"
 msgstr "Utwórz kafelek"
@@ -921,27 +906,22 @@ msgstr "Utwórz kafelek"
 msgid "Create Todo"
 msgstr "Utwórz zadanie"
 
-#: route:log_entries_detail_create_user_for_object
 msgctxt "bloomerp:route:name"
 msgid "Create User for Object"
 msgstr "Utwórz użytkownika dla obiektu"
 
-#: route:email_accounts_add
 msgctxt "bloomerp:route:description"
 msgid "Create a new email account"
 msgstr "Utwórz nowe konto e-mail"
 
-#: route:users_add
 msgctxt "bloomerp:route:description"
 msgid "Create a new object from User"
 msgstr "Utwórz nowy obiekt na podstawie użytkownika"
 
-#: route:workspaces_add
 msgctxt "bloomerp:route:description"
 msgid "Create a new object from {model}"
 msgstr "Utwórz nowy obiekt na podstawie {model}"
 
-#: route:create_tile
 msgctxt "bloomerp:route:description"
 msgid "Create a new tile for the workspace"
 msgstr "Utwórz nowy kafelek dla obszaru roboczego"
@@ -950,7 +930,6 @@ msgstr "Utwórz nowy kafelek dla obszaru roboczego"
 msgid "Create account"
 msgstr "Utwórz konto"
 
-#: route:log_entries_create_policy_for_log_entry
 msgctxt "bloomerp:route:description"
 msgid "Create an access control policies for {model}"
 msgstr "Utwórz zasady kontroli dostępu dla {model}"
@@ -971,12 +950,10 @@ msgstr "Utwórz wiersze wyświetlane po otwarciu formularza."
 msgid "Create tile"
 msgstr "Utwórz kafelek"
 
-#: route:users_add
 msgctxt "bloomerp:route:name"
 msgid "Create user"
 msgstr "Utwórz użytkownika"
 
-#: route:workspaces_add
 msgctxt "bloomerp:route:name"
 msgid "Create {model}"
 msgstr "Utwórz {model}"
@@ -1041,7 +1018,7 @@ msgstr "Widok danych"
 msgid "Data view updated"
 msgstr "Widok danych zaktualizowany"
 
-#: bloomerp.todo.datetime_completed models/project_management/todo.py:178
+#: bloomerp.todo.datetime_completed models/project_management/todo.py:389
 msgid "Date Completed"
 msgstr "Data i godzina ukończenia"
 
@@ -1147,7 +1124,6 @@ msgstr "Usuń"
 msgid "Delete %(delete_count)s object(s)"
 msgstr "Usuń %(delete_count)s obiekt(ów)"
 
-#: route:log_entries_detail_delete
 msgctxt "bloomerp:route:description"
 msgid "Delete an object from {model}"
 msgstr "Usuń obiekt z {model}"
@@ -1156,7 +1132,6 @@ msgstr "Usuń obiekt z {model}"
 msgid "Delete value"
 msgstr "Usuń wartość"
 
-#: route:log_entries_detail_delete
 msgctxt "bloomerp:route:name"
 msgid "Delete {model}"
 msgstr "Usuń {model}"
@@ -1176,11 +1151,11 @@ msgstr "Sortuj malejąco"
 
 #: bloomerp.form.description bloomerp.initiative.description bloomerp.policy.description
 #: bloomerp.tile.description models/access_control/policy.py:75 models/forms/form.py:73
-#: models/project_management/initiative.py:106 models/workspaces/tile.py:31
+#: models/project_management/initiative.py:146 models/workspaces/tile.py:38
 msgid "Description"
 msgstr "Opis"
 
-#: bloomerp.tile.description models/workspaces/tile.py:30
+#: bloomerp.tile.description models/workspaces/tile.py:37
 msgid "Description of the widget"
 msgstr "Opis widżetu"
 
@@ -1213,18 +1188,16 @@ msgstr "Preferencja wyświetlania paska bocznego szczegółów"
 msgid "Detailed run logging is still available."
 msgstr "Szczegółowe rejestrowanie przebiegu jest nadal dostępne."
 
-#: models/automation/workflow.py:37 models/forms/form_submission.py:38
-#: models/project_management/initiative.py:33 models/project_management/todo.py:70
+#: models/automation/workflow.py:38 models/forms/form_submission.py:38
+#: models/project_management/initiative.py:38 models/project_management/todo.py:92
 #: services/detail_view_services.py:408
 msgid "Details"
 msgstr "Szczegóły"
 
-#: route:log_entries_detail_overview
 msgctxt "bloomerp:route:name"
 msgid "Details"
 msgstr "Szczegóły"
 
-#: route:log_entries_detail_document_templates
 msgctxt "bloomerp:route:description"
 msgid "Different document templates"
 msgstr "Różne szablony dokumentów"
@@ -1329,7 +1302,6 @@ msgstr "Style szablonów dokumentów"
 msgid "Document Templates"
 msgstr "Szablony dokumentów"
 
-#: route:log_entries_detail_document_templates
 msgctxt "bloomerp:route:name"
 msgid "Document templates"
 msgstr "Szablony dokumentów"
@@ -1338,7 +1310,6 @@ msgstr "Szablony dokumentów"
 msgid "Download"
 msgstr "Pobierz"
 
-#: route:misc_module_download_sdk
 msgctxt "bloomerp:route:name"
 msgid "Download SDK"
 msgstr "Pobierz SDK"
@@ -1360,7 +1331,7 @@ msgstr "Upuść tutaj niezaplanowany rekord."
 msgid "Drop fields here"
 msgstr "Upuść pola tutaj"
 
-#: bloomerp.todo.status models/project_management/todo.py:41
+#: bloomerp.todo.status models/project_management/todo.py:46
 msgid "Duplicate"
 msgstr "Duplikat"
 
@@ -1373,12 +1344,11 @@ msgstr "Pole czasu trwania"
 msgid "Edit"
 msgstr "Edytuj"
 
-#: route:document_templates_detail_builder
 msgctxt "bloomerp:route:description"
 msgid "Edit a document template with the builder"
 msgstr "Edytuj szablon dokumentu za pomocą kreatora"
 
-#: bloomerp.todo.effort models/project_management/todo.py:161
+#: bloomerp.todo.effort models/project_management/todo.py:372
 msgid "Effort"
 msgstr "Nakład pracy"
 
@@ -1423,7 +1393,7 @@ msgstr "Weryfikacja adresu e-mail jest wymagana, zanim to konto uzyska dostęp d
 msgid "Emails"
 msgstr "E-maile"
 
-#: bloomerp.workflow.enable_logging models/automation/workflow.py:90
+#: bloomerp.workflow.enable_logging models/automation/workflow.py:176
 msgid "Enable Logging"
 msgstr "Włącz rejestrowanie"
 
@@ -1520,11 +1490,11 @@ msgstr "Typ pola"
 msgid "Field based access control"
 msgstr "Kontrola dostępu oparta na polach"
 
-#: workspaces/analytics_tile/model.py:557
+#: workspaces/analytics_tile/model.py:578
 msgid "Field does not exist"
 msgstr "Pole nie istnieje"
 
-#: workspaces/analytics_tile/model.py:552
+#: workspaces/analytics_tile/model.py:573
 msgid "Field options updated"
 msgstr "Zaktualizowano opcje pola"
 
@@ -1536,15 +1506,15 @@ msgstr "Zasady pól mogą używać tylko uprawnień wybranych w kroku 1."
 msgid "Field policy mismatch"
 msgstr "Niezgodność zasad pola"
 
-#: workspaces/analytics_tile/model.py:633
+#: workspaces/analytics_tile/model.py:654
 msgid "Field removed"
 msgstr "Usunięto pole"
 
-#: workspaces/analytics_tile/model.py:583
+#: workspaces/analytics_tile/model.py:604
 msgid "Field slot does not exist"
 msgstr "Gniazdo pola nie istnieje"
 
-#: workspaces/analytics_tile/model.py:605
+#: workspaces/analytics_tile/model.py:626
 msgid "Field updated"
 msgstr "Zaktualizowano pole"
 
@@ -1589,12 +1559,10 @@ msgstr "Foldery plików"
 msgid "Files"
 msgstr "Pliki"
 
-#: route:log_entries_detail_files
 msgctxt "bloomerp:route:name"
 msgid "Files"
 msgstr "Pliki"
 
-#: route:log_entries_detail_files
 msgctxt "bloomerp:route:description"
 msgid "Files for object for {model} model"
 msgstr "Pliki obiektu dla modelu {model}"
@@ -1603,15 +1571,15 @@ msgstr "Pliki obiektu dla modelu {model}"
 msgid "Filter"
 msgstr "Filtr"
 
-#: workspaces/analytics_tile/model.py:661
+#: workspaces/analytics_tile/model.py:688
 msgid "Filter added"
 msgstr "Dodano filtr"
 
-#: workspaces/analytics_tile/model.py:652
+#: workspaces/analytics_tile/model.py:673
 msgid "Filter already exists"
 msgstr "Filtr już istnieje"
 
-#: workspaces/analytics_tile/model.py:684
+#: workspaces/analytics_tile/model.py:711
 msgid "Filter removed"
 msgstr "Usunięto filtr"
 
@@ -1633,7 +1601,7 @@ msgstr "Przepływ"
 msgid "Folder"
 msgstr "Folder"
 
-#: workspaces/links_tile/model.py:130
+#: workspaces/links_tile/model.py:131
 msgid "Folder added"
 msgstr "Dodano folder"
 
@@ -1662,7 +1630,6 @@ msgstr "Nie pamiętasz hasła?"
 msgid "Form"
 msgstr "Formularz"
 
-#: route:forms_detail_form_builder
 msgctxt "bloomerp:route:name"
 msgid "Form Builder"
 msgstr "Kreator formularzy"
@@ -1714,7 +1681,6 @@ msgstr "Wykres Gantta"
 msgid "Generate"
 msgstr "Generuj"
 
-#: route:document_templates_detail_generate_pdf
 msgctxt "bloomerp:route:name"
 msgid "Generate PDF"
 msgstr "Generuj PDF"
@@ -1723,7 +1689,6 @@ msgstr "Generuj PDF"
 msgid "Generate Token"
 msgstr "Wygeneruj token"
 
-#: route:document_templates_detail_generate_pdf
 msgctxt "bloomerp:route:description"
 msgid "Generate pdf from document template"
 msgstr "Generuj PDF z szablonu dokumentu"
@@ -1820,7 +1785,7 @@ msgstr "Wysokość nagłówka w calach."
 msgid "Hex color code for the sidebar item (e.g. #FF5733)."
 msgstr "Kod koloru szesnastkowego elementu paska bocznego (np. #FF5733)."
 
-#: bloomerp.todo.priority models/project_management/todo.py:21
+#: bloomerp.todo.priority models/project_management/todo.py:26
 msgid "High"
 msgstr "Wysoki"
 
@@ -1882,7 +1847,7 @@ msgid "IP Address Field"
 msgstr "Pole adresu IP"
 
 #: bloomerp.sidebaritem.icon bloomerp.tile.icon models/workspaces/sidebar_item.py:53
-#: models/workspaces/tile.py:41
+#: models/workspaces/tile.py:48
 msgid "Icon"
 msgstr "Ikona"
 
@@ -1907,12 +1872,12 @@ msgstr "Pole obrazu"
 msgid "Image of the header."
 msgstr "Obraz nagłówka."
 
-#: bloomerp.initiative.status bloomerp.todo.status models/project_management/initiative.py:17
-#: models/project_management/todo.py:37
+#: bloomerp.initiative.status bloomerp.todo.status models/project_management/initiative.py:22
+#: models/project_management/todo.py:42
 msgid "In Progress"
 msgstr "W toku"
 
-#: bloomerp.todo.status models/project_management/todo.py:38
+#: bloomerp.todo.status models/project_management/todo.py:43
 msgid "In Review"
 msgstr "W weryfikacji"
 
@@ -1925,7 +1890,6 @@ msgstr "Aby obsługiwać zarówno klucze główne UUID, jak i całkowite"
 msgid "Inbox"
 msgstr "Skrzynka odbiorcza"
 
-#: route:inbox
 msgctxt "bloomerp:route:name"
 msgid "Inbox"
 msgstr "Skrzynka odbiorcza"
@@ -2024,14 +1988,14 @@ msgstr "Początkowy payload formularza"
 msgid "Initial rows"
 msgstr "Początkowe wiersze"
 
-#: bloomerp.initiative bloomerp.todo.initiative models/project_management/initiative.py:85
-#: models/project_management/todo.py:199
+#: bloomerp.initiative bloomerp.todo.initiative models/project_management/initiative.py:125
+#: models/project_management/todo.py:410
 msgid "Initiative"
 msgstr "Inicjatywa"
 
 # | msgctxt "bloomerp:route:name"
 # | msgid "Initiatives"
-#: bloomerp.initiative models/project_management/initiative.py:86
+#: bloomerp.initiative models/project_management/initiative.py:126
 msgid "Initiatives"
 msgstr "Inicjatywy"
 
@@ -2084,7 +2048,7 @@ msgstr "Czy przeczytano"
 msgid "Item Type"
 msgstr "Typ elementu"
 
-#: workspaces/links_tile/model.py:203
+#: workspaces/links_tile/model.py:204
 msgid "Item cannot be moved further"
 msgstr "Elementu nie można przenieść dalej"
 
@@ -2092,15 +2056,15 @@ msgstr "Elementu nie można przenieść dalej"
 msgid "Item created"
 msgstr "Utworzono element"
 
-#: components/workspaces/sidebar.py:397 workspaces/links_tile/model.py:206
+#: components/workspaces/sidebar.py:397 workspaces/links_tile/model.py:207
 msgid "Item moved"
 msgstr "Przeniesiono element"
 
-#: components/workspaces/sidebar.py:368 workspaces/links_tile/model.py:148
+#: components/workspaces/sidebar.py:368 workspaces/links_tile/model.py:149
 msgid "Item removed"
 msgstr "Usunięto element"
 
-#: components/workspaces/sidebar.py:346 workspaces/links_tile/model.py:185
+#: components/workspaces/sidebar.py:346 workspaces/links_tile/model.py:186
 msgid "Item updated"
 msgstr "Zaktualizowano element"
 
@@ -2124,7 +2088,7 @@ msgstr "Hash klucza"
 msgid "Key Prefix"
 msgstr "Prefiks klucza"
 
-#: bloomerp.todo.effort models/project_management/todo.py:30
+#: bloomerp.todo.effort models/project_management/todo.py:35
 msgid "L"
 msgstr "L"
 
@@ -2137,17 +2101,17 @@ msgstr "Etykieta"
 msgid "Label Details"
 msgstr "Szczegóły"
 
-#: bloomerp.initiative.labels bloomerp.todo.labels models/project_management/initiative.py:52
-#: models/project_management/initiative.py:137 models/project_management/todo.py:190
+#: bloomerp.initiative.labels bloomerp.todo.labels models/project_management/initiative.py:57
+#: models/project_management/initiative.py:177 models/project_management/todo.py:401
 #: workspaces/analytics_tile/model.py:378
 msgid "Labels"
 msgstr "Etykiety"
 
-#: bloomerp.initiative.labels models/project_management/initiative.py:138
+#: bloomerp.initiative.labels models/project_management/initiative.py:178
 msgid "Labels assigned to the initiative"
 msgstr "Etykiety przypisane do inicjatywy"
 
-#: bloomerp.todo.labels models/project_management/todo.py:189
+#: bloomerp.todo.labels models/project_management/todo.py:400
 msgid "Labels assigned to the todo"
 msgstr "Etykiety przypisane do zadania"
 
@@ -2220,11 +2184,11 @@ msgstr "Linia"
 msgid "Link"
 msgstr "Link"
 
-#: workspaces/links_tile/model.py:111
+#: workspaces/links_tile/model.py:112
 msgid "Link added"
 msgstr "Link dodany"
 
-#: workspaces/links_tile/model.py:100
+#: workspaces/links_tile/model.py:101
 msgid "Link already existed"
 msgstr "Link już istniał"
 
@@ -2244,11 +2208,11 @@ msgstr "Linki"
 msgid "Links and folders"
 msgstr "Linki i foldery"
 
-#: workspaces/links_tile/model.py:59
+#: workspaces/links_tile/model.py:60
 msgid "Links can only be nested inside folders"
 msgstr "Linki można zagnieżdżać tylko w folderach"
 
-#: services/workspace_services.py:184
+#: services/workspace_services.py:219
 #, python-brace-format
 msgid "Links to the different models of the '{module}' module."
 msgstr "Strona główna modułu {module}."
@@ -2257,17 +2221,14 @@ msgstr "Strona główna modułu {module}."
 msgid "List"
 msgstr "Lista"
 
-#: route:app
 msgctxt "bloomerp:route:description"
 msgid "List of all files across the application."
 msgstr "Lista wszystkich plików w całej aplikacji."
 
-#: route:log_entries_model
 msgctxt "bloomerp:route:description"
 msgid "List of records for {model} model"
 msgstr "Lista rekordów modelu {model}"
 
-#: route:my_workspaces
 msgctxt "bloomerp:route:description"
 msgid "List of your workspaces"
 msgstr "Lista Twoich obszarów roboczych"
@@ -2302,11 +2263,11 @@ msgstr "Logowanie"
 msgid "Login to Your Account"
 msgstr "Zaloguj się na swoje konto"
 
-#: bloomerp.todo.priority models/project_management/todo.py:23
+#: bloomerp.todo.priority models/project_management/todo.py:28
 msgid "Low"
 msgstr "Niski"
 
-#: bloomerp.todo.effort models/project_management/todo.py:29
+#: bloomerp.todo.effort models/project_management/todo.py:34
 msgid "M"
 msgstr "M"
 
@@ -2319,10 +2280,13 @@ msgid "Mailboxes"
 msgstr "Skrzynki pocztowe"
 
 msgctxt "bloomerp:module:description"
+msgid "Manage todos and initiatives within the ERP system."
+msgstr "Zarządzaj zadaniami i inicjatywami w systemie ERP."
+
+msgctxt "bloomerp:module:description"
 msgid "Manage users, roles, and permissions within the ERP system."
 msgstr "Zarządzaj użytkownikami, rolami i uprawnieniami w systemie ERP."
 
-#: route:log_entries_manageaccesscontrolformodelview
 msgctxt "bloomerp:route:name"
 msgid "ManageAccessControlForModelView"
 msgstr "Zarządzanie kontrolą dostępu dla widoku modelu"
@@ -2358,7 +2322,7 @@ msgid "Margin of the document template in inches."
 msgstr "Margines szablonu dokumentu w calach."
 
 # | msgid "Todo marked as completed."
-#: models/project_management/todo.py:108
+#: models/project_management/todo.py:130
 msgid "Mark as Completed"
 msgstr "Zadanie oznaczone jako ukończone."
 
@@ -2389,7 +2353,7 @@ msgstr ""
 "Maksymalna liczba zgłoszeń na adres IP nie może przekraczać całkowitej maksymalnej liczby "
 "zgłoszeń."
 
-#: bloomerp.todo.priority models/project_management/todo.py:22
+#: bloomerp.todo.priority models/project_management/todo.py:27
 msgid "Medium"
 msgstr "Średni"
 
@@ -2443,11 +2407,10 @@ msgid "Model"
 msgstr "Model"
 
 # | msgid "Module Id"
-#: bloomerp.workspace.module_id models/workspaces/workspace.py:49
+#: bloomerp.workspace.module_id models/workspaces/workspace.py:50
 msgid "Module ID"
 msgstr "Identyfikator modułu"
 
-#: route:bloomerp_home_view
 msgctxt "bloomerp:route:name"
 msgid "Modules"
 msgstr "Moduły"
@@ -2476,11 +2439,10 @@ msgstr "Przenieś w górę"
 msgid "Muted Until"
 msgstr "Wyciszone do"
 
-#: models/workspaces/workspace.py:74
+#: models/workspaces/workspace.py:116
 msgid "My Workspace"
 msgstr "Moje obszary robocze"
 
-#: route:my_workspaces
 msgctxt "bloomerp:route:name"
 msgid "My workspaces"
 msgstr "Moje obszary robocze"
@@ -2494,15 +2456,15 @@ msgstr "Moje obszary robocze"
 #: bloomerp.userlistviewpreference.name bloomerp.userobjectlayoutpreference.name bloomerp.workflow.name
 #: bloomerp.workflowedge.name bloomerp.workflownode.name bloomerp.workspace.name
 #: models/access_control/field_policy.py:35 models/access_control/policy.py:69
-#: models/access_control/row_policy.py:28 models/api_key.py:91 models/automation/workflow.py:75
+#: models/access_control/row_policy.py:28 models/api_key.py:91 models/automation/workflow.py:161
 #: models/automation/workflow_edge.py:21 models/automation/workflow_node.py:32
 #: models/communication/email_account.py:99 models/document_templates/document_template.py:122
 #: models/document_templates/document_template_header.py:28
 #: models/document_templates/document_template_styling.py:18 models/files/file.py:53
-#: models/files/file_folder.py:31 models/forms/form.py:68 models/project_management/initiative.py:100
+#: models/files/file_folder.py:31 models/forms/form.py:68 models/project_management/initiative.py:140
 #: models/project_management/todo_label.py:35 models/users/base_preference.py:78
 #: models/users/user_detail_view_tabs_preference.py:436 models/workspaces/sidebar_item.py:49
-#: models/workspaces/sql_query.py:30 models/workspaces/tile.py:25
+#: models/workspaces/sql_query.py:30 models/workspaces/tile.py:32
 #: templates/components/workspaces/tile_builders/links_tile_builder.html:42
 #: templates/components/workspaces/tile_builders/links_tile_builder.html:84
 #: templates/components/workspaces/tile_builders/links_tile_builder_items.html:38
@@ -2525,7 +2487,7 @@ msgstr "Nazwa elementu paska bocznego."
 msgid "Name of the template header."
 msgstr "Nazwa nagłówka szablonu."
 
-#: bloomerp.tile.name models/workspaces/tile.py:24
+#: bloomerp.tile.name models/workspaces/tile.py:31
 msgid "Name of the widget"
 msgstr "Nazwa widżetu"
 
@@ -2533,7 +2495,7 @@ msgstr "Nazwa widżetu"
 msgid "Name required"
 msgstr "Nazwa jest wymagana"
 
-#: services/workspace_services.py:175
+#: services/workspace_services.py:210
 #, python-brace-format
 msgid "Navigate to the '{module}' module."
 msgstr "Strona główna modułu {module}."
@@ -2553,6 +2515,10 @@ msgstr "Nowy link"
 #: bloomerp.emailaccount.next_sync_at models/communication/email_account.py:230
 msgid "Next Sync At"
 msgstr "Następna synchronizacja o"
+
+#: templates/views/workspaces/bloomerp_home_view.html:27
+msgid "No accessible modules available. Please contact your administrator."
+msgstr "Brak dostępnych modułów. Skontaktuj się z administratorem."
 
 #: templates/cotton/features/dataviews/calendar.html:252
 msgid "No calendar items in this period."
@@ -2582,8 +2548,8 @@ msgstr "Bez grupowania"
 msgid "No items found in this folder."
 msgstr "Nie znaleziono elementów w tym folderze."
 
-#: workspaces/links_tile/model.py:67 workspaces/links_tile/model.py:142
-#: workspaces/links_tile/model.py:198
+#: workspaces/links_tile/model.py:68 workspaces/links_tile/model.py:143
+#: workspaces/links_tile/model.py:199
 msgid "No link was selected"
 msgstr "Nie wybrano linku"
 
@@ -2689,7 +2655,7 @@ msgstr "Obiekt Bloom AI"
 #: bloomerp.activitylog.object_id bloomerp.bookmark.object_id bloomerp.comment.object_id
 #: bloomerp.file.object_id bloomerp.filefolder.object_id bloomerp.todo.object_id
 #: models/activity_log.py:64 models/communication/comment.py:29 models/communication/mention.py:28
-#: models/files/file.py:55 models/files/file_folder.py:44 models/project_management/todo.py:216
+#: models/files/file.py:55 models/files/file_folder.py:44 models/project_management/todo.py:427
 #: models/users/bookmark.py:28
 msgid "Object ID"
 msgstr "Identyfikator obiektu"
@@ -2698,7 +2664,7 @@ msgstr "Identyfikator obiektu"
 msgid "Object no longer available"
 msgstr "Obiekt nie jest już dostępny"
 
-#: bloomerp.initiative.status models/project_management/initiative.py:18
+#: bloomerp.initiative.status models/project_management/initiative.py:23
 msgid "On Hold"
 msgstr "Wstrzymano"
 
@@ -2776,7 +2742,7 @@ msgstr "Opcjonalne pole odwołujące się do tego samego typu, którego powiąza
 msgid "Options"
 msgstr "Opcje"
 
-#: workspaces/analytics_tile/model.py:527
+#: workspaces/analytics_tile/model.py:548
 msgid "Options updated"
 msgstr "Opcje zaktualizowane"
 
@@ -2804,18 +2770,16 @@ msgstr "Zastępuje etykietę osi X. Pozostaw puste, aby nie wyświetlać niestan
 msgid "Overrides the Y-axis label. Leave blank to show no custom axis title."
 msgstr "Zastępuje etykietę osi Y. Pozostaw puste, aby nie wyświetlać niestandardowego tytułu osi."
 
-#: route:log_entries_detail_overview
 msgctxt "bloomerp:route:description"
 msgid "Overview of object from {model} model"
 msgstr "Przegląd obiektu z modelu {model}"
 
-#: route:users_my_profile_overview
 msgctxt "bloomerp:route:description"
 msgid "Overview of profile"
 msgstr "Przegląd profilu"
 
 #: bloomerp.initiative.owner models/communication/channel_member.py:23
-#: models/project_management/initiative.py:131
+#: models/project_management/initiative.py:171
 msgid "Owner"
 msgstr "Właściciel"
 
@@ -2902,19 +2866,19 @@ msgstr "Przestawny"
 msgid "Pivot Table"
 msgstr "Tabela przestawna"
 
-#: workspaces/links_tile/model.py:98 workspaces/links_tile/model.py:169
+#: workspaces/links_tile/model.py:99 workspaces/links_tile/model.py:170
 msgid "Please add a URL to the link"
 msgstr "Dodaj adres URL do łącza"
 
-#: workspaces/links_tile/model.py:167
+#: workspaces/links_tile/model.py:168
 msgid "Please add a name"
 msgstr "Dodaj nazwę"
 
-#: workspaces/links_tile/model.py:126
+#: workspaces/links_tile/model.py:127
 msgid "Please add a name to the folder"
 msgstr "Dodaj nazwę folderu"
 
-#: workspaces/links_tile/model.py:96
+#: workspaces/links_tile/model.py:97
 msgid "Please add a name to the link"
 msgstr "Dodaj nazwę łącza"
 
@@ -3044,7 +3008,7 @@ msgstr ""
 msgid "Preview"
 msgstr "Podgląd"
 
-#: bloomerp.todo.priority models/project_management/todo.py:153
+#: bloomerp.todo.priority models/project_management/todo.py:364
 msgid "Priority"
 msgstr "Priorytet"
 
@@ -3056,7 +3020,6 @@ msgstr "Przetwarzanie..."
 msgid "Profile"
 msgstr "Profil"
 
-#: route:users_my_profile_overview
 msgctxt "bloomerp:route:name"
 msgid "Profile"
 msgstr "Profil"
@@ -3217,7 +3180,7 @@ msgstr "Błąd renderowania: %(error)s"
 msgid "Reply"
 msgstr "Odpowiedz"
 
-#: bloomerp.todo.requested_by models/project_management/todo.py:139
+#: bloomerp.todo.requested_by models/project_management/todo.py:350
 msgid "Requested By"
 msgstr "Zgłoszone przez"
 
@@ -3225,7 +3188,7 @@ msgstr "Zgłoszone przez"
 msgid "Required"
 msgstr "Wymagane"
 
-#: bloomerp.todo.required_by models/project_management/todo.py:145
+#: bloomerp.todo.required_by models/project_management/todo.py:356
 msgid "Required By"
 msgstr "Wymagane przez"
 
@@ -3250,32 +3213,26 @@ msgstr "Resetuj"
 msgid "Reset password"
 msgstr "Zresetuj hasło"
 
-#: route:users_detail_reset_password
 msgctxt "bloomerp:route:name"
 msgid "Reset password"
 msgstr "Resetowanie hasła"
 
-#: route:users_detail_reset_password
 msgctxt "bloomerp:route:description"
 msgid "Reset password for a user"
 msgstr "Resetowanie hasła użytkownika"
 
-#: route:users_detail_admin_reset_password_for_user
 msgctxt "bloomerp:route:description"
 msgid "Reset password for a user by admin"
 msgstr "Resetowanie hasła użytkownika przez administratora"
 
-#: route:users_detail_admin_reset_password_for_user
 msgctxt "bloomerp:route:name"
 msgid "Reset password for user (admin)"
 msgstr "Resetowanie hasła użytkownika (administrator)"
 
-#: route:form_submissions_detail_review_submission
 msgctxt "bloomerp:route:name"
 msgid "Review Submission"
 msgstr "Przesłanie oceny"
 
-#: route:form_submissions_detail_review_submission
 msgctxt "bloomerp:route:description"
 msgid "Review a form submission"
 msgstr "Przeglądanie przesłanego formularza"
@@ -3353,16 +3310,16 @@ msgstr "Wierszy na stronę"
 msgid "Rule"
 msgstr "Reguła"
 
-#: bloomerp.workflow.run_asynchronously models/automation/workflow.py:80
+#: bloomerp.workflow.run_asynchronously models/automation/workflow.py:166
 msgid "Run Asynchronously"
 msgstr "Uruchamiaj asynchronicznie"
 
 # | msgid "Workflow"
-#: models/automation/workflow.py:57 models/automation/workflow.py:59
+#: models/automation/workflow.py:58 models/automation/workflow.py:60
 msgid "Run workflow"
 msgstr "Przepływ pracy"
 
-#: bloomerp.todo.effort models/project_management/todo.py:28
+#: bloomerp.todo.effort models/project_management/todo.py:33
 msgid "S"
 msgstr "S"
 
@@ -3429,7 +3386,7 @@ msgstr "Zapisz i utwórz nowe"
 msgid "Scatter"
 msgstr "Punktowy"
 
-#: bloomerp.tile.schema models/workspaces/tile.py:43
+#: bloomerp.tile.schema models/workspaces/tile.py:50
 msgid "Schema"
 msgstr "Schemat"
 
@@ -3745,7 +3702,7 @@ msgstr "Skumulowane"
 msgid "Stacks multiple Y-axis series when supported by the selected chart type."
 msgstr "Nakłada na siebie wiele serii osi Y, jeśli jest to obsługiwane przez wybrany typ wykresu."
 
-#: bloomerp.initiative.start_date models/project_management/initiative.py:112
+#: bloomerp.initiative.start_date models/project_management/initiative.py:152
 msgid "Start Date"
 msgstr "Data rozpoczęcia"
 
@@ -3777,8 +3734,8 @@ msgstr "Status"
 
 #: bloomerp.emailaccount.status bloomerp.initiative.status bloomerp.todo.status
 #: bloomerp.workflowrunstep.status models/automation/workflow_run_step.py:45
-#: models/communication/email_account.py:116 models/project_management/initiative.py:96
-#: models/project_management/todo.py:184
+#: models/communication/email_account.py:116 models/project_management/initiative.py:136
+#: models/project_management/todo.py:395
 msgid "Status"
 msgstr "Status"
 
@@ -3820,12 +3777,10 @@ msgstr "Wartość podrzędna"
 msgid "Subject"
 msgstr "Temat"
 
-#: route:forms_detail_submit
 msgctxt "bloomerp:route:name"
 msgid "Submit"
 msgstr "Prześlij"
 
-#: route:forms_detail_submit
 msgctxt "bloomerp:route:description"
 msgid "Submit a form"
 msgstr "Prześlij formularz"
@@ -3883,7 +3838,7 @@ msgstr "System"
 msgid "Table"
 msgstr "Tabela"
 
-#: bloomerp.initiative.target_date models/project_management/initiative.py:117
+#: bloomerp.initiative.target_date models/project_management/initiative.py:157
 msgid "Target Date"
 msgstr "Data docelowa"
 
@@ -3895,7 +3850,6 @@ msgstr "Szablon"
 msgid "Template Header"
 msgstr "Nagłówek szablonu"
 
-#: route:testview
 msgctxt "bloomerp:route:name"
 msgid "TestView"
 msgstr "TestView"
@@ -3916,7 +3870,7 @@ msgstr "Tekst po wartości"
 msgid "Text that comes before the value"
 msgstr "Tekst przed wartością"
 
-#: bloomerp.todo.object_id models/project_management/todo.py:215
+#: bloomerp.todo.object_id models/project_management/todo.py:426
 msgid "The ID of the related object"
 msgstr "Nazwa zadania"
 
@@ -3953,7 +3907,7 @@ msgstr "Konfiguracja węzła przepływu pracy."
 msgid "The content type (model) this field belongs to."
 msgstr "Typ zawartości (model), do którego należy to pole."
 
-#: bloomerp.todo.content_type models/project_management/todo.py:209
+#: bloomerp.todo.content_type models/project_management/todo.py:420
 msgid "The content type of the related object"
 msgstr "Typ zawartości (model), do którego należy to pole."
 
@@ -3969,11 +3923,11 @@ msgstr "Data i godzina, po których formularz nie będzie już przyjmować zgło
 msgid "The date and time from which the form will accept submissions."
 msgstr "Data i godzina, od których formularz będzie przyjmować zgłoszenia."
 
-#: bloomerp.todo.datetime_completed models/project_management/todo.py:177
+#: bloomerp.todo.datetime_completed models/project_management/todo.py:388
 msgid "The date and time when the todo was completed"
 msgstr "Data i godzina ukończenia zadania"
 
-#: bloomerp.todo.required_by models/project_management/todo.py:146
+#: bloomerp.todo.required_by models/project_management/todo.py:357
 msgid "The date by which the todo is required"
 msgstr "Data, do której należy wykonać zadanie"
 
@@ -4013,7 +3967,7 @@ msgstr "Panel paska bocznego widoku szczegółów wyświetlany jako pierwszy"
 msgid "The direction used for table sorting."
 msgstr "Pole używane na osi X wykresu."
 
-#: bloomerp.todo.effort models/project_management/todo.py:158
+#: bloomerp.todo.effort models/project_management/todo.py:369
 msgid "The effort required for the todo"
 msgstr "Nakład pracy wymagany do wykonania zadania"
 
@@ -4061,7 +4015,6 @@ msgstr ""
 "Grupy, do których należy ten użytkownik. Użytkownik otrzyma wszystkie uprawnienia przyznane "
 "każdej z jego grup."
 
-#: route:automation_module_automation
 msgctxt "bloomerp:route:description"
 msgid "The homepage for the {module} module."
 msgstr "Strona główna modułu {module}."
@@ -4070,7 +4023,7 @@ msgstr "Strona główna modułu {module}."
 msgid "The identifier of the action being executed in this step."
 msgstr "Identyfikator akcji wykonywanej w tym kroku."
 
-#: bloomerp.todo.initiative models/project_management/todo.py:198
+#: bloomerp.todo.initiative models/project_management/todo.py:409
 msgid "The initiative this todo belongs to"
 msgstr "Inicjatywa, do której należy to zadanie"
 
@@ -4098,7 +4051,7 @@ msgstr "Nazwa pola."
 msgid "The name of the form"
 msgstr "Nazwa formularza"
 
-#: bloomerp.initiative.name models/project_management/initiative.py:101
+#: bloomerp.initiative.name models/project_management/initiative.py:141
 msgid "The name of the initiative"
 msgstr "Nazwa inicjatywy"
 
@@ -4106,7 +4059,7 @@ msgstr "Nazwa inicjatywy"
 msgid "The name of the row-level access control policy."
 msgstr "Nazwa polityki kontroli dostępu na poziomie wiersza."
 
-#: bloomerp.todo.title models/project_management/todo.py:165
+#: bloomerp.todo.title models/project_management/todo.py:376
 msgid "The name of the todo"
 msgstr "Nazwa zadania"
 
@@ -4114,7 +4067,7 @@ msgstr "Nazwa zadania"
 msgid "The name of the workflow node."
 msgstr "Nazwa węzła przepływu pracy."
 
-#: bloomerp.workflow.name models/automation/workflow.py:74
+#: bloomerp.workflow.name models/automation/workflow.py:160
 msgid "The name of the workflow."
 msgstr "Nazwa przepływu pracy."
 
@@ -4175,11 +4128,11 @@ msgstr ""
 msgid "The primary value"
 msgstr "Wartość główna"
 
-#: bloomerp.todo.priority models/project_management/todo.py:150
+#: bloomerp.todo.priority models/project_management/todo.py:361
 msgid "The priority of the todo"
 msgstr "Priorytet zadania"
 
-#: models/project_management/todo.py:256
+#: models/project_management/todo.py:467
 msgid "The related object does not exist"
 msgstr "Powiązany obiekt nie istnieje"
 
@@ -4203,11 +4156,11 @@ msgstr "Reguła zdefiniowana dla tej polityki wiersza jest nieprawidłowa."
 msgid "The secondary value that appears below the main value"
 msgstr "Wartość dodatkowa wyświetlana poniżej wartości głównej"
 
-#: workspaces/links_tile/model.py:56
+#: workspaces/links_tile/model.py:57
 msgid "The selected folder no longer exists"
 msgstr "Wybrany folder już nie istnieje"
 
-#: workspaces/links_tile/model.py:71 workspaces/links_tile/model.py:146
+#: workspaces/links_tile/model.py:72 workspaces/links_tile/model.py:147
 msgid "The selected link no longer exists"
 msgstr "Wybrany odnośnik już nie istnieje"
 
@@ -4247,15 +4200,15 @@ msgstr "Typ pola."
 msgid "The type of the workflow node."
 msgstr "Typ węzła przepływu pracy."
 
-#: bloomerp.tile.type models/workspaces/tile.py:34
+#: bloomerp.tile.type models/workspaces/tile.py:41
 msgid "The type of tile"
 msgstr "Typ kafelka"
 
-#: bloomerp.todo.assigned_to models/project_management/todo.py:131
+#: bloomerp.todo.assigned_to models/project_management/todo.py:343
 msgid "The user to whom the todo is assigned"
 msgstr "Data, do której należy wykonać zadanie"
 
-#: bloomerp.todo.requested_by models/project_management/todo.py:140
+#: bloomerp.todo.requested_by models/project_management/todo.py:351
 msgid "The user who requested the todo"
 msgstr "Użytkownik, który zlecił zadanie"
 
@@ -4263,7 +4216,7 @@ msgstr "Użytkownik, który zlecił zadanie"
 msgid "The wizard data is incomplete. Please review the account details."
 msgstr "Dane kreatora są niekompletne. Sprawdź dane konta."
 
-#: bloomerp.workflowrun.workflow models/automation/workflow_run.py:71
+#: bloomerp.workflowrun.workflow models/automation/workflow_run.py:375
 msgid "The workflow associated with this run."
 msgstr "Przepływ pracy powiązany z tym uruchomieniem."
 
@@ -4302,17 +4255,17 @@ msgstr ""
 
 # | msgctxt "bloomerp:route:name"
 # | msgid "Tiles"
-#: bloomerp.tile models/workspaces/tile.py:17
+#: bloomerp.tile models/workspaces/tile.py:24
 msgid "Tile"
 msgstr "Kafelki"
 
-#: workspaces/analytics_tile/model.py:509
+#: workspaces/analytics_tile/model.py:530
 msgid "Tile type updated"
 msgstr "Zaktualizowano typ kafelka"
 
 # | msgctxt "bloomerp:route:name"
 # | msgid "Tiles"
-#: bloomerp.tile models/workspaces/tile.py:18
+#: bloomerp.tile models/workspaces/tile.py:25
 msgid "Tiles"
 msgstr "Kafelki"
 
@@ -4321,7 +4274,7 @@ msgid "Time Field"
 msgstr "Pole czasu"
 
 # | msgid "Time Field"
-#: models/project_management/initiative.py:43 models/project_management/todo.py:91
+#: models/project_management/initiative.py:48 models/project_management/todo.py:113
 msgid "Timeline"
 msgstr "Pole czasu"
 
@@ -4348,7 +4301,7 @@ msgstr "Generator treści TinyMCE"
 
 #: bloomerp.aiconversation.title bloomerp.inboxitem.title bloomerp.todo.title
 #: models/communication/inbox/inbox_item.py:85 models/llm/ai_conversation.py:29
-#: models/project_management/todo.py:166
+#: models/project_management/todo.py:377
 msgid "Title"
 msgstr "Tytuł"
 
@@ -4367,7 +4320,7 @@ msgstr "Dzisiaj"
 
 # | msgctxt "bloomerp:route:name"
 # | msgid "Todos"
-#: bloomerp.todo models/project_management/todo.py:116
+#: bloomerp.todo models/project_management/todo.py:329
 msgid "Todo"
 msgstr "Zadania"
 
@@ -4383,22 +4336,24 @@ msgstr "Etykiety zadań"
 msgid "Todo Labels"
 msgstr "Etykiety zadań"
 
-#: models/project_management/todo.py:54
+#: models/project_management/todo.py:76
 msgid "Todo marked as completed."
 msgstr "Zadanie oznaczone jako ukończone."
 
 # | msgctxt "bloomerp:route:name"
 # | msgid "Todos"
-#: bloomerp.todo models/project_management/initiative.py:59 models/project_management/todo.py:117
+#: bloomerp.todo models/project_management/initiative.py:64 models/project_management/todo.py:330
 msgid "Todos"
 msgstr "Zadania"
 
-#: route:log_entries_detail_todos
 msgctxt "bloomerp:route:name"
 msgid "Todos"
 msgstr "Zadania"
 
-#: route:log_entries_detail_todos
+msgctxt "bloomerp:module:name"
+msgid "Todos & Initiatives"
+msgstr "Zadania i inicjatywy"
+
 msgctxt "bloomerp:route:description"
 msgid "Todos related to a specific object"
 msgstr "Zadania powiązane z określonym obiektem"
@@ -4441,7 +4396,7 @@ msgstr "Wyzwalacz"
 
 #: bloomerp.inboxfolder.type bloomerp.tile.type bloomerp.workflownode.type
 #: models/automation/workflow_node.py:45 models/communication/inbox/inbox_folder.py:28
-#: models/workspaces/tile.py:37
+#: models/workspaces/tile.py:44
 msgid "Type"
 msgstr "Typ"
 
@@ -4484,27 +4439,22 @@ msgstr "Niezaplanowane rekordy"
 msgid "Untitled tile"
 msgstr "Kafelek bez tytułu"
 
-#: route:access_control_policies_detail_update
 msgctxt "bloomerp:route:name"
 msgid "Update"
 msgstr "Aktualizacja"
 
-#: route:tiles_detail_update_tile
 msgctxt "bloomerp:route:name"
 msgid "Update Tile"
 msgstr "Aktualizacja kafelka"
 
-#: route:workflows_detail_builder
 msgctxt "bloomerp:route:description"
 msgid "Update a workflow"
 msgstr "Aktualizuj przepływ pracy"
 
-#: route:access_control_policies_detail_update
 msgctxt "bloomerp:route:description"
 msgid "Update this policy"
 msgstr "Aktualizuj tę zasadę"
 
-#: route:tiles_detail_update_tile
 msgctxt "bloomerp:route:description"
 msgid "Update this tile"
 msgstr "Aktualizuj ten kafelek"
@@ -4525,7 +4475,7 @@ msgstr "Zaktualizowane przez"
 msgid "Upload files"
 msgstr "Prześlij pliki"
 
-#: bloomerp.todo.priority models/project_management/todo.py:20
+#: bloomerp.todo.priority models/project_management/todo.py:25
 msgid "Urgent"
 msgstr "Pilne"
 
@@ -4622,13 +4572,13 @@ msgid "Username"
 msgstr "Nazwa użytkownika"
 
 #: bloomerp.policy.users bloomerp.user models/access_control/policy.py:99
-#: models/project_management/todo.py:83 models/users/user.py:160
+#: models/project_management/todo.py:105 models/users/user.py:160
 msgid "Users"
 msgstr "Użytkownicy"
 
 msgctxt "bloomerp:module:name"
-msgid "Users"
-msgstr "Użytkownicy"
+msgid "Users & Permissions"
+msgstr "Użytkownicy i uprawnienia"
 
 #: bloomerp.policy.users models/access_control/policy.py:98
 msgid "Users assigned to this access control policy."
@@ -4750,7 +4700,7 @@ msgstr "Co powinno być ustawione wstępnie dla"
 msgid "Where the legend should be placed."
 msgstr "Gdzie powinna zostać umieszczona legenda."
 
-#: bloomerp.workflow.run_asynchronously models/automation/workflow.py:79
+#: bloomerp.workflow.run_asynchronously models/automation/workflow.py:165
 msgid "Whether runs asynchronously"
 msgstr "Czy uruchamia się asynchronicznie"
 
@@ -4774,7 +4724,7 @@ msgstr "Czy przesłanie formularza wymaga sprawdzenia przed zapisaniem."
 msgid "Whether the form was persisted"
 msgstr "Czy formularz został zapisany"
 
-#: bloomerp.workflow.active models/automation/workflow.py:84
+#: bloomerp.workflow.active models/automation/workflow.py:170
 msgid "Whether the workflow is active or not"
 msgstr "Czy przepływ pracy jest aktywny"
 
@@ -4782,7 +4732,7 @@ msgstr "Czy przepływ pracy jest aktywny"
 msgid "Whether this account should be synchronized automatically."
 msgstr "Czy to konto powinno być automatycznie synchronizowane."
 
-#: bloomerp.workflow.enable_logging models/automation/workflow.py:89
+#: bloomerp.workflow.enable_logging models/automation/workflow.py:175
 msgid ""
 "Whether to enable logging for this workflow. Disabling logging may improve performance but will "
 "result in no detailed execution history being stored."
@@ -4797,8 +4747,8 @@ msgstr ""
 "przepływy pracy."
 
 #: bloomerp.workflow bloomerp.workflownode.workflow bloomerp.workflowrun.workflow
-#: models/automation/workflow.py:29 models/automation/workflow_node.py:38
-#: models/automation/workflow_run.py:74
+#: models/automation/workflow.py:30 models/automation/workflow_node.py:38
+#: models/automation/workflow_run.py:378
 msgid "Workflow"
 msgstr "Przepływ pracy"
 
@@ -4818,7 +4768,7 @@ msgstr "Węzeł przepływu pracy"
 msgid "Workflow Nodes"
 msgstr "Węzły przepływu pracy"
 
-#: bloomerp.workflowrun bloomerp.workflowrunstep.workflow_run models/automation/workflow_run.py:24
+#: bloomerp.workflowrun bloomerp.workflowrunstep.workflow_run models/automation/workflow_run.py:104
 #: models/automation/workflow_run_step.py:28
 msgid "Workflow Run"
 msgstr "Uruchomienie przepływu pracy"
@@ -4831,7 +4781,7 @@ msgstr "Krok uruchomienia przepływu pracy"
 msgid "Workflow Run Steps"
 msgstr "Kroki uruchomienia przepływu pracy"
 
-#: bloomerp.workflowrun models/automation/workflow_run.py:25
+#: bloomerp.workflowrun models/automation/workflow_run.py:105
 msgid "Workflow Runs"
 msgstr "Uruchomienia przepływów pracy"
 
@@ -4839,13 +4789,13 @@ msgstr "Uruchomienia przepływów pracy"
 msgid "Workflow execution"
 msgstr "Wykonanie przepływu pracy"
 
-#: bloomerp.workflow models/automation/workflow.py:30
+#: bloomerp.workflow models/automation/workflow.py:31
 msgid "Workflows"
 msgstr "Przepływy pracy"
 
 # | msgctxt "bloomerp:route:name"
 # | msgid "Workspaces"
-#: bloomerp.workspace models/workspaces/workspace.py:22
+#: bloomerp.workspace models/workspaces/workspace.py:23
 msgid "Workspace"
 msgstr "Obszary robocze"
 
@@ -4855,7 +4805,7 @@ msgstr "Udostępnianie obszaru roboczego zaktualizowane."
 
 # | msgctxt "bloomerp:route:name"
 # | msgid "Workspaces"
-#: bloomerp.workspace models/workspaces/workspace.py:23
+#: bloomerp.workspace models/workspaces/workspace.py:24
 msgid "Workspaces"
 msgstr "Obszary robocze"
 
@@ -4886,11 +4836,11 @@ msgstr "Etykieta osi X"
 msgid "X-axis order"
 msgstr "Kolejność osi X"
 
-#: bloomerp.todo.effort models/project_management/todo.py:31
+#: bloomerp.todo.effort models/project_management/todo.py:36
 msgid "XL"
 msgstr "XL"
 
-#: bloomerp.todo.effort models/project_management/todo.py:27
+#: bloomerp.todo.effort models/project_management/todo.py:32
 msgid "XS"
 msgstr "XS"
 
@@ -4914,7 +4864,7 @@ msgstr "Rok-Miesiąc-Dzień (2000-08-15)"
 msgid "Year-Month-Day Hour:Minute (2000-08-15 12:30)"
 msgstr "Rok-Miesiąc-Dzień Godzina:Minuta (2000-08-15 12:30)"
 
-#: models/project_management/todo.py:52
+#: models/project_management/todo.py:74
 msgid "You do not have permission to mark this todo as completed."
 msgstr "Nie masz uprawnień do oznaczenia tego zadania jako ukończonego."
 
@@ -4930,7 +4880,6 @@ msgstr "Pomniejsz"
 msgid "active"
 msgstr "aktywny"
 
-#: route:api_sql_accessible_tables
 msgctxt "bloomerp:route:name"
 msgid "api_sql_accessible_tables"
 msgstr "api_sql_accessible_tables"
@@ -4987,27 +4936,22 @@ msgstr "uprawnienia użytkownika"
 msgid "username"
 msgstr "nazwa użytkownika"
 
-#: route:workspace
 msgctxt "bloomerp:route:name"
 msgid "workspace"
 msgstr "obszar roboczy"
 
-#: route:log_entries_model
 msgctxt "bloomerp:route:name"
 msgid "{model} List"
 msgstr "Lista {model}"
 
-#: route:automation_module_automation
 msgctxt "bloomerp:route:name"
 msgid "{module}"
 msgstr "{module}"
 
-#: route:permissions_detail_rowpolicyrulepermission_set_relationship
 msgctxt "bloomerp:route:name"
 msgid "{related_model_plural}"
 msgstr "{related_model_plural}"
 
-#: route:permissions_detail_rowpolicyrulepermission_set_relationship
 msgctxt "bloomerp:route:description"
 msgid "{related_model_plural} relationship for {model}"
 msgstr "Relacja {related_model_plural} dla {model}"

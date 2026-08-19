@@ -2,6 +2,8 @@ from django.views.generic import TemplateView
 
 from bloomerp.models.workspaces.workspace import Workspace
 from bloomerp.modules.definition import module_registry
+from bloomerp.permissions.definition import BloomerpPermission
+from bloomerp.permissions.manager import UserPolicyManager
 from bloomerp.router import router
 from bloomerp.services.preference_services import PreferenceManager
 from bloomerp.views.workspaces.base import BaseWorkspaceView
@@ -25,7 +27,18 @@ class BloomerpHomeView(BaseWorkspaceView, TemplateView):
             context.update(self.get_workspace_template_context())
             context["show_module_selector"] = True
         else:
-            context["modules"] = module_registry.get_root_modules()
+            accessible_models = UserPolicyManager(self.request.user).get_accessible_models(
+                BloomerpPermission.VIEW
+            )
+            
+            all_modules = module_registry.get_root_modules()
+            accessible_modules = [
+                module for module in all_modules if any(
+                    model in accessible_models for model in module_registry.get_models_for_module(module.id, include_descendants=True)
+                )
+            ]
+            
+            context["modules"] = accessible_modules
 
         return context
 
