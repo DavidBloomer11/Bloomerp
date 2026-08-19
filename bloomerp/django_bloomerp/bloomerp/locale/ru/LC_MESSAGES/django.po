@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-18 19:22+0000\n"
+"POT-Creation-Date: 2026-08-19 09:10+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ru\n"
@@ -1827,6 +1827,10 @@ msgstr "Шестнадцатеричный код цвета элемента б
 #: bloomerp.todo.priority models/project_management/todo.py:21
 msgid "High"
 msgstr "Высокий"
+
+#: views/mixins/htmx_mixin.py:55 views/mixins/htmx_mixin.py:82
+msgid "Home"
+msgstr "Главная"
 
 #: templates/cotton/features/dataviews/gant.html:34
 msgid "Hour"
@@ -5155,4 +5159,3 @@ msgstr "Связь {related_model_plural} для {model}"
 
 #~ msgid "workspaces"
 #~ msgstr "рабочие области"
-

@@ -6,6 +6,7 @@ from bloomerp.services.preference_services import PreferenceManager
 from bloomerp.utils.models import get_detail_view_url, get_list_view_url
 
 from django.urls import reverse
+from django.utils.translation import gettext as _
 from django.views.generic import DetailView, UpdateView
 
 from typing import Any
@@ -51,7 +52,7 @@ class HtmxMixin(GetPreferenceMixin):
         route = self._resolve_current_route()
         if route and getattr(route, "name", None):
             return route.localized_name
-        return "Home"
+        return _("Home")
 
     def _resolve_detail_object(self, context: dict):
         if context.get("object") is not None:
@@ -78,7 +79,7 @@ class HtmxMixin(GetPreferenceMixin):
     def _build_breadcrumb_items(self, context: dict) -> list[dict]:
         items: list[dict] = [
             {
-                "text": "Home",
+                "text": _("Home"),
                 "url": "/",
                 "active": False,
             }

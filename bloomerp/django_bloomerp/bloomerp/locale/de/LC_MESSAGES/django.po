@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-18 19:22+0000\n"
+"POT-Creation-Date: 2026-08-19 09:10+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -1832,6 +1832,10 @@ msgstr "Hex-Farbcode für das Seitenleistenelement (z. B. #FF5733)."
 #: bloomerp.todo.priority models/project_management/todo.py:21
 msgid "High"
 msgstr "Hoch"
+
+#: views/mixins/htmx_mixin.py:55 views/mixins/htmx_mixin.py:82
+msgid "Home"
+msgstr "Startseite"
 
 #: templates/cotton/features/dataviews/gant.html:34
 msgid "Hour"
@@ -5167,4 +5171,3 @@ msgstr "Beziehung von {related_model_plural} zu {model}"
 
 #~ msgid "workspaces"
 #~ msgstr "Arbeitsbereiche"
-
