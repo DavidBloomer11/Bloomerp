@@ -6,6 +6,7 @@ from bloomerp.services.preference_services import PreferenceManager
 from bloomerp.utils.models import get_detail_view_url, get_list_view_url
 
 from django.urls import reverse
+from django.utils.translation import gettext as _
 from django.views.generic import DetailView, UpdateView
 
 from typing import Any
@@ -50,8 +51,8 @@ class HtmxMixin(GetPreferenceMixin):
     def _resolve_route_title(self) -> str:
         route = self._resolve_current_route()
         if route and getattr(route, "name", None):
-            return route.name
-        return "Home"
+            return route.localized_name
+        return _("Home")
 
     def _resolve_detail_object(self, context: dict):
         if context.get("object") is not None:
@@ -78,7 +79,7 @@ class HtmxMixin(GetPreferenceMixin):
     def _build_breadcrumb_items(self, context: dict) -> list[dict]:
         items: list[dict] = [
             {
-                "text": "Home",
+                "text": _("Home"),
                 "url": "/",
                 "active": False,
             }
@@ -92,7 +93,7 @@ class HtmxMixin(GetPreferenceMixin):
         route_type = self._normalize_route_type(route.route_type)
         module = getattr(route, "module", None)
         model = getattr(route, "model", None)
-        route_name = route.name or "Route"
+        route_name = route.localized_name or "Route"
         module_key = (module.full_id or module.id) if module else None
         module_lineage = module_registry.get_lineage(module_key) if module_key else []
         module_url = f"/{module.route_path}/" if module and module.route_path else None
@@ -107,7 +108,7 @@ class HtmxMixin(GetPreferenceMixin):
                 is_active = bool(route.path and route.path == lineage_url and index == len(module_lineage) - 1)
                 items.append(
                     {
-                        "text": lineage_module.name,
+                        "text": lineage_module.localized_name,
                         "url": lineage_url,
                         "active": is_active,
                     }

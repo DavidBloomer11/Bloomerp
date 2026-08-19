@@ -29,7 +29,7 @@
                         </div>
                     </th>
                 {% endfor %}
-                <th class="w-20"><span class="sr-only"><c-i18n.blocktrans>Row actions</c-i18n.blocktrans></span></th>
+                <th class="w-20"><span class="sr-only">{% blocktrans %}Row actions{% endblocktrans %}</span></th>
             </tr>
         </thead>
         <tbody id="data-table-body-{{ content_type_id }}" data-one-to-many-body>
@@ -60,7 +60,7 @@
             <tfoot class="border-t border-gray-200 bg-gray-50" data-one-to-many-totals>
                 <tr>
                     <td class="px-3 py-2 text-sm font-medium text-gray-700">
-                        <c-i18n.blocktrans>Totals</c-i18n.blocktrans>
+                        {% blocktrans %}Totals{% endblocktrans %}
                     </td>
                     {% for column in columns %}
                         <td class="px-3 py-2 text-sm text-gray-700">
@@ -100,10 +100,10 @@
     <div class="border-t border-gray-200 bg-white px-3 py-2 flex items-center justify-between gap-2">
         <div class="flex gap-2">
             <button type="button" class="btn btn-sm btn-secondary" data-one-to-many-add-row {% if not can_edit %}disabled{% endif %}>
-                <c-i18n.blocktrans>Add row</c-i18n.blocktrans>
+                {% blocktrans %}Add row{% endblocktrans %}
             </button>
             <button type="button" class="btn btn-sm btn-danger hidden" data-one-to-many-delete-rows {% if not can_edit %}disabled{% endif %}>
-                <c-i18n.blocktrans>Remove selected</c-i18n.blocktrans>
+                {% blocktrans %}Remove selected{% endblocktrans %}
             </button>
         </div>
         <div class="hidden items-center gap-2" data-one-to-many-pagination>

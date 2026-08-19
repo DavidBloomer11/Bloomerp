@@ -9,6 +9,8 @@ from pydantic import BaseModel, Field, field_validator
 from django.conf import settings
 from django.db.models import Model
 
+from bloomerp.workspaces.base import BaseTileConfig
+
 class ApiFilterRule(BaseModel):
     field: str
     operator: str = Lookup.EQUALS.value.id
@@ -20,7 +22,6 @@ class ApiFilterRule(BaseModel):
             if operator_value == lookup.value.id:
                 return lookup.value.django_representation or operator_value
         return operator_value
-
 
 class PublicAccessRule(BaseModel):
     """A public access rule defines in which cases objects can be accessed via the
@@ -162,7 +163,6 @@ class UserAccessRule(BaseModel):
     row_actions:list[Literal["view", "change", "add", "delete"]]
     filters:list[ApiFilterRule] = Field(default_factory=list)
 
-
 class ApiNesting(BaseModel):
     for_field: str
     fields: list[str | Literal["__all__"]] = Field(default_factory=lambda: ["__all__"])
@@ -184,7 +184,6 @@ class ApiNesting(BaseModel):
             for field_name in self.fields
             if field_name != "__all__"
         }
-
 
 class ApiSettings(BaseModel):
     """
@@ -233,12 +232,10 @@ class ApiSettings(BaseModel):
             if normalized_action in rule.on_action
         ]
 
-
 class ObjectHTML(BaseModel):
     template_name:str
     
     should_render_func:Callable[[HttpRequest, Model], bool] = lambda req, obj : True
-
 
 class ObjectAction(BaseModel):
     id:str
@@ -271,16 +268,12 @@ class ObjectModalAction(BaseModel):
     modal_title:Optional[str] = ""
 
     modal_size:Literal["sm", "md", "lg", "xl", "full"] = "md"
-    
-    
-
-    
+        
 class ModelViewSettings(BaseModel):
     """
     Optional settings for on the model level
     """
     skip_views : Optional[list[str]] = None
-
 
 class DetailViewSettings(BaseModel):
     """
@@ -288,7 +281,6 @@ class DetailViewSettings(BaseModel):
     """
     skip_views : Optional[list[str]] = None
     
-
 class BloomerpModelConfig(BaseModel):
     """
     Used to define certain bloomerp related meta data on a model. 
@@ -330,6 +322,8 @@ class BloomerpModelConfig(BaseModel):
     model_view_settings : Optional[ModelViewSettings] = None 
     
     object_actions : Optional[list[ObjectAction | ObjectHTML | ObjectModalAction]] = None
+    
+    
     
     @field_validator("module", mode="before")
     @classmethod

@@ -5,9 +5,12 @@ from django.apps import AppConfig
 from django.db.models.signals import post_migrate
 from colorama import Fore, Style
 
+from bloomerp.config.definition import BloomerpAppI18nSettings
+
 class BloomerpApp(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "bloomerp"
+    bloomerp_i18n = BloomerpAppI18nSettings(source_language="en")
 
     def _should_run_startup_validation(self) -> bool:
         if len(sys.argv) > 1 and sys.argv[1] == "validate_bloomerp":

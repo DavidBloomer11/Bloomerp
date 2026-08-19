@@ -6,6 +6,7 @@ from bloomerp.models import ApplicationField
 from django.shortcuts import get_object_or_404
 
 from django.apps import apps
+from bloomerp.i18n.models import model_verbose_name_in_source_language
 
 
 def model_name_singular_slug(model:Model) -> str:
@@ -18,7 +19,7 @@ def model_name_singular_slug(model:Model) -> str:
     model_name_slug(UserProfile) -> 'user-profile'
 
     """
-    return model._meta.verbose_name_plural.replace(' ', '-')
+    return model_verbose_name_in_source_language(model).replace(' ', '-').lower()
 
 def model_name_plural_slug(model:Model) -> str:
     """
@@ -29,7 +30,7 @@ def model_name_plural_slug(model:Model) -> str:
     model_name_plural_slug(User) -> 'users'
     model_name_plural_slug(UserProfile) -> 'user-profiles'
     """
-    return model._meta.verbose_name_plural.replace(' ', '-').lower()
+    return model_verbose_name_in_source_language(model, plural=True).replace(' ', '-').lower()
 
 def model_name_singular_underline(model:Model) -> str:
     """
@@ -40,7 +41,7 @@ def model_name_singular_underline(model:Model) -> str:
     model_name_singular_underline(User) -> 'user'
     model_name_singular_underline(UserProfile) -> 'user_profile'
     """
-    return model._meta.verbose_name.replace(' ', '_')
+    return model_verbose_name_in_source_language(model).replace(' ', '_').lower()
 
 def model_name_plural_underline(model:Model) -> str:
     """
@@ -51,7 +52,7 @@ def model_name_plural_underline(model:Model) -> str:
     model_name_plural_underline(User) -> 'users'
     model_name_plural_underline(UserProfile) -> 'user_profiles'
     """
-    return model._meta.verbose_name_plural.replace(' ', '_').lower()
+    return model_verbose_name_in_source_language(model, plural=True).replace(' ', '_').lower()
 
 def string_search(cls, query: str):
     '''

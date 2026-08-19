@@ -50,7 +50,7 @@ Parameters:
     </div>
     {% empty %}
     <div class="col-span-full text-center text-gray-500 py-6">
-        <c-i18n.blocktrans>No records found.</c-i18n.blocktrans>
+        {% blocktrans %}No records found.{% endblocktrans %}
     </div>
     {% endfor %}
 </div>

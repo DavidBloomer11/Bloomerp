@@ -9,7 +9,7 @@ from bloomerp.models.definition import BloomerpModelConfig, DetailViewSettings, 
 from bloomerp.models.mixins.absolute_url_model_mixin import AbsoluteUrlModelMixin
 from bloomerp.models.mixins.user_stamp_model_mixin import UserStampModelMixin
 from bloomerp.models.mixins import TimestampModelMixin
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _, gettext_noop
 from django.db.models import Count
 from django.db.models import Max, Min
 from django.db.models import Case, IntegerField, Value, When
@@ -51,7 +51,7 @@ class WorkflowRun(
         object_actions=[
             ObjectModalAction(
                 id="approve_step",
-                label="Approve",
+                label=gettext_noop("Approve"),
                 endpoint=lambda obj: reverse(
                     "components_automation_approve_workflow_continuation",
                     kwargs={
@@ -59,7 +59,7 @@ class WorkflowRun(
                     }
                 ),
                 should_render_func=lambda req, obj: obj.status == WorkflowRunStepStatus.PAUSED,
-                modal_title="Approve workflow continuation"
+                modal_title=gettext_noop("Approve workflow continuation")
             )
         ],
         record_activity_log=False
@@ -71,6 +71,7 @@ class WorkflowRun(
         help_text=_("The workflow associated with this run."),
         editable=False,
         related_name="runs",
+        verbose_name=_("Workflow"),
     )
     
     def __str__(self):
@@ -140,4 +141,3 @@ class WorkflowRun(
         )
 
         return status or WorkflowRunStepStatus.COMPLETED
-        

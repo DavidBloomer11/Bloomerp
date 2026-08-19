@@ -1,3 +1,4 @@
+{% load i18n %}
 <div
     
     class="overflow-visible rounded-xl border border-gray-200 bg-white"
@@ -8,9 +9,9 @@
     <div class="grid grid-cols-1 lg:grid-cols-2">
         <div class="relative z-10 min-w-0 overflow-visible border-r border-gray-200">
             <div class="border-b border-gray-200 p-4">
-                    <c-i18n.blocktrans>
+                    {% blocktrans trimmed %}
                         <p class="font-bold text-primary-900">{{ name }}</p>
-                    </c-i18n.blocktrans>
+                    {% endblocktrans %}
             </div>
 
             <div id="tile-builder-section">
@@ -20,11 +21,11 @@
 
         <div class="relative z-0 min-w-0 bg-white">
             <div class="border-b border-gray-200 p-4">
-                <c-i18n.blocktrans>
+                {% blocktrans trimmed %}
                     <p class="font-bold text-primary-900">
                         Preview
                     </p>
-                </c-i18n.blocktrans>
+                {% endblocktrans %}
             </div>
             <div class="min-w-0 space-y-6 px-6 py-5" id="tile-preview-section">
                 

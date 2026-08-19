@@ -1,3 +1,4 @@
+{% load i18n %}
 <select
     class="select w-full"
     bloomerp-component="focus-on-form"
@@ -9,7 +10,7 @@
     {% endif %}
 >
     <option disabled selected value="">
-        <c-i18n.blocktrans>Select operator</c-i18n.blocktrans>
+        {% blocktrans %}Select operator{% endblocktrans %}
     </option>
     {% for lookup in lookups %}
         <option value="{{ lookup.value.id }}" data-lookup-django="{{ lookup.value.django_representation }}">

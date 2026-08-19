@@ -1,3 +1,4 @@
+{% load i18n %}
 {% load crispy_forms_tags %}
 
 <form 
@@ -36,9 +37,7 @@
             {% endfor %}
             {% endif %}
             >
-            <c-i18n.blocktrans>
-                {{ submit_label|default:"Submit" }}
-            </c-i18n.blocktrans>
+            {% translate submit_label|default:"Submit" %}
         </button>
 
         {% for button in extra_buttons %}

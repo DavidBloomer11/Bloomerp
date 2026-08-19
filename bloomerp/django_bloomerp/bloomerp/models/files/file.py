@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from typing import Iterable
 
 from django.db import models
@@ -20,6 +21,8 @@ class File(
     models.Model,
 ):
     class Meta(BloomerpModel.Meta):
+        verbose_name = _("File")
+        verbose_name_plural = _("Files")
         managed = True
         db_table = "bloomerp_file"
 
@@ -45,11 +48,11 @@ class File(
     # -----------------------------
     # File Fields
     # -----------------------------
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    file = models.FileField(upload_to=upload_to)
-    name = models.CharField(max_length=100, null=True, blank=True)
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
-    object_id = models.CharField(max_length=36, null=True, blank=True) # In order to support both UUID and integer primary keys
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, verbose_name=_("ID"))
+    file = models.FileField(upload_to=upload_to, verbose_name=_("File"))
+    name = models.CharField(max_length=100, null=True, blank=True, verbose_name=_("Name"))
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True, verbose_name=_("Content Type"))
+    object_id = models.CharField(max_length=36, null=True, blank=True, verbose_name=_("Object ID")) # In order to support both UUID and integer primary keys
     content_object = GenericForeignKey("content_type", "object_id")
     folder : "FileFolder" = models.ForeignKey(
         "bloomerp.FileFolder",
@@ -57,11 +60,12 @@ class File(
         null=True,
         blank=True,
         related_name="files",
+        verbose_name=_("Folder"),
     )
-    persisted = models.BooleanField(default=False) # A field to indicate if the file is temporary or persisted
+    persisted = models.BooleanField(default=False, verbose_name=_("Persisted")) # A field to indicate if the file is temporary or persisted
 
     # Created/updated utils
-    meta = models.JSONField(blank=True, null=True)
+    meta = models.JSONField(blank=True, null=True, verbose_name=_("Meta"))
 
     @property
     def url(self):

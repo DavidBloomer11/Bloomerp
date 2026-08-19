@@ -3,7 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q, QuerySet
 from django.contrib.auth.models import Permission
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _, gettext_noop
 from bloomerp.models.base_bloomerp_model import BloomerpModel, FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.definition import BloomerpModelConfig
 from bloomerp.models.mixins import (
@@ -20,7 +20,7 @@ USER_CONFIG = BloomerpModelConfig(
         rows=[
             LayoutRow(
                 columns=2,
-                title="Profile",
+                title=gettext_noop("Profile"),
                 items=[
                     LayoutItem(id="username"),
                     LayoutItem(id="email"),
@@ -30,7 +30,7 @@ USER_CONFIG = BloomerpModelConfig(
             ),
             LayoutRow(
                 columns=2,
-                title="Access",
+                title=gettext_noop("Access"),
                 items=[
                     LayoutItem(id="is_active"),
                     LayoutItem(id="is_staff"),
@@ -76,6 +76,8 @@ class AbstractBloomerpUser(
     AvatarModelMixin
     ):
     class Meta:
+        verbose_name = _("Bloomerp User")
+        verbose_name_plural = _("Bloomerp Users")
         abstract = True
 
     allow_string_search = True
@@ -85,6 +87,7 @@ class AbstractBloomerpUser(
         default=DateViewPreference.DAY_MONTH_YEAR,
         choices=DateViewPreference.choices,
         help_text=_("The date format to be used in the application"),
+        verbose_name=_("Date View Preference"),
     )
 
     datetime_view_preference = models.CharField(
@@ -92,6 +95,7 @@ class AbstractBloomerpUser(
         default=DatetimeViewPreference.DAY_MONTH_YEAR,
         choices=DatetimeViewPreference.choices,
         help_text=_("The datetime format to be used in the application"),
+        verbose_name=_("Datetime View Preference"),
     )
 
     detail_sidebar_view_preference = models.CharField(
@@ -99,6 +103,7 @@ class AbstractBloomerpUser(
         default=DetailSidebarViewPreference.ACTIVITY,
         choices=DetailSidebarViewPreference.choices,
         help_text=_("The detail view sidebar panel to show first"),
+        verbose_name=_("Detail Sidebar View Preference"),
     )
     
     def __str__(self):
@@ -140,14 +145,18 @@ class AbstractBloomerpUser(
 
 
 class AbstractBloomerpEmailUser(AbstractBloomerpUser):
-    email = models.EmailField(unique=True)
+    email = models.EmailField(unique=True, verbose_name=_("Email"))
 
     class Meta:
+        verbose_name = _("Bloomerp Email User")
+        verbose_name_plural = _("Bloomerp Email Users")
         abstract = True
 
 class User(AbstractBloomerpUser):
     bloomerp_config = USER_CONFIG
 
     class Meta(BloomerpModel.Meta):
+        verbose_name = _("User")
+        verbose_name_plural = _("Users")
         db_table = "auth_user"
         swappable = "AUTH_USER_MODEL"

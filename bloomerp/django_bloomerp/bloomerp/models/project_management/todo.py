@@ -4,7 +4,7 @@ from slugify import slugify
 from bloomerp.model_fields.text_editor_field import TextEditorField
 from bloomerp.models import BloomerpModel
 from django.conf import settings
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _, gettext_noop
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.core.exceptions import ValidationError
@@ -13,31 +13,32 @@ from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutR
 from bloomerp.models.definition import BloomerpModelConfig, ObjectAction, ObjectHTML
 from bloomerp.permissions.definition import BloomerpPermission
 from bloomerp.utils.requests import render_message
+from bloomerp.workspaces.analytics_tile.model import AnalyticsTileConfig
 from bloomerp.workspaces.form_tile import render
 
 class TodoPriority(models.TextChoices):
-    URGENT = ('urgent', 'Urgent')
-    HIGH = ('high', 'High')
-    MEDIUM = ('medium','Medium')
-    LOW = ('low', 'Low')
+    URGENT = ('urgent', _('Urgent'))
+    HIGH = ('high', _('High'))
+    MEDIUM = ('medium', _('Medium'))
+    LOW = ('low', _('Low'))
     
 # TODO: Create effort model based on t-shirt sizing (check linear for this)
 class TodoEffort(models.IntegerChoices):
-    XS = (1, 'XS')
-    S = (2, 'S')
-    M = (4, 'M')
-    L = (8, 'L')
-    XL = (16, 'XL')
+    XS = (1, _('XS'))
+    S = (2, _('S'))
+    M = (4, _('M'))
+    L = (8, _('L'))
+    XL = (16, _('XL'))
 
 # TODO: Status should be based on what is defined in the overall bloomerp settings module
 # TODO: Use status field for this one -> status field can be used later on in table views 
 class TodoStatus(models.TextChoices):
-    BACKLOG = ('backlog', 'Backlog')
-    IN_PROGRESS = ('in_progress', 'In Progress')
-    IN_REVIEW = ('in_review', 'In Review')
-    COMPLETED = ('completed', 'Completed')
-    CANCELLED = ('cancelled', 'Cancelled')
-    DUPLICATE = ('duplicate', 'Duplicate')
+    BACKLOG = ('backlog', _('Backlog'))
+    IN_PROGRESS = ('in_progress', _('In Progress'))
+    IN_REVIEW = ('in_review', _('In Review'))
+    COMPLETED = ('completed', _('Completed'))
+    CANCELLED = ('cancelled', _('Cancelled'))
+    DUPLICATE = ('duplicate', _('Duplicate'))
 
 
 def _mark_as_completed(request:HttpRequest, object:"Todo") -> HttpResponse:
@@ -66,7 +67,7 @@ class Todo(BloomerpModel):
         layout=FieldLayout(
             rows=[
                 LayoutRow(
-                    title="Details",
+                    title=gettext_noop("Details"),
                     columns=4,
                     items=[
                         LayoutItem(id="title", colspan=3),
@@ -79,7 +80,7 @@ class Todo(BloomerpModel):
                     ],
                 ),
                 LayoutRow(
-                    title="Users",
+                    title=gettext_noop("Users"),
                     columns=4,
                     items=[
                         LayoutItem(id="requested_by"),
@@ -87,7 +88,7 @@ class Todo(BloomerpModel):
                     ],
                 ),
                 LayoutRow(
-                    title="Timeline",
+                    title=gettext_noop("Timeline"),
                     columns=4,
                     items=[
                         LayoutItem(id="required_by"),
@@ -104,14 +105,16 @@ class Todo(BloomerpModel):
             ),
             ObjectAction(
                 id="mark_as_completed",
-                label="Mark as Completed",
+                label=gettext_noop("Mark as Completed"),
                 should_render_func=lambda _, object: object.status != TodoStatus.COMPLETED,
                 execution_func=_mark_as_completed
             )
-        ]
+        ],
     )
 
     class Meta(BloomerpModel.Meta):
+        verbose_name = _("Todo")
+        verbose_name_plural = _("Todos")
         managed = True
         db_table = 'bloomerp_todo'
 
@@ -124,6 +127,8 @@ class Todo(BloomerpModel):
         null=True,
         blank=True,
         related_name='todos',
+        verbose_name=_("Assigned To"),
+        help_text=_("The user to whom the todo is assigned")
         )
     requested_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
@@ -131,49 +136,58 @@ class Todo(BloomerpModel):
         blank=True, 
         on_delete=models.CASCADE, 
         related_name='requested_todos', 
+        verbose_name=_("Requested By"),
         help_text=_("The user who requested the todo")
         )
     required_by = models.DateField(
         null=True, 
         blank=True,
+        verbose_name=_("Required By"),
         help_text=_("The date by which the todo is required")
         )
     priority = models.CharField(
         max_length=20,
         help_text=_("The priority of the todo"), 
         choices=TodoPriority.choices,
-        default=TodoPriority.MEDIUM
+        default=TodoPriority.MEDIUM,
+        verbose_name=_("Priority")
         )
     effort = models.IntegerField(
         null=True, 
         blank=True,
         help_text=_("The effort required for the todo"),
         choices=TodoEffort.choices,
-        default=TodoEffort.M
+        default=TodoEffort.M,
+        verbose_name=_("Effort")
         )
     title = models.CharField(
         max_length=255, 
-        help_text=_("The name of the todo")
+        help_text=_("The name of the todo"),
+        verbose_name=_("Title")
         )
     content = TextEditorField(
         blank=True, 
-        null=True
+        null=True,
+        verbose_name=_("Content")
         )
     datetime_completed = models.DateTimeField(
         null=True, 
         blank=True,
         editable=False,
-        help_text=_("The date and time when the todo was completed")
+        help_text=_("The date and time when the todo was completed"),
+        verbose_name=_("Date Completed")
         )
     status = models.CharField(
         max_length=50, 
         choices=TodoStatus.choices,
-        default=TodoStatus.BACKLOG
+        default=TodoStatus.BACKLOG,
+        verbose_name=_("Status")
         )
     labels = models.ManyToManyField(
         'bloomerp.TodoLabel',
         blank=True,
-        help_text=_("Labels assigned to the todo")
+        help_text=_("Labels assigned to the todo"),
+        verbose_name=_("Labels")
         )
     initiative = models.ForeignKey(
         'bloomerp.Initiative',
@@ -181,13 +195,30 @@ class Todo(BloomerpModel):
         null=True,
         blank=True,
         related_name='todos',
-        help_text=_("The initiative this todo belongs to")
+        help_text=_("The initiative this todo belongs to"),
+        verbose_name=_("Initiative")
         )
 
     # For if the todo is related to a model
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
-    object_id = models.CharField(max_length=36, null=True, blank=True) # In order to support both UUID and integer primary keys
-    content_object = GenericForeignKey("content_type", "object_id")
+    content_type = models.ForeignKey(
+        ContentType,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        verbose_name=_("Content Type"),
+        help_text=_("The content type of the related object"),
+    )
+    object_id = models.CharField(
+        max_length=36,
+        null=True,
+        blank=True,
+        help_text=_("The ID of the related object"),
+        verbose_name=_("Object ID"),
+    ) # In order to support both UUID and integer primary keys
+    content_object = GenericForeignKey(
+        "content_type", 
+        "object_id"
+    )
 
     @property
     def content_safe(self):

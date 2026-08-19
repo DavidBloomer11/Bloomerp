@@ -5,6 +5,7 @@ from typing import Any, Optional, Type
 from django.http import HttpRequest
 from django.urls import reverse
 from django.utils.html import format_html
+from django.utils.translation import gettext
 
 from bloomerp.models.base_bloomerp_model import LayoutItem
 from bloomerp.models.workspaces.workspace import Workspace
@@ -121,10 +122,72 @@ def render_tile_to_string(
         **tile.schema
     )
 
+    if tile.auto_generated and isinstance(config, LinkTileConfig):
+        _localize_generated_module_links(config.links)
+
     # 3. Get the render class. Saved canvases receive their persistence context;
     # previews call the renderer directly without a Tile instance.
     render_kwargs = {"tile": tile} if tile_type == TileType.CANVAS_TILE else {}
     return tile_type.value.render_cls.render(config=config, request=request, **render_kwargs)
+
+
+def _module_for_generated_tile(tile: Tile):
+    if not tile.auto_generated:
+        return None
+    return next(
+        (
+            module
+            for module in module_registry.get_all().values()
+            if module.name == tile.name
+        ),
+        None,
+    )
+
+
+def _localize_generated_module_links(links: list[Link]) -> None:
+    modules_by_path = {
+        f"/{module.route_path}/": module
+        for module in module_registry.get_all().values()
+        if module.route_path
+    }
+    for link in links:
+        module = modules_by_path.get(link.url)
+        if module is not None and link.name == module.name:
+            link.name = module.localized_name
+        _localize_generated_module_links(link.children)
+
+
+def _tile_display_metadata(tile: Tile) -> tuple[str, str | None]:
+    module = _module_for_generated_tile(tile)
+    if module is None:
+        return tile.name, tile.description
+
+    name = module.localized_name
+    links = tile.schema.get("links", []) if isinstance(tile.schema, dict) else []
+    is_module_navigation = any(
+        link.get("url") == f"/{module.route_path}/"
+        for link in links
+        if isinstance(link, dict)
+    )
+    if is_module_navigation:
+        source_description = f"Navigate to the '{module.name}' module."
+        description = (
+            gettext("Navigate to the '{module}' module.").format(module=name)
+            if tile.description == source_description
+            else tile.description
+        )
+    else:
+        source_description = (
+            f"Links to the different models of the '{module.name}' module."
+        )
+        description = (
+            gettext("Links to the different models of the '{module}' module.").format(
+                module=name
+            )
+            if tile.description == source_description
+            else tile.description
+        )
+    return name, description
 
 
 def build_workspace_layout_item(
@@ -146,12 +209,14 @@ def build_workspace_layout_item(
     except Exception as exc:
         content = format_html('<div class="alert alert-danger">{}</div>', exc)
 
+    tile_name, _tile_description = _tile_display_metadata(tile)
+
     return LayoutItem(
         id=str(tile.pk),
         colspan=colspan,
         config=config or {},
         icon=tile.icon,
-        label=tile.name,
+        label=tile_name,
         content=content,
         component_name="workspace-tile",
         border=True,
@@ -261,15 +326,18 @@ class UserWorkspaceService:
         tiles = Tile.objects.filter(
             Q(created_by=self.user) | Q(auto_generated=True)
         )
-        return [
-            AvailableLayoutItem(
-                id=tile.id,
-                title=tile.name,
-                description=tile.description,
-                icon=tile.icon,
-                search_keywords=tile.get_type_display(),
+        available_tiles = []
+        for tile in tiles:
+            title, description = _tile_display_metadata(tile)
+            available_tiles.append(
+                AvailableLayoutItem(
+                    id=tile.id,
+                    title=title,
+                    description=description,
+                    icon=tile.icon,
+                    search_keywords=tile.get_type_display(),
+                )
             )
-            for tile in tiles
-        ]
+        return available_tiles
 
         

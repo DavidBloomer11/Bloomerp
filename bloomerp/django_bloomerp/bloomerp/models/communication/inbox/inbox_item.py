@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from typing import Type
 
 from django.db import models
@@ -9,8 +10,8 @@ from bloomerp.models.definition import BloomerpModelConfig
 
 class InboxItem(BloomerpModel):
     class Meta:
-        verbose_name = "Inbox Item"
-        verbose_name_plural = "Inbox Items"
+        verbose_name = _("Inbox Item")
+        verbose_name_plural = _("Inbox Items")
         db_table = "bloomerp_inbox_item"
         constraints = [
             models.UniqueConstraint(
@@ -30,6 +31,7 @@ class InboxItem(BloomerpModel):
     item_type = models.CharField(
         max_length=50,
         choices=[(i.value.item_type.key, i.value.item_type.name) for i in InboxFolderType if isinstance(i.value.item_type, InboxItemTypeDefinition)],
+        verbose_name=_("Item Type"),
     )
     
     # Type related fields
@@ -37,7 +39,8 @@ class InboxItem(BloomerpModel):
         max_length=1000,
         null=True, 
         blank=True,
-        help_text="Optional reference to the source item's ID, if applicable."
+        help_text="Optional reference to the source item's ID, if applicable.",
+        verbose_name=_("Related Item ID"),
     )
     
     # Rel with folder
@@ -48,6 +51,7 @@ class InboxItem(BloomerpModel):
         on_delete=models.CASCADE,
         related_name="inbox_items",
         help_text="The folder to which this inbox item belongs.",
+        verbose_name=_("Folder"),
     )
     
     # Content related fields
@@ -55,12 +59,14 @@ class InboxItem(BloomerpModel):
         max_length=255,
         null=True,
         blank=True,
-        help_text="The actor or entity associated with the inbox item."
+        help_text="The actor or entity associated with the inbox item.",
+        verbose_name=_("Actor"),
     )
     
     is_read = models.BooleanField(
         default=False,
-        help_text="Indicates whether the inbox item has been read by the user."
+        help_text="Indicates whether the inbox item has been read by the user.",
+        verbose_name=_("Is Read"),
     )
     datetime_received = models.DateTimeField(
         null=True,
@@ -68,25 +74,29 @@ class InboxItem(BloomerpModel):
         editable=False,
         db_index=True,
         help_text="Timestamp when the inbox item was received by its source system.",
+        verbose_name=_("Datetime Received"),
     )
     
     title = models.CharField(
         max_length=1000,
         null=False,
         blank=False,
-        help_text="The title of the inbox item."
+        help_text="The title of the inbox item.",
+        verbose_name=_("Title"),
     )
     
     snippet = models.TextField(
         null=True,
         blank=True,
-        help_text="A brief snippet or summary of the inbox item content."
+        help_text="A brief snippet or summary of the inbox item content.",
+        verbose_name=_("Snippet"),
     )
     
     raw_meta_data = models.JSONField(
         null=True,
         blank=True,
-        help_text="Optional JSON field to store additional metadata related to the inbox item."
+        help_text="Optional JSON field to store additional metadata related to the inbox item.",
+        verbose_name=_("Raw Meta Data"),
     )
     
     @property

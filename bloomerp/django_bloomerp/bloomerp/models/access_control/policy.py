@@ -1,5 +1,5 @@
 from django.db import models
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _, gettext_noop
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth import get_user_model
 from django.conf import settings
@@ -34,7 +34,7 @@ class Policy(
         layout=FieldLayout(
             rows=[
                 LayoutRow(
-                    title="Policy Details",
+                    title=gettext_noop("Policy Details"),
                     columns=4,
                     items=[
                         LayoutItem(id="name", colspan=2),
@@ -44,7 +44,7 @@ class Policy(
                     ],
                 ),
                 LayoutRow(
-                    title="Policy Scope",
+                    title=gettext_noop("Policy Scope"),
                     columns=4,
                     items=[
                         LayoutItem(id="row_policy", colspan=2),
@@ -52,7 +52,7 @@ class Policy(
                     ],
                 ),
                 LayoutRow(
-                    title="Statistics",
+                    title=gettext_noop("Statistics"),
                     columns=4,
                     items=[
                         LayoutItem(id="number_of_users", colspan=2),
@@ -65,47 +65,54 @@ class Policy(
 
     name = models.CharField(
             max_length=255,
-            help_text=_("The name of the access control policy.")
+            help_text=_("The name of the access control policy."),
+        verbose_name=_("Name"),
         )
 
     description = models.TextField(
         blank=True,
-        help_text=_("A description of the access control policy.")
+        help_text=_("A description of the access control policy."),
+        verbose_name=_("Description"),
     )
     
     row_policy = models.ForeignKey(
         to=RowPolicy,
         on_delete=models.CASCADE,
         related_name='policies',
-        help_text=_("The row-level policy associated with this access control policy.")
+        help_text=_("The row-level policy associated with this access control policy."),
+        verbose_name=_("Row Policy"),
     )
     
     field_policy = models.ForeignKey(
         to=FieldPolicy,
         on_delete=models.CASCADE,
         related_name='policies',
-        help_text=_("The field-level policy associated with this access control policy.")
+        help_text=_("The field-level policy associated with this access control policy."),
+        verbose_name=_("Field Policy"),
     )
 
     users = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name='access_control_policies',
         blank=True,
-        help_text=_("Users assigned to this access control policy.")
+        help_text=_("Users assigned to this access control policy."),
+        verbose_name=_("Users"),
     )
 
     groups = models.ManyToManyField(
         Group,
         related_name='access_control_policies',
         blank=True,
-        help_text=_("Groups assigned to this access control policy.")
+        help_text=_("Groups assigned to this access control policy."),
+        verbose_name=_("Groups"),
     )
 
     global_permissions = models.ManyToManyField(
         Permission,
         related_name='access_control_policies',
         blank=True,
-        help_text=_("Global permissions applied by this policy.")
+        help_text=_("Global permissions applied by this policy."),
+        verbose_name=_("Global Permissions"),
     )
     
     def __str__(self):

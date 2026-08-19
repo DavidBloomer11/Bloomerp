@@ -13,6 +13,7 @@ from rest_framework.response import Response
 
 from bloomerp.router import router
 from bloomerp.utils.api import ApiAccessResolver
+from bloomerp.utils.models import model_name_plural_underline
 from bloomerp.views.api.base import BaseBloomerpApiView
 from bloomerp.views.api.generic.base import BaseModelApiView, get_auto_api_models
 
@@ -399,7 +400,7 @@ class AssistantMutationCatalogView(BaseBloomerpApiView):
         return schema
 
     def _resource_key(self, model) -> str:
-        return model._meta.verbose_name_plural.replace(" ", "_").lower()
+        return model_name_plural_underline(model)
 
     def _json_value(self, value):
         if value is None or isinstance(value, (str, int, float, bool)):
@@ -467,7 +468,7 @@ class AssistantMutationView(BaseBloomerpApiView):
 
     def _get_model_for_resource(self, resource: str):
         for model in get_auto_api_models():
-            route_resource = model._meta.verbose_name_plural.replace(" ", "_").lower()
+            route_resource = model_name_plural_underline(model)
             if route_resource == resource:
                 return model
         return None

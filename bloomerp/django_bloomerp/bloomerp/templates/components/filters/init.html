@@ -1,3 +1,4 @@
+{% load i18n %}
 <div
     bloomerp-component="filter-container"
     data-content-type-id="{{ content_type_id }}"
@@ -11,7 +12,7 @@
             {% if application_fields %}
                 <select class="select w-full">
                     <option value="">
-                        <c-i18n.blocktrans>Select field</c-i18n.blocktrans>
+                        {% blocktrans %}Select field{% endblocktrans %}
                     </option>
                     {% if model_fields %}
                         <optgroup label="Model fields">

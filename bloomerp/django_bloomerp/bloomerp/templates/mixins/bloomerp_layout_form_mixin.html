@@ -1,3 +1,4 @@
+{% load i18n %}
 {% load crispy_forms_tags %}
 {% load cotton %}
 
@@ -61,9 +62,9 @@
                     >
                         <i class="fa fa-asterisk"></i>
                         <span data-toggle-non-required-fields-label>
-                            <c-i18n.blocktrans>
+                            {% blocktrans trimmed %}
                                 Show Required Only
-                            </c-i18n.blocktrans>
+                            {% endblocktrans %}
                         </span>
                     </button>
                 </c-ui.shortcut_tooltip>
@@ -85,15 +86,15 @@
             <div class="hidden flex gap-3" id="object-crud-container-buttons">
                 <button type="button" class="btn btn-sm btn-secondary" id="object-crud-container-back-button">
                     <i class="fa fa-arrow-left"></i>
-                    <c-i18n.blocktrans>
+                    {% blocktrans trimmed %}
                         Back
-                    </c-i18n.blocktrans>
+                    {% endblocktrans %}
                 </button>
                 <button type="button" class="btn btn-sm btn-secondary" id="object-crud-container-reset-button">
                     <i class="fa fa-rotate-left"></i>
-                    <c-i18n.blocktrans>
+                    {% blocktrans trimmed %}
                         Reset
-                    </c-i18n.blocktrans>
+                    {% endblocktrans %}
                 </button>
                 <c-ui.shortcut_tooltip
                     shortcut="mod+s"
@@ -101,9 +102,7 @@
                     position="bottom">
                     <button type="submit" class="btn btn-sm btn-primary" id="object-crud-container-save-button">
                         <i class="fa fa-save"></i>
-                        <c-i18n.blocktrans>
-                            Save
-                        </c-i18n.blocktrans>
+                        {% blocktrans %}Save{% endblocktrans %}
                     </button>
                 </c-ui.shortcut_tooltip>
                 {% if layout_is_create %}
@@ -115,9 +114,9 @@
                     id="object-crud-container-save-and-create-new-button"
                 >
                     <i class="fa fa-plus"></i>
-                    <c-i18n.blocktrans>
+                    {% blocktrans trimmed %}
                         Save and Create New
-                    </c-i18n.blocktrans>
+                    {% endblocktrans %}
                 </button>
                 {% endif %}
             </div>
@@ -145,15 +144,15 @@
             <div class="hidden flex gap-3" id="object-crud-container-buttons">
                 <button type="button" class="btn btn-sm btn-secondary" id="object-crud-container-back-button">
                     <i class="fa fa-arrow-left"></i>
-                    <c-i18n.blocktrans>
+                    {% blocktrans trimmed %}
                         Back
-                    </c-i18n.blocktrans>
+                    {% endblocktrans %}
                 </button>
                 <button type="button" class="btn btn-sm btn-secondary" id="object-crud-container-reset-button">
                     <i class="fa fa-rotate-left"></i>
-                    <c-i18n.blocktrans>
+                    {% blocktrans trimmed %}
                         Reset
-                    </c-i18n.blocktrans>
+                    {% endblocktrans %}
                 </button>
                 <c-ui.shortcut_tooltip
                     shortcut="mod+s"
@@ -161,9 +160,9 @@
                     position="bottom">
                     <button type="submit" class="btn btn-sm btn-primary" id="object-crud-container-save-button">
                         <i class="fa fa-save"></i>
-                        <c-i18n.blocktrans>
+                        {% blocktrans trimmed %}
                             Save
-                        </c-i18n.blocktrans>
+                        {% endblocktrans %}
                     </button>
                 </c-ui.shortcut_tooltip>
                 {% if layout_is_create %}
@@ -180,9 +179,9 @@
                         id="object-crud-container-save-and-create-new-button"
                     >
                         <i class="fa fa-plus"></i>
-                        <c-i18n.blocktrans>
+                        {% blocktrans trimmed %}
                             Save and Create New
-                        </c-i18n.blocktrans>
+                        {% endblocktrans %}
                     </button>
                 </c-ui.shortcut_tooltip>
                 {% endif %}

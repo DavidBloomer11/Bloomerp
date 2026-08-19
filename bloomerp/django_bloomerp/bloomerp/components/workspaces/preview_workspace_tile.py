@@ -95,8 +95,8 @@ def _get_link_route_suggestions() -> list[dict[str, str]]:
         suggestions.append(
             {
                 "url": url,
-                "name": route.name or url,
-                "description": " ".join((route.description or "").split()),
+                "name": route.localized_name or url,
+                "description": " ".join(route.localized_description.split()),
             }
         )
     return sorted(suggestions, key=lambda suggestion: (suggestion["name"].lower(), suggestion["url"]))

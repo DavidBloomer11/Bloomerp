@@ -1,9 +1,10 @@
+{% load i18n %}
 
 
 {% if files %}
 <section class="mb-5 border-b border-gray-200 pb-5">
     <p class="text-sm font-semibold text-dark">
-        <c-i18n.blocktrans>Attachments</c-i18n.blocktrans> ({{ files|length }})
+        {% blocktrans %}Attachments{% endblocktrans %} ({{ files|length }})
     </p>
     <div class="mt-3 flex flex-wrap gap-2">
         {% for file in files %}

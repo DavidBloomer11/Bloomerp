@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ObjectDoesNotExist
 from bloomerp.models.base_bloomerp_model import BloomerpModel
 from bloomerp.utils.models import get_detail_view_url
@@ -10,24 +10,29 @@ from django.urls import reverse
 
 class Bookmark(models.Model):
     class Meta(BloomerpModel.Meta):
+        verbose_name = _("Bookmark")
+        verbose_name_plural = _("Bookmarks")
         managed = True
         db_table = "bloomerp_bookmark"
     
     user = models.ForeignKey(
         to=settings.AUTH_USER_MODEL, 
-        on_delete=models.CASCADE
-        )
+        on_delete=models.CASCADE,
+        verbose_name=_("User"),
+    )
     content_type = models.ForeignKey(
         to=ContentType, 
-        on_delete=models.CASCADE
-        )
-    object_id = models.CharField(max_length=255)
+        on_delete=models.CASCADE,
+        verbose_name=_("Content Type"),
+    )
+    object_id = models.CharField(max_length=255, verbose_name=_("Object ID"))
     object : models.Model = GenericForeignKey(
         ct_field="content_type", 
         fk_field="object_id"
         )
     datetime_created = models.DateTimeField(
-        auto_now_add=True
+        auto_now_add=True,
+        verbose_name=_("Datetime Created"),
         )
 
     allow_string_search = False

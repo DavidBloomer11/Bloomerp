@@ -1,3 +1,4 @@
+{% load i18n %}
 {% load crispy_forms_tags %}
 
 <div class="space-y-5">
@@ -59,12 +60,12 @@
     {% if can_bulk_delete and delete_count %}
         <div class="rounded-xl border border-danger-light bg-danger-light/20 p-4">
             <p class="text-sm font-semibold text-danger-dark">
-                <c-i18n.blocktrans>Delete {{ delete_count }} object(s)</c-i18n.blocktrans>
+                {% blocktrans %}Delete {{ delete_count }} object(s){% endblocktrans %}
             </p>
             <p class="mt-1 text-sm text-slate-700">
-                <c-i18n.blocktrans>
+                {% blocktrans trimmed %}
                     This permanently deletes the objects in the {{ selection_label }}.
-                </c-i18n.blocktrans>
+                {% endblocktrans %}
             </p>
             <form
                 hx-post="{{ submit_url }}"
@@ -76,7 +77,7 @@
                 {% csrf_token %}
                 <input type="hidden" name="action" value="bulk_delete">
                 <button type="submit" class="btn btn-danger">
-                    <c-i18n.blocktrans>Delete {{ delete_count }} object(s)</c-i18n.blocktrans>
+                    {% blocktrans %}Delete {{ delete_count }} object(s){% endblocktrans %}
                 </button>
             </form>
         </div>

@@ -1,0 +1,5152 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-19 09:17+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: pl\n"
+"Language-Team: pl <LL@li.org>\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : "
+"2);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.16.0\n"
+
+#: models/activity_log.py:116
+#, python-format
+msgid "%(actor)s changed the field %(field)s to %(value)s"
+msgstr "%(actor)s zmienił(a) pole %(field)s na %(value)s"
+
+#: models/activity_log.py:123
+#, python-format
+msgid "%(actor)s changed the fields %(first)s and %(second)s"
+msgstr "%(actor)s zmienił(a) pola %(first)s i %(second)s"
+
+#: models/activity_log.py:129
+#, python-format
+msgid "%(actor)s changed the fields %(first)s, %(second)s and more"
+msgstr "%(actor)s zmienił(a) pola %(first)s, %(second)s i więcej"
+
+#: models/activity_log.py:113 models/activity_log.py:135 models/activity_log.py:140
+#, python-format
+msgid "%(actor)s changed the object"
+msgstr "%(actor)s zmienił(a) obiekt"
+
+#: models/activity_log.py:138
+#, python-format
+msgid "%(actor)s created this object"
+msgstr "%(actor)s utworzył(a) ten obiekt"
+
+#: models/activity_log.py:98
+#, python-format
+msgid "%(actor)s deleted this object"
+msgstr "%(actor)s usunął(ęła) ten obiekt"
+
+#: templates/views/auth/login.html:60
+#, python-format
+msgid "%(provider_name)s login requires django-allauth and provider setup"
+msgstr "Logowanie za pomocą %(provider_name)s wymaga django-allauth i konfiguracji dostawcy"
+
+#: components/communication/emails/new_email.py:182
+#, python-format
+msgid "'%(email)s' is not a valid email address."
+msgstr "'%(email)s' nie jest prawidłowym adresem e-mail."
+
+#: models/users/user_list_view_preference.py:24
+msgid "10"
+msgstr "10"
+
+#: models/users/user_list_view_preference.py:27
+msgid "100"
+msgstr "100"
+
+#: models/users/user_list_view_preference.py:25
+msgid "25"
+msgstr "25"
+
+#: workspaces/analytics_tile/model.py:246
+msgid "2D Chart"
+msgstr "Wykres 2D"
+
+#: workspaces/analytics_tile/model.py:351
+msgid "3D Chart"
+msgstr "Wykres 3D"
+
+#: models/users/user_list_view_preference.py:26
+msgid "50"
+msgstr "50"
+
+#: templates/cotton/features/workspaces/preview_tile_container.html:24
+msgid "<p class=\"font-bold text-primary-900\"> Preview </p>"
+msgstr "<p class=\"font-bold text-primary-900\"> Podgląd </p>"
+
+#: templates/cotton/features/workspaces/preview_tile_container.html:12
+#, python-format
+msgid "<p class=\"font-bold text-primary-900\">%(name)s</p>"
+msgstr "<p class=\"font-bold text-primary-900\">%(name)s</p>"
+
+#: bloomerp.fieldpolicy.rule models/access_control/field_policy.py:39
+msgid "A JSON representation of the field-level access control rules."
+msgstr "Reprezentacja JSON reguł kontroli dostępu na poziomie pól."
+
+#: bloomerp.rowpolicyrule.rule models/access_control/row_policy_rule.py:36
+msgid "A JSON representation of the row-level access control rule."
+msgstr "Reprezentacja JSON reguły kontroli dostępu na poziomie wierszy."
+
+#: components/workspaces/sidebar.py:414
+msgid "A URL is required."
+msgstr "Wymagany jest adres URL."
+
+#: bloomerp.inboxitem.snippet
+msgid "A brief snippet or summary of the inbox item content."
+msgstr "Krótki fragment lub podsumowanie treści elementu skrzynki odbiorczej."
+
+msgctxt "bloomerp:module:description"
+msgid "A collection of miscellaneous features and tools that don't fit into other specific modules."
+msgstr "Zbiór różnych funkcji i narzędzi, które nie pasują do innych konkretnych modułów."
+
+#: bloomerp.policy.description models/access_control/policy.py:74
+msgid "A description of the access control policy."
+msgstr "Opis zasad kontroli dostępu."
+
+#: bloomerp.workflowedge.name
+msgid "A descriptive name for the edge."
+msgstr "Opisowa nazwa krawędzi."
+
+#: bloomerp.initiative.description models/project_management/initiative.py:107
+msgid "A detailed description of the initiative"
+msgstr "Nazwa inicjatywy"
+
+#: automation/defintion.py:224
+msgid "A flow node to branch the workflow"
+msgstr "Węzeł przepływu umożliwiający rozgałęzienie procesu roboczego"
+
+#: workspaces/tiles.py:33
+msgid ""
+"A free-form workspace where users can add and arrange different types of content such as text, "
+"media, and embedded components."
+msgstr ""
+"Swobodny obszar roboczy, w którym użytkownicy mogą dodawać i układać różne rodzaje treści, takie "
+"jak tekst, multimedia i osadzone komponenty."
+
+#: bloomerp.apikey.name
+msgid "A human-readable label for this API key."
+msgstr "Zrozumiała dla człowieka etykieta dla tego klucza API."
+
+#: bloomerp.documenttemplate.page_size models/document_templates/document_template.py:21
+msgid "A3"
+msgstr "A3"
+
+#: bloomerp.documenttemplate.page_size models/document_templates/document_template.py:19
+msgid "A4"
+msgstr "A4"
+
+#: bloomerp.aiconversation models/llm/ai_conversation.py:16
+msgid "AI conversation"
+msgstr "Rozmowa z AI"
+
+#: bloomerp.aiconversation models/llm/ai_conversation.py:17
+msgid "AI conversations"
+msgstr "Rozmowy z AI"
+
+# | msgid "KPI"
+#: bloomerp.activitylog.source models/activity_log.py:15
+msgid "API"
+msgstr "KPI"
+
+#: bloomerp.apikey models/api_key.py:27
+msgid "API Key"
+msgstr "Klucz API"
+
+# | msgid "API Keys"
+#: models/api_key.py:54
+msgid "API Key Details"
+msgstr "Klucze API"
+
+#: bloomerp.apikey models/api_key.py:28
+msgid "API Keys"
+msgstr "Klucze API"
+
+#: models/mixins/absolute_url_model_mixin.py:11
+msgid "Absolute URL Model Mixin"
+msgstr "Miksin modelu absolutnego adresu URL"
+
+#: models/mixins/absolute_url_model_mixin.py:12
+msgid "Absolute URL Model Mixins"
+msgstr "Miksiny modeli absolutnych adresów URL"
+
+# | msgid "Access Token"
+#: models/users/user.py:33
+msgid "Access"
+msgstr "Token dostępu"
+
+#: bloomerp.fieldpolicy models/access_control/field_policy.py:24
+msgid "Access Control Field Policies"
+msgstr "Zasady kontroli dostępu do pól"
+
+#: bloomerp.fieldpolicy models/access_control/field_policy.py:23
+msgid "Access Control Field Policy"
+msgstr "Zasada kontroli dostępu do pola"
+
+#: bloomerp.policy models/access_control/policy.py:31
+msgid "Access Control Policies"
+msgstr "Zasady kontroli dostępu"
+
+#: bloomerp.policy models/access_control/policy.py:30
+msgid "Access Control Policy"
+msgstr "Zasada kontroli dostępu"
+
+#: bloomerp.rowpolicy models/access_control/row_policy.py:17
+msgid "Access Control Row Policies"
+msgstr "Zasady kontroli dostępu do wierszy"
+
+#: bloomerp.rowpolicy models/access_control/row_policy.py:16
+msgid "Access Control Row Policy"
+msgstr "Zasada kontroli dostępu do wiersza"
+
+#: bloomerp.rowpolicyrule models/access_control/row_policy_rule.py:25
+msgid "Access Control Row Policy Rule"
+msgstr "Reguła zasady kontroli dostępu do wiersza"
+
+#: bloomerp.rowpolicyrule models/access_control/row_policy_rule.py:26
+msgid "Access Control Row Policy Rules"
+msgstr "Reguły zasad kontroli dostępu do wierszy"
+
+#: bloomerp.emailaccount.access_token models/communication/email_account.py:184
+msgid "Access Token"
+msgstr "Token dostępu"
+
+#: bloomerp.apikey.account models/api_key.py:86 models/communication/email_account.py:48
+msgid "Account"
+msgstr "Konto"
+
+#: templates/cotton/app/sidebar/body.html:165
+msgid "Account Settings"
+msgstr "Ustawienia konta"
+
+#: views/communication/create_email_account.py:161
+msgid "Account details need attention"
+msgstr "Szczegóły konta wymagają uwagi"
+
+#: views/communication/create_email_account.py:63
+msgid "Accounting inbox"
+msgstr "Skrzynka odbiorcza księgowości"
+
+#: automation/defintion.py:110 bloomerp.activitylog.action bloomerp.workflownode.type
+#: models/activity_log.py:88
+msgid "Action"
+msgstr "Akcja"
+
+#: bloomerp.workflowrunstep.action_id models/automation/workflow_run_step.py:38
+msgid "Action ID"
+msgstr "Identyfikator akcji"
+
+#: templates/components/files/browser.html:190
+msgid "Actions"
+msgstr "Akcje"
+
+#: bloomerp.emailaccount.status bloomerp.workflow.active models/automation/workflow.py:85
+#: models/communication/email_account.py:28
+msgid "Active"
+msgstr "Aktywne"
+
+#: bloomerp.user.detail_sidebar_view_preference models/users/user.py:68
+#: templates/views/generic/detail/base.html:134
+msgid "Activity"
+msgstr "Aktywność"
+
+#: bloomerp.activitylog models/activity_log.py:41
+msgid "Activity Log"
+msgstr "Dziennik aktywności"
+
+#: bloomerp.activitylog models/activity_log.py:42
+msgid "Activity Logs"
+msgstr "Dzienniki aktywności"
+
+#: components/activity/activity_log.py:31
+msgid "Activity logging is not enabled for this model."
+msgstr "Rejestrowanie aktywności nie jest włączone dla tego modelu."
+
+#: bloomerp.activitylog.actor bloomerp.inboxitem.actor models/activity_log.py:55
+#: models/communication/inbox/inbox_item.py:63
+msgid "Actor"
+msgstr "Aktor"
+
+#: components/workspaces/sidebar.py:236 components/workspaces/sidebar.py:246
+#: components/workspaces/sidebar.py:284 components/workspaces/sidebar.py:312
+#: templates/views/access_control/manage_permissions/wizard_object_access_control.html:164
+msgid "Add"
+msgstr "Dodaj"
+
+#: templates/views/access_control/manage_permissions/wizard_object_access_control.html:161
+msgid "Add Condition"
+msgstr "Dodaj warunek"
+
+#: templates/views/access_control/manage_permissions/wizard_object_access_control.html:188
+msgid "Add Field Policy"
+msgstr "Dodaj politykę pola"
+
+#: templates/views/workflows/builder.html:11
+msgid "Add Node"
+msgstr "Dodaj węzeł"
+
+#: components/communication/emails/new_email.py:185
+msgid "Add a subject or message body before sending."
+msgstr "Dodaj temat lub treść wiadomości przed wysłaniem."
+
+#: models/users/user_list_view_preference.py:563
+msgid "Add a total column for each row."
+msgstr "Dodaj kolumnę sumy dla każdego wiersza."
+
+#: models/users/user_list_view_preference.py:571
+msgid "Add a totals row beneath the pivot table."
+msgstr "Dodaj wiersz sum pod tabelą przestawną."
+
+#: components/communication/emails/new_email.py:175
+msgid "Add at least one recipient."
+msgstr "Dodaj co najmniej jednego odbiorcę."
+
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:81
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:116
+msgid "Add folder"
+msgstr "Dodaj folder"
+
+#: templates/cotton/features/layout/container.html:126
+msgid "Add items"
+msgstr "Dodaj elementy"
+
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:34
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:75
+msgid "Add link"
+msgstr "Dodaj link"
+
+#: templates/cotton/features/workspaces/tiles/text.html:9
+msgid "Add markdown content to preview your text tile."
+msgstr "Dodaj treść w formacie Markdown, aby wyświetlić podgląd kafelka tekstowego."
+
+#: templates/widgets/one_to_many_field_widget.html:103
+msgid "Add row"
+msgstr "Dodaj wiersz"
+
+#: bloomerp.applicationfield.meta models/application_field.py:59
+msgid "Additional metadata about the field."
+msgstr "Dodatkowe metadane pola."
+
+#: bloomerp.applicationfield.field_type
+msgid "Address Field"
+msgstr "Pole adresu"
+
+# | msgid "Admin page"
+#: models/communication/channel_member.py:22
+msgid "Admin"
+msgstr "Strona administratora"
+
+#: workspaces/analytics_tile/model.py:223
+msgid "Advanced formatting"
+msgstr "Zaawansowane formatowanie"
+
+#: models/users/user_list_view_preference.py:552
+msgid "Aggregation"
+msgstr "Agregacja"
+
+#: bloomerp.inboxfolder.type
+#: templates/views/access_control/manage_permissions/wizard_object_access_control.html:56
+msgid "All"
+msgstr "Wszystkie"
+
+#: templates/cotton/ui/inputs/permissions.html:28
+msgid "All Permissions"
+msgstr "Wszystkie uprawnienia"
+
+#: templates/cotton/features/dataviews/calendar.html:149
+msgid "All day"
+msgstr "Cały dzień"
+
+#: templates/components/objects/dataview_gant_unscheduled.html:18
+msgid "All visible records are scheduled."
+msgstr "Wszystkie widoczne rekordy są zaplanowane."
+
+#: automation/defintion.py:111
+msgid "An action to perform"
+msgstr "Akcja do wykonania"
+
+#: components/workspaces/sidebar.py:386
+msgid "An item is required."
+msgstr "Element jest wymagany."
+
+#: bloomerp.tile.type workspaces/tiles.py:23
+msgid "Analytics Tile"
+msgstr "Kafelek analityczny"
+
+#: workspaces/analytics_tile/model.py:217
+msgid "Applicable filter on this field"
+msgstr "Filtr mający zastosowanie do tego pola"
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "Application Fields"
+#: bloomerp.applicationfield models/application_field.py:23
+msgid "Application Field"
+msgstr "Pola aplikacji"
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "Application Fields"
+#: bloomerp.applicationfield models/application_field.py:24
+msgid "Application Fields"
+msgstr "Pola aplikacji"
+
+#: models/automation/workflow_run.py:54
+msgid "Approve"
+msgstr "Zatwierdź"
+
+# | msgid "Open workflow run"
+#: models/automation/workflow_run.py:62
+msgid "Approve workflow continuation"
+msgstr "Otwórz przebieg przepływu pracy"
+
+#: bloomerp.aiconversation.args models/llm/ai_conversation.py:35
+msgid "Args"
+msgstr "Argumenty"
+
+#: bloomerp.applicationfield.field_type
+msgid "Array Field"
+msgstr "Pole tablicowe"
+
+# | msgid "Sort ascending"
+#: models/users/user_list_view_preference.py:108
+msgid "Ascending"
+msgstr "Sortuj rosnąco"
+
+#: bloomerp.todo.assigned_to models/project_management/todo.py:130
+msgid "Assigned To"
+msgstr "Przypisano do"
+
+#: templates/components/communication/emails/email_editor.html:129
+msgid "Attach"
+msgstr "Załącz"
+
+#: templates/inbox_items/email.html:7
+msgid "Attachments"
+msgstr "Załączniki"
+
+#: bloomerp.applicationfield.field_type
+msgid "Auto Field"
+msgstr "Pole automatyczne"
+
+#: bloomerp.tile.auto_generated models/workspaces/tile.py:46
+msgid "Auto Generated"
+msgstr "Wygenerowane automatycznie"
+
+#: bloomerp.aiconversation.auto_named models/llm/ai_conversation.py:34
+msgid "Auto Named"
+msgstr "Automatycznie nazwane"
+
+#: templates/cotton/ui/inputs/one_to_many/column_actions.html:3
+#: templates/cotton/ui/inputs/one_to_many/column_actions.html:42
+msgid "Autofill"
+msgstr "Autouzupełnianie"
+
+#: templates/cotton/app/theme_selector.html:19
+msgid "Automatic"
+msgstr "Automatyczne"
+
+msgctxt "bloomerp:module:name"
+msgid "Automation"
+msgstr "Automatyzacja"
+
+#: route:bloomerp_home_view
+msgctxt "bloomerp:route:description"
+msgid "Available Modules"
+msgstr "Dostępne moduły"
+
+#: bloomerp.emailaccount.avatar bloomerp.form.avatar bloomerp.inboxfolder.avatar
+#: bloomerp.inboxitem.avatar bloomerp.sqlquery.avatar bloomerp.tile.avatar bloomerp.user.avatar
+#: bloomerp.userinboxpreference.avatar models/mixins/avatar_model_mixin.py:13
+msgid "Avatar"
+msgstr "Awatar"
+
+#: models/mixins/avatar_model_mixin.py:10
+msgid "Avatar Model Mixin"
+msgstr "Miksin modelu awatara"
+
+#: models/mixins/avatar_model_mixin.py:11
+msgid "Avatar Model Mixins"
+msgstr "Miksy modelu awatara"
+
+#: models/users/user_list_view_preference.py:144
+msgid "Average"
+msgstr "Średnia"
+
+#: templates/mixins/bloomerp_layout_form_mixin.html:89
+#: templates/mixins/bloomerp_layout_form_mixin.html:147 templates/views/base_wizard.html:62
+msgid "Back"
+msgstr "Wstecz"
+
+#: bloomerp.initiative.status bloomerp.todo.status models/project_management/initiative.py:16
+#: models/project_management/todo.py:36
+msgid "Backlog"
+msgstr "Backlog"
+
+#: workspaces/analytics_tile/model.py:148
+msgid "Bar"
+msgstr "Wykres słupkowy"
+
+# | msgid "Preference"
+#: models/users/base_preference.py:43
+msgid "Base Preference"
+msgstr "Preferencja"
+
+# | msgid "Preference"
+#: models/users/base_preference.py:44
+msgid "Base Preferences"
+msgstr "Preferencja"
+
+# | msgid "Date View Preference"
+#: models/users/base_view_preference.py:15
+msgid "Base View Preference"
+msgstr "Preferencja wyświetlania daty"
+
+# | msgid "Date View Preference"
+#: models/users/base_view_preference.py:16
+msgid "Base View Preferences"
+msgstr "Preferencja wyświetlania daty"
+
+#: templates/components/communication/emails/email_editor.html:88
+msgid "Bcc"
+msgstr "UDW"
+
+#: bloomerp.applicationfield.field_type
+msgid "Big Auto Field"
+msgstr "Duże pole automatyczne"
+
+#: bloomerp.applicationfield.field_type
+msgid "Big Integer Field"
+msgstr "Pole dużej liczby całkowitej"
+
+#: bloomerp.applicationfield.field_type
+msgid "Binary Field"
+msgstr "Pole binarne"
+
+#: bloomerp.aiconversation.conversation_type
+msgid "Bloom AI"
+msgstr "Bloom AI"
+
+# | msgid "Bloomerp File Field"
+#: models/users/user.py:151
+msgid "Bloomerp Email User"
+msgstr "Pole pliku Bloomerp"
+
+# | msgid "Bloomerp File Field"
+#: models/users/user.py:152
+msgid "Bloomerp Email Users"
+msgstr "Pole pliku Bloomerp"
+
+#: bloomerp.applicationfield.field_type
+msgid "Bloomerp File Field"
+msgstr "Pole pliku Bloomerp"
+
+# | msgid "Bloomerp File Field"
+#: models/base_bloomerp_model.py:61
+msgid "Bloomerp Model"
+msgstr "Pole pliku Bloomerp"
+
+# | msgid "Bloomerp File Field"
+#: models/base_bloomerp_model.py:62
+msgid "Bloomerp Models"
+msgstr "Pole pliku Bloomerp"
+
+# | msgid "Bloomerp File Field"
+#: models/users/user.py:79
+msgid "Bloomerp User"
+msgstr "Pole pliku Bloomerp"
+
+# | msgid "Bloomerp File Field"
+#: models/users/user.py:80
+msgid "Bloomerp Users"
+msgstr "Pole pliku Bloomerp"
+
+# | msgid "Bookmarks"
+#: bloomerp.bookmark models/users/bookmark.py:13
+msgid "Bookmark"
+msgstr "Zakładki"
+
+#: bloomerp.bookmark models/users/bookmark.py:14
+msgid "Bookmarks"
+msgstr "Zakładki"
+
+#: bloomerp.applicationfield.field_type
+msgid "Boolean Field"
+msgstr "Pole logiczne"
+
+#: workspaces/analytics_tile/model.py:198
+msgid "Bottom"
+msgstr "Dół"
+
+#: bloomerp.documenttemplateheader.margin_bottom
+#: models/document_templates/document_template_header.py:35
+msgid "Bottom margin of the header in inches."
+msgstr "Dolny margines nagłówka w calach."
+
+#: views/workspaces/create_tile.py:164
+msgid "Build tile"
+msgstr "Utwórz kafelek"
+
+#: route:workflows_detail_builder
+msgctxt "bloomerp:route:name"
+msgid "Builder"
+msgstr "Kreator"
+
+#: bloomerp.activitylog.source models/activity_log.py:17
+msgid "Bulk"
+msgstr "Masowe"
+
+#: route:log_entries_bulk_upload
+msgctxt "bloomerp:route:name"
+msgid "Bulk Upload {model}"
+msgstr "Masowe przesyłanie {model}"
+
+#: route:log_entries_bulk_upload
+msgctxt "bloomerp:route:description"
+msgid "Bulk upload objects from {model}"
+msgstr "Masowe przesyłanie obiektów z {model}"
+
+#: bloomerp.emailaccount.mailboxes
+msgid "Cached list of folders/mailboxes for this account."
+msgstr "Buforowana lista folderów/skrz ynek pocztowych dla tego konta."
+
+#: models/users/user_list_view_preference.py:580
+msgid "Calculate the totals row from this page or the entire filtered dataset."
+msgstr "Oblicz wiersz sum podsumowujący na podstawie tej strony lub całego przefiltrowanego zbioru danych."
+
+#: bloomerp.userlistviewpreference.view_type models/users/user_list_view_preference.py:413
+msgid "Calendar"
+msgstr "Kalendarz"
+
+#: bloomerp.initiative.status models/project_management/initiative.py:20
+msgid "Canceled"
+msgstr "Anulowano"
+
+#: bloomerp.todo.status bloomerp.workflowrunstep.status models/automation/workflow_run_step.py:10
+#: models/project_management/todo.py:40
+msgid "Cancelled"
+msgstr "Anulowano"
+
+#: bloomerp.tile.type workspaces/tiles.py:32
+msgid "Canvas"
+msgstr "Kanwa"
+
+#: templates/components/workspaces/tile_builders/canvas_tile_builder.html:4
+msgid "Canvas height"
+msgstr "Wysokość kanwy"
+
+#: bloomerp.userlistviewpreference.view_type models/users/user_list_view_preference.py:394
+msgid "Card"
+msgstr "Karta"
+
+#: models/users/user_list_view_preference.py:364
+msgid "Cards per column"
+msgstr "Liczba kart w kolumnie"
+
+#: templates/components/communication/emails/email_editor.html:73
+msgid "Cc"
+msgstr "DW"
+
+#: bloomerp.activitylog.action models/activity_log.py:26
+msgid "Change"
+msgstr "Zmiana"
+
+#: templates/views/generic/model/bulk_upload_wizard/confirm_step.html:20
+msgid "Changed rows"
+msgstr "Zmienione wiersze"
+
+# | msgid "Change"
+#: models/communication/channel.py:8 models/communication/channel_member.py:31
+msgid "Channel"
+msgstr "Zmiana"
+
+# | msgid "Content Type"
+# | msgid "Channel Type"
+#: models/communication/channel_member.py:9
+msgid "Channel Member"
+msgstr "Typ treści"
+
+# | msgid "Content Type"
+# | msgid "Channel Type"
+#: models/communication/channel_member.py:10
+msgid "Channel Members"
+msgstr "Typ treści"
+
+# | msgid "Content Type"
+#: models/communication/channel.py:17
+msgid "Channel Type"
+msgstr "Typ treści"
+
+# | msgid "Change"
+# | msgid "Channel"
+#: models/communication/channel.py:9
+msgid "Channels"
+msgstr "Zmiana"
+
+#: bloomerp.applicationfield.field_type
+msgid "Char Field"
+msgstr "Pole tekstowe"
+
+#: workspaces/analytics_tile/model.py:141
+msgid "Chart type"
+msgstr "Typ wykresu"
+
+#: bloomerp.applicationfield.field_type
+msgid "Choice Field"
+msgstr "Pole wyboru"
+
+#: views/communication/create_email_account.py:204
+msgid "Choose the type of email account you want to connect."
+msgstr "Wybierz typ konta e-mail, które chcesz połączyć."
+
+#: views/access_control/manage_permissions.py:336
+msgid "Choose which model-level permissions this policy grants."
+msgstr "Wybierz uprawnienia na poziomie modelu, które przyznaje ta zasada."
+
+#: templates/cotton/ui/inputs/one_to_many/row_actions.html:2
+msgid "Clone row"
+msgstr "Klonuj wiersz"
+
+#: bloomerp.form.closes_at models/forms/form.py:125
+msgid "Closes At"
+msgstr "Zamyka się o"
+
+#: models/forms/form.py:136
+msgid "Closing time must be after opening time."
+msgstr "Godzina zamknięcia musi być późniejsza niż godzina otwarcia."
+
+#: bloomerp.applicationfield.field_type
+msgid "Code Field"
+msgstr "Pole kodu"
+
+#: bloomerp.aiconversation.conversation_type
+msgid "Code Generator"
+msgstr "Generator kodu"
+
+#: bloomerp.sidebaritem.color bloomerp.todolabel.color models/project_management/todo_label.py:39
+#: models/workspaces/sidebar_item.py:83 workspaces/analytics_tile/model.py:104
+msgid "Color"
+msgstr "Kolor"
+
+#: models/users/user_list_view_preference.py:447
+msgid "Color grouping"
+msgstr "Grupowanie według koloru"
+
+#: templates/cotton/ui/inputs/one_to_many/column_actions.html:2
+msgid "Column actions"
+msgstr "Działania kolumny"
+
+#: templates/cotton/features/dataviews/pivot_table.html:104
+msgid "Column totals"
+msgstr "Podsumowania kolumn"
+
+#: models/users/user_list_view_preference.py:534 workspaces/analytics_tile/model.py:292
+msgid "Columns"
+msgstr "Kolumny"
+
+#: workspaces/analytics_tile/model.py:163
+msgid "Comma separated order for text X-axis values, for example Mon, Tue, Wed."
+msgstr "Rozdzielana przecinkami kolejność wartości tekstowych osi X, na przykład Pon, Wt, Śr."
+
+# | msgid "Comments"
+#: bloomerp.comment models/communication/comment.py:15
+msgid "Comment"
+msgstr "Komentarze"
+
+#: bloomerp.aiconversation.comments bloomerp.apikey.comments bloomerp.comment
+#: bloomerp.documenttemplate.comments bloomerp.documenttemplateheader.comments
+#: bloomerp.documenttemplatestyling.comments bloomerp.emailaccount.comments bloomerp.form.comments
+#: bloomerp.formsubmission.comments bloomerp.inboxfolder.comments bloomerp.inboxitem.comments
+#: bloomerp.initiative.comments bloomerp.sqlquery.comments bloomerp.tile.comments
+#: bloomerp.todo.comments bloomerp.todolabel.comments bloomerp.user.detail_sidebar_view_preference
+#: bloomerp.userinboxpreference.comments models/communication/comment.py:16 models/users/user.py:69
+#: templates/views/generic/detail/base.html:144
+msgid "Comments"
+msgstr "Komentarze"
+
+#: bloomerp.initiative.status bloomerp.todo.status bloomerp.workflowrunstep.status
+#: models/automation/workflow_run_step.py:8 models/project_management/initiative.py:19
+#: models/project_management/todo.py:39 templates/inbox_items/workflow_run.html:14
+msgid "Completed"
+msgstr "Ukończono"
+
+#: bloomerp.initiative.completed_at models/project_management/initiative.py:123
+msgid "Completed At"
+msgstr "Ukończono o"
+
+#: bloomerp.workflownode.config models/automation/workflow_node.py:51
+msgid "Config"
+msgstr "Konfiguracja"
+
+# | msgid "Configure account"
+#: models/automation/workflow.py:44
+msgid "Configuration"
+msgstr "Skonfiguruj konto"
+
+#: views/communication/create_email_account.py:211
+msgid "Configure account"
+msgstr "Skonfiguruj konto"
+
+#: views/access_control/manage_permissions.py:343
+msgid "Configure row and field rules using only the global permissions selected in step 1."
+msgstr "Konfiguruj reguły wierszy i pól, korzystając wyłącznie z globalnych uprawnień wybranych w kroku 1."
+
+#: views/workspaces/create_tile.py:165
+msgid "Configure the details of your tile and preview what it looks like."
+msgstr "Skonfiguruj szczegóły kafelka i zobacz podgląd jego wyglądu."
+
+#: bloomerp.comment.content bloomerp.todo.content models/communication/channel_message.py:18
+#: models/communication/comment.py:36 models/project_management/todo.py:171
+msgid "Content"
+msgstr "Treść"
+
+#: models/mixins/content_layout_model_mixin.py:12
+msgid "Content Layout Model Mixin"
+msgstr "Miks modelu układu treści"
+
+#: models/mixins/content_layout_model_mixin.py:13
+msgid "Content Layout Model Mixins"
+msgstr "Miksy modelu układu treści"
+
+#: bloomerp.comment.content_object bloomerp.file.content_object bloomerp.filefolder.content_object
+#: bloomerp.todo.content_object
+msgid "Content Object"
+msgstr "Obiekt treści"
+
+#: bloomerp.activitylog.content_type bloomerp.applicationfield.content_type
+#: bloomerp.bookmark.content_type bloomerp.comment.content_type bloomerp.fieldpolicy.content_type
+#: bloomerp.file.content_type bloomerp.filefolder.content_type bloomerp.form.content_type
+#: bloomerp.rowpolicy.content_type bloomerp.todo.content_type
+#: bloomerp.userdetailviewtabspreference.content_type bloomerp.userlistviewpreference.content_type
+#: bloomerp.userobjectlayoutpreference.content_type models/access_control/field_policy.py:29
+#: models/access_control/row_policy.py:21 models/activity_log.py:60 models/application_field.py:39
+#: models/communication/comment.py:25 models/communication/mention.py:24 models/files/file.py:54
+#: models/files/file_folder.py:38 models/forms/form.py:78 models/project_management/todo.py:208
+#: models/users/base_view_preference.py:25 models/users/bookmark.py:26
+#: models/users/user_detail_view_tabs_preference.py:56
+msgid "Content Type"
+msgstr "Typ treści"
+
+#: bloomerp.documenttemplate.content_types models/document_templates/document_template.py:134
+msgid "Content Types"
+msgstr "Typy treści"
+
+#: bloomerp.documenttemplate.template models/document_templates/document_template.py:125
+msgid "Content of the template, including the variables."
+msgstr "Treść szablonu, w tym zmienne."
+
+#: templates/views/base_wizard.html:75
+msgid "Continue"
+msgstr "Kontynuuj"
+
+#: templates/views/auth/login.html:56
+#, python-format
+msgid "Continue with %(provider_name)s"
+msgstr "Kontynuuj za pomocą %(provider_name)s"
+
+#: bloomerp.aiconversation.conversation_history models/llm/ai_conversation.py:32
+msgid "Conversation History"
+msgstr "Historia konwersacji"
+
+#: bloomerp.aiconversation.conversation_type models/llm/ai_conversation.py:33
+msgid "Conversation Type"
+msgstr "Typ konwersacji"
+
+#: templates/components/forms/qr_code.html:27
+msgid "Copy"
+msgstr "Kopiuj"
+
+#: templates/models/todo/copy_git_branch_name.html:6
+msgid "Copy branch name"
+msgstr "Kopiuj nazwę gałęzi"
+
+#: templates/cotton/ui/inputs/one_to_many/column_actions.html:30
+msgid "Copy first value"
+msgstr "Kopiuj pierwszą wartość"
+
+msgctxt "bloomerp:module:name"
+msgid "Core"
+msgstr "Rdzeń"
+
+# | msgid "Details"
+#: models/document_templates/document_template.py:104 models/forms/form.py:26
+msgid "Core Details"
+msgstr "Szczegóły"
+
+msgctxt "bloomerp:module:description"
+msgid "Core functionalities and features of the ERP system."
+msgstr "Podstawowe funkcje i możliwości systemu ERP."
+
+#: views/access_control/manage_permissions.py:400
+msgid "Could not save policy"
+msgstr "Nie można zapisać zasad"
+
+# | msgid "Account"
+#: models/users/user_list_view_preference.py:140
+msgid "Count"
+msgstr "Konto"
+
+#: bloomerp.activitylog.action bloomerp.activitylog.source models/activity_log.py:16
+#: models/activity_log.py:27 templates/views/workspaces/my_workspaces_view.html:14
+msgid "Create"
+msgstr "Utwórz"
+
+#: route:api_keys_add
+msgctxt "bloomerp:route:name"
+msgid "Create API Key"
+msgstr "Utwórz klucz API"
+
+#: route:log_entries_create_policy_for_log_entry
+msgctxt "bloomerp:route:name"
+msgid "Create Policy for {model}"
+msgstr "Utwórz politykę dla {model}"
+
+#: route:create_tile
+msgctxt "bloomerp:route:name"
+msgid "Create Tile"
+msgstr "Utwórz kafelek"
+
+#: templates/views/generic/detail/base.html:157
+msgid "Create Todo"
+msgstr "Utwórz zadanie"
+
+#: route:log_entries_detail_create_user_for_object
+msgctxt "bloomerp:route:name"
+msgid "Create User for Object"
+msgstr "Utwórz użytkownika dla obiektu"
+
+#: route:email_accounts_add
+msgctxt "bloomerp:route:description"
+msgid "Create a new email account"
+msgstr "Utwórz nowe konto e-mail"
+
+#: route:users_add
+msgctxt "bloomerp:route:description"
+msgid "Create a new object from User"
+msgstr "Utwórz nowy obiekt na podstawie użytkownika"
+
+#: route:workspaces_add
+msgctxt "bloomerp:route:description"
+msgid "Create a new object from {model}"
+msgstr "Utwórz nowy obiekt na podstawie {model}"
+
+#: route:create_tile
+msgctxt "bloomerp:route:description"
+msgid "Create a new tile for the workspace"
+msgstr "Utwórz nowy kafelek dla obszaru roboczego"
+
+#: views/communication/create_email_account.py:223
+msgid "Create account"
+msgstr "Utwórz konto"
+
+#: route:log_entries_create_policy_for_log_entry
+msgctxt "bloomerp:route:description"
+msgid "Create an access control policies for {model}"
+msgstr "Utwórz zasady kontroli dostępu dla {model}"
+
+#: templates/views/workspaces/bloomerp_workspace_view.html:28
+msgid "Create default"
+msgstr "Utwórz domyślne"
+
+#: templates/components/files/browser.html:144
+msgid "Create folder"
+msgstr "Utwórz folder"
+
+#: templates/components/forms/initial_data_value.html:47
+msgid "Create rows shown when the form opens."
+msgstr "Utwórz wiersze wyświetlane po otwarciu formularza."
+
+#: templates/cotton/features/workspaces/container.html:88
+msgid "Create tile"
+msgstr "Utwórz kafelek"
+
+#: route:users_add
+msgctxt "bloomerp:route:name"
+msgid "Create user"
+msgstr "Utwórz użytkownika"
+
+#: route:workspaces_add
+msgctxt "bloomerp:route:name"
+msgid "Create {model}"
+msgstr "Utwórz {model}"
+
+#: bloomerp.aiconversation.created_by bloomerp.apikey.created_by bloomerp.comment.created_by
+#: bloomerp.documenttemplate.created_by bloomerp.documenttemplateheader.created_by
+#: bloomerp.documenttemplatestyling.created_by bloomerp.emailaccount.created_by
+#: bloomerp.file.created_by bloomerp.filefolder.created_by bloomerp.form.created_by
+#: bloomerp.formsubmission.created_by bloomerp.inboxfolder.created_by bloomerp.inboxitem.created_by
+#: bloomerp.initiative.created_by bloomerp.policy.created_by bloomerp.sqlquery.created_by
+#: bloomerp.tile.created_by bloomerp.todo.created_by bloomerp.todolabel.created_by
+#: bloomerp.userinboxpreference.created_by bloomerp.workflow.created_by
+#: bloomerp.workflownode.created_by models/mixins/user_stamp_model_mixin.py:17
+msgid "Created By"
+msgstr "Utworzone przez"
+
+#: templates/cotton/app/sidebar/body.html:204
+msgid "Current language"
+msgstr "Bieżący język"
+
+# | msgid "Current language"
+#: models/users/user_list_view_preference.py:154
+msgid "Current page"
+msgstr "Bieżący język"
+
+#: bloomerp.documenttemplate.custom_styling models/document_templates/document_template.py:196
+msgid "Custom CSS styling for the document template."
+msgstr "Niestandardowe style CSS szablonu dokumentu."
+
+#: bloomerp.documenttemplate.custom_styling models/document_templates/document_template.py:197
+msgid "Custom Styling"
+msgstr "Niestandardowe style"
+
+# | msgid "Db Column"
+#: bloomerp.applicationfield.db_column models/application_field.py:81
+msgid "DB Column"
+msgstr "Kolumna bazy danych"
+
+# | msgid "Db Field Type"
+#: bloomerp.applicationfield.db_field_type models/application_field.py:75
+msgid "DB Field Type"
+msgstr "Typ pola bazy danych"
+
+# | msgid "Db Table"
+#: bloomerp.applicationfield.db_table models/application_field.py:69
+msgid "DB Table"
+msgstr "Tabela bazy danych"
+
+#: templates/cotton/app/theme_selector.html:14
+msgid "Dark"
+msgstr "Ciemny"
+
+#: bloomerp.formsubmission.data models/forms/form_submission.py:68
+msgid "Data"
+msgstr "Dane"
+
+#: bloomerp.tile.type workspaces/tiles.py:56
+msgid "Data View"
+msgstr "Widok danych"
+
+#: workspaces/dataview_tile/model.py:55
+msgid "Data view updated"
+msgstr "Widok danych zaktualizowany"
+
+#: bloomerp.todo.datetime_completed models/project_management/todo.py:178
+msgid "Date Completed"
+msgstr "Data i godzina ukończenia"
+
+#: bloomerp.applicationfield.field_type
+msgid "Date Field"
+msgstr "Pole daty"
+
+#: bloomerp.user.date_view_preference models/users/user.py:90
+msgid "Date View Preference"
+msgstr "Preferencja wyświetlania daty"
+
+#: models/communication/signature_request.py:63
+msgid "Date and time when the document was signed."
+msgstr "Data i godzina podpisania dokumentu."
+
+# | msgid "Date Field"
+#: models/users/user_list_view_preference.py:420
+msgid "Date field"
+msgstr "Pole daty"
+
+#: bloomerp.applicationfield.field_type
+msgid "DateTime Field"
+msgstr "Pole daty i godziny"
+
+#: bloomerp.aiconversation.datetime_created bloomerp.apikey.datetime_created
+#: bloomerp.bookmark.datetime_created bloomerp.comment.datetime_created
+#: bloomerp.documenttemplate.datetime_created bloomerp.documenttemplateheader.datetime_created
+#: bloomerp.documenttemplatestyling.datetime_created bloomerp.emailaccount.datetime_created
+#: bloomerp.file.datetime_created bloomerp.filefolder.datetime_created bloomerp.form.datetime_created
+#: bloomerp.formsubmission.datetime_created bloomerp.inboxfolder.datetime_created
+#: bloomerp.inboxitem.datetime_created bloomerp.initiative.datetime_created
+#: bloomerp.policy.datetime_created bloomerp.sqlquery.datetime_created bloomerp.tile.datetime_created
+#: bloomerp.todo.datetime_created bloomerp.todolabel.datetime_created
+#: bloomerp.userinboxpreference.datetime_created bloomerp.workflow.datetime_created
+#: bloomerp.workflownode.datetime_created bloomerp.workflowrun.datetime_created
+#: bloomerp.workflowrunstep.datetime_created models/mixins/timestamp_model_mixin.py:9
+#: models/users/bookmark.py:35
+msgid "Datetime Created"
+msgstr "Data i godzina utworzenia"
+
+#: bloomerp.inboxitem.datetime_received models/communication/inbox/inbox_item.py:77
+msgid "Datetime Received"
+msgstr "Data i godzina otrzymania"
+
+#: bloomerp.aiconversation.datetime_updated bloomerp.apikey.datetime_updated
+#: bloomerp.comment.datetime_updated bloomerp.documenttemplate.datetime_updated
+#: bloomerp.documenttemplateheader.datetime_updated bloomerp.documenttemplatestyling.datetime_updated
+#: bloomerp.emailaccount.datetime_updated bloomerp.file.datetime_updated
+#: bloomerp.filefolder.datetime_updated bloomerp.form.datetime_updated
+#: bloomerp.formsubmission.datetime_updated bloomerp.inboxfolder.datetime_updated
+#: bloomerp.inboxitem.datetime_updated bloomerp.initiative.datetime_updated
+#: bloomerp.policy.datetime_updated bloomerp.sqlquery.datetime_updated bloomerp.tile.datetime_updated
+#: bloomerp.todo.datetime_updated bloomerp.todolabel.datetime_updated
+#: bloomerp.userinboxpreference.datetime_updated bloomerp.workflow.datetime_updated
+#: bloomerp.workflownode.datetime_updated bloomerp.workflowrun.datetime_updated
+#: bloomerp.workflowrunstep.datetime_updated models/mixins/timestamp_model_mixin.py:10
+msgid "Datetime Updated"
+msgstr "Data i godzina aktualizacji"
+
+#: bloomerp.user.datetime_view_preference models/users/user.py:98
+msgid "Datetime View Preference"
+msgstr "Preferencja wyświetlania daty i godziny"
+
+#: models/users/user_list_view_preference.py:31
+msgid "Day"
+msgstr "Dzień"
+
+#: bloomerp.user.date_view_preference models/users/user.py:47
+msgid "Day-Month-Year (15-08-2000)"
+msgstr "Dzień-miesiąc-rok (15-08-2000)"
+
+#: bloomerp.user.datetime_view_preference models/users/user.py:55
+msgid "Day-Month-Year Hour:Minute (15-08-2000 12:30)"
+msgstr "Dzień-miesiąc-rok godzina:minuta (15-08-2000 12:30)"
+
+#: bloomerp.applicationfield.field_type
+msgid "Decimal Field"
+msgstr "Pole dziesiętne"
+
+# | msgid "Default Filters"
+#: models/users/user_list_view_preference.py:98
+msgid "Default"
+msgstr "Filtry domyślne"
+
+#: bloomerp.userlistviewpreference.default_filters models/users/user_list_view_preference.py:657
+msgid "Default Filters"
+msgstr "Filtry domyślne"
+
+#: views/communication/create_email_account.py:66
+msgid "Defaults to email address"
+msgstr "Domyślnie adres e-mail"
+
+#: templates/components/access_control/row_policy.html:3
+msgid "Define the row policy by selecting a lookup and value for the field."
+msgstr "Zdefiniuj zasady dotyczące wierszy, wybierając odwołanie i wartość dla pola."
+
+#: bloomerp.activitylog.action models/activity_log.py:28
+msgid "Delete"
+msgstr "Usuń"
+
+#: templates/components/objects/bulk_actions.html:63 templates/components/objects/bulk_actions.html:80
+#, python-format
+msgid "Delete %(delete_count)s object(s)"
+msgstr "Usuń %(delete_count)s obiekt(ów)"
+
+#: route:log_entries_detail_delete
+msgctxt "bloomerp:route:description"
+msgid "Delete an object from {model}"
+msgstr "Usuń obiekt z {model}"
+
+#: templates/components/forms/initial_data_row.html:46
+msgid "Delete value"
+msgstr "Usuń wartość"
+
+#: route:log_entries_detail_delete
+msgctxt "bloomerp:route:name"
+msgid "Delete {model}"
+msgstr "Usuń {model}"
+
+#: models/users/user_list_view_preference.py:495
+msgid "Dependency for"
+msgstr "Zależność dla"
+
+#: models/users/user_list_view_preference.py:486
+msgid "Dependency from"
+msgstr "Zależność od"
+
+# | msgid "Sort descending"
+#: models/users/user_list_view_preference.py:109
+msgid "Descending"
+msgstr "Sortuj malejąco"
+
+#: bloomerp.form.description bloomerp.initiative.description bloomerp.policy.description
+#: bloomerp.tile.description models/access_control/policy.py:75 models/forms/form.py:73
+#: models/project_management/initiative.py:106 models/workspaces/tile.py:31
+msgid "Description"
+msgstr "Opis"
+
+#: bloomerp.tile.description models/workspaces/tile.py:30
+msgid "Description of the widget"
+msgstr "Opis widżetu"
+
+#: bloomerp.user.is_superuser
+msgid "Designates that this user has all permissions without explicitly assigning them."
+msgstr "Określa, że ten użytkownik ma wszystkie uprawnienia bez ich jawnego przypisywania."
+
+#: bloomerp.user.is_staff
+msgid "Designates whether the user can log into this admin site."
+msgstr "Określa, czy użytkownik może logować się do tej witryny administracyjnej."
+
+#: bloomerp.user.is_active
+msgid ""
+"Designates whether this user should be treated as active. Unselect this instead of deleting "
+"accounts."
+msgstr ""
+"Określa, czy tego użytkownika należy traktować jako aktywnego. Zamiast usuwać konta, odznacz tę "
+"opcję."
+
+# | msgid "Details"
+#: bloomerp.activitylog.source models/activity_log.py:14
+msgid "Detail"
+msgstr "Szczegóły"
+
+#: bloomerp.user.detail_sidebar_view_preference models/users/user.py:106
+msgid "Detail Sidebar View Preference"
+msgstr "Preferencja wyświetlania paska bocznego szczegółów"
+
+#: templates/inbox_items/workflow_run.html:100
+msgid "Detailed run logging is still available."
+msgstr "Szczegółowe rejestrowanie przebiegu jest nadal dostępne."
+
+#: models/automation/workflow.py:37 models/forms/form_submission.py:38
+#: models/project_management/initiative.py:33 models/project_management/todo.py:70
+#: services/detail_view_services.py:408
+msgid "Details"
+msgstr "Szczegóły"
+
+#: route:log_entries_detail_overview
+msgctxt "bloomerp:route:name"
+msgid "Details"
+msgstr "Szczegóły"
+
+#: route:log_entries_detail_document_templates
+msgctxt "bloomerp:route:description"
+msgid "Different document templates"
+msgstr "Różne szablony dokumentów"
+
+#: bloomerp.userlistviewpreference.display_fields models/users/user_list_view_preference.py:655
+msgid "Display Fields"
+msgstr "Pola wyświetlane"
+
+#: workspaces/tiles.py:66
+msgid "Displays a form, containing inputs, etc."
+msgstr "Wyświetla formularz zawierający pola wejściowe itp."
+
+#: workspaces/tiles.py:57
+msgid ""
+"Displays and manages records from a selected model in a structured view with filtering, sorting, "
+"and interaction capabilities."
+msgstr ""
+"Wyświetla rekordy z wybranego modelu i zarządza nimi w uporządkowanym widoku z funkcjami "
+"filtrowania, sortowania i interakcji."
+
+#: workspaces/analytics_tile/model.py:359
+msgid ""
+"Displays data from a custom query in a pivot table format, allowing users to dynamically "
+"summarize, analyze, and explore large datasets by rearranging and aggregating data across "
+"multiple dimensions for enhanced insights and decision-making."
+msgstr ""
+"Wyświetla dane z niestandardowego zapytania w formacie tabeli przestawnej, umożliwiając "
+"użytkownikom dynamiczne podsumowywanie, analizowanie i przeglądanie dużych zbiorów danych poprzez"
+" przestawianie i agregowanie danych w wielu wymiarach w celu uzyskania lepszych informacji i "
+"podejmowania decyzji."
+
+#: workspaces/analytics_tile/model.py:287
+msgid ""
+"Displays data from a custom query in a structured tabular format, enabling users to view, sort, "
+"and analyze information in rows and columns for easy comparison and reference."
+msgstr ""
+"Wyświetla dane z niestandardowego zapytania w uporządkowanym formacie tabelarycznym, umożliwiając"
+" użytkownikom przeglądanie, sortowanie i analizowanie informacji w wierszach i kolumnach w celu "
+"łatwego porównywania i odwoływania się do danych."
+
+#: models/users/user_list_view_preference.py:461
+msgid "Displays records as a timeline."
+msgstr "Wyświetla rekordy na osi czasu."
+
+#: models/users/user_list_view_preference.py:350
+msgid "Displays records as cards grouped into columns."
+msgstr "Wyświetla rekordy jako karty pogrupowane w kolumny."
+
+#: models/users/user_list_view_preference.py:396
+msgid "Displays records in a card grid."
+msgstr "Wyświetla rekordy w siatce kart."
+
+#: models/users/user_list_view_preference.py:303
+msgid "Displays records in a sortable table."
+msgstr "Wyświetla rekordy w sortowalnej tabeli."
+
+#: models/users/user_list_view_preference.py:415
+msgid "Displays records on a day, week, month, year, or list calendar."
+msgstr "Wyświetla rekordy w kalendarzu dziennym, tygodniowym, miesięcznym, rocznym lub listowym."
+
+#: workspaces/tiles.py:49
+msgid "Displays simple markdown content such as notes, instructions, or reference text."
+msgstr "Wyświetla prostą zawartość Markdown, taką jak notatki, instrukcje lub tekst referencyjny."
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "Document Templates"
+#: bloomerp.documenttemplate models/document_templates/document_template.py:94
+msgid "Document Template"
+msgstr "Szablony dokumentów"
+
+#: bloomerp.aiconversation.conversation_type
+msgid "Document Template Generator"
+msgstr "Generator szablonów dokumentów"
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "Document Template Headers"
+#: bloomerp.documenttemplateheader models/document_templates/document_template_header.py:18
+msgid "Document Template Header"
+msgstr "Nagłówki szablonów dokumentów"
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "Document Template Headers"
+#: bloomerp.documenttemplateheader models/document_templates/document_template_header.py:19
+msgid "Document Template Headers"
+msgstr "Nagłówki szablonów dokumentów"
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "Document Template Stylings"
+#: bloomerp.documenttemplatestyling models/document_templates/document_template_styling.py:13
+msgid "Document Template Styling"
+msgstr "Style szablonów dokumentów"
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "Document Template Stylings"
+#: bloomerp.documenttemplatestyling models/document_templates/document_template_styling.py:14
+msgid "Document Template Stylings"
+msgstr "Style szablonów dokumentów"
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "Document Templates"
+#: bloomerp.documenttemplate models/document_templates/document_template.py:95
+msgid "Document Templates"
+msgstr "Szablony dokumentów"
+
+#: route:log_entries_detail_document_templates
+msgctxt "bloomerp:route:name"
+msgid "Document templates"
+msgstr "Szablony dokumentów"
+
+#: templates/components/forms/qr_code.html:38 templates/views/sdk/download.html:39
+msgid "Download"
+msgstr "Pobierz"
+
+#: route:misc_module_download_sdk
+msgctxt "bloomerp:route:name"
+msgid "Download SDK"
+msgstr "Pobierz SDK"
+
+#: bloomerp.emailaccount.status models/communication/email_account.py:27
+msgid "Draft"
+msgstr "Wersja robocza"
+
+#: templates/cotton/features/dataviews/gant.html:68
+msgid "Drag a record onto the timeline to schedule it."
+msgstr "Przeciągnij rekord na oś czasu, aby go zaplanować."
+
+#: templates/components/objects/dataview_gant_rows.html:70
+msgid "Drop an unscheduled record here."
+msgstr "Upuść tutaj niezaplanowany rekord."
+
+#: templates/views/access_control/manage_permissions/wizard_object_access_control.html:80
+#: templates/views/access_control/manage_permissions/wizard_object_access_control.html:102
+msgid "Drop fields here"
+msgstr "Upuść pola tutaj"
+
+#: bloomerp.todo.status models/project_management/todo.py:41
+msgid "Duplicate"
+msgstr "Duplikat"
+
+#: bloomerp.applicationfield.field_type
+msgid "Duration Field"
+msgstr "Pole czasu trwania"
+
+#: templates/components/workspaces/tile_builders/links_tile_builder_items.html:32
+#: templates/cotton/features/layout/container.html:111
+msgid "Edit"
+msgstr "Edytuj"
+
+#: route:document_templates_detail_builder
+msgctxt "bloomerp:route:description"
+msgid "Edit a document template with the builder"
+msgstr "Edytuj szablon dokumentu za pomocą kreatora"
+
+#: bloomerp.todo.effort models/project_management/todo.py:161
+msgid "Effort"
+msgstr "Nakład pracy"
+
+#: bloomerp.inboxitem.item_type models/users/user.py:148
+msgid "Email"
+msgstr "E-mail"
+
+#: bloomerp.emailaccount models/communication/email_account.py:33
+msgid "Email Account"
+msgstr "Konto e-mail"
+
+#: bloomerp.emailaccount models/communication/email_account.py:34
+msgid "Email Accounts"
+msgstr "Konta e-mail"
+
+#: bloomerp.emailaccount.email_address models/communication/email_account.py:104
+msgid "Email Address"
+msgstr "Adres e-mail"
+
+#: bloomerp.applicationfield.field_type
+msgid "Email Field"
+msgstr "Pole e-mail"
+
+#: views/communication/create_email_account.py:259
+#, python-format
+msgid "Email account '%(account)s' created successfully."
+msgstr "Konto e-mail „%(account)s” zostało pomyślnie utworzone."
+
+#: models/communication/signature_request.py:37
+msgid "Email of the recipient (if recipient is not provided)."
+msgstr "Adres e-mail odbiorcy (jeśli odbiorca nie został podany)."
+
+#: components/communication/emails/new_email.py:125
+msgid "Email sent successfully."
+msgstr "E-mail został wysłany pomyślnie."
+
+#: templates/views/auth/login.html:79
+msgid "Email verification is required before this account can access protected flows."
+msgstr "Weryfikacja adresu e-mail jest wymagana, zanim to konto uzyska dostęp do chronionych przepływów."
+
+#: bloomerp.inboxfolder.type
+msgid "Emails"
+msgstr "E-maile"
+
+#: bloomerp.workflow.enable_logging models/automation/workflow.py:90
+msgid "Enable Logging"
+msgstr "Włącz rejestrowanie"
+
+#: bloomerp.emailaccount.access_token
+msgid "Encrypted OAuth access token."
+msgstr "Zaszyfrowany token dostępu OAuth."
+
+#: bloomerp.emailaccount.oauth_client_secret
+msgid "Encrypted OAuth client secret."
+msgstr "Zaszyfrowany klucz tajny klienta OAuth."
+
+#: bloomerp.emailaccount.refresh_token
+msgid "Encrypted OAuth refresh token."
+msgstr "Zaszyfrowany token odświeżania OAuth."
+
+#: bloomerp.emailaccount.password
+msgid ""
+"Encrypted password or app password used for providers that support direct SMTP/IMAP "
+"authentication."
+msgstr ""
+"Zaszyfrowane hasło lub hasło aplikacji używane przez dostawców obsługujących bezpośrednie "
+"uwierzytelnianie SMTP/IMAP."
+
+# | msgid "Date Field"
+#: models/users/user_list_view_preference.py:429
+msgid "End date field"
+msgstr "Pole daty"
+
+# | msgid "Code Field"
+#: models/users/user_list_view_preference.py:476
+msgid "End field"
+msgstr "Pole kodu"
+
+#: views/communication/create_email_account.py:213
+msgid "Enter the connection details for this mailbox."
+msgstr "Wprowadź dane połączenia dla tej skrzynki pocztowej."
+
+# | msgid "Initial data"
+#: models/users/user_list_view_preference.py:155
+msgid "Entire dataset"
+msgstr "Dane początkowe"
+
+#: bloomerp.emailaccount.status models/communication/email_account.py:29
+msgid "Error"
+msgstr "Błąd"
+
+#: templates/components/forms/initial_data_value.html:26
+msgid "Every row gets this child field value."
+msgstr "Każdy wiersz otrzymuje tę wartość pola podrzędnego."
+
+#: templates/inbox_items/workflow_run.html:30
+msgid "Executed steps"
+msgstr "Wykonane kroki"
+
+#: templates/inbox_items/workflow_run.html:63
+msgid "Execution graph"
+msgstr "Graf wykonania"
+
+#: templates/inbox_items/workflow_run.html:26
+msgid "Execution time"
+msgstr "Czas wykonania"
+
+#: bloomerp.apikey.expires_at models/api_key.py:114
+msgid "Expires At"
+msgstr "Wygasa"
+
+#: bloomerp.emailaccount.extra_settings models/communication/email_account.py:200
+msgid "Extra Settings"
+msgstr "Dodatkowe ustawienia"
+
+#: bloomerp.aiconversation.args
+msgid "Extra arguments for the conversation"
+msgstr "Dodatkowe argumenty konwersacji"
+
+#: bloomerp.workflowrunstep.status models/automation/workflow_run_step.py:9
+#: templates/inbox_items/workflow_run.html:19
+msgid "Failed"
+msgstr "Niepowodzenie"
+
+#: bloomerp.applicationfield.field models/application_field.py:33
+#: templates/components/forms/initial_data_row.html:10
+msgid "Field"
+msgstr "Pole"
+
+#: bloomerp.policy.field_policy models/access_control/policy.py:91
+msgid "Field Policy"
+msgstr "Zasady pola"
+
+#: bloomerp.applicationfield.field_type models/application_field.py:45
+msgid "Field Type"
+msgstr "Typ pola"
+
+#: views/access_control/manage_permissions.py:342
+msgid "Field based access control"
+msgstr "Kontrola dostępu oparta na polach"
+
+#: workspaces/analytics_tile/model.py:557
+msgid "Field does not exist"
+msgstr "Pole nie istnieje"
+
+#: workspaces/analytics_tile/model.py:552
+msgid "Field options updated"
+msgstr "Zaktualizowano opcje pola"
+
+#: views/access_control/manage_permissions.py:289
+msgid "Field policies can only use permissions selected in step 1."
+msgstr "Zasady pól mogą używać tylko uprawnień wybranych w kroku 1."
+
+#: views/access_control/manage_permissions.py:290
+msgid "Field policy mismatch"
+msgstr "Niezgodność zasad pola"
+
+#: workspaces/analytics_tile/model.py:633
+msgid "Field removed"
+msgstr "Usunięto pole"
+
+#: workspaces/analytics_tile/model.py:583
+msgid "Field slot does not exist"
+msgstr "Gniazdo pola nie istnieje"
+
+#: workspaces/analytics_tile/model.py:605
+msgid "Field updated"
+msgstr "Zaktualizowano pole"
+
+#: models/users/user_list_view_preference.py:546
+msgid "Fields aggregated into the leaf columns of the pivot table."
+msgstr "Pola agregowane w kolumnach liści tabeli przestawnej."
+
+#: models/users/user_list_view_preference.py:537
+msgid "Fields used to build nested column headers."
+msgstr "Pola używane do tworzenia zagnieżdżonych nagłówków kolumn."
+
+#: models/users/user_list_view_preference.py:528
+msgid "Fields used to build the expandable row hierarchy."
+msgstr "Pola używane do tworzenia rozwijanej hierarchii wierszy."
+
+#: bloomerp.file bloomerp.file.file models/files/file.py:24 models/files/file.py:52
+msgid "File"
+msgstr "Plik"
+
+#: bloomerp.applicationfield.field_type
+msgid "File Field"
+msgstr "Pole pliku"
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "File Folders"
+#: bloomerp.filefolder models/files/file_folder.py:26
+msgid "File Folder"
+msgstr "Foldery plików"
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "File Folders"
+#: bloomerp.filefolder models/files/file_folder.py:27
+msgid "File Folders"
+msgstr "Foldery plików"
+
+#: bloomerp.aiconversation.files bloomerp.apikey.files bloomerp.applicationfield.field_type
+#: bloomerp.documenttemplate.files bloomerp.documenttemplateheader.files
+#: bloomerp.documenttemplatestyling.files bloomerp.emailaccount.files bloomerp.file bloomerp.form.files
+#: bloomerp.formsubmission.files bloomerp.inboxfolder.files bloomerp.inboxitem.files
+#: bloomerp.initiative.files bloomerp.sqlquery.files bloomerp.tile.files bloomerp.todo.files
+#: bloomerp.todolabel.files bloomerp.userinboxpreference.files models/files/file.py:25
+msgid "Files"
+msgstr "Pliki"
+
+#: route:log_entries_detail_files
+msgctxt "bloomerp:route:name"
+msgid "Files"
+msgstr "Pliki"
+
+#: route:log_entries_detail_files
+msgctxt "bloomerp:route:description"
+msgid "Files for object for {model} model"
+msgstr "Pliki obiektu dla modelu {model}"
+
+#: workspaces/analytics_tile/model.py:215
+msgid "Filter"
+msgstr "Filtr"
+
+#: workspaces/analytics_tile/model.py:661
+msgid "Filter added"
+msgstr "Dodano filtr"
+
+#: workspaces/analytics_tile/model.py:652
+msgid "Filter already exists"
+msgstr "Filtr już istnieje"
+
+#: workspaces/analytics_tile/model.py:684
+msgid "Filter removed"
+msgstr "Usunięto filtr"
+
+#: templates/inbox_items/workflow_run.html:34
+msgid "Finished"
+msgstr "Zakończono"
+
+#: bloomerp.applicationfield.field_type
+msgid "Float Field"
+msgstr "Pole zmiennoprzecinkowe"
+
+#: automation/defintion.py:223 bloomerp.workflownode.type
+msgid "Flow"
+msgstr "Przepływ"
+
+#: bloomerp.file.folder bloomerp.inboxitem.folder models/communication/inbox/inbox_item.py:54
+#: models/files/file.py:63 templates/components/workspaces/tile_builders/links_tile_builder.html:50
+#: templates/components/workspaces/tile_builders/links_tile_builder_items.html:41
+msgid "Folder"
+msgstr "Folder"
+
+#: workspaces/links_tile/model.py:130
+msgid "Folder added"
+msgstr "Dodano folder"
+
+#: components/workspaces/sidebar.py:260
+msgid "Folder created"
+msgstr "Utworzono folder"
+
+#: bloomerp.documenttemplate.footer models/document_templates/document_template.py:153
+msgid "Footer"
+msgstr "Stopka"
+
+#: bloomerp.documenttemplate.footer models/document_templates/document_template.py:150
+msgid "Footer content of the document template."
+msgstr "Zawartość stopki szablonu dokumentu."
+
+#: bloomerp.applicationfield.field_type
+msgid "Foreign Key"
+msgstr "Klucz obcy"
+
+#: templates/views/auth/login.html:70
+msgid "Forgot password?"
+msgstr "Nie pamiętasz hasła?"
+
+#: bloomerp.form bloomerp.formsubmission.form bloomerp.tile.type models/forms/form.py:16
+#: models/forms/form_submission.py:66 workspaces/tiles.py:65
+msgid "Form"
+msgstr "Formularz"
+
+#: route:forms_detail_form_builder
+msgctxt "bloomerp:route:name"
+msgid "Form Builder"
+msgstr "Kreator formularzy"
+
+#: templates/components/forms/qr_code.html:7
+msgid "Form QR code"
+msgstr "Kod QR formularza"
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "Form Submissions"
+#: bloomerp.formsubmission models/forms/form_submission.py:31
+msgid "Form Submission"
+msgstr "Przesłane formularze"
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "Form Submissions"
+#: bloomerp.formsubmission models/forms/form_submission.py:32
+msgid "Form Submissions"
+msgstr "Przesłane formularze"
+
+#: workspaces/analytics_tile/model.py:96
+msgid "Formatter"
+msgstr "Formater"
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "Forms"
+#: bloomerp.form models/forms/form.py:17
+msgid "Forms"
+msgstr "Formularze"
+
+#: bloomerp.documenttemplate.free_variables models/document_templates/document_template.py:139
+msgid "Free Variables"
+msgstr "Wolne zmienne"
+
+#: templates/components/communication/emails/email_editor.html:16
+#, python-format
+msgid "From %(from_email)s"
+msgstr "Od %(from_email)s"
+
+#: bloomerp.workflowedge.from_node models/automation/workflow_edge.py:29
+msgid "From Node"
+msgstr "Z węzła"
+
+#: bloomerp.userlistviewpreference.view_type models/users/user_list_view_preference.py:459
+msgid "Gantt"
+msgstr "Wykres Gantta"
+
+#: templates/components/document_templates/generate_document_template.html:31
+msgid "Generate"
+msgstr "Generuj"
+
+#: route:document_templates_detail_generate_pdf
+msgctxt "bloomerp:route:name"
+msgid "Generate PDF"
+msgstr "Generuj PDF"
+
+#: templates/views/auth/create_api_token.html:22
+msgid "Generate Token"
+msgstr "Wygeneruj token"
+
+#: route:document_templates_detail_generate_pdf
+msgctxt "bloomerp:route:description"
+msgid "Generate pdf from document template"
+msgstr "Generuj PDF z szablonu dokumentu"
+
+#: bloomerp.applicationfield.field_type
+msgid "Generic Foreign Key"
+msgstr "Generyczny klucz obcy"
+
+#: bloomerp.applicationfield.field_type
+msgid "Generic IP Address Field"
+msgstr "Generyczne pole adresu IP"
+
+#: bloomerp.applicationfield.field_type
+msgid "Generic Relation"
+msgstr "Relacja generyczna"
+
+#: views/access_control/manage_permissions.py:350
+msgid "Give the policy a name and description before saving."
+msgstr "Przed zapisaniem nadaj polityce nazwę i opis."
+
+#: bloomerp.policy.global_permissions models/access_control/policy.py:115
+msgid "Global Permissions"
+msgstr "Uprawnienia globalne"
+
+#: views/access_control/manage_permissions.py:335
+msgid "Global access control"
+msgstr "Globalna kontrola dostępu"
+
+#: bloomerp.policy.global_permissions models/access_control/policy.py:114
+msgid "Global permissions applied by this policy."
+msgstr "Globalne uprawnienia zastosowane przez tę politykę."
+
+#: views/access_control/manage_permissions.py:387
+msgid "Global permissions error"
+msgstr "Błąd uprawnień globalnych"
+
+# | msgid "Groups"
+#: models/users/user_list_view_preference.py:355
+msgid "Group by"
+msgstr "Grupy"
+
+#: bloomerp.policy.groups models/access_control/policy.py:107
+msgid "Groups"
+msgstr "Grupy"
+
+#: bloomerp.policy.groups models/access_control/policy.py:106
+msgid "Groups assigned to this access control policy."
+msgstr "Grupy przypisane do tej polityki kontroli dostępu."
+
+#: bloomerp.inbox.shared_with_groups bloomerp.sidebar.shared_with_groups
+#: bloomerp.userdetailviewtabspreference.shared_with_groups
+#: bloomerp.userlistviewpreference.shared_with_groups
+#: bloomerp.userobjectlayoutpreference.shared_with_groups bloomerp.workspace.shared_with_groups
+msgid "Groups with whom this preference is shared."
+msgstr "Grupy, którym udostępniono to ustawienie."
+
+#: bloomerp.applicationfield.field_type
+msgid "HStore Field"
+msgstr "Pole HStore"
+
+#: workspaces/analytics_tile/model.py:224
+msgid ""
+"HTML based formatting. The value is injected as {{ value }}, the pre-formatted value as {{ "
+"pre_formatted_value }}."
+msgstr ""
+"Formatowanie oparte na HTML. Wartość jest wstawiana jako {{ value }}, a wstępnie sformatowana "
+"wartość jako {{ pre_formatted_value }}."
+
+#: bloomerp.apikey.key_hash
+msgid "Hashed API key secret. The raw token is only shown when it is created."
+msgstr "Zahaszowany sekret klucza API. Surowy token jest wyświetlany tylko podczas jego tworzenia."
+
+#: bloomerp.documenttemplateheader.header models/document_templates/document_template_header.py:32
+msgid "Header"
+msgstr "Nagłówek"
+
+#: bloomerp.documenttemplate.template_header models/document_templates/document_template.py:146
+msgid "Header of the document template."
+msgstr "Nagłówek szablonu dokumentu."
+
+#: bloomerp.documenttemplateheader.height models/document_templates/document_template_header.py:39
+msgid "Height"
+msgstr "Wysokość"
+
+#: templates/components/workspaces/tile_builders/canvas_tile_builder.html:24
+msgid "Height in pixels, between 256 and 1600."
+msgstr "Wysokość w pikselach, od 256 do 1600."
+
+#: bloomerp.documenttemplateheader.height models/document_templates/document_template_header.py:39
+msgid "Height of the header in inches."
+msgstr "Wysokość nagłówka w calach."
+
+#: bloomerp.sidebaritem.color
+msgid "Hex color code for the sidebar item (e.g. #FF5733)."
+msgstr "Kod koloru szesnastkowego elementu paska bocznego (np. #FF5733)."
+
+#: bloomerp.todo.priority models/project_management/todo.py:21
+msgid "High"
+msgstr "Wysoki"
+
+#: views/mixins/htmx_mixin.py:55 views/mixins/htmx_mixin.py:82
+msgid "Home"
+msgstr "Strona główna"
+
+#: templates/cotton/features/dataviews/gant.html:34
+msgid "Hour"
+msgstr "Godzina"
+
+#: workspaces/analytics_tile/model.py:142
+msgid "How the series should be drawn."
+msgstr "Sposób rysowania serii."
+
+#: bloomerp.activitylog.id bloomerp.aiconversation.id bloomerp.apikey.id bloomerp.applicationfield.id
+#: bloomerp.bookmark.id bloomerp.comment.id bloomerp.documenttemplate.id
+#: bloomerp.documenttemplateheader.id bloomerp.documenttemplatestyling.id bloomerp.emailaccount.id
+#: bloomerp.fieldpolicy.id bloomerp.file.id bloomerp.filefolder.id bloomerp.form.id
+#: bloomerp.formsubmission.id bloomerp.inbox.id bloomerp.inboxfolder.id bloomerp.inboxitem.id
+#: bloomerp.initiative.id bloomerp.policy.id bloomerp.rowpolicy.id bloomerp.rowpolicyrule.id
+#: bloomerp.rowpolicyrulepermission.id bloomerp.sidebar.id bloomerp.sidebaritem.id bloomerp.sqlquery.id
+#: bloomerp.tile.id bloomerp.todo.id bloomerp.todolabel.id bloomerp.user.id
+#: bloomerp.userdetailviewtabitem.id bloomerp.userdetailviewtabspreference.id
+#: bloomerp.userinboxpreference.id bloomerp.userlistviewpreference.id
+#: bloomerp.userobjectlayoutpreference.id bloomerp.workflow.id bloomerp.workflowedge.id
+#: bloomerp.workflownode.id bloomerp.workflowrun.id bloomerp.workflowrunstep.id bloomerp.workspace.id
+#: models/files/file.py:51 models/llm/ai_conversation.py:30 models/mixins/uuid_model_mixin.py:8
+#: models/users/user_detail_view_tabs_preference.py:421
+msgid "ID"
+msgstr "ID"
+
+#: bloomerp.emailaccount.provider
+msgid "IMAP / SMTP"
+msgstr "IMAP / SMTP"
+
+# | msgid "Imap Host"
+#: bloomerp.emailaccount.imap_host models/communication/email_account.py:131
+msgid "IMAP Host"
+msgstr "Host IMAP"
+
+# | msgid "Imap Port"
+#: bloomerp.emailaccount.imap_port models/communication/email_account.py:136
+msgid "IMAP Port"
+msgstr "Port IMAP"
+
+# | msgid "Imap Security"
+#: bloomerp.emailaccount.imap_security models/communication/email_account.py:142
+msgid "IMAP Security"
+msgstr "Zabezpieczenia IMAP"
+
+# | msgid "Ip Address"
+#: bloomerp.formsubmission.ip_address models/forms/form_submission.py:78
+msgid "IP Address"
+msgstr "Adres IP"
+
+#: bloomerp.applicationfield.field_type
+msgid "IP Address Field"
+msgstr "Pole adresu IP"
+
+#: bloomerp.sidebaritem.icon bloomerp.tile.icon models/workspaces/sidebar_item.py:53
+#: models/workspaces/tile.py:41
+msgid "Icon"
+msgstr "Ikona"
+
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:46
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:88
+msgid "Icon (optional)"
+msgstr "Ikona (opcjonalnie)"
+
+#: bloomerp.applicationfield.field_type
+msgid "Icon Field"
+msgstr "Pole ikony"
+
+#: bloomerp.sidebaritem.icon
+msgid "Icon for the particular sidebar item."
+msgstr "Ikona danego elementu paska bocznego."
+
+#: bloomerp.applicationfield.field_type
+msgid "Image Field"
+msgstr "Pole obrazu"
+
+#: bloomerp.documenttemplateheader.header models/document_templates/document_template_header.py:30
+msgid "Image of the header."
+msgstr "Obraz nagłówka."
+
+#: bloomerp.initiative.status bloomerp.todo.status models/project_management/initiative.py:17
+#: models/project_management/todo.py:37
+msgid "In Progress"
+msgstr "W toku"
+
+#: bloomerp.todo.status models/project_management/todo.py:38
+msgid "In Review"
+msgstr "W weryfikacji"
+
+#: bloomerp.comment.object_id models/communication/comment.py:30
+msgid "In order to support both UUID and integer primary keys"
+msgstr "Aby obsługiwać zarówno klucze główne UUID, jak i całkowite"
+
+#: bloomerp.inbox bloomerp.inboxfolder.inbox models/communication/inbox/inbox.py:20
+#: models/communication/inbox/inbox_folder.py:23 templates/cotton/app/sidebar/body.html:66
+msgid "Inbox"
+msgstr "Skrzynka odbiorcza"
+
+#: route:inbox
+msgctxt "bloomerp:route:name"
+msgid "Inbox"
+msgstr "Skrzynka odbiorcza"
+
+#: bloomerp.inboxfolder models/communication/inbox/inbox_folder.py:15
+msgid "Inbox Folder"
+msgstr "Folder skrzynki odbiorczej"
+
+#: bloomerp.inboxfolder models/communication/inbox/inbox_folder.py:16
+msgid "Inbox Folders"
+msgstr "Foldery skrzynki odbiorczej"
+
+#: bloomerp.inboxitem models/communication/inbox/inbox_item.py:13
+msgid "Inbox Item"
+msgstr "Element skrzynki odbiorczej"
+
+#: bloomerp.inboxitem models/communication/inbox/inbox_item.py:14
+msgid "Inbox Items"
+msgstr "Elementy skrzynki odbiorczej"
+
+# | msgid "Inboxs"
+#: bloomerp.inbox models/communication/inbox/inbox.py:19
+msgid "Inboxes"
+msgstr "Skrzynki odbiorcze"
+
+#: bloomerp.documenttemplate.include_page_numbers models/document_templates/document_template.py:174
+msgid "Include Page Numbers"
+msgstr "Uwzględnij numery stron"
+
+#: models/communication/email_account.py:58
+msgid "Incoming mail"
+msgstr "Poczta przychodząca"
+
+#: views/communication/create_email_account.py:234
+msgid "Incomplete setup"
+msgstr "Niekompletna konfiguracja"
+
+#: templates/cotton/ui/inputs/one_to_many/column_actions.html:35
+msgid "Increment first value"
+msgstr "Zwiększ pierwszą wartość"
+
+#: bloomerp.inbox.selected bloomerp.sidebar.selected bloomerp.userdetailviewtabspreference.selected
+#: bloomerp.userlistviewpreference.selected bloomerp.userobjectlayoutpreference.selected
+#: bloomerp.workspace.selected
+msgid ""
+"Indicates if this preference is currently selected for the user. Only one preference per user can"
+" be selected at a time."
+msgstr ""
+"Wskazuje, czy ta preferencja jest obecnie wybrana przez użytkownika. W danym momencie użytkownik "
+"może mieć wybraną tylko jedną preferencję."
+
+#: bloomerp.inbox.initial_default bloomerp.sidebar.initial_default
+#: bloomerp.userdetailviewtabspreference.initial_default
+#: bloomerp.userlistviewpreference.initial_default bloomerp.userobjectlayoutpreference.initial_default
+#: bloomerp.workspace.initial_default
+msgid ""
+"Indicates if this preference is the initial default for the user. This is used to determine the "
+"user's default preference when they first create an account."
+msgstr ""
+"Wskazuje, czy ta preferencja jest początkową preferencją domyślną użytkownika. Służy do "
+"określenia domyślnej preferencji użytkownika podczas pierwszego tworzenia konta."
+
+# | msgid "Indicates whether the inbox item has been read by the user."
+#: models/communication/channel.py:23
+msgid "Indicates whether the channel is currently active."
+msgstr "Wskazuje, czy element skrzynki odbiorczej został przeczytany przez użytkownika."
+
+#: bloomerp.inboxitem.is_read
+msgid "Indicates whether the inbox item has been read by the user."
+msgstr "Wskazuje, czy element skrzynki odbiorczej został przeczytany przez użytkownika."
+
+#: bloomerp.inbox.initial_default bloomerp.sidebar.initial_default
+#: bloomerp.userdetailviewtabspreference.initial_default
+#: bloomerp.userlistviewpreference.initial_default bloomerp.userobjectlayoutpreference.initial_default
+#: bloomerp.workspace.initial_default models/users/base_preference.py:128
+msgid "Initial Default"
+msgstr "Początkowa preferencja domyślna"
+
+#: bloomerp.form.initial_payload models/forms/form.py:84
+msgid "Initial Payload"
+msgstr "Początkowy payload"
+
+#: templates/views/forms/builder.html:31
+msgid "Initial data"
+msgstr "Dane początkowe"
+
+#: components/workspaces/share_workspace.py:45
+msgid "Initial default"
+msgstr "Początkowe ustawienie domyślne"
+
+#: bloomerp.form.initial_payload models/forms/form.py:83
+msgid "Initial payload for the form"
+msgstr "Początkowy payload formularza"
+
+#: templates/components/forms/initial_data_value.html:46
+msgid "Initial rows"
+msgstr "Początkowe wiersze"
+
+#: bloomerp.initiative bloomerp.todo.initiative models/project_management/initiative.py:85
+#: models/project_management/todo.py:199
+msgid "Initiative"
+msgstr "Inicjatywa"
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "Initiatives"
+#: bloomerp.initiative models/project_management/initiative.py:86
+msgid "Initiatives"
+msgstr "Inicjatywy"
+
+#: templates/components/forms/initial_data_value.html:82
+msgid "Input value"
+msgstr "Wartość wejściowa"
+
+#: bloomerp.applicationfield.field_type
+msgid "Integer Field"
+msgstr "Pole typu całkowitego"
+
+#: templates/views/generic/model/bulk_upload_wizard/confirm_step.html:14
+msgid "Invalid"
+msgstr "Nieprawidłowe"
+
+#: components/activity/activity_log.py:24
+msgid "Invalid content type ID"
+msgstr "Nieprawidłowy identyfikator typu zawartości"
+
+#: views/access_control/manage_permissions.py:232
+msgid "Invalid field policy"
+msgstr "Nieprawidłowa reguła dostępu do pól"
+
+#: views/access_control/manage_permissions.py:223
+msgid "Invalid row policy"
+msgstr "Nieprawidłowa reguła dostępu do wierszy"
+
+#: views/access_control/manage_permissions.py:275
+msgid "Invalid row policy field"
+msgstr "Nieprawidłowe pole reguły dostępu do wierszy"
+
+# | msgid "Active"
+#: models/communication/channel.py:24
+msgid "Is Active"
+msgstr "Aktywne"
+
+#: bloomerp.activitylog.is_create models/activity_log.py:76
+msgid "Is Create"
+msgstr "Czy utworzono"
+
+#: bloomerp.sidebaritem.is_folder models/workspaces/sidebar_item.py:72
+msgid "Is Folder"
+msgstr "Czy jest folderem"
+
+#: bloomerp.inboxitem.is_read models/communication/inbox/inbox_item.py:69
+msgid "Is Read"
+msgstr "Czy przeczytano"
+
+#: bloomerp.inboxitem.item_type models/communication/inbox/inbox_item.py:34
+msgid "Item Type"
+msgstr "Typ elementu"
+
+#: workspaces/links_tile/model.py:203
+msgid "Item cannot be moved further"
+msgstr "Elementu nie można przenieść dalej"
+
+#: components/workspaces/sidebar.py:305
+msgid "Item created"
+msgstr "Utworzono element"
+
+#: components/workspaces/sidebar.py:397 workspaces/links_tile/model.py:206
+msgid "Item moved"
+msgstr "Przeniesiono element"
+
+#: components/workspaces/sidebar.py:368 workspaces/links_tile/model.py:148
+msgid "Item removed"
+msgstr "Usunięto element"
+
+#: components/workspaces/sidebar.py:346 workspaces/links_tile/model.py:185
+msgid "Item updated"
+msgstr "Zaktualizowano element"
+
+#: bloomerp.applicationfield.field_type
+msgid "JSON Field"
+msgstr "Pole JSON"
+
+#: workspaces/analytics_tile/model.py:313
+msgid "KPI"
+msgstr "KPI"
+
+#: bloomerp.userlistviewpreference.view_type models/users/user_list_view_preference.py:348
+msgid "Kanban"
+msgstr "Kanban"
+
+#: bloomerp.apikey.key_hash models/api_key.py:103
+msgid "Key Hash"
+msgstr "Hash klucza"
+
+#: bloomerp.apikey.key_prefix models/api_key.py:97
+msgid "Key Prefix"
+msgstr "Prefiks klucza"
+
+#: bloomerp.todo.effort models/project_management/todo.py:30
+msgid "L"
+msgstr "L"
+
+#: workspaces/analytics_tile/model.py:72
+msgid "Label"
+msgstr "Etykieta"
+
+# | msgid "Details"
+#: models/project_management/todo_label.py:15
+msgid "Label Details"
+msgstr "Szczegóły"
+
+#: bloomerp.initiative.labels bloomerp.todo.labels models/project_management/initiative.py:52
+#: models/project_management/initiative.py:137 models/project_management/todo.py:190
+#: workspaces/analytics_tile/model.py:378
+msgid "Labels"
+msgstr "Etykiety"
+
+#: bloomerp.initiative.labels models/project_management/initiative.py:138
+msgid "Labels assigned to the initiative"
+msgstr "Etykiety przypisane do inicjatywy"
+
+#: bloomerp.todo.labels models/project_management/todo.py:189
+msgid "Labels assigned to the todo"
+msgstr "Etykiety przypisane do zadania"
+
+#: bloomerp.documenttemplate.page_orientation models/document_templates/document_template.py:25
+msgid "Landscape"
+msgstr "Pozioma"
+
+#: templates/cotton/app/sidebar/body.html:167
+msgid "Languages"
+msgstr "Języki"
+
+#: models/communication/channel_member.py:52
+msgid "Last Read Message"
+msgstr "Ostatnia przeczytana wiadomość"
+
+#: bloomerp.emailaccount.last_sync_error models/communication/email_account.py:253
+msgid "Last Sync Error"
+msgstr "Błąd ostatniej synchronizacji"
+
+#: bloomerp.emailaccount.last_sync_finished_at models/communication/email_account.py:242
+msgid "Last Sync Finished At"
+msgstr "Czas zakończenia ostatniej synchronizacji"
+
+#: bloomerp.emailaccount.last_sync_started_at models/communication/email_account.py:236
+msgid "Last Sync Started At"
+msgstr "Czas rozpoczęcia ostatniej synchronizacji"
+
+#: bloomerp.apikey.last_used_at models/api_key.py:109
+msgid "Last Used At"
+msgstr "Czas ostatniego użycia"
+
+#: bloomerp.emailaccount.last_validated_at models/communication/email_account.py:259
+msgid "Last Validated At"
+msgstr "Czas ostatniej weryfikacji"
+
+#: bloomerp.form.layout bloomerp.userobjectlayoutpreference.layout bloomerp.workspace.layout
+#: models/mixins/content_layout_model_mixin.py:16
+msgid "Layout"
+msgstr "Układ"
+
+#: workspaces/analytics_tile/model.py:199
+msgid "Left"
+msgstr "Lewo"
+
+#: bloomerp.documenttemplateheader.margin_left models/document_templates/document_template_header.py:36
+msgid "Left margin of the header in inches."
+msgstr "Lewy margines nagłówka w calach."
+
+#: templates/cotton/features/dataviews/calendar.html:56
+msgid "Legend"
+msgstr "Legenda"
+
+#: workspaces/analytics_tile/model.py:191
+msgid "Legend position"
+msgstr "Pozycja legendy"
+
+#: bloomerp.documenttemplate.page_size models/document_templates/document_template.py:20
+msgid "Letter"
+msgstr "Letter"
+
+#: templates/cotton/app/theme_selector.html:9
+msgid "Light"
+msgstr "Jasny"
+
+#: workspaces/analytics_tile/model.py:146
+msgid "Line"
+msgstr "Linia"
+
+#: templates/components/forms/qr_code.html:13
+msgid "Link"
+msgstr "Link"
+
+#: workspaces/links_tile/model.py:111
+msgid "Link added"
+msgstr "Link dodany"
+
+#: workspaces/links_tile/model.py:100
+msgid "Link already existed"
+msgstr "Link już istniał"
+
+#: templates/components/forms/qr_code.html:24
+msgid "Link copied to clipboard!"
+msgstr "Link skopiowano do schowka!"
+
+#: components/workspaces/sidebar.py:430
+msgid "Link created"
+msgstr "Utworzono link"
+
+#: bloomerp.tile.type workspaces/tiles.py:40
+msgid "Links"
+msgstr "Linki"
+
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:20
+msgid "Links and folders"
+msgstr "Linki i foldery"
+
+#: workspaces/links_tile/model.py:59
+msgid "Links can only be nested inside folders"
+msgstr "Linki można zagnieżdżać tylko w folderach"
+
+#: services/workspace_services.py:184
+#, python-brace-format
+msgid "Links to the different models of the '{module}' module."
+msgstr "Strona główna modułu {module}."
+
+#: models/users/user_list_view_preference.py:35
+msgid "List"
+msgstr "Lista"
+
+#: route:app
+msgctxt "bloomerp:route:description"
+msgid "List of all files across the application."
+msgstr "Lista wszystkich plików w całej aplikacji."
+
+#: route:log_entries_model
+msgctxt "bloomerp:route:description"
+msgid "List of records for {model} model"
+msgstr "Lista rekordów modelu {model}"
+
+#: route:my_workspaces
+msgctxt "bloomerp:route:description"
+msgid "List of your workspaces"
+msgstr "Lista Twoich obszarów roboczych"
+
+#: workspaces/dataview_tile/form.py:23
+msgid "List view preference"
+msgstr "Preferencja widoku listy"
+
+#: templates/components/objects/dataview_calendar_events.html:53
+msgid "Load more"
+msgstr "Załaduj więcej"
+
+#: templates/cotton/features/workspaces/container.html:43
+msgid "Loading filters..."
+msgstr "Ładowanie filtrów..."
+
+#: templates/components/communication/render_inbox_folder_items.html:46
+#: templates/components/objects/dataview_gant_rows.html:85
+#: templates/components/objects/dataview_gant_unscheduled.html:32
+msgid "Loading more…"
+msgstr "Ładowanie kolejnych…"
+
+#: templates/views/forms/builder.html:38
+msgid "Loading..."
+msgstr "Ładowanie..."
+
+#: templates/views/auth/login.html:34
+msgid "Login"
+msgstr "Logowanie"
+
+#: templates/views/auth/login.html:24
+msgid "Login to Your Account"
+msgstr "Zaloguj się na swoje konto"
+
+#: bloomerp.todo.priority models/project_management/todo.py:23
+msgid "Low"
+msgstr "Niski"
+
+#: bloomerp.todo.effort models/project_management/todo.py:29
+msgid "M"
+msgstr "M"
+
+#: views/communication/create_email_account.py:253
+msgid "Mailbox connection failed"
+msgstr "Nie udało się połączyć ze skrzynką pocztową"
+
+#: bloomerp.emailaccount.mailboxes models/communication/email_account.py:270
+msgid "Mailboxes"
+msgstr "Skrzynki pocztowe"
+
+msgctxt "bloomerp:module:description"
+msgid "Manage users, roles, and permissions within the ERP system."
+msgstr "Zarządzaj użytkownikami, rolami i uprawnieniami w systemie ERP."
+
+#: route:log_entries_manageaccesscontrolformodelview
+msgctxt "bloomerp:route:name"
+msgid "ManageAccessControlForModelView"
+msgstr "Zarządzanie kontrolą dostępu dla widoku modelu"
+
+#: bloomerp.applicationfield.field_type
+msgid "Many To Many Field"
+msgstr "Pole wiele-do-wielu"
+
+#: workspaces/analytics_tile/model.py:365
+msgid "Map"
+msgstr "Mapa"
+
+#: bloomerp.documenttemplateheader.margin_bottom
+#: models/document_templates/document_template_header.py:35
+msgid "Margin Bottom"
+msgstr "Margines dolny"
+
+#: bloomerp.documenttemplateheader.margin_left models/document_templates/document_template_header.py:36
+msgid "Margin Left"
+msgstr "Margines lewy"
+
+#: bloomerp.documenttemplateheader.margin_right
+#: models/document_templates/document_template_header.py:37
+msgid "Margin Right"
+msgstr "Margines prawy"
+
+#: bloomerp.documenttemplateheader.margin_top models/document_templates/document_template_header.py:34
+msgid "Margin Top"
+msgstr "Margines górny"
+
+#: bloomerp.documenttemplate.page_margin models/document_templates/document_template.py:169
+msgid "Margin of the document template in inches."
+msgstr "Margines szablonu dokumentu w calach."
+
+# | msgid "Todo marked as completed."
+#: models/project_management/todo.py:108
+msgid "Mark as Completed"
+msgstr "Zadanie oznaczone jako ukończone."
+
+#: bloomerp.form.max_submissions models/forms/form.py:107
+msgid "Max Submissions"
+msgstr "Maksymalna liczba zgłoszeń"
+
+# | msgid "Max Submissions Per Ip"
+#: bloomerp.form.max_submissions_per_ip models/forms/form.py:113
+msgid "Max Submissions Per IP"
+msgstr "Maksymalna liczba zgłoszeń na adres IP"
+
+#: models/users/user_list_view_preference.py:143
+msgid "Maximum"
+msgstr "Maksimum"
+
+#: bloomerp.form.max_submissions_per_ip models/forms/form.py:112
+msgid "Maximum number of submissions per IP address"
+msgstr "Maksymalna liczba zgłoszeń na adres IP"
+
+#: bloomerp.form.max_submissions models/forms/form.py:106
+msgid "Maximum number of submissions possible for the form"
+msgstr "Maksymalna możliwa liczba zgłoszeń w formularzu"
+
+#: models/forms/form.py:144
+msgid "Maximum submissions per IP address cannot exceed the total maximum submissions."
+msgstr ""
+"Maksymalna liczba zgłoszeń na adres IP nie może przekraczać całkowitej maksymalnej liczby "
+"zgłoszeń."
+
+#: bloomerp.todo.priority models/project_management/todo.py:22
+msgid "Medium"
+msgstr "Średni"
+
+# | msgid "Content Type"
+# | msgid "Channel Type"
+#: models/communication/channel_member.py:21
+msgid "Member"
+msgstr "Typ treści"
+
+# | msgid "Action"
+#: models/communication/mention.py:15
+msgid "Mention"
+msgstr "Akcja"
+
+# | msgid "Actions"
+#: models/communication/mention.py:16
+msgid "Mentions"
+msgstr "Akcje"
+
+# | msgid "Parent"
+# | msgid "Parent Message"
+#: models/communication/channel_message.py:8
+msgid "Message"
+msgstr "Element nadrzędny"
+
+# | msgid "Parent"
+# | msgid "Parent Message"
+#: models/communication/channel_message.py:9
+msgid "Messages"
+msgstr "Element nadrzędny"
+
+#: bloomerp.applicationfield.meta bloomerp.file.meta models/application_field.py:60
+#: models/files/file.py:68
+msgid "Meta"
+msgstr "Meta"
+
+#: models/users/user_list_view_preference.py:142
+msgid "Minimum"
+msgstr "Minimum"
+
+msgctxt "bloomerp:module:name"
+msgid "Miscellaneous"
+msgstr "Różne"
+
+#: components/activity/activity_log.py:35
+msgid "Missing object ID or content type ID"
+msgstr "Brak identyfikatora obiektu lub identyfikatora typu zawartości"
+
+#: workspaces/dataview_tile/form.py:14
+msgid "Model"
+msgstr "Model"
+
+# | msgid "Module Id"
+#: bloomerp.workspace.module_id models/workspaces/workspace.py:49
+msgid "Module ID"
+msgstr "Identyfikator modułu"
+
+#: route:bloomerp_home_view
+msgctxt "bloomerp:route:name"
+msgid "Modules"
+msgstr "Moduły"
+
+#: models/users/user_list_view_preference.py:33 templates/cotton/features/dataviews/gant.html:32
+msgid "Month"
+msgstr "Miesiąc"
+
+#: bloomerp.user.date_view_preference models/users/user.py:48
+msgid "Month-Day-Year (08-15-2000)"
+msgstr "Miesiąc-Dzień-Rok (08-15-2000)"
+
+#: bloomerp.user.datetime_view_preference models/users/user.py:59
+msgid "Month-Day-Year Hour:Minute (08-15-2000 12:30)"
+msgstr "Miesiąc-Dzień-Rok Godzina:Minuta (08-15-2000 12:30)"
+
+#: templates/components/workspaces/tile_builders/links_tile_builder_items.html:23
+msgid "Move down"
+msgstr "Przenieś w dół"
+
+#: templates/components/workspaces/tile_builders/links_tile_builder_items.html:14
+msgid "Move up"
+msgstr "Przenieś w górę"
+
+#: models/communication/channel_member.py:57
+msgid "Muted Until"
+msgstr "Wyciszone do"
+
+#: models/workspaces/workspace.py:74
+msgid "My Workspace"
+msgstr "Moje obszary robocze"
+
+#: route:my_workspaces
+msgctxt "bloomerp:route:name"
+msgid "My workspaces"
+msgstr "Moje obszary robocze"
+
+#: bloomerp.apikey.name bloomerp.documenttemplate.name bloomerp.documenttemplateheader.name
+#: bloomerp.documenttemplatestyling.name bloomerp.emailaccount.name bloomerp.fieldpolicy.name
+#: bloomerp.file.name bloomerp.filefolder.name bloomerp.form.name bloomerp.inbox.name
+#: bloomerp.initiative.name bloomerp.policy.name bloomerp.rowpolicy.name bloomerp.sidebar.name
+#: bloomerp.sidebaritem.name bloomerp.sqlquery.name bloomerp.tile.name bloomerp.todolabel.name
+#: bloomerp.userdetailviewtabitem.name bloomerp.userdetailviewtabspreference.name
+#: bloomerp.userlistviewpreference.name bloomerp.userobjectlayoutpreference.name bloomerp.workflow.name
+#: bloomerp.workflowedge.name bloomerp.workflownode.name bloomerp.workspace.name
+#: models/access_control/field_policy.py:35 models/access_control/policy.py:69
+#: models/access_control/row_policy.py:28 models/api_key.py:91 models/automation/workflow.py:75
+#: models/automation/workflow_edge.py:21 models/automation/workflow_node.py:32
+#: models/communication/email_account.py:99 models/document_templates/document_template.py:122
+#: models/document_templates/document_template_header.py:28
+#: models/document_templates/document_template_styling.py:18 models/files/file.py:53
+#: models/files/file_folder.py:31 models/forms/form.py:68 models/project_management/initiative.py:100
+#: models/project_management/todo_label.py:35 models/users/base_preference.py:78
+#: models/users/user_detail_view_tabs_preference.py:436 models/workspaces/sidebar_item.py:49
+#: models/workspaces/sql_query.py:30 models/workspaces/tile.py:25
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:42
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:84
+#: templates/components/workspaces/tile_builders/links_tile_builder_items.html:38
+msgid "Name"
+msgstr "Nazwa"
+
+#: bloomerp.documenttemplatestyling.name models/document_templates/document_template_styling.py:18
+msgid "Name of the document template styling."
+msgstr "Nazwa stylu szablonu dokumentu."
+
+#: bloomerp.documenttemplate.name models/document_templates/document_template.py:121
+msgid "Name of the document template."
+msgstr "Nazwa szablonu dokumentu."
+
+#: bloomerp.sidebaritem.name
+msgid "Name of the sidebar item."
+msgstr "Nazwa elementu paska bocznego."
+
+#: bloomerp.documenttemplateheader.name models/document_templates/document_template_header.py:27
+msgid "Name of the template header."
+msgstr "Nazwa nagłówka szablonu."
+
+#: bloomerp.tile.name models/workspaces/tile.py:24
+msgid "Name of the widget"
+msgstr "Nazwa widżetu"
+
+#: views/access_control/manage_permissions.py:314
+msgid "Name required"
+msgstr "Nazwa jest wymagana"
+
+#: services/workspace_services.py:175
+#, python-brace-format
+msgid "Navigate to the '{module}' module."
+msgstr "Strona główna modułu {module}."
+
+#: templates/components/forms/initial_data.html:29
+msgid "New"
+msgstr "Nowy"
+
+#: components/communication/emails/new_email.py:139
+msgid "New email"
+msgstr "Nowa wiadomość e-mail"
+
+#: components/workspaces/sidebar.py:82
+msgid "New link"
+msgstr "Nowy link"
+
+#: bloomerp.emailaccount.next_sync_at models/communication/email_account.py:230
+msgid "Next Sync At"
+msgstr "Następna synchronizacja o"
+
+#: templates/cotton/features/dataviews/calendar.html:252
+msgid "No calendar items in this period."
+msgstr "Brak elementów kalendarza w tym okresie."
+
+#: models/users/user_list_view_preference.py:200
+msgid "No color grouping"
+msgstr "Bez grupowania według koloru"
+
+#: templates/cotton/features/dataviews/calendar.html:22
+msgid "No date field selected"
+msgstr "Nie wybrano pola daty"
+
+#: models/users/user_list_view_preference.py:174
+msgid "No dependency"
+msgstr "Brak zależności"
+
+#: templates/components/forms/initial_data_value.html:75
+msgid "No editable child fields"
+msgstr "Brak edytowalnych pól podrzędnych"
+
+#: models/users/user_list_view_preference.py:119
+msgid "No grouping"
+msgstr "Bez grupowania"
+
+#: templates/components/communication/render_inbox_folder_items.html:20
+msgid "No items found in this folder."
+msgstr "Nie znaleziono elementów w tym folderze."
+
+#: workspaces/links_tile/model.py:67 workspaces/links_tile/model.py:142
+#: workspaces/links_tile/model.py:198
+msgid "No link was selected"
+msgstr "Nie wybrano linku"
+
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:28
+msgid "No links have been added yet."
+msgstr "Nie dodano jeszcze żadnych linków."
+
+#: templates/cotton/features/dataviews/card.html:53
+#: templates/cotton/features/dataviews/pivot_table.html:95
+#: templates/cotton/features/dataviews/table.html:112
+msgid "No records found."
+msgstr "Nie znaleziono rekordów."
+
+#: templates/widgets/one_to_many_field_widget.html:54
+#: templates/widgets/one_to_many_field_widget.html:96
+msgid "No related objects found."
+msgstr "Nie znaleziono powiązanych obiektów."
+
+#: templates/components/global_search.html:136
+msgid "No results found."
+msgstr "Nie znaleziono wyników."
+
+#: templates/components/global_search.html:52
+msgid "No routes found."
+msgstr "Nie znaleziono tras."
+
+#: templates/components/objects/dataview_gant_rows.html:67
+msgid "No scheduled records."
+msgstr "Brak zaplanowanych rekordów."
+
+#: templates/views/generic/detail/base.html:58
+msgid "No tabs in folder"
+msgstr "Brak kart w folderze"
+
+#: templates/components/global_search.html:72
+msgid "No users found."
+msgstr "Nie znaleziono użytkowników."
+
+#: templates/inbox_items/workflow_run.html:93
+msgid "No workflow graph was available for this execution."
+msgstr "Dla tego wykonania nie był dostępny graf przepływu pracy."
+
+#: bloomerp.workflowrunstep.node models/automation/workflow_run_step.py:66
+msgid "Node"
+msgstr "Węzeł"
+
+#: models/automation/workflow_node.py:146
+msgid "Node subtype is required in config"
+msgstr "Podtyp węzła jest wymagany w konfiguracji"
+
+#: bloomerp.emailaccount.imap_security bloomerp.emailaccount.smtp_security
+#: models/communication/email_account.py:24 models/users/user_list_view_preference.py:56
+#: models/users/user_list_view_preference.py:73
+msgid "None"
+msgstr "Brak"
+
+#: bloomerp.inboxitem.item_type
+msgid "Notification"
+msgstr "Powiadomienie"
+
+#: bloomerp.inboxfolder.type
+msgid "Notifications"
+msgstr "Powiadomienia"
+
+#: bloomerp.applicationfield.field_type
+msgid "Null Boolean Field"
+msgstr "Pole logiczne z wartością null"
+
+#: models/users/user_list_view_preference.py:555
+msgid "Numeric fields support all aggregations; booleans support sum and count; other fields use count."
+msgstr ""
+"Pola liczbowe obsługują wszystkie agregacje; pola logiczne obsługują sumę i zliczanie; dla "
+"pozostałych pól używane jest zliczanie."
+
+# | msgid "Oauth Client Id"
+#: bloomerp.emailaccount.oauth_client_id models/communication/email_account.py:163
+msgid "OAuth Client ID"
+msgstr "Identyfikator klienta OAuth"
+
+# | msgid "Oauth Client Secret"
+#: bloomerp.emailaccount.oauth_client_secret models/communication/email_account.py:168
+msgid "OAuth Client Secret"
+msgstr "Sekret klienta OAuth"
+
+# | msgid "Oauth Scopes"
+#: bloomerp.emailaccount.oauth_scopes models/communication/email_account.py:179
+msgid "OAuth Scopes"
+msgstr "Zakresy OAuth"
+
+# | msgid "Oauth Tenant Id"
+#: bloomerp.emailaccount.oauth_tenant_id models/communication/email_account.py:174
+msgid "OAuth Tenant ID"
+msgstr "Identyfikator dzierżawy OAuth"
+
+#: bloomerp.activitylog.object bloomerp.bookmark.object
+msgid "Object"
+msgstr "Obiekt"
+
+#: bloomerp.aiconversation.conversation_type
+msgid "Object Bloom AI"
+msgstr "Obiekt Bloom AI"
+
+#: bloomerp.activitylog.object_id bloomerp.bookmark.object_id bloomerp.comment.object_id
+#: bloomerp.file.object_id bloomerp.filefolder.object_id bloomerp.todo.object_id
+#: models/activity_log.py:64 models/communication/comment.py:29 models/communication/mention.py:28
+#: models/files/file.py:55 models/files/file_folder.py:44 models/project_management/todo.py:216
+#: models/users/bookmark.py:28
+msgid "Object ID"
+msgstr "Identyfikator obiektu"
+
+#: templates/inbox_items/workflow_run.html:55
+msgid "Object no longer available"
+msgstr "Obiekt nie jest już dostępny"
+
+#: bloomerp.initiative.status models/project_management/initiative.py:18
+msgid "On Hold"
+msgstr "Wstrzymano"
+
+#: bloomerp.applicationfield.field_type
+msgid "One To Many Field"
+msgstr "Pole jeden-do-wielu"
+
+#: bloomerp.applicationfield.field_type
+msgid "One To One Field"
+msgstr "Pole jeden-do-jednego"
+
+#: bloomerp.applicationfield.field_type
+msgid "One To One User Field"
+msgstr "Pole użytkownika jeden-do-jednego"
+
+#: templates/components/workspaces/share_workspace.html:18
+msgid "Only you can manage who has access to this workspace."
+msgstr "Tylko Ty możesz zarządzać tym, kto ma dostęp do tego obszaru roboczego."
+
+#: templates/inbox_items/workflow_run.html:52
+msgid "Open object"
+msgstr "Otwórz obiekt"
+
+#: templates/inbox_items/workflow_run.html:102
+msgid "Open workflow run"
+msgstr "Otwórz przebieg przepływu pracy"
+
+#: bloomerp.form.opens_at models/forms/form.py:119
+msgid "Opens At"
+msgstr "Otwiera się"
+
+#: components/workspaces/preview_workspace_tile.py:356
+msgid "Operation does not exist"
+msgstr "Operacja nie istnieje"
+
+#: bloomerp.inboxitem.raw_meta_data
+msgid "Optional JSON field to store additional metadata related to the inbox item."
+msgstr ""
+"Opcjonalne pole JSON do przechowywania dodatkowych metadanych powiązanych z elementem skrzynki "
+"odbiorczej."
+
+#: workspaces/analytics_tile/model.py:105
+msgid "Optional color for this series, for example #3b82f6."
+msgstr "Opcjonalny kolor tej serii, na przykład #3b82f6."
+
+#: models/users/user_list_view_preference.py:432
+msgid "Optional date field used as the end of an event range."
+msgstr "Opcjonalne pole daty używane jako koniec zakresu wydarzenia."
+
+#: models/users/user_list_view_preference.py:450
+msgid "Optional field used to color calendar items and build the legend."
+msgstr "Opcjonalne pole używane do kolorowania elementów kalendarza i tworzenia legendy."
+
+#: bloomerp.inbox.name bloomerp.sidebar.name bloomerp.userdetailviewtabspreference.name
+#: bloomerp.userlistviewpreference.name bloomerp.userobjectlayoutpreference.name
+#: bloomerp.workspace.name
+msgid "Optional name for this preference, for user reference"
+msgstr "Opcjonalna nazwa tego ustawienia, używana jako odniesienie dla użytkownika"
+
+#: bloomerp.inboxitem.related_item_id
+msgid "Optional reference to the source item's ID, if applicable."
+msgstr "Opcjonalne odwołanie do identyfikatora elementu źródłowego, jeśli dotyczy."
+
+#: models/users/user_list_view_preference.py:498
+msgid "Optional self-referencing field whose related record follows this record."
+msgstr ""
+"Opcjonalne pole odwołujące się do tego samego typu, którego powiązany rekord następuje po tym "
+"rekordzie."
+
+#: models/users/user_list_view_preference.py:489
+msgid "Optional self-referencing field whose related record precedes this record."
+msgstr "Opcjonalne pole odwołujące się do tego samego typu, którego powiązany rekord poprzedza ten rekord."
+
+#: bloomerp.userlistviewpreference.options models/users/user_list_view_preference.py:656
+msgid "Options"
+msgstr "Opcje"
+
+#: workspaces/analytics_tile/model.py:527
+msgid "Options updated"
+msgstr "Opcje zaktualizowane"
+
+#: templates/views/auth/login.html:46
+msgid "Or continue with"
+msgstr "Lub kontynuuj za pomocą"
+
+#: bloomerp.documenttemplate.page_orientation models/document_templates/document_template.py:158
+msgid "Orientation of the document template."
+msgstr "Orientacja szablonu dokumentu."
+
+#: models/communication/email_account.py:68
+msgid "Outgoing mail"
+msgstr "Poczta wychodząca"
+
+#: bloomerp.workflowrunstep.output_file models/automation/workflow_run_step.py:58
+msgid "Output File"
+msgstr "Plik wyjściowy"
+
+#: workspaces/analytics_tile/model.py:156
+msgid "Overrides the X-axis label. Leave blank to show no custom axis title."
+msgstr "Zastępuje etykietę osi X. Pozostaw puste, aby nie wyświetlać niestandardowego tytułu osi."
+
+#: workspaces/analytics_tile/model.py:171
+msgid "Overrides the Y-axis label. Leave blank to show no custom axis title."
+msgstr "Zastępuje etykietę osi Y. Pozostaw puste, aby nie wyświetlać niestandardowego tytułu osi."
+
+#: route:log_entries_detail_overview
+msgctxt "bloomerp:route:description"
+msgid "Overview of object from {model} model"
+msgstr "Przegląd obiektu z modelu {model}"
+
+#: route:users_my_profile_overview
+msgctxt "bloomerp:route:description"
+msgid "Overview of profile"
+msgstr "Przegląd profilu"
+
+#: bloomerp.initiative.owner models/communication/channel_member.py:23
+#: models/project_management/initiative.py:131
+msgid "Owner"
+msgstr "Właściciel"
+
+#: bloomerp.documenttemplate.page_margin models/document_templates/document_template.py:170
+msgid "Page Margin"
+msgstr "Margines strony"
+
+#: bloomerp.documenttemplate.page_orientation models/document_templates/document_template.py:160
+msgid "Page Orientation"
+msgstr "Orientacja strony"
+
+#: bloomerp.documenttemplate.page_size models/document_templates/document_template.py:166
+#: workspaces/analytics_tile/model.py:125
+msgid "Page Size"
+msgstr "Rozmiar strony"
+
+# | msgid "Page Size"
+#: models/users/user_list_view_preference.py:309 models/users/user_list_view_preference.py:401
+msgid "Page size"
+msgstr "Rozmiar strony"
+
+#: bloomerp.filefolder.parent bloomerp.sidebaritem.parent bloomerp.userdetailviewtabitem.parent
+#: models/files/file_folder.py:32 models/users/user_detail_view_tabs_preference.py:434
+#: models/workspaces/sidebar_item.py:68
+msgid "Parent"
+msgstr "Element nadrzędny"
+
+# | msgid "Parent"
+#: models/communication/channel_message.py:36
+msgid "Parent Message"
+msgstr "Element nadrzędny"
+
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:92
+msgid "Parent folder"
+msgstr "Folder nadrzędny"
+
+#: bloomerp.emailaccount.password models/communication/email_account.py:126
+msgid "Password"
+msgstr "Hasło"
+
+#: bloomerp.workflowrunstep.status models/automation/workflow_run_step.py:7
+msgid "Paused"
+msgstr "Wstrzymano"
+
+#: bloomerp.activitylog.payload models/activity_log.py:72
+msgid "Payload"
+msgstr "Ładunek"
+
+#: bloomerp.rowpolicyrulepermission.permission models/access_control/row_policy_rule.py:305
+msgid "Permission"
+msgstr "Uprawnienie"
+
+#: views/access_control/manage_permissions.py:201
+msgid "Permission required"
+msgstr "Wymagane uprawnienie"
+
+#: bloomerp.rowpolicyrule.permissions models/access_control/row_policy_rule.py:43
+msgid "Permissions"
+msgstr "Uprawnienia"
+
+# | msgid "Persisted"
+#: models/forms/form_submission.py:51
+msgid "Persist"
+msgstr "Utrwalono"
+
+#: bloomerp.file.persisted bloomerp.formsubmission.persisted models/files/file.py:65
+#: models/forms/form_submission.py:73
+msgid "Persisted"
+msgstr "Utrwalono"
+
+#: bloomerp.applicationfield.field_type
+msgid "Phone Number Field"
+msgstr "Pole numeru telefonu"
+
+#: workspaces/analytics_tile/model.py:372
+msgid "Pie Chart"
+msgstr "Wykres kołowy"
+
+#: bloomerp.userlistviewpreference.view_type models/users/user_list_view_preference.py:516
+msgid "Pivot"
+msgstr "Przestawny"
+
+#: workspaces/analytics_tile/model.py:358
+msgid "Pivot Table"
+msgstr "Tabela przestawna"
+
+#: workspaces/links_tile/model.py:98 workspaces/links_tile/model.py:169
+msgid "Please add a URL to the link"
+msgstr "Dodaj adres URL do łącza"
+
+#: workspaces/links_tile/model.py:167
+msgid "Please add a name"
+msgstr "Dodaj nazwę"
+
+#: workspaces/links_tile/model.py:126
+msgid "Please add a name to the folder"
+msgstr "Dodaj nazwę folderu"
+
+#: workspaces/links_tile/model.py:96
+msgid "Please add a name to the link"
+msgstr "Dodaj nazwę łącza"
+
+#: workspaces/dataview_tile/model.py:44
+msgid "Please correct the data view configuration."
+msgstr "Popraw konfigurację widoku danych."
+
+#: forms/auth.py:43
+#, python-format
+msgid "Please enter a correct %(identifier)s and password. Note that both fields may be case-sensitive."
+msgstr ""
+"Wprowadź poprawny identyfikator %(identifier)s i hasło. Pamiętaj, że w obu polach może być "
+"rozróżniana wielkość liter."
+
+#: views/access_control/manage_permissions.py:313
+msgid "Please give the policy a name before saving."
+msgstr "Przed zapisaniem nadaj zasadzie nazwę."
+
+#: views/workspaces/create_tile.py:79
+msgid "Please provide a SQL query before continuing."
+msgstr "Przed kontynuowaniem wprowadź zapytanie SQL."
+
+#: views/communication/create_email_account.py:158
+msgid "Please review the form."
+msgstr "Sprawdź formularz."
+
+#: views/workspaces/create_tile.py:59
+msgid "Please select a tile type to continue."
+msgstr "Wybierz typ kafelka, aby kontynuować."
+
+#: views/communication/create_email_account.py:147
+msgid "Please select an email provider first."
+msgstr "Najpierw wybierz dostawcę poczty e-mail."
+
+#: views/communication/create_email_account.py:112
+msgid "Please select an email provider to continue."
+msgstr "Wybierz dostawcę poczty e-mail, aby kontynuować."
+
+#: views/access_control/manage_permissions.py:200
+msgid "Please select at least one global permission before continuing."
+msgstr "Przed kontynuowaniem wybierz co najmniej jedno globalne uprawnienie."
+
+# | msgid "Policy details"
+#: models/access_control/policy.py:37
+msgid "Policy Details"
+msgstr "Szczegóły zasad"
+
+# | msgid "Policy details"
+#: models/access_control/policy.py:47
+msgid "Policy Scope"
+msgstr "Szczegóły zasad"
+
+#: views/access_control/manage_permissions.py:349
+msgid "Policy details"
+msgstr "Szczegóły zasad"
+
+#: views/access_control/manage_permissions.py:394
+msgid "Policy rules error"
+msgstr "Błąd reguł zasad"
+
+#: bloomerp.emailaccount.sync_mode
+msgid "Polling"
+msgstr "Odpytywanie"
+
+#: bloomerp.emailaccount.sync_interval_minutes
+msgid "Polling interval used by providers that synchronize on a schedule."
+msgstr "Interwał odpytywania używany przez dostawców synchronizujących dane według harmonogramu."
+
+#: bloomerp.documenttemplate.page_orientation models/document_templates/document_template.py:24
+msgid "Portrait"
+msgstr "Pionowa"
+
+#: bloomerp.workflownode.pos_x models/automation/workflow_node.py:58
+msgid "Pos X"
+msgstr "Pozycja X"
+
+#: bloomerp.workflownode.pos_y models/automation/workflow_node.py:63
+msgid "Pos Y"
+msgstr "Pozycja Y"
+
+#: bloomerp.sidebaritem.position bloomerp.userdetailviewtabitem.position
+#: models/users/user_detail_view_tabs_preference.py:438 models/workspaces/sidebar_item.py:77
+msgid "Position"
+msgstr "Pozycja"
+
+#: bloomerp.sidebaritem.position
+msgid "Position of the sidebar item among its siblings. Lower numbers appear first."
+msgstr ""
+"Pozycja elementu paska bocznego wśród elementów równorzędnych. Niższe liczby pojawiają się jako "
+"pierwsze."
+
+#: bloomerp.applicationfield.field_type
+msgid "Positive Integer Field"
+msgstr "Pole dodatniej liczby całkowitej"
+
+#: bloomerp.applicationfield.field_type
+msgid "Positive Small Integer Field"
+msgstr "Pole dodatniej małej liczby całkowitej"
+
+#: bloomerp.userdetailviewtabitem.preference models/users/user_detail_view_tabs_preference.py:426
+msgid "Preference"
+msgstr "Preferencja"
+
+#: workspaces/analytics_tile/model.py:80
+msgid "Prefix"
+msgstr "Prefiks"
+
+#: workspaces/analytics_tile/model.py:314
+msgid ""
+"Presents key performance indicators (KPIs) derived from a custom query in a concise and visually "
+"impactful format, allowing users to quickly assess critical metrics and track progress towards "
+"specific goals."
+msgstr ""
+"Prezentuje kluczowe wskaźniki wydajności (KPI) uzyskane z niestandardowego zapytania w zwięzłej i"
+" atrakcyjnej wizualnie formie, umożliwiając użytkownikom szybką ocenę krytycznych danych oraz "
+"śledzenie postępów w realizacji określonych celów."
+
+#: templates/components/forms/initial_data.html:11
+msgid ""
+"Preset values by selecting a field and filling in the value. A form can have default values for "
+"fields that exist on the form and fields that are hidden from the user."
+msgstr ""
+"Ustaw wartości domyślne, wybierając pole i wprowadzając wartość. Formularz może mieć wartości "
+"domyślne dla pól istniejących na formularzu oraz pól ukrytych przed użytkownikiem."
+
+#: templates/components/document_templates/generate_document_template.html:94
+msgid "Preview"
+msgstr "Podgląd"
+
+#: bloomerp.todo.priority models/project_management/todo.py:153
+msgid "Priority"
+msgstr "Priorytet"
+
+#: templates/views/base_wizard.html:79
+msgid "Processing..."
+msgstr "Przetwarzanie..."
+
+#: models/users/user.py:23
+msgid "Profile"
+msgstr "Profil"
+
+#: route:users_my_profile_overview
+msgctxt "bloomerp:route:name"
+msgid "Profile"
+msgstr "Profil"
+
+#: views/access_control/manage_permissions.py:274
+msgid "Properties and one-to-many fields cannot be used in row policies."
+msgstr "Właściwości i pola jeden-do-wielu nie mogą być używane w zasadach dotyczących wierszy."
+
+#: bloomerp.applicationfield.field_type
+msgid "Property"
+msgstr "Właściwość"
+
+#: bloomerp.filefolder.protected models/files/file_folder.py:53
+msgid "Protected"
+msgstr "Chroniony"
+
+#: bloomerp.filefolder.protected
+msgid ""
+"Protected folders cannot be edited or deleted through the UI. This is useful for folders that are"
+" automatically created for objects, such as the module-level folders created for files."
+msgstr ""
+"Chronionych folderów nie można edytować ani usuwać za pomocą interfejsu użytkownika. Jest to "
+"przydatne w przypadku folderów tworzonych automatycznie dla obiektów, takich jak foldery na "
+"poziomie modułu tworzone dla plików."
+
+#: bloomerp.emailaccount.provider models/communication/email_account.py:110
+msgid "Provider"
+msgstr "Dostawca"
+
+#: views/communication/create_email_account.py:148
+msgid "Provider required"
+msgstr "Dostawca jest wymagany"
+
+#: bloomerp.emailaccount.oauth_tenant_id
+msgid "Provider tenant, directory, or workspace identifier when applicable."
+msgstr "Identyfikator dzierżawy, katalogu lub obszaru roboczego dostawcy, jeśli ma zastosowanie."
+
+#: bloomerp.emailaccount.sync_cursor
+msgid "Provider-specific cursor/state for incremental synchronization."
+msgstr "Kursor/stan specyficzny dla dostawcy, używany do synchronizacji przyrostowej."
+
+#: bloomerp.emailaccount.extra_settings
+msgid "Provider-specific settings that do not have dedicated fields yet."
+msgstr "Ustawienia specyficzne dla dostawcy, które nie mają jeszcze dedykowanych pól."
+
+#: workspaces/tiles.py:41
+msgid ""
+"Provides quick access to a collection of internal or external links, allowing users to navigate "
+"efficiently to frequently used resources."
+msgstr ""
+"Zapewnia szybki dostęp do zbioru wewnętrznych lub zewnętrznych odnośników, umożliwiając "
+"użytkownikom sprawne przechodzenie do często używanych zasobów."
+
+#: bloomerp.form.public_embed_enabled models/forms/form.py:101
+msgid "Public Embed Enabled"
+msgstr "Włączono publiczne osadzanie"
+
+#: bloomerp.emailaccount.sync_mode
+msgid "Push"
+msgstr "Push"
+
+#: templates/cotton/features/dataviews/gant.html:31
+msgid "Quarter"
+msgstr "Kwartał"
+
+#: bloomerp.sqlquery.query models/workspaces/sql_query.py:31
+msgid "Query"
+msgstr "Zapytanie"
+
+#: views/workspaces/create_tile.py:80
+msgid "Query required"
+msgstr "Zapytanie jest wymagane"
+
+#: bloomerp.inboxitem.raw_meta_data models/communication/inbox/inbox_item.py:99
+msgid "Raw Meta Data"
+msgstr "Surowe metadane"
+
+#: templates/components/communication/emails/email_editor.html:135
+msgid "Ready to send."
+msgstr "Gotowe do wysłania."
+
+#: templates/views/workflows/builder.html:21
+msgid "Recenter"
+msgstr "Wyśrodkuj ponownie"
+
+#: models/communication/signature_request.py:30
+msgid "Recipient of the signature request."
+msgstr "Odbiorca prośby o podpis."
+
+#: templates/cotton/features/dataviews/gant.html:52
+msgid "Records"
+msgstr "Rekordy"
+
+#: bloomerp.workflowrunstep.node models/automation/workflow_run_step.py:65
+msgid "Reference to node object"
+msgstr "Odwołanie do obiektu węzła"
+
+#: bloomerp.inbox.source_object bloomerp.sidebar.source_object
+#: bloomerp.userdetailviewtabspreference.source_object bloomerp.userlistviewpreference.source_object
+#: bloomerp.userobjectlayoutpreference.source_object bloomerp.workspace.source_object
+msgid ""
+"Reference to the original preference from which this preference was derived. This is used to "
+"track the origin of derived preferences."
+msgstr ""
+"Odwołanie do oryginalnego ustawienia, z którego wyprowadzono to ustawienie. Służy do śledzenia "
+"pochodzenia ustawień pochodnych."
+
+#: bloomerp.emailaccount.refresh_token models/communication/email_account.py:189
+msgid "Refresh Token"
+msgstr "Token odświeżania"
+
+# | msgid "Related Item Id"
+#: bloomerp.inboxitem.related_item_id models/communication/inbox/inbox_item.py:43
+msgid "Related Item ID"
+msgstr "Identyfikator powiązanego elementu"
+
+#: bloomerp.applicationfield.related_model models/application_field.py:54
+msgid "Related Model"
+msgstr "Powiązany model"
+
+# | msgid "Related Object Id"
+#: bloomerp.inboxfolder.related_object_id models/communication/inbox/inbox_folder.py:34
+msgid "Related Object ID"
+msgstr "Identyfikator powiązanego obiektu"
+
+#: bloomerp.applicationfield.related_model models/application_field.py:53
+msgid "Related model for ForeignKey, OneToOneField, ManyToManyField"
+msgstr "Powiązany model dla pól ForeignKey, OneToOneField i ManyToManyField"
+
+#: templates/inbox_items/workflow_run.html:43
+msgid "Related object"
+msgstr "Powiązany obiekt"
+
+#: templates/components/workspaces/tile_builders/links_tile_builder_items.html:70
+#: templates/components/workspaces/tile_builders/links_tile_builder_items.html:77
+msgid "Remove"
+msgstr "Usuń"
+
+#: templates/components/workspaces/tile_builders/analytics_tile_builder.html:128
+#: templates/components/workspaces/tile_builders/analytics_tile_builder.html:272
+msgid "Remove field"
+msgstr "Usuń pole"
+
+#: templates/cotton/ui/inputs/one_to_many/row_actions.html:3
+msgid "Remove row"
+msgstr "Usuń wiersz"
+
+#: templates/widgets/one_to_many_field_widget.html:106
+msgid "Remove selected"
+msgstr "Usuń zaznaczone"
+
+#: components/workspaces/preview_workspace_tile.py:190
+#, python-format
+msgid "Rendering error: %(error)s"
+msgstr "Błąd renderowania: %(error)s"
+
+#: components/communication/emails/reply_to_email.py:72
+msgid "Reply"
+msgstr "Odpowiedz"
+
+#: bloomerp.todo.requested_by models/project_management/todo.py:139
+msgid "Requested By"
+msgstr "Zgłoszone przez"
+
+#: templates/cotton/features/document_templates/builder.html:111
+msgid "Required"
+msgstr "Wymagane"
+
+#: bloomerp.todo.required_by models/project_management/todo.py:145
+msgid "Required By"
+msgstr "Wymagane przez"
+
+#: bloomerp.user.username
+msgid "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only."
+msgstr "Wymagane. Maksymalnie 150 znaków. Dozwolone są tylko litery, cyfry oraz znaki @/./+/-/_."
+
+#: bloomerp.form.requires_authentication models/forms/form.py:96
+msgid "Requires Authentication"
+msgstr "Wymaga uwierzytelnienia"
+
+#: bloomerp.form.requires_review models/forms/form.py:91
+msgid "Requires Review"
+msgstr "Wymaga przeglądu"
+
+#: templates/mixins/bloomerp_layout_form_mixin.html:95
+#: templates/mixins/bloomerp_layout_form_mixin.html:153 templates/views/base_wizard.html:50
+msgid "Reset"
+msgstr "Resetuj"
+
+#: templates/views/auth/login.html:72
+msgid "Reset password"
+msgstr "Zresetuj hasło"
+
+#: route:users_detail_reset_password
+msgctxt "bloomerp:route:name"
+msgid "Reset password"
+msgstr "Resetowanie hasła"
+
+#: route:users_detail_reset_password
+msgctxt "bloomerp:route:description"
+msgid "Reset password for a user"
+msgstr "Resetowanie hasła użytkownika"
+
+#: route:users_detail_admin_reset_password_for_user
+msgctxt "bloomerp:route:description"
+msgid "Reset password for a user by admin"
+msgstr "Resetowanie hasła użytkownika przez administratora"
+
+#: route:users_detail_admin_reset_password_for_user
+msgctxt "bloomerp:route:name"
+msgid "Reset password for user (admin)"
+msgstr "Resetowanie hasła użytkownika (administrator)"
+
+#: route:form_submissions_detail_review_submission
+msgctxt "bloomerp:route:name"
+msgid "Review Submission"
+msgstr "Przesłanie oceny"
+
+#: route:form_submissions_detail_review_submission
+msgctxt "bloomerp:route:description"
+msgid "Review a form submission"
+msgstr "Przeglądanie przesłanego formularza"
+
+#: models/api_key.py:44
+msgid "Revoke API Key"
+msgstr "Utwórz klucz API"
+
+#: bloomerp.apikey.revoked_at models/api_key.py:120
+msgid "Revoked At"
+msgstr "Unieważniono dnia"
+
+#: workspaces/analytics_tile/model.py:196
+msgid "Right"
+msgstr "Prawo"
+
+#: bloomerp.documenttemplateheader.margin_right
+#: models/document_templates/document_template_header.py:37
+msgid "Right margin of the header in inches."
+msgstr "Prawy margines nagłówka w calach."
+
+#: models/communication/channel_member.py:43
+msgid "Role"
+msgstr "Rola"
+
+#: bloomerp.documenttemplate.content_types models/document_templates/document_template.py:132
+msgid "Root object types that can be used as variables in the document template."
+msgstr "Typy obiektów głównych, których można używać jako zmiennych w szablonie dokumentu."
+
+#: bloomerp.policy.row_policy bloomerp.rowpolicyrule.row_policy models/access_control/policy.py:83
+#: models/access_control/row_policy_rule.py:33
+msgid "Row Policy"
+msgstr "Polityka wierszy"
+
+#: bloomerp.rowpolicyrulepermission.row_policy_rule models/access_control/row_policy_rule.py:304
+msgid "Row Policy Rule"
+msgstr "Reguła polityki wierszy"
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "Row Policy Rule Permissions"
+#: bloomerp.rowpolicyrulepermission models/access_control/row_policy_rule.py:299
+msgid "Row Policy Rule Permission"
+msgstr "Uprawnienia reguł polityki wierszy"
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "Row Policy Rule Permissions"
+#: bloomerp.rowpolicyrulepermission models/access_control/row_policy_rule.py:300
+msgid "Row Policy Rule Permissions"
+msgstr "Uprawnienia reguł polityki wierszy"
+
+#: templates/widgets/one_to_many_field_widget.html:32
+msgid "Row actions"
+msgstr "Akcje wiersza"
+
+#: views/access_control/manage_permissions.py:248
+msgid "Row policies can only use permissions selected in step 1."
+msgstr "Polityki wierszy mogą używać tylko uprawnień wybranych w kroku 1."
+
+#: views/access_control/manage_permissions.py:249
+msgid "Row policy mismatch"
+msgstr "Niezgodność polityki wierszy"
+
+#: models/users/user_list_view_preference.py:525
+#: templates/cotton/features/dataviews/pivot_table.html:25
+#: templates/views/generic/model/bulk_upload_wizard/confirm_step.html:6
+msgid "Rows"
+msgstr "Wiersze"
+
+#: models/users/user_list_view_preference.py:504 models/users/user_list_view_preference.py:586
+msgid "Rows per page"
+msgstr "Wierszy na stronę"
+
+#: bloomerp.fieldpolicy.rule bloomerp.rowpolicyrule.rule models/access_control/field_policy.py:40
+#: models/access_control/row_policy_rule.py:37
+msgid "Rule"
+msgstr "Reguła"
+
+#: bloomerp.workflow.run_asynchronously models/automation/workflow.py:80
+msgid "Run Asynchronously"
+msgstr "Uruchamiaj asynchronicznie"
+
+# | msgid "Workflow"
+#: models/automation/workflow.py:57 models/automation/workflow.py:59
+msgid "Run workflow"
+msgstr "Przepływ pracy"
+
+#: bloomerp.todo.effort models/project_management/todo.py:28
+msgid "S"
+msgstr "S"
+
+# | msgid "Smtp Host"
+#: bloomerp.emailaccount.smtp_host models/communication/email_account.py:147
+msgid "SMTP Host"
+msgstr "Host SMTP"
+
+# | msgid "Smtp Port"
+#: bloomerp.emailaccount.smtp_port models/communication/email_account.py:152
+msgid "SMTP Port"
+msgstr "Port SMTP"
+
+# | msgid "Smtp Security"
+#: bloomerp.emailaccount.smtp_security models/communication/email_account.py:158
+msgid "SMTP Security"
+msgstr "Zabezpieczenia SMTP"
+
+#: bloomerp.aiconversation.conversation_type
+msgid "SQL"
+msgstr "SQL"
+
+#: bloomerp.sqlquery models/workspaces/sql_query.py:17
+msgid "SQL Queries"
+msgstr "Zapytania SQL"
+
+#: bloomerp.sqlquery models/workspaces/sql_query.py:16
+msgid "SQL Query"
+msgstr "Zapytanie SQL"
+
+#: bloomerp.sqlquery.query models/workspaces/sql_query.py:31
+msgid "SQL Query to execute"
+msgstr "Zapytanie SQL do wykonania"
+
+#: bloomerp.emailaccount.imap_security bloomerp.emailaccount.smtp_security
+#: models/communication/email_account.py:22
+msgid "SSL/TLS"
+msgstr "SSL/TLS"
+
+#: bloomerp.emailaccount.imap_security bloomerp.emailaccount.smtp_security
+#: models/communication/email_account.py:23
+msgid "STARTTLS"
+msgstr "STARTTLS"
+
+#: components/workspaces/sidebar.py:333 components/workspaces/sidebar.py:342
+#: templates/components/forms/initial_data.html:37
+#: templates/components/workspaces/share_workspace.html:42
+#: templates/components/workspaces/tile_builders/links_tile_builder_items.html:64
+#: templates/mixins/bloomerp_layout_form_mixin.html:105
+#: templates/mixins/bloomerp_layout_form_mixin.html:163
+msgid "Save"
+msgstr "Zapisz"
+
+#: bloomerp.documenttemplate.save_to_folder models/document_templates/document_template.py:181
+msgid "Save To Folder"
+msgstr "Zapisz w folderze"
+
+#: templates/mixins/bloomerp_layout_form_mixin.html:117
+#: templates/mixins/bloomerp_layout_form_mixin.html:182
+msgid "Save and Create New"
+msgstr "Zapisz i utwórz nowe"
+
+#: workspaces/analytics_tile/model.py:147
+msgid "Scatter"
+msgstr "Punktowy"
+
+#: bloomerp.tile.schema models/workspaces/tile.py:43
+msgid "Schema"
+msgstr "Schemat"
+
+#: templates/cotton/app/sidebar/body.html:41 templates/cotton/features/layout/container.html:92
+msgid "Search"
+msgstr "Szukaj"
+
+#: components/workspaces/share_workspace.py:33
+msgid "Search and add groups whose members should be able to open this workspace."
+msgstr "Wyszukaj i dodaj grupy, których członkowie powinni mieć możliwość otwarcia tego obszaru roboczego."
+
+#: components/workspaces/share_workspace.py:19
+msgid "Search and add users who should be able to open this workspace."
+msgstr "Wyszukaj i dodaj użytkowników, którzy powinni mieć możliwość otwierania tego obszaru roboczego."
+
+#: templates/components/workspaces/tile_builders/analytics_tile_builder.html:51
+#: templates/components/workspaces/tile_builders/analytics_tile_builder.html:198
+msgid "Search fields"
+msgstr "Wyszukaj pola"
+
+#: templates/views/base.html:48
+msgid "Search or type a command"
+msgstr "Wyszukaj polecenie lub wpisz je"
+
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:39
+msgid "Search route names or descriptions, or enter any URL."
+msgstr "Wyszukaj nazwy lub opisy tras albo wprowadź dowolny adres URL."
+
+#: templates/components/global_search.html:6
+msgid "Searching:"
+msgstr "Wyszukiwanie:"
+
+# | msgid "Select a field"
+#: models/users/user_list_view_preference.py:165
+msgid "Select a date field"
+msgstr "Wybierz pole"
+
+#: templates/components/forms/initial_data_row.html:36
+msgid "Select a field"
+msgstr "Wybierz pole"
+
+#: templates/cotton/features/dataviews/calendar.html:23
+msgid "Select a start date field in the display options."
+msgstr "Wybierz pole daty rozpoczęcia w opcjach wyświetlania."
+
+#: templates/cotton/features/dataviews/gant.html:6
+msgid "Select a start field and an end field in the display options to configure the Gantt chart."
+msgstr "Wybierz pole początkowe i końcowe w opcjach wyświetlania, aby skonfigurować wykres Gantta."
+
+#: components/communication/emails/reply_to_email.py:58
+msgid "Select an email before replying."
+msgstr "Wybierz wiadomość e-mail przed udzieleniem odpowiedzi."
+
+#: components/communication/emails/new_email.py:68
+msgid "Select an email folder before composing a message."
+msgstr "Wybierz folder wiadomości e-mail przed utworzeniem wiadomości."
+
+#: templates/cotton/features/dataviews/pivot_table.html:4
+msgid ""
+"Select at least one row field and one value field in the display options to configure the pivot "
+"table."
+msgstr ""
+"Wybierz co najmniej jedno pole wiersza i jedno pole wartości w opcjach wyświetlania, aby "
+"skonfigurować tabelę przestawną."
+
+#: templates/components/filters/init.html:15 templates/components/forms/initial_data_row.html:21
+#: templates/components/forms/initial_data_value.html:61
+#: templates/components/workspaces/filters/init.html:8
+msgid "Select field"
+msgstr "Wybierz pole"
+
+#: templates/cotton/features/workspaces/container.html:69
+msgid "Select module"
+msgstr "Wybierz moduł"
+
+#: templates/components/application_fields/lookup_operators.html:13
+#: templates/components/workspaces/filters/lookup_operators.html:9
+msgid "Select operator"
+msgstr "Wybierz operator"
+
+#: views/workspaces/create_tile.py:200
+msgid "Select or enter a query for your analytics tile"
+msgstr "Wybierz zapytanie lub wprowadź je dla kafelka analitycznego"
+
+#: views/communication/create_email_account.py:202
+msgid "Select provider"
+msgstr "Wybierz dostawcę"
+
+#: views/workspaces/create_tile.py:198
+msgid "Select query"
+msgstr "Wybierz zapytanie"
+
+#: templates/components/filters/related_fields_select.html:10
+msgid "Select related field"
+msgstr "Wybierz powiązane pole"
+
+#: views/workspaces/create_tile.py:187
+msgid "Select the type of tile you want to create"
+msgstr "Wybierz typ kafelka, który chcesz utworzyć"
+
+#: views/workspaces/create_tile.py:185
+msgid "Select type"
+msgstr "Wybierz typ"
+
+#: bloomerp.inbox.selected bloomerp.sidebar.selected bloomerp.userdetailviewtabspreference.selected
+#: bloomerp.userlistviewpreference.selected bloomerp.userobjectlayoutpreference.selected
+#: bloomerp.workspace.selected models/users/base_preference.py:92
+msgid "Selected"
+msgstr "Wybrano"
+
+#: bloomerp.userinboxpreference.selected_inbox_folder
+#: models/communication/inbox/user_inbox_preference.py:31
+msgid "Selected Inbox Folder"
+msgstr "Wybrany folder skrzynki odbiorczej"
+
+#: views/communication/create_email_account.py:113 views/workspaces/create_tile.py:60
+msgid "Selection required"
+msgstr "Wymagany wybór"
+
+#: components/communication/emails/new_email.py:140
+msgid "Send"
+msgstr "Wyślij"
+
+#: components/communication/emails/reply_to_email.py:73
+msgid "Send reply"
+msgstr "Wyślij odpowiedź"
+
+# | msgid "Send"
+#: models/communication/channel_message.py:26
+msgid "Sender"
+msgstr "Wyślij"
+
+#: models/communication/signature_request.py:46
+msgid "Sender of the signature request."
+msgstr "Nadawca prośby o podpis."
+
+#: bloomerp.workflowrunstep.sequence models/automation/workflow_run_step.py:33
+msgid "Sequence"
+msgstr "Sekwencja"
+
+#: bloomerp.workflowrunstep.state models/automation/workflow_run_step.py:50
+msgid "Serializable workflow execution state captured after this step."
+msgstr "Stan wykonania przepływu pracy możliwy do serializacji, zarejestrowany po tym kroku."
+
+#: bloomerp.workflowrunstep.output_file models/automation/workflow_run_step.py:57
+msgid "Serialized output produced by this workflow node execution."
+msgstr "Zserializowane dane wyjściowe wygenerowane podczas wykonania tego węzła przepływu pracy."
+
+#: models/forms/form.py:35 templates/cotton/features/document_templates/builder.html:63
+msgid "Settings"
+msgstr "Ustawienia"
+
+#: templates/components/workspaces/share_workspace.html:15
+msgid "Share workspace"
+msgstr "Udostępnij obszar roboczy"
+
+#: bloomerp.inbox.shared_with_groups bloomerp.sidebar.shared_with_groups
+#: bloomerp.userdetailviewtabspreference.shared_with_groups
+#: bloomerp.userlistviewpreference.shared_with_groups
+#: bloomerp.userobjectlayoutpreference.shared_with_groups bloomerp.workspace.shared_with_groups
+#: models/users/base_preference.py:120
+msgid "Shared With Groups"
+msgstr "Udostępniono grupom"
+
+#: bloomerp.inbox.shared_with_users bloomerp.sidebar.shared_with_users
+#: bloomerp.userdetailviewtabspreference.shared_with_users
+#: bloomerp.userlistviewpreference.shared_with_users
+#: bloomerp.userobjectlayoutpreference.shared_with_users bloomerp.workspace.shared_with_users
+#: models/users/base_preference.py:113
+msgid "Shared With Users"
+msgstr "Udostępniono użytkownikom"
+
+#: components/workspaces/share_workspace.py:18
+msgid "Shared with"
+msgstr "Udostępniono"
+
+#: components/workspaces/share_workspace.py:31
+msgid "Shared with groups"
+msgstr "Udostępniono grupom"
+
+#: templates/mixins/bloomerp_layout_form_mixin.html:65 templates/views/forms/submit.html:51
+msgid "Show Required Only"
+msgstr "Pokaż tylko wymagane"
+
+# | msgid "Column totals"
+#: models/users/user_list_view_preference.py:569
+msgid "Show column totals"
+msgstr "Podsumowania kolumn"
+
+#: workspaces/analytics_tile/model.py:184
+msgid "Show legend"
+msgstr "Pokaż legendę"
+
+#: models/users/user_list_view_preference.py:561
+msgid "Show row totals"
+msgstr "Pokaż sumy wierszy"
+
+#: templates/components/global_search.html:141
+#, python-format
+msgid "Showing first %(results_limit)s results."
+msgstr "Wyświetlono pierwszych %(results_limit)s wyników."
+
+#: workspaces/analytics_tile/model.py:185
+msgid "Shows the legend when enabled. By default, legends are only shown for multiple series."
+msgstr "Pokazuje legendę po włączeniu. Domyślnie legendy są wyświetlane tylko dla wielu serii."
+
+#: bloomerp.sidebar bloomerp.sidebaritem.sidebar models/workspaces/sidebar.py:11
+#: models/workspaces/sidebar_item.py:44 templates/cotton/app/sidebar/body.html:87
+msgid "Sidebar"
+msgstr "Pasek boczny"
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "Sidebar Items"
+#: bloomerp.sidebaritem models/workspaces/sidebar_item.py:36
+msgid "Sidebar Item"
+msgstr "Elementy paska bocznego"
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "Sidebar Items"
+#: bloomerp.sidebaritem models/workspaces/sidebar_item.py:37
+msgid "Sidebar Items"
+msgstr "Elementy paska bocznego"
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "Sidebars"
+#: bloomerp.sidebar models/workspaces/sidebar.py:12
+msgid "Sidebars"
+msgstr "Paski boczne"
+
+#: templates/cotton/app/sidebar/body.html:168
+msgid "Sign Out"
+msgstr "Wyloguj się"
+
+#: bloomerp.documenttemplate.save_to_folder models/document_templates/document_template.py:179
+msgid "Signifies to which folder a file generated from the template needs to be saved upon creation."
+msgstr ""
+"Określa, w którym folderze należy zapisać plik wygenerowany na podstawie szablonu podczas jego "
+"tworzenia."
+
+#: bloomerp.documenttemplate.include_page_numbers models/document_templates/document_template.py:173
+msgid "Signifies whether the page numbers are included or not."
+msgstr "Określa, czy numery stron są uwzględniane."
+
+#: workspaces/analytics_tile/model.py:111
+msgid "Size"
+msgstr "Rozmiar"
+
+#: bloomerp.documenttemplate.page_size models/document_templates/document_template.py:164
+msgid "Size of the document template."
+msgstr "Rozmiar szablonu dokumentu."
+
+#: bloomerp.applicationfield.field_type
+msgid "Slug Field"
+msgstr "Pole slug"
+
+#: bloomerp.applicationfield.field_type
+msgid "Small Auto Field"
+msgstr "Małe pole automatyczne"
+
+#: bloomerp.applicationfield.field_type
+msgid "Small Integer Field"
+msgstr "Pole małej liczby całkowitej"
+
+#: bloomerp.inboxitem.snippet models/communication/inbox/inbox_item.py:92
+msgid "Snippet"
+msgstr "Fragment"
+
+#: templates/cotton/ui/inputs/one_to_many/column_actions.html:17
+msgid "Sort ascending"
+msgstr "Sortuj rosnąco"
+
+#: templates/cotton/ui/inputs/one_to_many/column_actions.html:22
+msgid "Sort descending"
+msgstr "Sortuj malejąco"
+
+# | msgid "Sort descending"
+#: models/users/user_list_view_preference.py:327 models/users/user_list_view_preference.py:382
+msgid "Sort direction"
+msgstr "Sortuj malejąco"
+
+#: models/users/user_list_view_preference.py:318 models/users/user_list_view_preference.py:373
+msgid "Sort on"
+msgstr "Sortuj według"
+
+#: bloomerp.activitylog.source models/activity_log.py:82
+msgid "Source"
+msgstr "Źródło"
+
+#: bloomerp.inbox.source_object bloomerp.sidebar.source_object
+#: bloomerp.userdetailviewtabspreference.source_object bloomerp.userlistviewpreference.source_object
+#: bloomerp.userobjectlayoutpreference.source_object bloomerp.workspace.source_object
+#: models/users/base_preference.py:104
+msgid "Source Object"
+msgstr "Obiekt źródłowy"
+
+#: bloomerp.emailaccount.oauth_scopes
+msgid "Space-separated OAuth scopes requested for this account."
+msgstr "Zakresy OAuth żądane dla tego konta, rozdzielone spacjami."
+
+#: bloomerp.user.user_permissions
+msgid "Specific permissions for this user."
+msgstr "Określone uprawnienia tego użytkownika."
+
+#: bloomerp.userlistviewpreference.split_view_enabled models/users/user_list_view_preference.py:652
+msgid "Split View Enabled"
+msgstr "Widok podzielony włączony"
+
+#: workspaces/analytics_tile/model.py:177
+msgid "Stacked"
+msgstr "Skumulowane"
+
+#: workspaces/analytics_tile/model.py:178
+msgid "Stacks multiple Y-axis series when supported by the selected chart type."
+msgstr "Nakłada na siebie wiele serii osi Y, jeśli jest to obsługiwane przez wybrany typ wykresu."
+
+#: bloomerp.initiative.start_date models/project_management/initiative.py:112
+msgid "Start Date"
+msgstr "Data rozpoczęcia"
+
+# | msgid "Status Field"
+#: models/users/user_list_view_preference.py:466
+msgid "Start field"
+msgstr "Pole statusu"
+
+#: templates/views/workspaces/bloomerp_workspace_view.html:38
+msgid "Start from scratch"
+msgstr "Zacznij od zera"
+
+#: templates/components/objects/dataview_gant_rows.html:58
+msgid "Start or end date is missing."
+msgstr "Brakuje daty rozpoczęcia lub zakończenia."
+
+#: templates/components/global_search.html:144
+msgid "Start typing to search."
+msgstr "Zacznij pisać, aby wyszukać."
+
+#: bloomerp.workflowrunstep.state models/automation/workflow_run_step.py:51
+msgid "State"
+msgstr "Stan"
+
+# | msgid "Status"
+#: models/access_control/policy.py:55
+msgid "Statistics"
+msgstr "Status"
+
+#: bloomerp.emailaccount.status bloomerp.initiative.status bloomerp.todo.status
+#: bloomerp.workflowrunstep.status models/automation/workflow_run_step.py:45
+#: models/communication/email_account.py:116 models/project_management/initiative.py:96
+#: models/project_management/todo.py:184
+msgid "Status"
+msgstr "Status"
+
+#: bloomerp.applicationfield.field_type
+msgid "Status Field"
+msgstr "Pole statusu"
+
+#: models/communication/signature_request.py:51
+msgid "Status of the signature request."
+msgstr "Status żądania podpisu."
+
+#: models/mixins/string_search_model_mixin.py:12
+msgid "String Search Model Mixin"
+msgstr "Mixin modelu wyszukiwania ciągów znaków"
+
+#: models/mixins/string_search_model_mixin.py:13
+msgid "String Search Model Mixins"
+msgstr "Mixiny modeli wyszukiwania ciągów znaków"
+
+#: bloomerp.documenttemplate.style_sets models/document_templates/document_template.py:190
+msgid "Style Sets"
+msgstr "Zestawy stylów"
+
+#: bloomerp.documenttemplatestyling.styling models/document_templates/document_template_styling.py:19
+#: templates/cotton/features/document_templates/builder.html:57
+msgid "Styling"
+msgstr "Stylizacja"
+
+#: bloomerp.documenttemplate.style_sets models/document_templates/document_template.py:188
+msgid "Styling sets that can be applied to the document template."
+msgstr "Zestawy stylów, które można zastosować do szablonu dokumentu."
+
+#: workspaces/analytics_tile/model.py:331
+msgid "Sub Value"
+msgstr "Wartość podrzędna"
+
+#: templates/components/communication/emails/email_editor.html:103
+#: templates/components/communication/emails/email_editor.html:110
+msgid "Subject"
+msgstr "Temat"
+
+#: route:forms_detail_submit
+msgctxt "bloomerp:route:name"
+msgid "Submit"
+msgstr "Prześlij"
+
+#: route:forms_detail_submit
+msgctxt "bloomerp:route:description"
+msgid "Submit a form"
+msgstr "Prześlij formularz"
+
+#: templates/views/forms/submit.html:26
+msgid "Submit a new form"
+msgstr "Prześlij nowy formularz"
+
+#: workspaces/analytics_tile/model.py:88
+msgid "Suffix"
+msgstr "Sufiks"
+
+#: models/users/user_list_view_preference.py:141
+msgid "Sum"
+msgstr "Prześlij"
+
+#: models/users/user_list_view_preference.py:518
+msgid "Summarizes records across selected row, column, and value fields."
+msgstr "Podsumowuje rekordy na podstawie wybranych pól wierszy, kolumn i wartości."
+
+#: bloomerp.emailaccount.sync_cursor models/communication/email_account.py:224
+msgid "Sync Cursor"
+msgstr "Kursor synchronizacji"
+
+#: bloomerp.emailaccount.sync_enabled models/communication/email_account.py:206
+msgid "Sync Enabled"
+msgstr "Synchronizacja włączona"
+
+#: bloomerp.emailaccount.sync_interval_minutes models/communication/email_account.py:218
+msgid "Sync Interval Minutes"
+msgstr "Interwał synchronizacji (minuty)"
+
+#: bloomerp.emailaccount.sync_locked_until models/communication/email_account.py:248
+msgid "Sync Locked Until"
+msgstr "Synchronizacja zablokowana do"
+
+#: bloomerp.emailaccount.sync_mode models/communication/email_account.py:213
+msgid "Sync Mode"
+msgstr "Tryb synchronizacji"
+
+#: models/communication/email_account.py:78
+msgid "Synchronization"
+msgstr "Synchronizacja"
+
+#: bloomerp.emailaccount.sync_mode
+msgid "Synchronization mode for this account. Defaults to the provider's preferred mode."
+msgstr "Tryb synchronizacji dla tego konta. Domyślnie używany jest preferowany tryb dostawcy."
+
+#: models/activity_log.py:94
+msgid "System"
+msgstr "System"
+
+#: bloomerp.userlistviewpreference.view_type models/users/user_list_view_preference.py:302
+#: workspaces/analytics_tile/model.py:286
+msgid "Table"
+msgstr "Tabela"
+
+#: bloomerp.initiative.target_date models/project_management/initiative.py:117
+msgid "Target Date"
+msgstr "Data docelowa"
+
+#: bloomerp.documenttemplate.template models/document_templates/document_template.py:128
+msgid "Template"
+msgstr "Szablon"
+
+#: bloomerp.documenttemplate.template_header models/document_templates/document_template.py:147
+msgid "Template Header"
+msgstr "Nagłówek szablonu"
+
+#: route:testview
+msgctxt "bloomerp:route:name"
+msgid "TestView"
+msgstr "TestView"
+
+#: bloomerp.tile.type workspaces/tiles.py:48
+msgid "Text"
+msgstr "Tekst"
+
+#: bloomerp.applicationfield.field_type
+msgid "Text Field"
+msgstr "Pole tekstowe"
+
+#: workspaces/analytics_tile/model.py:89
+msgid "Text that comes after the value"
+msgstr "Tekst po wartości"
+
+#: workspaces/analytics_tile/model.py:81
+msgid "Text that comes before the value"
+msgstr "Tekst przed wartością"
+
+#: bloomerp.todo.object_id models/project_management/todo.py:215
+msgid "The ID of the related object"
+msgstr "Nazwa zadania"
+
+#: bloomerp.workflownode.pos_x models/automation/workflow_node.py:56
+msgid "The X position of the node in the workflow editor."
+msgstr "Pozycja X węzła w edytorze przepływu pracy."
+
+#: bloomerp.workflownode.pos_y models/automation/workflow_node.py:61
+msgid "The Y position of the node in the workflow editor."
+msgstr "Pozycja Y węzła w edytorze przepływu pracy."
+
+#: bloomerp.apikey.account
+msgid "The account whose permissions this API key uses."
+msgstr "Konto, którego uprawnienia są używane przez ten klucz API."
+
+#: bloomerp.inboxitem.actor
+msgid "The actor or entity associated with the inbox item."
+msgstr "Aktor lub jednostka powiązana z elementem skrzynki odbiorczej."
+
+#: models/users/user_list_view_preference.py:441
+msgid "The calendar period to show."
+msgstr "Okres kalendarzowy do wyświetlenia."
+
+#: workspaces/analytics_tile/model.py:294
+msgid "The columns of the table"
+msgstr "Kolumny tabeli"
+
+#: bloomerp.workflownode.config models/automation/workflow_node.py:50
+msgid "The configuration for the workflow node."
+msgstr "Konfiguracja węzła przepływu pracy."
+
+#: bloomerp.applicationfield.content_type models/application_field.py:38
+#: models/communication/mention.py:23
+msgid "The content type (model) this field belongs to."
+msgstr "Typ zawartości (model), do którego należy to pole."
+
+#: bloomerp.todo.content_type models/project_management/todo.py:209
+msgid "The content type of the related object"
+msgstr "Typ zawartości (model), do którego należy to pole."
+
+#: bloomerp.applicationfield.db_table models/application_field.py:68
+msgid "The database table this field belongs to."
+msgstr "Tabela bazy danych, do której należy to pole."
+
+#: bloomerp.form.closes_at models/forms/form.py:124
+msgid "The date and time after which the form will no longer accept submissions."
+msgstr "Data i godzina, po których formularz nie będzie już przyjmować zgłoszeń."
+
+#: bloomerp.form.opens_at models/forms/form.py:118
+msgid "The date and time from which the form will accept submissions."
+msgstr "Data i godzina, od których formularz będzie przyjmować zgłoszenia."
+
+#: bloomerp.todo.datetime_completed models/project_management/todo.py:177
+msgid "The date and time when the todo was completed"
+msgstr "Data i godzina ukończenia zadania"
+
+#: bloomerp.todo.required_by models/project_management/todo.py:146
+msgid "The date by which the todo is required"
+msgstr "Data, do której należy wykonać zadanie"
+
+# | msgid "The field used for the pie slice labels."
+#: models/users/user_list_view_preference.py:479
+msgid "The date field used as the end of the timeline item."
+msgstr "Pole używane do etykiet wycinków wykresu kołowego."
+
+# | msgid "The field used for the pie slice labels."
+#: models/users/user_list_view_preference.py:469
+msgid "The date field used as the start of the timeline item."
+msgstr "Pole używane do etykiet wycinków wykresu kołowego."
+
+# | msgid "The field to be used for the X-axis of the chart."
+#: models/users/user_list_view_preference.py:423
+msgid "The date field used to place records on the calendar."
+msgstr "Pole używane na osi X wykresu."
+
+#: bloomerp.user.date_view_preference models/users/user.py:89
+msgid "The date format to be used in the application"
+msgstr "Format daty używany w aplikacji"
+
+#: bloomerp.user.datetime_view_preference models/users/user.py:97
+msgid "The datetime format to be used in the application"
+msgstr "Format daty i godziny używany w aplikacji"
+
+#: forms/widgets.py:23
+msgid "The description of the widget. Will be displayed in the widget if provided"
+msgstr "Opis widżetu. Jeśli zostanie podany, będzie wyświetlany w widżecie"
+
+#: bloomerp.user.detail_sidebar_view_preference models/users/user.py:105
+msgid "The detail view sidebar panel to show first"
+msgstr "Panel paska bocznego widoku szczegółów wyświetlany jako pierwszy"
+
+# | msgid "The field to be used for the X-axis of the chart."
+#: models/users/user_list_view_preference.py:330 models/users/user_list_view_preference.py:385
+msgid "The direction used for table sorting."
+msgstr "Pole używane na osi X wykresu."
+
+#: bloomerp.todo.effort models/project_management/todo.py:158
+msgid "The effort required for the todo"
+msgstr "Nakład pracy wymagany do wykonania zadania"
+
+#: views/access_control/manage_permissions.py:231
+msgid "The field policy configuration could not be read. Please review step 2 and try again."
+msgstr "Nie udało się odczytać konfiguracji zasad dotyczących pól. Przejrzyj krok 2 i spróbuj ponownie."
+
+#: workspaces/analytics_tile/model.py:254
+msgid "The field to be used for the X-axis of the chart."
+msgstr "Pole używane na osi X wykresu."
+
+#: workspaces/analytics_tile/model.py:264
+msgid "The field to be used for the Y-axis of the chart."
+msgstr "Pole używane na osi Y wykresu."
+
+# | msgid "The field used for the pie slice labels."
+#: models/users/user_list_view_preference.py:321 models/users/user_list_view_preference.py:376
+msgid "The field used for table sorting."
+msgstr "Pole używane do etykiet wycinków wykresu kołowego."
+
+#: workspaces/analytics_tile/model.py:380
+msgid "The field used for the pie slice labels."
+msgstr "Pole używane do etykiet wycinków wykresu kołowego."
+
+# | msgid "The field used for the pie slice labels."
+#: models/users/user_list_view_preference.py:358
+msgid "The field used to build Kanban columns."
+msgstr "Pole używane do etykiet wycinków wykresu kołowego."
+
+#: bloomerp.policy.field_policy models/access_control/policy.py:90
+msgid "The field-level policy associated with this access control policy."
+msgstr "Zasady na poziomie pola powiązane z tymi zasadami kontroli dostępu."
+
+#: bloomerp.inboxitem.folder
+msgid "The folder to which this inbox item belongs."
+msgstr "Folder, do którego należy ten element skrzynki odbiorczej."
+
+#: workspaces/analytics_tile/model.py:97
+msgid "The formatter applied to this value"
+msgstr "Formater zastosowany do tej wartości"
+
+#: bloomerp.user.groups
+msgid "The groups this user belongs to. A user will get all permissions granted to each of their groups."
+msgstr ""
+"Grupy, do których należy ten użytkownik. Użytkownik otrzyma wszystkie uprawnienia przyznane "
+"każdej z jego grup."
+
+#: route:automation_module_automation
+msgctxt "bloomerp:route:description"
+msgid "The homepage for the {module} module."
+msgstr "Strona główna modułu {module}."
+
+#: bloomerp.workflowrunstep.action_id models/automation/workflow_run_step.py:37
+msgid "The identifier of the action being executed in this step."
+msgstr "Identyfikator akcji wykonywanej w tym kroku."
+
+#: bloomerp.todo.initiative models/project_management/todo.py:198
+msgid "The initiative this todo belongs to"
+msgstr "Inicjatywa, do której należy to zadanie"
+
+#: workspaces/analytics_tile/model.py:73
+msgid "The label"
+msgstr "Etykieta"
+
+#: forms/widgets.py:18
+msgid "The name given to the widget"
+msgstr "Nazwa nadana widżetowi"
+
+#: bloomerp.policy.name models/access_control/policy.py:68
+msgid "The name of the access control policy."
+msgstr "Nazwa zasad kontroli dostępu."
+
+#: bloomerp.fieldpolicy.name models/access_control/field_policy.py:34
+msgid "The name of the field-level access control policy."
+msgstr "Nazwa polityki kontroli dostępu na poziomie pola."
+
+#: bloomerp.applicationfield.field models/application_field.py:32
+msgid "The name of the field."
+msgstr "Nazwa pola."
+
+#: bloomerp.form.name models/forms/form.py:67
+msgid "The name of the form"
+msgstr "Nazwa formularza"
+
+#: bloomerp.initiative.name models/project_management/initiative.py:101
+msgid "The name of the initiative"
+msgstr "Nazwa inicjatywy"
+
+#: bloomerp.rowpolicy.name models/access_control/row_policy.py:27
+msgid "The name of the row-level access control policy."
+msgstr "Nazwa polityki kontroli dostępu na poziomie wiersza."
+
+#: bloomerp.todo.title models/project_management/todo.py:165
+msgid "The name of the todo"
+msgstr "Nazwa zadania"
+
+#: bloomerp.workflownode.name models/automation/workflow_node.py:29
+msgid "The name of the workflow node."
+msgstr "Nazwa węzła przepływu pracy."
+
+#: bloomerp.workflow.name models/automation/workflow.py:74
+msgid "The name of the workflow."
+msgstr "Nazwa przepływu pracy."
+
+#: bloomerp.workflowedge.to_node
+msgid "The node where this edge ends."
+msgstr "Węzeł, na którym kończy się ta krawędź."
+
+#: bloomerp.workflowedge.from_node
+msgid "The node where this edge starts."
+msgstr "Węzeł, na którym zaczyna się ta krawędź."
+
+# | msgid "The number of records on each page"
+#: models/users/user_list_view_preference.py:367
+msgid "The number of cards initially shown in each column."
+msgstr "Liczba rekordów na każdej stronie"
+
+# | msgid "The number of records on each page"
+#: models/users/user_list_view_preference.py:404
+msgid "The number of cards shown on each page."
+msgstr "Liczba rekordów na każdej stronie"
+
+#: workspaces/analytics_tile/model.py:126
+msgid "The number of records on each page"
+msgstr "Liczba rekordów na każdej stronie"
+
+# | msgid "The number of records on each page"
+#: models/users/user_list_view_preference.py:312
+msgid "The number of records shown on each page."
+msgstr "Liczba rekordów na każdej stronie"
+
+#: forms/widgets.py:63
+msgid "The number of rows to display in the table"
+msgstr "Liczba wierszy wyświetlanych w tabeli"
+
+# | msgid "The number of records on each page"
+#: models/users/user_list_view_preference.py:507
+msgid "The number of timeline rows loaded at a time."
+msgstr "Liczba rekordów na każdej stronie"
+
+# | msgid "The number of records on each page"
+#: models/users/user_list_view_preference.py:589
+msgid "The number of top-level pivot rows shown per page."
+msgstr "Liczba rekordów na każdej stronie"
+
+#: workspaces/analytics_tile/model.py:390
+msgid "The numeric field used for the pie slice values."
+msgstr "Pole liczbowe używane do określania wartości wycinka wykresu kołowego."
+
+#: templates/inbox_items/workflow_run.html:107
+msgid ""
+"The original workflow-run record is no longer available. This notification is rendered from its "
+"saved execution snapshot."
+msgstr ""
+"Oryginalny rekord uruchomienia przepływu pracy nie jest już dostępny. To powiadomienie zostało "
+"wyrenderowane na podstawie zapisanego zrzutu wykonania."
+
+#: workspaces/analytics_tile/model.py:321
+msgid "The primary value"
+msgstr "Wartość główna"
+
+#: bloomerp.todo.priority models/project_management/todo.py:150
+msgid "The priority of the todo"
+msgstr "Priorytet zadania"
+
+#: models/project_management/todo.py:256
+msgid "The related object does not exist"
+msgstr "Powiązany obiekt nie istnieje"
+
+#: views/access_control/manage_permissions.py:222
+msgid "The row policy configuration could not be read. Please review step 2 and try again."
+msgstr "Nie można odczytać konfiguracji polityki wiersza. Sprawdź krok 2 i spróbuj ponownie."
+
+#: bloomerp.rowpolicyrule.row_policy models/access_control/row_policy_rule.py:32
+msgid "The row-level access control policy this rule belongs to."
+msgstr "Polityka kontroli dostępu na poziomie wiersza, do której należy ta reguła."
+
+#: bloomerp.policy.row_policy models/access_control/policy.py:82
+msgid "The row-level policy associated with this access control policy."
+msgstr "Polityka na poziomie wiersza powiązana z tą polityką kontroli dostępu."
+
+#: models/access_control/row_policy.py:41
+msgid "The rule defined for this RowPolicy is invalid."
+msgstr "Reguła zdefiniowana dla tej polityki wiersza jest nieprawidłowa."
+
+#: workspaces/analytics_tile/model.py:333
+msgid "The secondary value that appears below the main value"
+msgstr "Wartość dodatkowa wyświetlana poniżej wartości głównej"
+
+#: workspaces/links_tile/model.py:56
+msgid "The selected folder no longer exists"
+msgstr "Wybrany folder już nie istnieje"
+
+#: workspaces/links_tile/model.py:71 workspaces/links_tile/model.py:146
+msgid "The selected link no longer exists"
+msgstr "Wybrany odnośnik już nie istnieje"
+
+#: bloomerp.workflowrunstep.sequence models/automation/workflow_run_step.py:32
+msgid "The sequence number of this step within the workflow run."
+msgstr "Numer kolejny tego kroku w ramach uruchomienia przepływu pracy."
+
+#: workspaces/analytics_tile/model.py:112
+msgid "The size"
+msgstr "Rozmiar"
+
+#: forms/widgets.py:13
+msgid "The sql query (data) to use for the query"
+msgstr "Zapytanie SQL (dane) używane do zapytania"
+
+#: bloomerp.workflowrunstep.status models/automation/workflow_run_step.py:44
+msgid "The status of this workflow run step."
+msgstr "Stan tego kroku uruchomienia przepływu pracy."
+
+#: bloomerp.inboxitem.title
+msgid "The title of the inbox item."
+msgstr "Tytuł elementu skrzynki odbiorczej."
+
+#: automation/defintion.py:54
+msgid "The trigger for a workflow"
+msgstr "Wyzwalacz przepływu pracy"
+
+#: forms/widgets.py:37
+msgid "The type of output to display for the widget"
+msgstr "Typ danych wyjściowych wyświetlanych dla widżetu"
+
+#: bloomerp.applicationfield.field_type models/application_field.py:44
+msgid "The type of the field."
+msgstr "Typ pola."
+
+#: bloomerp.workflownode.type models/automation/workflow_node.py:44
+msgid "The type of the workflow node."
+msgstr "Typ węzła przepływu pracy."
+
+#: bloomerp.tile.type models/workspaces/tile.py:34
+msgid "The type of tile"
+msgstr "Typ kafelka"
+
+#: bloomerp.todo.assigned_to models/project_management/todo.py:131
+msgid "The user to whom the todo is assigned"
+msgstr "Data, do której należy wykonać zadanie"
+
+#: bloomerp.todo.requested_by models/project_management/todo.py:140
+msgid "The user who requested the todo"
+msgstr "Użytkownik, który zlecił zadanie"
+
+#: views/communication/create_email_account.py:233
+msgid "The wizard data is incomplete. Please review the account details."
+msgstr "Dane kreatora są niekompletne. Sprawdź dane konta."
+
+#: bloomerp.workflowrun.workflow models/automation/workflow_run.py:71
+msgid "The workflow associated with this run."
+msgstr "Przepływ pracy powiązany z tym uruchomieniem."
+
+#: bloomerp.workflowrunstep.workflow_run models/automation/workflow_run_step.py:29
+msgid "The workflow run that this step belongs to."
+msgstr "Uruchomienie przepływu pracy, do którego należy ten krok."
+
+#: templates/cotton/app/sidebar/body.html:166
+msgid "Theme"
+msgstr "Motyw"
+
+#: forms/auth.py:45
+msgid "This account is inactive."
+msgstr "To konto jest nieaktywne."
+
+#: components/communication/emails/new_email.py:100
+msgid "This email account has an unsupported provider."
+msgstr "To konto e-mail korzysta z nieobsługiwanego dostawcy."
+
+#: components/communication/emails/new_email.py:72
+msgid "This email folder is not connected to an email account."
+msgstr "Ten folder poczty e-mail nie jest połączony z kontem e-mail."
+
+#: templates/components/objects/bulk_actions.html:66
+#, python-format
+msgid "This permanently deletes the objects in the %(selection_label)s."
+msgstr "Spowoduje to trwałe usunięcie obiektów z sekcji %(selection_label)s."
+
+#: templates/cotton/features/dataviews/pivot_table.html:8
+msgid ""
+"This pivot has too many columns to display safely. Refine the active filters or select fewer "
+"column or value fields."
+msgstr ""
+"Ta tabela przestawna zawiera zbyt wiele kolumn, aby można ją było bezpiecznie wyświetlić. Zawęź "
+"aktywne filtry lub wybierz mniej pól kolumn albo wartości."
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "Tiles"
+#: bloomerp.tile models/workspaces/tile.py:17
+msgid "Tile"
+msgstr "Kafelki"
+
+#: workspaces/analytics_tile/model.py:509
+msgid "Tile type updated"
+msgstr "Zaktualizowano typ kafelka"
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "Tiles"
+#: bloomerp.tile models/workspaces/tile.py:18
+msgid "Tiles"
+msgstr "Kafelki"
+
+#: bloomerp.applicationfield.field_type
+msgid "Time Field"
+msgstr "Pole czasu"
+
+# | msgid "Time Field"
+#: models/project_management/initiative.py:43 models/project_management/todo.py:91
+msgid "Timeline"
+msgstr "Pole czasu"
+
+#: bloomerp.activitylog.timestamp models/activity_log.py:48
+msgid "Timestamp"
+msgstr "Znacznik czasu"
+
+# | msgid "Timestamp"
+#: models/mixins/timestamp_model_mixin.py:13
+msgid "Timestamp Model Mixin"
+msgstr "Znacznik czasu"
+
+#: models/mixins/timestamp_model_mixin.py:14
+msgid "Timestamp Model Mixins"
+msgstr "Miksiny modelu znaczników czasu"
+
+#: bloomerp.inboxitem.datetime_received
+msgid "Timestamp when the inbox item was received by its source system."
+msgstr "Znacznik czasu odebrania elementu skrzynki odbiorczej przez jego system źródłowy."
+
+#: bloomerp.aiconversation.conversation_type
+msgid "TinyMCE Content Generator"
+msgstr "Generator treści TinyMCE"
+
+#: bloomerp.aiconversation.title bloomerp.inboxitem.title bloomerp.todo.title
+#: models/communication/inbox/inbox_item.py:85 models/llm/ai_conversation.py:29
+#: models/project_management/todo.py:166
+msgid "Title"
+msgstr "Tytuł"
+
+#: templates/components/communication/emails/email_editor.html:54
+msgid "To"
+msgstr "Do"
+
+#: bloomerp.workflowedge.to_node models/automation/workflow_edge.py:37
+msgid "To Node"
+msgstr "Do węzła"
+
+#: templates/cotton/features/dataviews/calendar.html:33
+#: templates/cotton/features/dataviews/gant.html:22
+msgid "Today"
+msgstr "Dzisiaj"
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "Todos"
+#: bloomerp.todo models/project_management/todo.py:116
+msgid "Todo"
+msgstr "Zadania"
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "Todo Labels"
+#: bloomerp.todolabel models/project_management/todo_label.py:27
+msgid "Todo Label"
+msgstr "Etykiety zadań"
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "Todo Labels"
+#: bloomerp.todolabel models/project_management/todo_label.py:28
+msgid "Todo Labels"
+msgstr "Etykiety zadań"
+
+#: models/project_management/todo.py:54
+msgid "Todo marked as completed."
+msgstr "Zadanie oznaczone jako ukończone."
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "Todos"
+#: bloomerp.todo models/project_management/initiative.py:59 models/project_management/todo.py:117
+msgid "Todos"
+msgstr "Zadania"
+
+#: route:log_entries_detail_todos
+msgctxt "bloomerp:route:name"
+msgid "Todos"
+msgstr "Zadania"
+
+#: route:log_entries_detail_todos
+msgctxt "bloomerp:route:description"
+msgid "Todos related to a specific object"
+msgstr "Zadania powiązane z określonym obiektem"
+
+#: bloomerp.emailaccount.token_expires_at models/communication/email_account.py:194
+msgid "Token Expires At"
+msgstr "Data wygaśnięcia tokenu"
+
+#: workspaces/analytics_tile/model.py:197
+msgid "Top"
+msgstr "Góra"
+
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:52
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:94
+#: templates/components/workspaces/tile_builders/links_tile_builder_items.html:42
+msgid "Top level"
+msgstr "Poziom główny"
+
+#: bloomerp.documenttemplateheader.margin_top models/document_templates/document_template_header.py:34
+msgid "Top margin of the header in inches."
+msgstr "Górny margines nagłówka w calach."
+
+#: templates/cotton/features/dataviews/pivot_table.html:42
+#, python-format
+msgid "Total %(value_header)s"
+msgstr "Suma %(value_header)s"
+
+#: templates/widgets/one_to_many_field_widget.html:63
+msgid "Totals"
+msgstr "Sumy"
+
+# | msgid "Totals"
+#: models/users/user_list_view_preference.py:577
+msgid "Totals scope"
+msgstr "Sumy"
+
+#: automation/defintion.py:53 bloomerp.workflownode.type
+msgid "Trigger"
+msgstr "Wyzwalacz"
+
+#: bloomerp.inboxfolder.type bloomerp.tile.type bloomerp.workflownode.type
+#: models/automation/workflow_node.py:45 models/communication/inbox/inbox_folder.py:28
+#: models/workspaces/tile.py:37
+msgid "Type"
+msgstr "Typ"
+
+#: bloomerp.sidebaritem.url bloomerp.userdetailviewtabitem.url
+#: models/users/user_detail_view_tabs_preference.py:437 models/workspaces/sidebar_item.py:60
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:37
+#: templates/components/workspaces/tile_builders/links_tile_builder_items.html:36
+msgid "URL"
+msgstr "URL"
+
+#: bloomerp.applicationfield.field_type
+msgid "URL Field"
+msgstr "Pole URL"
+
+#: bloomerp.sidebaritem.url
+msgid "URL that the sidebar item points to."
+msgstr "Adres URL, do którego prowadzi element paska bocznego."
+
+#: bloomerp.applicationfield.field_type
+msgid "UUID Field"
+msgstr "Pole UUID"
+
+#: models/mixins/uuid_model_mixin.py:11
+msgid "UUID Model Mixin"
+msgstr "Miksina modelu UUID"
+
+#: models/mixins/uuid_model_mixin.py:12
+msgid "UUID Model Mixins"
+msgstr "Miksiny modeli UUID"
+
+#: templates/cotton/features/dataviews/calendar.html:258
+msgid "Unscheduled"
+msgstr "Niezaplanowane"
+
+#: templates/cotton/features/dataviews/gant.html:67
+msgid "Unscheduled records"
+msgstr "Niezaplanowane rekordy"
+
+#: components/workspaces/preview_workspace_tile.py:202
+msgid "Untitled tile"
+msgstr "Kafelek bez tytułu"
+
+#: route:access_control_policies_detail_update
+msgctxt "bloomerp:route:name"
+msgid "Update"
+msgstr "Aktualizacja"
+
+#: route:tiles_detail_update_tile
+msgctxt "bloomerp:route:name"
+msgid "Update Tile"
+msgstr "Aktualizacja kafelka"
+
+#: route:workflows_detail_builder
+msgctxt "bloomerp:route:description"
+msgid "Update a workflow"
+msgstr "Aktualizuj przepływ pracy"
+
+#: route:access_control_policies_detail_update
+msgctxt "bloomerp:route:description"
+msgid "Update this policy"
+msgstr "Aktualizuj tę zasadę"
+
+#: route:tiles_detail_update_tile
+msgctxt "bloomerp:route:description"
+msgid "Update this tile"
+msgstr "Aktualizuj ten kafelek"
+
+#: bloomerp.aiconversation.updated_by bloomerp.apikey.updated_by bloomerp.comment.updated_by
+#: bloomerp.documenttemplate.updated_by bloomerp.documenttemplateheader.updated_by
+#: bloomerp.documenttemplatestyling.updated_by bloomerp.emailaccount.updated_by
+#: bloomerp.file.updated_by bloomerp.filefolder.updated_by bloomerp.form.updated_by
+#: bloomerp.formsubmission.updated_by bloomerp.inboxfolder.updated_by bloomerp.inboxitem.updated_by
+#: bloomerp.initiative.updated_by bloomerp.policy.updated_by bloomerp.sqlquery.updated_by
+#: bloomerp.tile.updated_by bloomerp.todo.updated_by bloomerp.todolabel.updated_by
+#: bloomerp.userinboxpreference.updated_by bloomerp.workflow.updated_by
+#: bloomerp.workflownode.updated_by models/mixins/user_stamp_model_mixin.py:24
+msgid "Updated By"
+msgstr "Zaktualizowane przez"
+
+#: templates/components/files/browser.html:140
+msgid "Upload files"
+msgstr "Prześlij pliki"
+
+#: bloomerp.todo.priority models/project_management/todo.py:20
+msgid "Urgent"
+msgstr "Pilne"
+
+#: workspaces/dataview_tile/form.py:26
+msgid "Use current preference"
+msgstr "Użyj bieżącego ustawienia"
+
+#: templates/components/workspaces/tile_builders/links_tile_builder.html:21
+msgid "Use the arrows to reorder items"
+msgstr "Użyj strzałek, aby zmienić kolejność elementów"
+
+#: components/workspaces/share_workspace.py:47
+msgid "Use this workspace initially for users who receive it through sharing."
+msgstr ""
+"Używaj tego obszaru roboczego domyślnie dla użytkowników, którzy otrzymają go za pośrednictwem "
+"udostępniania."
+
+#: bloomerp.aiconversation.user bloomerp.bookmark.user bloomerp.inbox.user bloomerp.sidebar.user
+#: bloomerp.user bloomerp.userdetailviewtabspreference.user bloomerp.userinboxpreference.user
+#: bloomerp.userlistviewpreference.user bloomerp.userobjectlayoutpreference.user
+#: bloomerp.workspace.user models/communication/channel_member.py:37
+#: models/communication/inbox/user_inbox_preference.py:23 models/communication/mention.py:34
+#: models/llm/ai_conversation.py:31 models/users/base_preference.py:84 models/users/bookmark.py:21
+#: models/users/user.py:159
+msgid "User"
+msgstr "Użytkownik"
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "User Detail View Tab Items"
+#: bloomerp.userdetailviewtabitem models/users/user_detail_view_tabs_preference.py:399
+msgid "User Detail View Tab Item"
+msgstr "Elementy kart widoku szczegółów użytkownika"
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "User Detail View Tab Items"
+#: bloomerp.userdetailviewtabitem models/users/user_detail_view_tabs_preference.py:400
+msgid "User Detail View Tab Items"
+msgstr "Elementy kart widoku szczegółów użytkownika"
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "User Detail View Tabs Preferences"
+#: bloomerp.userdetailviewtabspreference models/users/user_detail_view_tabs_preference.py:60
+msgid "User Detail View Tabs Preference"
+msgstr "Preferencje kart widoku szczegółów użytkownika"
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "User Detail View Tabs Preferences"
+#: bloomerp.userdetailviewtabspreference models/users/user_detail_view_tabs_preference.py:61
+msgid "User Detail View Tabs Preferences"
+msgstr "Preferencje kart widoku szczegółów użytkownika"
+
+#: bloomerp.applicationfield.field_type
+msgid "User Field"
+msgstr "Pole użytkownika"
+
+#: bloomerp.userinboxpreference models/communication/inbox/user_inbox_preference.py:11
+msgid "User Inbox Preference"
+msgstr "Preferencja skrzynki odbiorczej użytkownika"
+
+#: bloomerp.userinboxpreference models/communication/inbox/user_inbox_preference.py:12
+msgid "User Inbox Preferences"
+msgstr "Preferencje skrzynki odbiorczej użytkownika"
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "User List View Preferences"
+#: bloomerp.userlistviewpreference models/users/user_list_view_preference.py:630
+msgid "User List View Preference"
+msgstr "Preferencje widoku listy użytkownika"
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "User List View Preferences"
+#: bloomerp.userlistviewpreference models/users/user_list_view_preference.py:631
+msgid "User List View Preferences"
+msgstr "Preferencje widoku listy użytkownika"
+
+#: bloomerp.userobjectlayoutpreference models/users/user_object_layout_preference.py:12
+msgid "User Object Layout Preference"
+msgstr "Preferencja układu obiektu użytkownika"
+
+#: bloomerp.userobjectlayoutpreference models/users/user_object_layout_preference.py:13
+msgid "User Object Layout Preferences"
+msgstr "Preferencje układu obiektu użytkownika"
+
+#: models/mixins/user_stamp_model_mixin.py:28
+msgid "User Stamp Model Mixin"
+msgstr "Miks modelu znaczników użytkownika"
+
+#: models/mixins/user_stamp_model_mixin.py:29
+msgid "User Stamp Model Mixins"
+msgstr "Miksy modeli znaczników użytkownika"
+
+#: bloomerp.emailaccount.username models/communication/email_account.py:121
+msgid "Username"
+msgstr "Nazwa użytkownika"
+
+#: bloomerp.policy.users bloomerp.user models/access_control/policy.py:99
+#: models/project_management/todo.py:83 models/users/user.py:160
+msgid "Users"
+msgstr "Użytkownicy"
+
+msgctxt "bloomerp:module:name"
+msgid "Users"
+msgstr "Użytkownicy"
+
+#: bloomerp.policy.users models/access_control/policy.py:98
+msgid "Users assigned to this access control policy."
+msgstr "Użytkownicy przypisani do tej zasady kontroli dostępu."
+
+#: bloomerp.inbox.shared_with_users bloomerp.sidebar.shared_with_users
+#: bloomerp.userdetailviewtabspreference.shared_with_users
+#: bloomerp.userlistviewpreference.shared_with_users
+#: bloomerp.userobjectlayoutpreference.shared_with_users bloomerp.workspace.shared_with_users
+msgid "Users with whom this preference is shared."
+msgstr "Użytkownicy, z którymi udostępniono tę preferencję."
+
+#: templates/views/generic/model/bulk_upload_wizard/confirm_step.html:10
+msgid "Valid"
+msgstr "Prawidłowe"
+
+#: bloomerp.emailaccount.validation_error models/communication/email_account.py:264
+msgid "Validation Error"
+msgstr "Błąd walidacji"
+
+#: templates/components/forms/initial_data_row.html:33
+#: templates/components/forms/initial_data_value.html:96 workspaces/analytics_tile/model.py:319
+msgid "Value"
+msgstr "Wartość"
+
+#: templates/components/forms/initial_data_value.html:25
+msgid "Value on all rows"
+msgstr "Wartość we wszystkich wierszach"
+
+#: models/users/user_list_view_preference.py:543 workspaces/analytics_tile/model.py:388
+msgid "Values"
+msgstr "Wartości"
+
+#: templates/cotton/features/document_templates/builder.html:51
+msgid "Variables"
+msgstr "Zmienne"
+
+#: bloomerp.userlistviewpreference.view_type models/users/user_list_view_preference.py:650
+msgid "View Type"
+msgstr "Typ widoku"
+
+# | msgid "View row"
+#: models/users/user_list_view_preference.py:438
+msgid "View mode"
+msgstr "Wyświetl wiersz"
+
+#: templates/cotton/ui/inputs/one_to_many/row_actions.html:4
+msgid "View row"
+msgstr "Wyświetl wiersz"
+
+#: bloomerp.apikey.key_prefix
+msgid "Visible token prefix used to identify the API key without storing the raw token."
+msgstr "Widoczny prefiks tokena używany do identyfikacji klucza API bez przechowywania surowego tokena."
+
+#: workspaces/tiles.py:24
+msgid ""
+"Visualizes data from a custom query and presents it in a structured format such as a chart, KPI, "
+"table, or pie chart."
+msgstr ""
+"Wizualizuje dane z niestandardowego zapytania i przedstawia je w ustrukturyzowanym formacie, "
+"takim jak wykres, KPI, tabela lub wykres kołowy."
+
+#: workspaces/analytics_tile/model.py:373
+msgid ""
+"Visualizes data from a custom query in a pie chart format, allowing users to easily understand "
+"the proportional distribution of different categories or segments within a dataset, making it "
+"ideal for displaying parts of a whole and comparing relative sizes for enhanced insights and "
+"decision-making."
+msgstr ""
+"Wizualizuje dane z niestandardowego zapytania w formie wykresu kołowego, umożliwiając "
+"użytkownikom łatwe zrozumienie proporcjonalnego rozkładu różnych kategorii lub segmentów w "
+"zbiorze danych, dzięki czemu idealnie nadaje się do przedstawiania części całości i porównywania "
+"względnych rozmiarów w celu uzyskania lepszych informacji i podejmowania decyzji."
+
+#: workspaces/analytics_tile/model.py:352
+msgid ""
+"Visualizes data from a custom query in a three-dimensional chart format, providing users with an "
+"immersive and interactive way to explore complex datasets, identify relationships, and gain "
+"deeper insights through a multi-dimensional graphical representation."
+msgstr ""
+"Wizualizuje dane z niestandardowego zapytania w formie wykresu trójwymiarowego, zapewniając "
+"użytkownikom immersyjny i interaktywny sposób eksplorowania złożonych zbiorów danych, "
+"identyfikowania zależności i uzyskiwania głębszych informacji za pomocą wielowymiarowej "
+"reprezentacji graficznej."
+
+#: workspaces/analytics_tile/model.py:247
+msgid ""
+"Visualizes data from a custom query in a two-dimensional chart format, allowing users to easily "
+"identify trends, patterns, and insights through graphical representation."
+msgstr ""
+"Wizualizuje dane z niestandardowego zapytania w formie wykresu dwuwymiarowego, umożliwiając "
+"użytkownikom łatwe identyfikowanie trendów, wzorców i informacji za pomocą reprezentacji "
+"graficznej."
+
+#: workspaces/analytics_tile/model.py:366
+msgid ""
+"Visualizes geospatial data from a custom query on an interactive map, enabling users to identify "
+"spatial patterns, trends, and insights by plotting data points, regions, or heatmaps based on "
+"geographic locations for enhanced analysis and decision-making."
+msgstr ""
+"Wizualizuje dane geoprzestrzenne z niestandardowego zapytania na interaktywnej mapie, "
+"umożliwiając użytkownikom identyfikowanie wzorców przestrzennych, trendów i informacji poprzez "
+"nanoszenie punktów danych, regionów lub map cieplnych na podstawie lokalizacji geograficznych w "
+"celu usprawnienia analizy i podejmowania decyzji."
+
+#: models/users/user_list_view_preference.py:32 templates/cotton/features/dataviews/gant.html:33
+msgid "Week"
+msgstr "Tydzień"
+
+#: bloomerp.applicationfield.field_type
+msgid "Week Field"
+msgstr "Pole tygodnia"
+
+#: templates/components/forms/initial_data_value.html:6
+msgid "What should be preset for"
+msgstr "Co powinno być ustawione wstępnie dla"
+
+#: workspaces/analytics_tile/model.py:192
+msgid "Where the legend should be placed."
+msgstr "Gdzie powinna zostać umieszczona legenda."
+
+#: bloomerp.workflow.run_asynchronously models/automation/workflow.py:79
+msgid "Whether runs asynchronously"
+msgstr "Czy uruchamia się asynchronicznie"
+
+#: bloomerp.aiconversation.auto_named
+msgid "Whether the conversation has been auto-named"
+msgstr "Czy rozmowa została automatycznie nazwana"
+
+#: bloomerp.form.public_embed_enabled models/forms/form.py:100
+msgid "Whether the form can be embedded in a public page."
+msgstr "Czy formularz może być osadzony na stronie publicznej."
+
+#: bloomerp.form.requires_authentication models/forms/form.py:95
+msgid "Whether the form requires an authenticated user in order to be accessible."
+msgstr "Czy formularz wymaga uwierzytelnionego użytkownika, aby uzyskać do niego dostęp."
+
+#: bloomerp.form.requires_review models/forms/form.py:90
+msgid "Whether the form submission needs to be reviewed before it is persisted."
+msgstr "Czy przesłanie formularza wymaga sprawdzenia przed zapisaniem."
+
+#: bloomerp.formsubmission.persisted models/forms/form_submission.py:71
+msgid "Whether the form was persisted"
+msgstr "Czy formularz został zapisany"
+
+#: bloomerp.workflow.active models/automation/workflow.py:84
+msgid "Whether the workflow is active or not"
+msgstr "Czy przepływ pracy jest aktywny"
+
+#: bloomerp.emailaccount.sync_enabled
+msgid "Whether this account should be synchronized automatically."
+msgstr "Czy to konto powinno być automatycznie synchronizowane."
+
+#: bloomerp.workflow.enable_logging models/automation/workflow.py:89
+msgid ""
+"Whether to enable logging for this workflow. Disabling logging may improve performance but will "
+"result in no detailed execution history being stored."
+msgstr ""
+"Czy włączyć rejestrowanie dla tego przepływu pracy. Wyłączenie rejestrowania może poprawić "
+"wydajność, ale spowoduje, że nie będzie przechowywana szczegółowa historia wykonywania."
+
+msgctxt "bloomerp:module:description"
+msgid "With automation, streamline and optimize your business processes by creating automated workflows."
+msgstr ""
+"Dzięki automatyzacji usprawniaj i optymalizuj procesy biznesowe, tworząc zautomatyzowane "
+"przepływy pracy."
+
+#: bloomerp.workflow bloomerp.workflownode.workflow bloomerp.workflowrun.workflow
+#: models/automation/workflow.py:29 models/automation/workflow_node.py:38
+#: models/automation/workflow_run.py:74
+msgid "Workflow"
+msgstr "Przepływ pracy"
+
+#: bloomerp.workflowedge models/automation/workflow_edge.py:13
+msgid "Workflow Edge"
+msgstr "Krawędź przepływu pracy"
+
+#: bloomerp.workflowedge models/automation/workflow_edge.py:14
+msgid "Workflow Edges"
+msgstr "Krawędzie przepływu pracy"
+
+#: bloomerp.workflownode models/automation/workflow_node.py:23
+msgid "Workflow Node"
+msgstr "Węzeł przepływu pracy"
+
+#: bloomerp.workflownode models/automation/workflow_node.py:24
+msgid "Workflow Nodes"
+msgstr "Węzły przepływu pracy"
+
+#: bloomerp.workflowrun bloomerp.workflowrunstep.workflow_run models/automation/workflow_run.py:24
+#: models/automation/workflow_run_step.py:28
+msgid "Workflow Run"
+msgstr "Uruchomienie przepływu pracy"
+
+#: bloomerp.workflowrunstep models/automation/workflow_run_step.py:16
+msgid "Workflow Run Step"
+msgstr "Krok uruchomienia przepływu pracy"
+
+#: bloomerp.workflowrunstep models/automation/workflow_run_step.py:17
+msgid "Workflow Run Steps"
+msgstr "Kroki uruchomienia przepływu pracy"
+
+#: bloomerp.workflowrun models/automation/workflow_run.py:25
+msgid "Workflow Runs"
+msgstr "Uruchomienia przepływów pracy"
+
+#: templates/inbox_items/workflow_run.html:7
+msgid "Workflow execution"
+msgstr "Wykonanie przepływu pracy"
+
+#: bloomerp.workflow models/automation/workflow.py:30
+msgid "Workflows"
+msgstr "Przepływy pracy"
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "Workspaces"
+#: bloomerp.workspace models/workspaces/workspace.py:22
+msgid "Workspace"
+msgstr "Obszary robocze"
+
+#: templates/components/workspaces/share_workspace.html:36
+msgid "Workspace sharing updated."
+msgstr "Udostępnianie obszaru roboczego zaktualizowane."
+
+# | msgctxt "bloomerp:route:name"
+# | msgid "Workspaces"
+#: bloomerp.workspace models/workspaces/workspace.py:23
+msgid "Workspaces"
+msgstr "Obszary robocze"
+
+#: templates/views/workspaces/bloomerp_workspace_view.html:11
+msgid ""
+"Workspaces help you organize this module around the way you work. You can create your own space "
+"for the information, tiles, and shortcuts you want to see first, and switch between different "
+"workspaces when you need a different focus."
+msgstr ""
+"Obszary robocze pomagają organizować ten moduł zgodnie z Twoim sposobem pracy. Możesz utworzyć "
+"własny obszar z informacjami, kafelkami i skrótami, które chcesz widzieć w pierwszej kolejności, "
+"oraz przełączać się między różnymi obszarami roboczymi, gdy potrzebujesz skupić się na czymś "
+"innym."
+
+#: templates/components/communication/emails/email_editor.html:120
+msgid "Write your message"
+msgstr "Wpisz wiadomość"
+
+#: workspaces/analytics_tile/model.py:252
+msgid "X-Axis"
+msgstr "Oś X"
+
+#: workspaces/analytics_tile/model.py:155
+msgid "X-axis label"
+msgstr "Etykieta osi X"
+
+#: workspaces/analytics_tile/model.py:162
+msgid "X-axis order"
+msgstr "Kolejność osi X"
+
+#: bloomerp.todo.effort models/project_management/todo.py:31
+msgid "XL"
+msgstr "XL"
+
+#: bloomerp.todo.effort models/project_management/todo.py:27
+msgid "XS"
+msgstr "XS"
+
+#: workspaces/analytics_tile/model.py:262
+msgid "Y-Axis"
+msgstr "Oś Y"
+
+#: workspaces/analytics_tile/model.py:170
+msgid "Y-axis label"
+msgstr "Etykieta osi Y"
+
+#: models/users/user_list_view_preference.py:34 templates/cotton/features/dataviews/gant.html:30
+msgid "Year"
+msgstr "Rok"
+
+#: bloomerp.user.date_view_preference models/users/user.py:49
+msgid "Year-Month-Day (2000-08-15)"
+msgstr "Rok-Miesiąc-Dzień (2000-08-15)"
+
+#: bloomerp.user.datetime_view_preference models/users/user.py:63
+msgid "Year-Month-Day Hour:Minute (2000-08-15 12:30)"
+msgstr "Rok-Miesiąc-Dzień Godzina:Minuta (2000-08-15 12:30)"
+
+#: models/project_management/todo.py:52
+msgid "You do not have permission to mark this todo as completed."
+msgstr "Nie masz uprawnień do oznaczenia tego zadania jako ukończonego."
+
+#: templates/cotton/features/dataviews/gant.html:38
+msgid "Zoom in"
+msgstr "Powiększ"
+
+#: templates/cotton/features/dataviews/gant.html:27
+msgid "Zoom out"
+msgstr "Pomniejsz"
+
+#: bloomerp.user.is_active
+msgid "active"
+msgstr "aktywny"
+
+#: route:api_sql_accessible_tables
+msgctxt "bloomerp:route:name"
+msgid "api_sql_accessible_tables"
+msgstr "api_sql_accessible_tables"
+
+#: bloomerp.user.date_joined
+msgid "date joined"
+msgstr "data dołączenia"
+
+#: bloomerp.user.email
+msgid "email address"
+msgstr "adres e-mail"
+
+#: bloomerp.user.first_name
+msgid "first name"
+msgstr "imię"
+
+#: bloomerp.user.groups
+msgid "groups"
+msgstr "grupy"
+
+#: bloomerp.user.last_login
+msgid "last login"
+msgstr "ostatnie logowanie"
+
+#: bloomerp.user.last_name
+msgid "last name"
+msgstr "nazwisko"
+
+#: views/communication/create_email_account.py:64
+msgid "name@example.com"
+msgstr "name@example.com"
+
+#: templates/views/auth/login.html:73
+msgid "or contact your staff."
+msgstr "lub skontaktuj się z personelem."
+
+#: bloomerp.user.password
+msgid "password"
+msgstr "hasło"
+
+#: bloomerp.user.is_staff
+msgid "staff status"
+msgstr "status pracownika"
+
+#: bloomerp.user.is_superuser
+msgid "superuser status"
+msgstr "status superużytkownika"
+
+#: bloomerp.user.user_permissions
+msgid "user permissions"
+msgstr "uprawnienia użytkownika"
+
+#: bloomerp.user.username
+msgid "username"
+msgstr "nazwa użytkownika"
+
+#: route:workspace
+msgctxt "bloomerp:route:name"
+msgid "workspace"
+msgstr "obszar roboczy"
+
+#: route:log_entries_model
+msgctxt "bloomerp:route:name"
+msgid "{model} List"
+msgstr "Lista {model}"
+
+#: route:automation_module_automation
+msgctxt "bloomerp:route:name"
+msgid "{module}"
+msgstr "{module}"
+
+#: route:permissions_detail_rowpolicyrulepermission_set_relationship
+msgctxt "bloomerp:route:name"
+msgid "{related_model_plural}"
+msgstr "{related_model_plural}"
+
+#: route:permissions_detail_rowpolicyrulepermission_set_relationship
+msgctxt "bloomerp:route:description"
+msgid "{related_model_plural} relationship for {model}"
+msgstr "Relacja {related_model_plural} dla {model}"
+
+#~ msgid "Id"
+#~ msgstr "ID"
+
+#~ msgid "Object Id"
+#~ msgstr "Identyfikator obiektu"
+
+#~ msgid "Url"
+#~ msgstr "URL"
+
+#~ msgid "application field"
+#~ msgstr "pole aplikacji"
+
+#~ msgid "application fields"
+#~ msgstr "pola aplikacji"
+
+#~ msgid "bookmark"
+#~ msgstr "zakładka"
+
+#~ msgid "bookmarks"
+#~ msgstr "zakładki"
+
+#~ msgid "comment"
+#~ msgstr "komentarz"
+
+#~ msgid "comments"
+#~ msgstr "komentarze"
+
+#~ msgid "document template"
+#~ msgstr "szablon dokumentu"
+
+#~ msgid "document template header"
+#~ msgstr "nagłówek szablonu dokumentu"
+
+#~ msgid "document template headers"
+#~ msgstr "nagłówki szablonu dokumentu"
+
+#~ msgid "document template styling"
+#~ msgstr "stylizacja szablonu dokumentu"
+
+#~ msgid "document template stylings"
+#~ msgstr "stylizacje szablonów dokumentów"
+
+#~ msgid "document templates"
+#~ msgstr "szablony dokumentów"
+
+#~ msgid "file"
+#~ msgstr "plik"
+
+#~ msgid "file folder"
+#~ msgstr "folder plików"
+
+#~ msgid "file folders"
+#~ msgstr "foldery plików"
+
+#~ msgid "files"
+#~ msgstr "pliki"
+
+#~ msgid "form"
+#~ msgstr "formularz"
+
+#~ msgid "form submission"
+#~ msgstr "przesłanie formularza"
+
+#~ msgid "form submissions"
+#~ msgstr "przesłania formularzy"
+
+#~ msgid "forms"
+#~ msgstr "formularze"
+
+#~ msgid "initiative"
+#~ msgstr "inicjatywa"
+
+#~ msgid "initiatives"
+#~ msgstr "inicjatywy"
+
+#~ msgid "row policy rule permission"
+#~ msgstr "uprawnienie do reguły polityki wiersza"
+
+#~ msgid "row policy rule permissions"
+#~ msgstr "uprawnienia do reguł polityki wiersza"
+
+#~ msgid "sidebar"
+#~ msgstr "pasek boczny"
+
+#~ msgid "sidebar item"
+#~ msgstr "element paska bocznego"
+
+#~ msgid "sidebar items"
+#~ msgstr "elementy paska bocznego"
+
+#~ msgid "sidebars"
+#~ msgstr "paski boczne"
+
+#~ msgid "tile"
+#~ msgstr "kafelek"
+
+#~ msgid "tiles"
+#~ msgstr "kafelki"
+
+#~ msgid "todo"
+#~ msgstr "zadanie"
+
+#~ msgid "todo label"
+#~ msgstr "etykieta zadania"
+
+#~ msgid "todo labels"
+#~ msgstr "etykiety zadań"
+
+#~ msgid "todos"
+#~ msgstr "zadania"
+
+#~ msgid "user"
+#~ msgstr "użytkownik"
+
+#~ msgid "user detail view tab item"
+#~ msgstr "element karty widoku szczegółów użytkownika"
+
+#~ msgid "user detail view tab items"
+#~ msgstr "elementy kart widoku szczegółów użytkownika"
+
+#~ msgid "user detail view tabs preference"
+#~ msgstr "preferencja kart widoku szczegółów użytkownika"
+
+#~ msgid "user detail view tabs preferences"
+#~ msgstr "preferencje kart widoku szczegółów użytkownika"
+
+#~ msgid "user list view preference"
+#~ msgstr "preferencja widoku listy użytkowników"
+
+#~ msgid "user list view preferences"
+#~ msgstr "preferencje widoku listy użytkowników"
+
+#~ msgid "users"
+#~ msgstr "użytkownicy"
+
+#~ msgid "workspaces"
+#~ msgstr "obszary robocze"
+

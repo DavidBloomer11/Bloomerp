@@ -3,7 +3,8 @@
 	{% load static %}
 	{% load globals %}
 	{% load bloomerp %}
-
+	{% load i18n %}
+	
 	<head>
 		{% include "snippets/head.html" %}
 	</head>
@@ -44,7 +45,7 @@
 						class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
 						<i class="fa fa-magnifying-glass"></i>
 					</span>
-					<input id="global-search-modal-input" autofocus placeholder="Search or type a command"
+					<input id="global-search-modal-input" autofocus placeholder="{% trans 'Search or type a command' %}"
 						class="w-full bg-white pl-10 pr-4 py-3 ring-0 focus:ring-0 border-0 focus:border-0" />
 				</div>
 				<div id="global-search-results"

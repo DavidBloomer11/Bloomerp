@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from typing import Type
 
 from django.db import models
@@ -11,23 +12,26 @@ from django.db.models.query import QuerySet
 
 class InboxFolder(BloomerpModel):
     class Meta:
-        verbose_name = "Inbox Folder"
-        verbose_name_plural = "Inbox Folders"
+        verbose_name = _("Inbox Folder")
+        verbose_name_plural = _("Inbox Folders")
         db_table = "bloomerp_inbox_folder"
     
     inbox = models.ForeignKey(
         "Inbox",
         on_delete=models.CASCADE,
         related_name="folders",
+        verbose_name=_("Inbox"),
     )
     type = models.CharField(
         max_length=50,
-        choices=InboxFolderType.choices()
+        choices=InboxFolderType.choices(),
+        verbose_name=_("Type"),
     )
     related_object_id = models.CharField(
         max_length=255,
         null=True,
         blank=True,
+        verbose_name=_("Related Object ID"),
     )
     
     @property

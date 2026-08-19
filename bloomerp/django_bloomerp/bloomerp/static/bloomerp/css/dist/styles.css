@@ -1252,6 +1252,9 @@
   .cursor-context-menu {
     cursor: context-menu;
   }
+  .cursor-default {
+    cursor: default;
+  }
   .cursor-ew-resize {
     cursor: ew-resize;
   }

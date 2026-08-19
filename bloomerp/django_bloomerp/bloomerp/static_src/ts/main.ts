@@ -72,6 +72,7 @@ import { EmailEditor } from './components/inbox/EmailEditor';
 import { SelectPreference } from './components/SelectPreference';
 import BaseSectionedLayoutContainer from './components/layouts/BaseSectionedLayoutContainer';
 import ThemeProvider from './components/theme/ThemeProvider';
+import { loadTranslations } from './utils/i18n';
 
 Object.assign(window, { showMessage });
 
@@ -178,13 +179,11 @@ registerComponent('inbox-item', InboxItem)
 
 registerComponent('email-editor', EmailEditor)
 
-// Auto init comonents
-setupComponentAutoInit();
-
-
-// Realtime messages
-initMessagesWebsocket();
-
-
-// Setup animation listener
-SetupAnimationListener()
+loadTranslations()
+    .catch((error) => console.warn('Could not load the translation catalog', error))
+    .finally(() => {
+        // Components may synchronously render translated frontend labels.
+        setupComponentAutoInit();
+        initMessagesWebsocket();
+        SetupAnimationListener();
+    });

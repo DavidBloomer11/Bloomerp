@@ -156,11 +156,24 @@ if _has_allauth():
     ]
 
 BLOOMERP_MIDDLEWARE = [
+    "django.middleware.locale.LocaleMiddleware",
     "bloomerp.middleware.HTMXVaryMiddleware",
     "bloomerp.middleware.HTMXPermissionDeniedMiddleware",
     "django_htmx.middleware.HtmxMiddleware",
     "django_browser_reload.middleware.BrowserReloadMiddleware",
     "bloomerp.middleware.RequestMiddleware",
+]
+
+BLOOMERP_LANGUAGES = [
+    ("en", "English"),
+    ("nl", "Nederlands"),
+    ("fr", "Français"),
+    ("de", "Deutsch"),
+    ("es", "Español"),
+    ("it", "Italiano"),
+    ("pt", "Português"),
+    ("ru", "Русский"),
+    ("pl", "Polski"),
 ]
 
 if _has_allauth():

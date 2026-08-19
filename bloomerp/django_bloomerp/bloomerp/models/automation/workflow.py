@@ -6,7 +6,7 @@ from bloomerp.models.definition import BloomerpModelConfig, DetailViewSettings, 
 from bloomerp.models.mixins.absolute_url_model_mixin import AbsoluteUrlModelMixin
 from bloomerp.models.mixins.user_stamp_model_mixin import UserStampModelMixin
 from bloomerp.models.mixins import TimestampModelMixin
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _, gettext_noop
 from bloomerp.automation.defintion import WorkflowNodeType
 
 if TYPE_CHECKING:
@@ -34,14 +34,14 @@ class Workflow(
         layout=FieldLayout(
             rows=[
                 LayoutRow(
-                    title="Details",
+                    title=gettext_noop("Details"),
                     columns=2,
                     items=[
                         LayoutItem(id="name")
                     ]
                 ),
                 LayoutRow(
-                    title="Configuration",
+                    title=gettext_noop("Configuration"),
                     columns=2,
                     items=[
                         LayoutItem(id="active"),
@@ -54,9 +54,9 @@ class Workflow(
         object_actions=[
             ObjectModalAction(
                 id="run_workflow",
-                label="Run workflow",
+                label=gettext_noop("Run workflow"),
                 endpoint=lambda obj: reverse("components_automation_run_workflow", kwargs={"workflow_id" : obj.id}),
-                modal_title="Run workflow"
+                modal_title=gettext_noop("Run workflow")
             ),
             
         ],
@@ -71,19 +71,23 @@ class Workflow(
     
     name = models.CharField(
         max_length=255,
-        help_text=_("The name of the workflow.")
+        help_text=_("The name of the workflow."),
+        verbose_name=_("Name")
         )
     run_asynchronously = models.BooleanField(
         default=False,
-        help_text=_("Whether runs asynchronously")
+        help_text=_("Whether runs asynchronously"),
+        verbose_name=_("Run Asynchronously")
     )
     active = models.BooleanField(
         default=True,
-        help_text=_("Whether the workflow is active or not")
+        help_text=_("Whether the workflow is active or not"),
+        verbose_name=_("Active")
     )
     enable_logging = models.BooleanField(
         default=False,
-        help_text=_("Whether to enable logging for this workflow. Disabling logging may improve performance but will result in no detailed execution history being stored.")
+        help_text=_("Whether to enable logging for this workflow. Disabling logging may improve performance but will result in no detailed execution history being stored."),
+        verbose_name=_("Enable Logging")
     )
     
     def get_trigger(self) -> "WorkflowNode |None":
@@ -125,10 +129,8 @@ class Workflow(
         from bloomerp.models.automation.workflow_edge import WorkflowEdge
         if not self.contains_node(from_node) or not self.contains_node(to_node):
             raise ValueError("Node not in workflow")
-        
+
         return WorkflowEdge.objects.create(
             from_node=from_node,
             to_node=to_node
         )
-        
-    

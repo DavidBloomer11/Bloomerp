@@ -9,7 +9,7 @@ from bloomerp.model_fields.code_field import CodeField
 from bloomerp.models.base_bloomerp_model import BloomerpModel, FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.model_fields.text_editor_field import TextEditorField
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _, gettext_noop
 from bloomerp.models.definition import BloomerpModelConfig
 from bloomerp.models.document_templates.document_template_styling import DocumentTemplateStyling
 from bloomerp.models.document_templates.document_template_header import DocumentTemplateHeader
@@ -91,6 +91,8 @@ class FreeVariableConfig(BaseModel):
 
 class DocumentTemplate(BloomerpModel):
     class Meta(BloomerpModel.Meta):
+        verbose_name = _("Document Template")
+        verbose_name_plural = _("Document Templates")
         managed = True
         db_table = 'bloomerp_document_template'
 
@@ -99,7 +101,7 @@ class DocumentTemplate(BloomerpModel):
             rows=[
                 LayoutRow(
                     columns=2,
-                    title="Core Details",
+                    title=gettext_noop("Core Details"),
                     items=[
                         LayoutItem(id="name"),
                         LayoutItem(id="include_page_numbers"),
@@ -116,62 +118,67 @@ class DocumentTemplate(BloomerpModel):
     
     name = models.CharField(
         max_length=100,
-        help_text=_("Name of the document template.")
-        ) #Name of the document template
+        help_text=_("Name of the document template."),
+        verbose_name=_("Name")) #Name of the document template
     template = TextEditorField(
         default='Hello world',
         help_text=_("Content of the template, including the variables."),
         blank=True,
         null=False,
-        ) # Content of the template, including the variables
+        verbose_name=_("Template")) # Content of the template, including the variables
     content_types = models.ManyToManyField(
         ContentType,
         blank=True,
         help_text=_("Root object types that can be used as variables in the document template."),
         related_name="document_templates",
+        verbose_name=_("Content Types"),
     )
     free_variables = models.JSONField(
         default=list,
         blank=True,
+        verbose_name=_("Free Variables"),
     )
     template_header : DocumentTemplateHeader = models.ForeignKey(
         "DocumentTemplateHeader",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        help_text=_("Header of the document template.")
-        ) #Foreign key to the document template header
+        help_text=_("Header of the document template."),
+        verbose_name=_("Template Header"),
+    ) #Foreign key to the document template header
     footer = models.TextField(
         help_text=_("Footer content of the document template."),
         blank=True,
-        null=True
+        null=True,
+        verbose_name=_("Footer"),
         )
     page_orientation = models.CharField(
         max_length=10,
         default='portrait',
         help_text=_("Orientation of the document template."),
-        choices=Orientation.choices
-        ) # Orientation of the document template
+        choices=Orientation.choices,
+        verbose_name=_("Page Orientation")) # Orientation of the document template
     page_size = models.CharField(
         max_length=10,
         default='A4',
         help_text=_("Size of the document template."),
-        choices=PageSize.choices
-        ) 
+        choices=PageSize.choices,
+        verbose_name=_("Page Size"))
     page_margin = models.FloatField(
         default=1.0,
-        help_text=_("Margin of the document template in inches.")
-        ) # Margin of the document template in inches
+        help_text=_("Margin of the document template in inches."),
+        verbose_name=_("Page Margin")) # Margin of the document template in inches
     include_page_numbers = models.BooleanField(
         default=True,
-        help_text=_("Signifies whether the page numbers are included or not.")
-        ) 
+        help_text=_("Signifies whether the page numbers are included or not."),
+        verbose_name=_("Include Page Numbers"))
     save_to_folder = models.ForeignKey(
         to = FileFolder,
         null=True,
         blank=True,
         help_text=_('Signifies to which folder a file generated from the template needs to be saved upon creation.'),
-        on_delete=models.SET_NULL
+        on_delete=models.SET_NULL,
+        verbose_name=_("Save To Folder"),
     )
     
     # STYLING
@@ -180,12 +187,14 @@ class DocumentTemplate(BloomerpModel):
         blank=True,
         help_text=_("Styling sets that can be applied to the document template."),
         related_name="document_templates",
+        verbose_name=_("Style Sets"),
     )
     custom_styling = CodeField(
         language='css',
         default=DEFAULT_CSS,
         blank=True,
-        help_text=_("Custom CSS styling for the document template.")
+        help_text=_("Custom CSS styling for the document template."),
+        verbose_name=_("Custom Styling"),
     )
     
 

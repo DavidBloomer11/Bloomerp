@@ -1,3 +1,4 @@
+{% load i18n %}
 
 {% if error_message %}
 <div class="border-b border-danger-light bg-danger-light/20 px-5 py-4 text-left">
@@ -16,9 +17,9 @@
     <button class="w-full border-b border-gray-200 px-5 py-4 text-left hover:bg-gray-50">
         <div class="flex flex-col items-start gap-3">
             <c-ui.text.text>
-                <c-i18n.blocktrans>
+                {% blocktrans trimmed %}
                     No items found in this folder.
-                </c-i18n.blocktrans>
+                {% endblocktrans %}
             </c-ui.text.text>
             <c-ui.text.muted>
                 Perform a <a 
@@ -42,6 +43,6 @@
     hx-target="this"
     hx-swap="outerHTML"
 >
-    <c-i18n.blocktrans>Loading more…</c-i18n.blocktrans>
+    {% blocktrans %}Loading more…{% endblocktrans %}
 </div>
 {% endif %}

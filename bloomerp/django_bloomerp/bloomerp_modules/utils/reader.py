@@ -280,6 +280,7 @@ def _scan_module_tree(module_dir: Path, parent_module_id: str | None = None) -> 
         parent_module_id=module_data.get("parent_module_id", parent_module_id),
         full_id=full_id,
         visible=module_data.get("visible", True),
+        owner_app_label="bloomerp_modules",
     )
 
     modules = [module]
@@ -347,4 +348,5 @@ def parse_yaml_config(yaml_file_path: str) -> ModuleConfig:
         icon=module_data.get("icon", "fa-solid fa-folder"),
         parent_module_id=module_data.get("parent_module_id"),
         visible=module_data.get("visible", True),
+        owner_app_label="bloomerp_modules",
     )
