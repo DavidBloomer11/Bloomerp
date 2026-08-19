@@ -179,4 +179,6 @@ exclude = ["bloomerp.tests", "bloomerp.tests.*"]
 bloomerp = [
     "templates/**/*",
     "static/**/*",
+    "locale/**/*",
+    "i18n/*.mjs",
 ]
