@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _, gettext_noop
 from typing import Any
 
 from django.core.exceptions import ValidationError
@@ -18,6 +19,8 @@ class Workspace(ContentLayoutModelMixin, BasePreference):
     preference_scope_fields = ("module_id",)
 
     class Meta(BloomerpModel.Meta):
+        verbose_name = _("Workspace")
+        verbose_name_plural = _("Workspaces")
         managed = True
         db_table = "bloomerp_workspace"
         constraints = [
@@ -43,6 +46,7 @@ class Workspace(ContentLayoutModelMixin, BasePreference):
         null=True,
         blank=True,
         default=None,
+        verbose_name=_("Module ID"),
     )
 
     def __str__(self):
@@ -67,7 +71,7 @@ class Workspace(ContentLayoutModelMixin, BasePreference):
             name="Default",
             module_id=scope.get("module_id"),
             layout=FieldLayout(
-                rows=[LayoutRow(columns=4, title="My Workspace", items=[])]
+                rows=[LayoutRow(columns=4, title=gettext_noop("My Workspace"), items=[])]
             ).model_dump(),
             selected=True,
         )

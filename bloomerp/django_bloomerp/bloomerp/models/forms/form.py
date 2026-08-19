@@ -6,12 +6,16 @@ from bloomerp.models.application_field import ApplicationField
 from bloomerp.models.base_bloomerp_model import BloomerpModel, FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.definition import BloomerpModelConfig, ObjectHTML, DetailViewSettings
 from bloomerp.models.mixins.content_layout_model_mixin import ContentLayoutModelMixin
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _, gettext_noop
 from bloomerp.services.sectioned_layout_services import create_default_layout
 from django.db.models.query import QuerySet
 
 class Form(BloomerpModel, ContentLayoutModelMixin, models.Model):
     
+    class Meta:
+        verbose_name = _("Form")
+        verbose_name_plural = _("Forms")
+
     bloomerp_config = BloomerpModelConfig(
         create_redirect_url_func=lambda x: reverse("forms_detail_form_builder", kwargs={"pk" : x.id}),
         allow_string_search=True,
@@ -19,7 +23,7 @@ class Form(BloomerpModel, ContentLayoutModelMixin, models.Model):
             rows=[
                 LayoutRow(
                     columns=2,
-                    title="Core Details",
+                    title=gettext_noop("Core Details"),
                     items=[
                         LayoutItem(id="name"),
                         LayoutItem(id="content_type"),
@@ -28,7 +32,7 @@ class Form(BloomerpModel, ContentLayoutModelMixin, models.Model):
                 ),
                 LayoutRow(
                     columns=2,
-                    title="Settings",
+                    title=gettext_noop("Settings"),
                     items=[
                         LayoutItem(id="requires_review", colspan=2),
                         LayoutItem(id="requires_authentication"),
@@ -60,54 +64,65 @@ class Form(BloomerpModel, ContentLayoutModelMixin, models.Model):
     name = models.CharField(
         max_length=255,
         default="Untitled form",
-        help_text=_("The name of the form")
+        help_text=_("The name of the form"),
+        verbose_name=_("Name"),
     )
     description = models.TextField(
         null=True,
-        blank=True
+        blank=True,
+        verbose_name=_("Description"),
     )
     content_type = models.ForeignKey(
         to=ContentType,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        verbose_name=_("Content Type"),
     )
     initial_payload = models.JSONField(
         default=dict,
         blank=True,
-        help_text=_("Initial payload for the form")
+        help_text=_("Initial payload for the form"),
+        verbose_name=_("Initial Payload"),
     )
     
     # Other information
     requires_review = models.BooleanField(
         default=True,
-        help_text=_("Whether the form submission needs to be reviewed before it is persisted.")
+        help_text=_("Whether the form submission needs to be reviewed before it is persisted."),
+        verbose_name=_("Requires Review"),
     )
     requires_authentication = models.BooleanField(
         default=False,
-        help_text=_("Whether the form requires an authenticated user in order to be accessible.")
+        help_text=_("Whether the form requires an authenticated user in order to be accessible."),
+        verbose_name=_("Requires Authentication"),
     )
     public_embed_enabled = models.BooleanField(
         default=False,
-        help_text=_("Whether the form can be embedded in a public page.")
+        help_text=_("Whether the form can be embedded in a public page."),
+        verbose_name=_("Public Embed Enabled"),
     )
     max_submissions = models.IntegerField(
         null=True,
         blank=True,
-        help_text=_("Maximum number of submissions possible for the form")
+        help_text=_("Maximum number of submissions possible for the form"),
+        verbose_name=_("Max Submissions"),
     )
     max_submissions_per_ip = models.IntegerField(
         null=True,
         blank=True,
-        help_text=_("Maximum number of submissions per IP address")
+        help_text=_("Maximum number of submissions per IP address"),
+        verbose_name=_("Max Submissions Per IP"),
     )
     opens_at = models.DateTimeField(
         null=True,
         blank=True,
-        help_text=_("The date and time from which the form will accept submissions.")
+        help_text=_("The date and time from which the form will accept submissions."),
+        verbose_name=_("Opens At"),
     )
     closes_at = models.DateTimeField(
         null=True,
         blank=True,
-        help_text=_("The date and time after which the form will no longer accept submissions.")
+        help_text=_("The date and time after which the form will no longer accept submissions."),
+        verbose_name=_("Closes At"),
     )
     
 

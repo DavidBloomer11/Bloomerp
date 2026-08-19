@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
@@ -22,20 +23,25 @@ class FileFolder(
     )
 
     class Meta(BloomerpModel.Meta):
+        verbose_name = _("File Folder")
+        verbose_name_plural = _("File Folders")
         managed = True
         db_table = "bloomerp_file_folder"
 
-    name = models.CharField(max_length=255)
-    parent = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True)
+    name = models.CharField(max_length=255, verbose_name=_("Name"))
+    parent = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, verbose_name=_("Parent"))
     content_type = models.ForeignKey(
         to=ContentType, 
         on_delete=models.CASCADE, 
         null=True, 
-        blank=True)
+        blank=True,
+        verbose_name=_("Content Type"),
+    )
     object_id = models.CharField(
         max_length=36, 
         null=True, 
-        blank=True
+        blank=True,
+        verbose_name=_("Object ID"),
         )
     content_object = GenericForeignKey(
         ct_field="content_type", 
@@ -44,6 +50,7 @@ class FileFolder(
     protected = models.BooleanField(
         default=False,
         help_text="Protected folders cannot be edited or deleted through the UI. This is useful for folders that are automatically created for objects, such as the module-level folders created for files.",
+        verbose_name=_("Protected"),
         )
 
 

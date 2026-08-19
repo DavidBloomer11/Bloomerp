@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from enum import Enum
 from typing import Any, Callable, Optional
 
@@ -20,18 +21,18 @@ from django import forms
 from pydantic import Field as PydanticField
 
 class PageSize(models.IntegerChoices):
-    SIZE_10 = 10, '10'
-    SIZE_25 = 25, '25'
-    SIZE_50 = 50, '50'
-    SIZE_100 = 100, '100'
+    SIZE_10 = 10, _('10')
+    SIZE_25 = 25, _('25')
+    SIZE_50 = 50, _('50')
+    SIZE_100 = 100, _('100')
 
 
 class CalendarViewMode(models.TextChoices):
-    DAY = 'day', 'Day'
-    WEEK = 'week', 'Week'
-    MONTH = 'month', 'Month'
-    YEAR = 'year', 'Year'
-    LIST = 'list', 'List'
+    DAY = 'day', _('Day')
+    WEEK = 'week', _('Week')
+    MONTH = 'month', _('Month')
+    YEAR = 'year', _('Year')
+    LIST = 'list', _('List')
 
 
 def get_default_display_fields() -> dict:
@@ -52,7 +53,7 @@ def _application_field_choices(
     application_fields: QuerySet[ApplicationField],
     *,
     include_empty: bool = False,
-    empty_label: str = "None",
+    empty_label: str = _("None"),
     field_types: set[str] | None = None,
 ) -> list[tuple[str, str]]:
     choices = [("", empty_label)] if include_empty else []
@@ -69,7 +70,7 @@ def _application_field_name_choices(
     application_fields: QuerySet[ApplicationField],
     *,
     include_empty: bool = False,
-    empty_label: str = "None",
+    empty_label: str = _("None"),
     field_types: set[str] | None = None,
 ) -> list[tuple[str, str]]:
     choices = [("", empty_label)] if include_empty else []
@@ -94,7 +95,7 @@ def _sort_field_choices(application_fields: QuerySet[ApplicationField]) -> dict[
         "choices": _application_field_name_choices(
             application_fields,
             include_empty=True,
-            empty_label="Default",
+            empty_label=_("Default"),
         ),
         "coerce": lambda value: value or None,
         "empty_value": None,
@@ -104,8 +105,8 @@ def _sort_field_choices(application_fields: QuerySet[ApplicationField]) -> dict[
 def _sort_direction_choices(_application_fields: QuerySet[ApplicationField]) -> dict[str, Any]:
     return {
         "choices": [
-            ("asc", "Ascending"),
-            ("desc", "Descending"),
+            ("asc", _("Ascending")),
+            ("desc", _("Descending")),
         ]
     }
 
@@ -115,7 +116,7 @@ def _group_by_field_choices(application_fields: QuerySet[ApplicationField]) -> d
         "choices": _application_field_choices(
             application_fields,
             include_empty=True,
-            empty_label="No grouping",
+            empty_label=_("No grouping"),
         ),
         "coerce": int,
         "empty_value": None,
@@ -136,11 +137,11 @@ def _pivot_aggregation_choices(
 ) -> dict[str, Any]:
     return {
         "choices": [
-            ("count", "Count"),
-            ("sum", "Sum"),
-            ("min", "Minimum"),
-            ("max", "Maximum"),
-            ("avg", "Average"),
+            ("count", _("Count")),
+            ("sum", _("Sum")),
+            ("min", _("Minimum")),
+            ("max", _("Maximum")),
+            ("avg", _("Average")),
         ],
     }
 
@@ -150,8 +151,8 @@ def _pivot_totals_scope_choices(
 ) -> dict[str, Any]:
     return {
         "choices": [
-            ("page", "Current page"),
-            ("dataset", "Entire dataset"),
+            ("page", _("Current page")),
+            ("dataset", _("Entire dataset")),
         ],
     }
 
@@ -161,7 +162,7 @@ def _date_field_choices(application_fields: QuerySet[ApplicationField]) -> dict[
         "choices": _application_field_choices(
             application_fields,
             include_empty=True,
-            empty_label="Select a date field",
+            empty_label=_("Select a date field"),
             field_types={"DateField", "DateTimeField"},
         ),
         "coerce": int,
@@ -170,7 +171,7 @@ def _date_field_choices(application_fields: QuerySet[ApplicationField]) -> dict[
 
 
 def _self_relation_field_choices(application_fields: QuerySet[ApplicationField]) -> dict[str, Any]:
-    choices = [("", "No dependency")]
+    choices = [("", _("No dependency"))]
     for application_field in application_fields:
         if application_field.field_type not in {"ForeignKey", "OneToOneField"}:
             continue
@@ -196,7 +197,7 @@ def _calendar_color_field_choices(
         "choices": _application_field_choices(
             application_fields,
             include_empty=True,
-            empty_label="No color grouping",
+            empty_label=_("No color grouping"),
         ),
         "coerce": int,
         "empty_value": None,
@@ -298,35 +299,35 @@ class PivotTableDataviewOptions(BaseModel):
 class DataviewType(Enum):
     TABLE = ViewTypeDefinition(
         key="table",
-        label="Table",
-        description="Displays records in a sortable table.",
+        label=_("Table"),
+        description=_("Displays records in a sortable table."),
         icon="fa fa-table",
         renderer_cls=TableDataviewRenderer,
         opts=[
             PreferenceOption(
                 key="page_size",
-                label="Page size",
+                label=_("Page size"),
                 field_cls=forms.TypedChoiceField,
                 field_attrs_func=_page_size_choices,
-                description="The number of records shown on each page.",
+                description=_("The number of records shown on each page."),
                 data_type=int,
                 default_value=PageSize.SIZE_25,
             ),
             PreferenceOption(
                 key="sort_field",
-                label="Sort on",
+                label=_("Sort on"),
                 field_cls=forms.TypedChoiceField,
                 field_attrs_func=_sort_field_choices,
-                description="The field used for table sorting.",
+                description=_("The field used for table sorting."),
                 data_type=str | None,
                 default_value=None,
             ),
             PreferenceOption(
                 key="sort_direction",
-                label="Sort direction",
+                label=_("Sort direction"),
                 field_cls=forms.ChoiceField,
                 field_attrs_func=_sort_direction_choices,
-                description="The direction used for table sorting.",
+                description=_("The direction used for table sorting."),
                 data_type=str,
                 default_value="asc",
             ),
@@ -344,44 +345,44 @@ class DataviewType(Enum):
     
     KANBAN = ViewTypeDefinition(
         key="kanban",
-        label="Kanban",
+        label=_("Kanban"),
         icon="fa fa-table-columns",
-        description="Displays records as cards grouped into columns.",
+        description=_("Displays records as cards grouped into columns."),
         renderer_cls=KanbanDataviewRenderer,
         opts=[
             PreferenceOption(
                 key="group_by_field_id",
-                label="Group by",
+                label=_("Group by"),
                 field_cls=forms.TypedChoiceField,
                 field_attrs_func=_group_by_field_choices,
-                description="The field used to build Kanban columns.",
+                description=_("The field used to build Kanban columns."),
                 data_type=int | None,
                 default_value=None,
             ),
             PreferenceOption(
                 key="page_size",
-                label="Cards per column",
+                label=_("Cards per column"),
                 field_cls=forms.TypedChoiceField,
                 field_attrs_func=_page_size_choices,
-                description="The number of cards initially shown in each column.",
+                description=_("The number of cards initially shown in each column."),
                 data_type=int,
                 default_value=PageSize.SIZE_25,
             ),
             PreferenceOption(
                 key="sort_field",
-                label="Sort on",
+                label=_("Sort on"),
                 field_cls=forms.TypedChoiceField,
                 field_attrs_func=_sort_field_choices,
-                description="The field used for table sorting.",
+                description=_("The field used for table sorting."),
                 data_type=str | None,
                 default_value=None,
             ),
             PreferenceOption(
                 key="sort_direction",
-                label="Sort direction",
+                label=_("Sort direction"),
                 field_cls=forms.ChoiceField,
                 field_attrs_func=_sort_direction_choices,
-                description="The direction used for table sorting.",
+                description=_("The direction used for table sorting."),
                 data_type=str,
                 default_value="asc",
             ),
@@ -390,17 +391,17 @@ class DataviewType(Enum):
 
     CARD = ViewTypeDefinition(
         key="card",
-        label="Card",
+        label=_("Card"),
         icon="fa fa-id-card",
-        description="Displays records in a card grid.",
+        description=_("Displays records in a card grid."),
         renderer_cls=CardDataviewRenderer,
         opts=[
             PreferenceOption(
                 key="page_size",
-                label="Page size",
+                label=_("Page size"),
                 field_cls=forms.TypedChoiceField,
                 field_attrs_func=_page_size_choices,
-                description="The number of cards shown on each page.",
+                description=_("The number of cards shown on each page."),
                 data_type=int,
                 default_value=PageSize.SIZE_25,
             ),
@@ -409,44 +410,44 @@ class DataviewType(Enum):
 
     CALENDAR = ViewTypeDefinition(
         key="calendar",
-        label="Calendar",
+        label=_("Calendar"),
         icon="fa fa-calendar",
-        description="Displays records on a day, week, month, year, or list calendar.",
+        description=_("Displays records on a day, week, month, year, or list calendar."),
         renderer_cls=CalendarDataviewRenderer,
         opts=[
             PreferenceOption(
                 key="start_field_id",
-                label="Date field",
+                label=_("Date field"),
                 field_cls=forms.TypedChoiceField,
                 field_attrs_func=_date_field_choices,
-                description="The date field used to place records on the calendar.",
+                description=_("The date field used to place records on the calendar."),
                 data_type=int | None,
                 default_value=None,
             ),
             PreferenceOption(
                 key="end_field_id",
-                label="End date field",
+                label=_("End date field"),
                 field_cls=forms.TypedChoiceField,
                 field_attrs_func=_date_field_choices,
-                description="Optional date field used as the end of an event range.",
+                description=_("Optional date field used as the end of an event range."),
                 data_type=int | None,
                 default_value=None,
             ),
             PreferenceOption(
                 key="view_mode",
-                label="View mode",
+                label=_("View mode"),
                 field_cls=forms.ChoiceField,
                 field_attrs_func=_view_mode_choices,
-                description="The calendar period to show.",
+                description=_("The calendar period to show."),
                 data_type=str,
                 default_value=CalendarViewMode.WEEK,
             ),
             PreferenceOption(
                 key="color_grouping_field_id",
-                label="Color grouping",
+                label=_("Color grouping"),
                 field_cls=forms.TypedChoiceField,
                 field_attrs_func=_calendar_color_field_choices,
-                description="Optional field used to color calendar items and build the legend.",
+                description=_("Optional field used to color calendar items and build the legend."),
                 data_type=int | None,
                 default_value=None,
             ),
@@ -455,55 +456,55 @@ class DataviewType(Enum):
 
     GANT = ViewTypeDefinition(
         key="gant",
-        label="Gantt",
+        label=_("Gantt"),
         icon="fa fa-chart-gantt",
-        description="Displays records as a timeline.",
+        description=_("Displays records as a timeline."),
         renderer_cls=GantDataviewRenderer,
         opts=[
             PreferenceOption(
                 key="start_field_id",
-                label="Start field",
+                label=_("Start field"),
                 field_cls=forms.TypedChoiceField,
                 field_attrs_func=_date_field_choices,
-                description="The date field used as the start of the timeline item.",
+                description=_("The date field used as the start of the timeline item."),
                 data_type=int | None,
                 default_value=None,
                 required=True,
             ),
             PreferenceOption(
                 key="end_field_id",
-                label="End field",
+                label=_("End field"),
                 field_cls=forms.TypedChoiceField,
                 field_attrs_func=_date_field_choices,
-                description="The date field used as the end of the timeline item.",
+                description=_("The date field used as the end of the timeline item."),
                 data_type=int | None,
                 default_value=None,
                 required=True,
             ),
             PreferenceOption(
                 key="dependency_from_field_id",
-                label="Dependency from",
+                label=_("Dependency from"),
                 field_cls=forms.TypedChoiceField,
                 field_attrs_func=_self_relation_field_choices,
-                description="Optional self-referencing field whose related record precedes this record.",
+                description=_("Optional self-referencing field whose related record precedes this record."),
                 data_type=int | None,
                 default_value=None,
             ),
             PreferenceOption(
                 key="dependency_for_field_id",
-                label="Dependency for",
+                label=_("Dependency for"),
                 field_cls=forms.TypedChoiceField,
                 field_attrs_func=_self_relation_field_choices,
-                description="Optional self-referencing field whose related record follows this record.",
+                description=_("Optional self-referencing field whose related record follows this record."),
                 data_type=int | None,
                 default_value=None,
             ),
             PreferenceOption(
                 key="page_size",
-                label="Rows per page",
+                label=_("Rows per page"),
                 field_cls=forms.TypedChoiceField,
                 field_attrs_func=_page_size_choices,
-                description="The number of timeline rows loaded at a time.",
+                description=_("The number of timeline rows loaded at a time."),
                 data_type=int,
                 default_value=PageSize.SIZE_25,
             ),
@@ -512,80 +513,80 @@ class DataviewType(Enum):
 
     PIVOT_TABLE = ViewTypeDefinition(
         key="pivot_table",
-        label="Pivot",
+        label=_("Pivot"),
         icon="fa fa-table-cells",
-        description="Summarizes records across selected row, column, and value fields.",
+        description=_("Summarizes records across selected row, column, and value fields."),
         renderer_cls=PivotTableDataviewRenderer,
         requires_display_fields=False,
         model=PivotTableDataviewOptions,
         opts=[
             PreferenceOption(
                 key="row_field_ids",
-                label="Rows",
+                label=_("Rows"),
                 field_cls=forms.MultipleChoiceField,
                 field_attrs_func=_application_field_multiple_choices,
-                description="Fields used to build the expandable row hierarchy.",
+                description=_("Fields used to build the expandable row hierarchy."),
                 data_type=list[int],
                 default_value=[],
             ),
             PreferenceOption(
                 key="column_field_ids",
-                label="Columns",
+                label=_("Columns"),
                 field_cls=forms.MultipleChoiceField,
                 field_attrs_func=_application_field_multiple_choices,
-                description="Fields used to build nested column headers.",
+                description=_("Fields used to build nested column headers."),
                 data_type=list[int],
                 default_value=[],
             ),
             PreferenceOption(
                 key="value_field_ids",
-                label="Values",
+                label=_("Values"),
                 field_cls=forms.MultipleChoiceField,
                 field_attrs_func=_application_field_multiple_choices,
-                description="Fields aggregated into the leaf columns of the pivot table.",
+                description=_("Fields aggregated into the leaf columns of the pivot table."),
                 data_type=list[int],
                 default_value=[],
             ),
             PreferenceOption(
                 key="aggregation",
-                label="Aggregation",
+                label=_("Aggregation"),
                 field_cls=forms.ChoiceField,
                 field_attrs_func=_pivot_aggregation_choices,
-                description="Numeric fields support all aggregations; booleans support sum and count; other fields use count.",
+                description=_("Numeric fields support all aggregations; booleans support sum and count; other fields use count."),
                 data_type=str,
                 default_value="count",
             ),
             PreferenceOption(
                 key="show_row_totals",
-                label="Show row totals",
+                label=_("Show row totals"),
                 field_cls=forms.BooleanField,
-                description="Add a total column for each row.",
+                description=_("Add a total column for each row."),
                 data_type=bool,
                 default_value=True,
             ),
             PreferenceOption(
                 key="show_column_totals",
-                label="Show column totals",
+                label=_("Show column totals"),
                 field_cls=forms.BooleanField,
-                description="Add a totals row beneath the pivot table.",
+                description=_("Add a totals row beneath the pivot table."),
                 data_type=bool,
                 default_value=True,
             ),
             PreferenceOption(
                 key="totals_scope",
-                label="Totals scope",
+                label=_("Totals scope"),
                 field_cls=forms.ChoiceField,
                 field_attrs_func=_pivot_totals_scope_choices,
-                description="Calculate the totals row from this page or the entire filtered dataset.",
+                description=_("Calculate the totals row from this page or the entire filtered dataset."),
                 data_type=str,
                 default_value="page",
             ),
             PreferenceOption(
                 key="page_size",
-                label="Rows per page",
+                label=_("Rows per page"),
                 field_cls=forms.TypedChoiceField,
                 field_attrs_func=_page_size_choices,
-                description="The number of top-level pivot rows shown per page.",
+                description=_("The number of top-level pivot rows shown per page."),
                 data_type=int,
                 default_value=PageSize.SIZE_25,
             ),
@@ -626,6 +627,8 @@ class UserListViewPreference(BaseViewPreference):
     }
     """
     class Meta:
+        verbose_name = _("User List View Preference")
+        verbose_name_plural = _("User List View Preferences")
         db_table = 'bloomerp_user_list_view_pref'
         constraints = [
             models.UniqueConstraint(
@@ -644,13 +647,14 @@ class UserListViewPreference(BaseViewPreference):
         max_length=50,
         choices=DataviewType.choices(),
         default=DataviewType.TABLE.value.key,
+        verbose_name=_("View Type"),
     )
-    split_view_enabled = models.BooleanField(default=False)
+    split_view_enabled = models.BooleanField(default=False, verbose_name=_("Split View Enabled"))
     
     # Visible field IDs per view type (list of ApplicationField IDs in order)
-    display_fields = models.JSONField(default=get_default_display_fields)
-    options : dict = models.JSONField(default=dict)
-    default_filters : dict = models.JSONField(default=dict)
+    display_fields = models.JSONField(default=get_default_display_fields, verbose_name=_("Display Fields"))
+    options : dict = models.JSONField(default=dict, verbose_name=_("Options"))
+    default_filters : dict = models.JSONField(default=dict, verbose_name=_("Default Filters"))
     
     @classmethod
     def create_default_for_user(cls, user, **scope) -> "UserListViewPreference":

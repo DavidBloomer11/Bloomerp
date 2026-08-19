@@ -4,17 +4,17 @@ from bloomerp.models.definition import BloomerpModelConfig
 from bloomerp.models.mixins.timestamp_model_mixin import TimestampModelMixin
 
 class WorkflowRunStepStatus(models.TextChoices):
-    PAUSED = "PAUSED", "Paused"
-    COMPLETED = "COMPLETED", "Completed"
-    FAILED = "FAILED", "Failed"
-    CANCELLED = "CANCELLED", "Cancelled"
+    PAUSED = "PAUSED", _("Paused")
+    COMPLETED = "COMPLETED", _("Completed")
+    FAILED = "FAILED", _("Failed")
+    CANCELLED = "CANCELLED", _("Cancelled")
 
 
 class WorkflowRunStep(TimestampModelMixin, models.Model):
     class Meta:
         db_table = "bloomerp_workflow_run_step"
-        verbose_name = "Workflow Run Step"
-        verbose_name_plural = "Workflow Run Steps"
+        verbose_name = _("Workflow Run Step")
+        verbose_name_plural = _("Workflow Run Steps")
     
     bloomerp_config = BloomerpModelConfig(
         module="automation",

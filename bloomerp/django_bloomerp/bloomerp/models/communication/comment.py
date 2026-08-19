@@ -12,6 +12,8 @@ class Comment(
     models.Model,
 ):
     class Meta(BloomerpModel.Meta):
+        verbose_name = _("Comment")
+        verbose_name_plural = _("Comments")
         managed = True
         db_table = 'bloomerp_comment'
     

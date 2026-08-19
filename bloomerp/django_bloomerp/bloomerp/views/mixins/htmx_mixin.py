@@ -107,7 +107,7 @@ class HtmxMixin(GetPreferenceMixin):
                 is_active = bool(route.path and route.path == lineage_url and index == len(module_lineage) - 1)
                 items.append(
                     {
-                        "text": lineage_module.name,
+                        "text": lineage_module.localized_name,
                         "url": lineage_url,
                         "active": is_active,
                     }

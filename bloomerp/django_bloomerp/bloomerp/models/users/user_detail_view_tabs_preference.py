@@ -1,4 +1,5 @@
 from __future__ import annotations
+from django.utils.translation import gettext_lazy as _
 
 import re
 import uuid
@@ -52,9 +53,12 @@ class UserDetailViewTabsPreference(BasePreference):
         ContentType,
         on_delete=models.CASCADE,
         related_name="+",
+        verbose_name=_("Content Type"),
     )
 
     class Meta:
+        verbose_name = _("User Detail View Tabs Preference")
+        verbose_name_plural = _("User Detail View Tabs Preferences")
         db_table = "bloomerp_user_detail_view_tabs_preference"
         constraints = [
             models.UniqueConstraint(
@@ -392,6 +396,8 @@ class UserDetailViewTabsPreference(BasePreference):
 class UserDetailViewTabItem(models.Model):
     """A top-level folder when ``url`` is null, otherwise a navigable tab."""
     class Meta:
+        verbose_name = _("User Detail View Tab Item")
+        verbose_name_plural = _("User Detail View Tab Items")
         db_table = "bloomerp_user_detail_view_tab_item"
         ordering = ["position", "id"]
         indexes = [
@@ -412,11 +418,12 @@ class UserDetailViewTabItem(models.Model):
         api_settings=ApiSettings(enable_auto_generation=False),
     )
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, verbose_name=_("ID"))
     preference = models.ForeignKey(
         UserDetailViewTabsPreference,
         on_delete=models.CASCADE,
         related_name="items",
+        verbose_name=_("Preference"),
     )
     parent = models.ForeignKey(
         "self",
@@ -424,10 +431,11 @@ class UserDetailViewTabItem(models.Model):
         related_name="children",
         null=True,
         blank=True,
+        verbose_name=_("Parent"),
     )
-    name = models.CharField(max_length=255)
-    url = models.CharField(max_length=2048, null=True, blank=True)
-    position = models.PositiveIntegerField(default=0)
+    name = models.CharField(max_length=255, verbose_name=_("Name"))
+    url = models.CharField(max_length=2048, null=True, blank=True, verbose_name=_("URL"))
+    position = models.PositiveIntegerField(default=0, verbose_name=_("Position"))
 
     def __str__(self) -> str:
         return self.name

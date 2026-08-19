@@ -43,6 +43,7 @@ def merge_messages(
     messages: Iterable[dict],
     *,
     prune: bool = False,
+    prune_contexts: set[str] | None = None,
 ) -> int:
     catalog = read_catalog(path, language, domain)
     messages = list(messages)
@@ -65,11 +66,43 @@ def merge_messages(
         return added
 
     added = 0
+    if prune_contexts:
+        desired = {
+            (item["message"], item.get("context"))
+            for item in messages
+        }
+        for message in list(catalog):
+            if (
+                message.id
+                and message.context in prune_contexts
+                and (message.id, message.context) not in desired
+            ):
+                catalog.delete(message.id, context=message.context)
+        for key, message in list(catalog.obsolete.items()):
+            if (
+                message.context in prune_contexts
+                and (message.id, message.context) not in desired
+            ):
+                del catalog.obsolete[key]
+
     for item in messages:
         message_id = item["message"]
         context = item.get("context")
         existing = catalog.get(message_id, context=context)
-        obsolete = catalog.obsolete.pop(catalog._key_for(message_id, context), None)
+        obsolete_key = next(
+            (
+                key
+                for key, obsolete_message in catalog.obsolete.items()
+                if obsolete_message.id == message_id
+                and obsolete_message.context == context
+            ),
+            None,
+        )
+        obsolete = (
+            catalog.obsolete.pop(obsolete_key)
+            if obsolete_key is not None
+            else None
+        )
         locations = [tuple(location) for location in item.get("locations", [])]
         if existing:
             if obsolete and not all(translated_values(existing)) and all(

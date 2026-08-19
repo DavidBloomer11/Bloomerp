@@ -1,4 +1,5 @@
 from __future__ import annotations
+from django.utils.translation import gettext_lazy as _, gettext_noop
 
 import secrets
 
@@ -23,8 +24,8 @@ def revoke_api_key_action(request, api_key) -> HttpResponse:
 class ApiKey(BloomerpModel):
     class Meta(BloomerpModel.Meta):
         db_table = "bloomerp_api_key"
-        verbose_name = "API Key"
-        verbose_name_plural = "API Keys"
+        verbose_name = _("API Key")
+        verbose_name_plural = _("API Keys")
         indexes = [
             models.Index(fields=["key_prefix"], name="api_key_prefix_idx"),
             models.Index(fields=["account", "revoked_at"], name="api_key_account_active_idx"),
@@ -40,7 +41,7 @@ class ApiKey(BloomerpModel):
         object_actions=[
             ObjectAction(
                 id="revoke_api_key",
-                label="Revoke API Key",
+                label=gettext_noop("Revoke API Key"),
                 icon="fa fa-solid fa-xmark",
                 execution_func=revoke_api_key_action,
                 should_render_func=lambda request, obj: obj.is_usable
@@ -50,7 +51,7 @@ class ApiKey(BloomerpModel):
             rows=[
                 LayoutRow(
                     columns=2,
-                    title="API Key Details",
+                    title=gettext_noop("API Key Details"),
                     items=[
                         LayoutItem(id="account"),
                         LayoutItem(id="name"),
@@ -82,34 +83,41 @@ class ApiKey(BloomerpModel):
         on_delete=models.CASCADE,
         related_name="api_keys",
         help_text="The account whose permissions this API key uses.",
+        verbose_name=_("Account"),
     )
     name = models.CharField(
         max_length=150,
         help_text="A human-readable label for this API key.",
+        verbose_name=_("Name"),
     )
     key_prefix = models.CharField(
         max_length=32,
         editable=False,
         help_text="Visible token prefix used to identify the API key without storing the raw token.",
+        verbose_name=_("Key Prefix"),
     )
     key_hash = models.CharField(
         max_length=255,
         editable=False,
         help_text="Hashed API key secret. The raw token is only shown when it is created.",
+        verbose_name=_("Key Hash"),
     )
     last_used_at = models.DateTimeField(
         null=True, 
         blank=True, 
-        editable=False
+        editable=False,
+        verbose_name=_("Last Used At"),
     )
     expires_at = models.DateTimeField(
         null=True, 
-        blank=True
+        blank=True,
+        verbose_name=_("Expires At"),
     )
     revoked_at = models.DateTimeField(
         null=True, 
         blank=True, 
-        editable=False
+        editable=False,
+        verbose_name=_("Revoked At"),
     )
 
 

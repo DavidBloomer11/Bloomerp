@@ -16,6 +16,7 @@ from bloomerp.i18n.catalogs import (
 from bloomerp.i18n.extraction import (
     extract_django_messages,
     extract_model_messages,
+    extract_module_messages,
     extract_route_messages,
     extract_typescript_messages,
     working_directory,
@@ -98,6 +99,7 @@ class Command(BaseCommand):
                 extract_django_messages(app, languages, verbosity=max(self.verbosity - 1, 0))
                 if not options["skip_models"]:
                     extract_model_messages(app, languages, source_language)
+                extract_module_messages(app, languages)
                 extract_route_messages(app, languages)
                 if not options["skip_frontend"]:
                     extract_typescript_messages(app, languages, config)

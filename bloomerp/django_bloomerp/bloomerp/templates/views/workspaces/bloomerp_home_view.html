@@ -15,8 +15,8 @@
                             <div class="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br bg-primary-50 text-primary-700 shadow">
                                 <i class="fas {{ module.icon }} fa-lg"></i>
                             </div>
-                            <span class="text-sm font-semibold tracking-wide">{{ module.name }}</span>
-                            <c-ui.text.muted class="mt-2 text-xs text-center">{{ module.description }}</c-ui.text.muted>
+                            <span class="text-sm font-semibold tracking-wide">{{ module.localized_name|default:module.name }}</span>
+                            <c-ui.text.muted class="mt-2 text-xs text-center">{{ module.localized_description|default:module.description }}</c-ui.text.muted>
                     </div>
                 </a>
             {% endfor %}

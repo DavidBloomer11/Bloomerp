@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
@@ -11,6 +12,8 @@ class BaseViewPreference(BasePreference):
     preference_scope_fields = ("content_type",)
 
     class Meta:
+        verbose_name = _("Base View Preference")
+        verbose_name_plural = _("Base View Preferences")
         abstract = True
 
     bloomerp_config = BloomerpModelConfig(
@@ -19,6 +22,7 @@ class BaseViewPreference(BasePreference):
     content_type = models.ForeignKey(
         ContentType,
         on_delete=models.CASCADE,
+        verbose_name=_("Content Type"),
     )
 
     @classmethod

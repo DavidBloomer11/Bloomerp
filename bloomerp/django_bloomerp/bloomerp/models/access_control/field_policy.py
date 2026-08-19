@@ -26,15 +26,18 @@ class FieldPolicy(models.Model):
     content_type = models.ForeignKey(
         to=ContentType,
         on_delete=models.CASCADE,
+        verbose_name=_("Content Type"),
     )
     
     name = models.CharField(
             max_length=255,
-            help_text=_("The name of the field-level access control policy.")
+            help_text=_("The name of the field-level access control policy."),
+        verbose_name=_("Name"),
         )
     
     rule = models.JSONField(
-        help_text=_("A JSON representation of the field-level access control rules.")
+        help_text=_("A JSON representation of the field-level access control rules."),
+        verbose_name=_("Rule"),
     )
     
     def __str__(self):

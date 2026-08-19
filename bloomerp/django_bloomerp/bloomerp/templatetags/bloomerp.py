@@ -14,6 +14,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.utils.safestring import mark_safe
 from django.utils.html import escape, format_html
 from django.utils.text import Truncator
+from django.utils.translation import gettext
 from django.middleware.csrf import get_token
 import re
 import uuid
@@ -538,8 +539,8 @@ def render_object_action(
             ),
             style=action.style,
             url=action.endpoint(object),
-            label=action.label,
-            title=action.modal_title,
+            label=gettext(action.label),
+            title=gettext(action.modal_title) if action.modal_title else "",
             size=action.modal_size,
         )
 
@@ -563,7 +564,7 @@ def render_object_action(
             },
         ),
         get_token(request),
-        action.label,
+        gettext(action.label),
     )
     
 @register.simple_tag

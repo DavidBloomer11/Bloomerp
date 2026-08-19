@@ -9,6 +9,7 @@ from django.conf import settings
 from django.template import Context, Template
 from django.test import SimpleTestCase
 from django.urls import reverse
+from django.utils.functional import Promise
 from django.utils.translation import override
 
 from bloomerp.config.definition import (
@@ -26,12 +27,25 @@ from bloomerp.i18n.catalogs import (
     validate_message,
 )
 from bloomerp.i18n.models import model_messages
+from bloomerp.i18n.modules import module_messages
 from bloomerp.i18n.languages import catalog_locale, normalize_language_code
 from bloomerp.i18n.routes import route_messages
 from bloomerp.i18n.translator import TranslationBatch, TranslationResult, translate_catalog
 from bloomerp.management.commands.bloomerp_i18n import Command as I18nCommand
+from bloomerp.models.activity_log import ActivityLog, ActivityLogAction, ActivityLogSource
 from bloomerp.models.application_field import ApplicationField
-from bloomerp.router import BloomerpRoute, BloomerpRouteRegistry, RouteType, ViewType
+from bloomerp.models.project_management.todo import Todo, TodoStatus
+from bloomerp.models.workspaces.workspace import Workspace
+from bloomerp.modules.definition import ModuleConfig
+from bloomerp.router import (
+    BloomerpRoute,
+    BloomerpRouteRegistry,
+    RouteType,
+    ViewType,
+    _auto_generate_url_name,
+)
+from bloomerp.services.sectioned_layout_services import resolve_detail_layout_rows
+from bloomerp.utils.models import get_create_view_url, model_name_plural_slug
 
 
 class TestI18nConfiguration(SimpleTestCase):
@@ -82,6 +96,20 @@ class TestI18nConfiguration(SimpleTestCase):
             "pt-pt",
         )
 
+    def test_model_route_identity_uses_app_source_language(self):
+        with override("nl"):
+            self.assertEqual(str(Workspace._meta.verbose_name_plural), "Werkruimten")
+            self.assertEqual(model_name_plural_slug(Workspace), "workspaces")
+            self.assertEqual(get_create_view_url(Workspace), "workspaces_add")
+            self.assertEqual(
+                _auto_generate_url_name("add", RouteType.MODEL, Workspace),
+                "workspaces_add",
+            )
+            self.assertEqual(
+                reverse(get_create_view_url(Workspace)),
+                "/misc/workspaces/create/",
+            )
+
     def test_command_calculates_translation_targets_per_app(self):
         english_app = SimpleNamespace(
             label="bloomerp",
@@ -131,6 +159,37 @@ class TestI18nConfiguration(SimpleTestCase):
         ):
             self.assertEqual(route.localized_name, "Lista de Cliente")
 
+    def test_route_localization_formats_related_model_metadata_at_runtime(self):
+        model = SimpleNamespace(_meta=SimpleNamespace(verbose_name="Account"))
+        route = BloomerpRoute(
+            path="accounts/<int:pk>/contacts/",
+            route_type=RouteType.DETAIL,
+            name="Contacts",
+            url_name="accounts_contacts_relationship",
+            view_type=ViewType.FUNCTION,
+            view=lambda request: None,
+            model=model,
+            name_message="{related_model_plural}",
+            description_message="{related_model_plural} relationship for {model}",
+            message_format_values={"related_model_plural": "Contacts"},
+            owner_app_label="bloomerp",
+        )
+
+        with patch(
+            "bloomerp.router.pgettext",
+            side_effect=lambda _context, message: {
+                "{related_model_plural}": "{related_model_plural}",
+                "{related_model_plural} relationship for {model}": (
+                    "{related_model_plural} relacionados con {model}"
+                ),
+            }.get(message, message),
+        ):
+            self.assertEqual(route.localized_name, "Contacts")
+            self.assertEqual(
+                route.localized_description,
+                "Contacts relacionados con Account",
+            )
+
     def test_route_extraction_uses_owner_and_context_without_decorator_gettext(self):
         route = BloomerpRoute(
             path="/clientes/",
@@ -179,6 +238,52 @@ class TestI18nConfiguration(SimpleTestCase):
 
         self.assertEqual(route.url_name, "clientes")
 
+    def test_module_localization_keeps_stable_identity(self):
+        module = ModuleConfig(
+            id="users",
+            code="users",
+            name="Utilizadores",
+            description="Gerir utilizadores.",
+            owner_app_label="vendas",
+        )
+
+        with patch(
+            "bloomerp.modules.definition.pgettext",
+            side_effect=lambda _context, message: {
+                "Utilizadores": "Users",
+                "Gerir utilizadores.": "Manage users.",
+            }.get(message, message),
+        ):
+            self.assertEqual(module.localized_name, "Users")
+            self.assertEqual(module.localized_description, "Manage users.")
+
+        self.assertEqual(module.id, "users")
+        self.assertEqual(module.name, "Utilizadores")
+
+    def test_module_extraction_uses_owner_and_context(self):
+        module = ModuleConfig(
+            id="users",
+            code="users",
+            name="Utilizadores",
+            description="Gerir utilizadores.",
+            owner_app_label="vendas",
+        )
+        app = SimpleNamespace(label="vendas")
+
+        with patch(
+            "bloomerp.i18n.modules.module_registry.get_all",
+            return_value={"users": module},
+        ):
+            messages = module_messages(app)
+
+        self.assertEqual(
+            {(item["context"], item["message"]) for item in messages},
+            {
+                ("vendas:module:name", "Utilizadores"),
+                ("vendas:module:description", "Gerir utilizadores."),
+            },
+        )
+
     def test_component_routes_default_to_non_translatable_and_non_searchable(self):
         registry = BloomerpRouteRegistry()
 
@@ -193,6 +298,34 @@ class TestI18nConfiguration(SimpleTestCase):
         route = registry.routes[0]
         self.assertFalse(route.translatable)
         self.assertFalse(route.searchable)
+
+    def test_text_choice_labels_are_lazy_translations(self):
+        self.assertIsInstance(ActivityLogAction.CHANGE.label, Promise)
+        self.assertIsInstance(ActivityLogSource.DETAIL.label, Promise)
+        self.assertIsInstance(TodoStatus.IN_PROGRESS.label, Promise)
+        self.assertEqual(ActivityLog._meta.get_field("source").choices, ActivityLogSource.choices)
+
+    def test_static_layout_titles_remain_pydantic_safe_and_translate_when_resolved(self):
+        layout = Todo.bloomerp_config.layout
+
+        self.assertIsInstance(layout.rows[0].title, str)
+        self.assertEqual(layout.rows[0].title, "Details")
+
+        content_type = SimpleNamespace(model_class=lambda: Todo)
+        with (
+            patch("bloomerp.services.sectioned_layout_services.UserPermissionManager"),
+            patch(
+                "bloomerp.services.sectioned_layout_services.gettext",
+                side_effect=lambda message: {"Details": "Detalhes"}.get(message, message),
+            ),
+        ):
+            rows = resolve_detail_layout_rows(
+                layout={"rows": [{"columns": 1, "title": "Details", "items": []}]},
+                content_type=content_type,
+                user=SimpleNamespace(),
+            )
+
+        self.assertEqual(rows[0]["title"], "Detalhes")
 
     def test_catalog_merge_handles_references_without_line_numbers(self):
         with TemporaryDirectory() as directory:
@@ -233,6 +366,72 @@ class TestI18nConfiguration(SimpleTestCase):
             merged = read_catalog(path, "nl", "django")
             self.assertEqual(merged["Invoice"].string, "Factuur")
             self.assertNotIn("Invoice", merged.obsolete)
+
+    def test_catalog_merge_removes_contextual_obsolete_duplicate(self):
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "nl" / "LC_MESSAGES" / "django.po"
+            context = "billing:route:name"
+            catalog = Catalog(locale="nl", domain="django")
+            catalog.add("Invoices", context=context)
+            catalog.obsolete["Invoices"] = Message(
+                "Invoices",
+                "Facturen",
+                context=context,
+            )
+            save_catalog(catalog, path)
+
+            merge_messages(
+                path,
+                "nl",
+                "django",
+                [{"message": "Invoices", "context": context}],
+            )
+
+            merged = read_catalog(path, "nl", "django")
+            self.assertEqual(merged.get("Invoices", context=context).string, "Facturen")
+            self.assertFalse(
+                any(
+                    message.id == "Invoices" and message.context == context
+                    for message in merged.obsolete.values()
+                )
+            )
+
+    def test_catalog_merge_prunes_only_the_generated_contexts(self):
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "nl" / "LC_MESSAGES" / "django.po"
+            catalog = Catalog(locale="nl", domain="django")
+            catalog.add(
+                "Contacts",
+                "Contacten",
+                context="bloomerp:route:name",
+            )
+            catalog.add("Save", "Opslaan")
+            save_catalog(catalog, path)
+
+            merge_messages(
+                path,
+                "nl",
+                "django",
+                [
+                    {
+                        "message": "{related_model_plural}",
+                        "context": "bloomerp:route:name",
+                    }
+                ],
+                prune_contexts={"bloomerp:route:name"},
+            )
+
+            merged = read_catalog(path, "nl", "django")
+            self.assertIsNone(
+                merged.get("Contacts", context="bloomerp:route:name")
+            )
+            self.assertIsNotNone(
+                merged.get(
+                    "{related_model_plural}",
+                    context="bloomerp:route:name",
+                )
+            )
+            self.assertEqual(merged["Save"].string, "Opslaan")
 
     def test_reconcile_repairs_existing_active_and_obsolete_duplicate(self):
         catalog = Catalog(locale="nl", domain="django")

@@ -8,6 +8,7 @@ from typing import Any
 
 from django import apps
 from django.db.models import Model
+from django.utils.translation import gettext, pgettext
 from pydantic import BaseModel, Field
 
 from bloomerp.models.base_bloomerp_model import FieldLayout
@@ -51,6 +52,29 @@ class ModuleConfig(BaseConfig):
     route_path: str | None = None
     root_module_id: str | None = None
     depth: int = 0
+    owner_app_label: str | None = None
+
+    def _translation_context(self, field: str) -> str:
+        owner = self.owner_app_label or "bloomerp"
+        return f"{owner}:module:{field}"
+
+    def _localized_message(self, message: str | None, field: str) -> str:
+        if not message:
+            return ""
+        translated = pgettext(self._translation_context(field), message)
+        if translated == message:
+            # Reuse context-free catalogs while module-specific entries are
+            # introduced and translated.
+            translated = gettext(message)
+        return translated
+
+    @property
+    def localized_name(self) -> str:
+        return self._localized_message(self.name, "name")
+
+    @property
+    def localized_description(self) -> str:
+        return self._localized_message(self.description, "description")
 
 
 class BloomerpModule:
@@ -68,7 +92,7 @@ class BloomerpModule:
     route_path: str | None = None
 
     @classmethod
-    def to_config(cls) -> ModuleConfig:
+    def to_config(cls, *, owner_app_label: str | None = None) -> ModuleConfig:
         data = {
             "id": cls.id,
             "name": cls.name,
@@ -77,6 +101,7 @@ class BloomerpModule:
             "icon": cls.icon,
             "visible": cls.visible,
             "route_path": cls.route_path,
+            "owner_app_label": owner_app_label,
         }
 
         parent_module_id = cls.parent_module_id or cls.parent
@@ -190,7 +215,11 @@ class ModuleRegistry:
                 continue
 
             for _, attribute in inspect.getmembers(module_package, inspect.isclass):
-                self._register_module_class(attribute, source=app_config.name)
+                self._register_module_class(
+                    attribute,
+                    source=app_config.name,
+                    owner_app_label=app_config.label,
+                )
 
             if not hasattr(module_package, "__path__"):
                 continue
@@ -205,7 +234,11 @@ class ModuleRegistry:
                     continue
 
                 for _, attribute in inspect.getmembers(imported_module, inspect.isclass):
-                    self._register_module_class(attribute, source=module_name)
+                    self._register_module_class(
+                        attribute,
+                        source=module_name,
+                        owner_app_label=app_config.label,
+                    )
 
         try:
             from bloomerp_modules.utils.reader import scan_modules_directory
@@ -215,6 +248,7 @@ class ModuleRegistry:
         if scan_modules_directory is not None:
             try:
                 for module in scan_modules_directory():
+                    module.owner_app_label = module.owner_app_label or "bloomerp_modules"
                     self.register(module)
             except Exception as exc:
                 logger.error("Error loading YAML module definitions: %s", exc)
@@ -249,6 +283,7 @@ class ModuleRegistry:
                     name=module_id.split(".")[-1].replace("_", " ").replace("-", " ").title(),
                     code=module_id.split(".")[-1],
                     full_id=module_id,
+                    owner_app_label=model._meta.app_label,
                 )
                 self.register(module)
                 self._rebuild_hierarchy_metadata()
@@ -261,17 +296,24 @@ class ModuleRegistry:
             return config
         return None
 
-    def _register_module_class(self, attribute: type, source: str) -> None:
+    def _register_module_class(
+        self,
+        attribute: type,
+        source: str,
+        owner_app_label: str,
+    ) -> None:
         if attribute in {ModuleConfig, BloomerpModule}:
             return
 
         try:
             if issubclass(attribute, ModuleConfig):
-                self.register(attribute())
+                module = attribute()
+                module.owner_app_label = module.owner_app_label or owner_app_label
+                self.register(module)
                 return
 
             if issubclass(attribute, BloomerpModule):
-                self.register(attribute.to_config())
+                self.register(attribute.to_config(owner_app_label=owner_app_label))
                 return
         except TypeError:
             return

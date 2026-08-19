@@ -47,10 +47,9 @@ def ensure_folder_hierarchy_for_object(
     }
 
     model_folder = FileFolder.objects.filter(
-        name=model_name,
         content_type=content_type,
         object_id__isnull=True,
-    ).first()
+    ).order_by("id").first()
     if model_folder is None:
         model_folder = FileFolder.objects.create(
             name=model_name,

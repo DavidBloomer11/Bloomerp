@@ -90,9 +90,14 @@ def _resolve_module(module_key: str):
     for item in module_registry.get_all().values():
         code = _normalize_key(item.code)
         name = _normalize_key(item.name)
-        if code == normalized or name == normalized:
+        localized_name = _normalize_key(item.localized_name)
+        module_id = _normalize_key(item.full_id or item.id)
+        if normalized in {code, name, localized_name, module_id}:
             exact_matches.append(item)
-        elif code.startswith(normalized) or name.startswith(normalized):
+        elif any(
+            value.startswith(normalized)
+            for value in (code, name, localized_name, module_id)
+        ):
             partial_matches.append(item)
     if exact_matches:
         return exact_matches[0]
@@ -200,7 +205,7 @@ def _collect_object_results(
         results.append(
             {
                 "model_label": model._meta.verbose_name_plural.title(),
-                "module_labels": [item.name for item in module_registry.get_lineage(module.full_id or module.id)] if module else [],
+                "module_labels": [item.localized_name for item in module_registry.get_lineage(module.full_id or module.id)] if module else [],
                 "objects": matching_objects, 
                 "detail_routes" : router.filter(
                     route_type="detail",
@@ -329,7 +334,7 @@ def global_search(request: HttpRequest) -> HttpResponse:
                             "path": route_path,
                             "description": route_desc,
                             "url": route_url,
-                            "module": route.module.name if route.module else None,
+                            "module": route.module.localized_name if route.module else None,
                         }
                     )
 
@@ -430,7 +435,7 @@ def global_search(request: HttpRequest) -> HttpResponse:
                     if not module:
                         context["slash_error"] = "Module not found."
                     else:
-                        context["search_scope"] = {"module": module.name}
+                        context["search_scope"] = {"module": module.localized_name}
                         models = module_registry.get_models_for_module(module.id, include_descendants=True)
                         context["object_results"], truncated = _collect_object_results(
                             request,
@@ -462,7 +467,7 @@ def global_search(request: HttpRequest) -> HttpResponse:
                                 if model in module_registry.get_models_for_module(module.id, include_descendants=True)
                             ]
                             context["search_scope"] = {
-                                "module": module.name,
+                                "module": module.localized_name,
                                 "model": model_key,
                             }
                             if not models:

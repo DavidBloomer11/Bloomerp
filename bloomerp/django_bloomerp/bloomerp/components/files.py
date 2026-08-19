@@ -292,6 +292,24 @@ def _get_folder_display_name(folder: FileFolder) -> str:
         if model is not None:
             return str(model._meta.verbose_name_plural)
 
+    if (
+        folder.parent_id is None
+        and folder.content_type_id is None
+        and not folder.object_id
+    ):
+        from bloomerp.modules.definition import module_registry
+
+        module = next(
+            (
+                item
+                for item in module_registry.get_root_modules()
+                if item.name == folder.name
+            ),
+            None,
+        )
+        if module is not None:
+            return module.localized_name
+
     return folder.name
 
 
@@ -527,7 +545,11 @@ def _build_visible_files_queryset(
 
 
 def _serialize_file_row(request: HttpRequest, file: File, current_folder: FileFolder | None) -> dict:
-    folder_label = current_folder.name if current_folder else (file.folder.name if file.folder_id else "Root")
+    folder_label = (
+        _get_folder_display_name(current_folder)
+        if current_folder
+        else (_get_folder_display_name(file.folder) if file.folder_id else "Root")
+    )
     linked_object = _get_file_linked_object(file)
 
     return {
@@ -574,9 +596,9 @@ def _prepare_file_cards(
                 "object_label": str(linked_object) if linked_object else "Unlinked",
                 "object_url": getattr(linked_object, "get_absolute_url", None) if linked_object else None,
                 "folder_label": (
-                    current_folder.name
+                    _get_folder_display_name(current_folder)
                     if current_folder
-                    else (file.folder.name if file.folder_id else "Root")
+                    else (_get_folder_display_name(file.folder) if file.folder_id else "Root")
                 ),
                 "view_url": file.url if file.file else None,
                 "download_url": file.url if file.file else None,

@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 import json
 from enum import Enum
 
@@ -57,6 +58,8 @@ class BloomerpModel(
     models.Model,
 ):
     class Meta:
+        verbose_name = _("Bloomerp Model")
+        verbose_name_plural = _("Bloomerp Models")
         abstract = True
         default_permissions = BloomerpPermission.to_tuple()
     

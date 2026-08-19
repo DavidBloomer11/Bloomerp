@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from django.db import models
 
 from bloomerp.models.base_bloomerp_model import FieldLayout
@@ -8,9 +9,11 @@ class ContentLayoutModelMixin(models.Model):
     Shared behavior for models that store a sectioned content layout.
     """
     class Meta:
+        verbose_name = _("Content Layout Model Mixin")
+        verbose_name_plural = _("Content Layout Model Mixins")
         abstract = True
 
-    layout = models.JSONField(default=dict, blank=True)
+    layout = models.JSONField(default=dict, blank=True, verbose_name=_("Layout"))
 
     @property
     def layout_obj(self) -> FieldLayout:

@@ -1,7 +1,7 @@
 from django.db import models
 from bloomerp.models.base_bloomerp_model import BloomerpModel, FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.definition import BloomerpModelConfig
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _, gettext_noop
 
 class TodoLabel(BloomerpModel):
     """
@@ -12,7 +12,7 @@ class TodoLabel(BloomerpModel):
         layout=FieldLayout(
             rows=[
                 LayoutRow(
-                    title="Label Details",
+                    title=gettext_noop("Label Details"),
                     columns=2,
                     items=[
                         LayoutItem(id="name", colspan=1),
@@ -24,6 +24,8 @@ class TodoLabel(BloomerpModel):
     )
 
     class Meta:
+        verbose_name = _("Todo Label")
+        verbose_name_plural = _("Todo Labels")
         managed = True
         db_table = 'bloomerp_todo_label'
 

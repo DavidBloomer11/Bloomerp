@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from abc import ABCMeta, abstractmethod
 from copy import deepcopy
 from typing import Any
@@ -39,6 +40,8 @@ class BasePreference(
     This model is intended to be inherited by other models that represent specific user preferences.
     """
     class Meta:
+        verbose_name = _("Base Preference")
+        verbose_name_plural = _("Base Preferences")
         abstract = True
 
     # Subclasses declare the fields that partition a user's selections, for
@@ -72,11 +75,13 @@ class BasePreference(
         max_length=255,
         help_text="Optional name for this preference, for user reference",
         default="Default",
+        verbose_name=_("Name"),
     )
     user = models.ForeignKey(
         to=settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="%(class)s_preferences",
+        verbose_name=_("User"),
     )
     selected = models.BooleanField(
         default=False,
@@ -84,6 +89,7 @@ class BasePreference(
             "Indicates if this preference is currently selected for the user. "
             "Only one preference per user can be selected at a time."
         ),
+        verbose_name=_("Selected"),
     )
     source_object = models.ForeignKey(
         to="self",
@@ -95,6 +101,7 @@ class BasePreference(
             "Reference to the original preference from which this preference was derived. "
             "This is used to track the origin of derived preferences."
         ),
+        verbose_name=_("Source Object"),
     )
 
     # Fields for sharing preferences with other users
@@ -103,12 +110,14 @@ class BasePreference(
         related_name="shared_%(class)s_preferences",
         blank=True,
         help_text="Users with whom this preference is shared.",
+        verbose_name=_("Shared With Users"),
     )
     shared_with_groups = models.ManyToManyField(
         to="auth.Group",
         related_name="shared_%(class)s_preferences",
         blank=True,
         help_text="Groups with whom this preference is shared.",
+        verbose_name=_("Shared With Groups"),
     )
     initial_default = models.BooleanField(
         default=False,
@@ -116,6 +125,7 @@ class BasePreference(
             "Indicates if this preference is the initial default for the user. "
             "This is used to determine the user's default preference when they first create an account."
         ),
+        verbose_name=_("Initial Default"),
     )
 
     @classmethod

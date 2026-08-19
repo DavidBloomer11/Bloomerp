@@ -20,6 +20,8 @@ class ApplicationField(models.Model):
     and other useful information.
     """
     class Meta:
+        verbose_name = _("Application Field")
+        verbose_name_plural = _("Application Fields")
         managed = True
         db_table = "bloomerp_application_field"
     
@@ -27,17 +29,20 @@ class ApplicationField(models.Model):
 
     field = models.CharField(
         max_length=100,
-        help_text=_("The name of the field.")
+        help_text=_("The name of the field."),
+        verbose_name=_("Field"),
         )
     content_type = models.ForeignKey(
         ContentType, 
         on_delete=models.CASCADE,
-        help_text=_("The content type (model) this field belongs to.")
-        )
+        help_text=_("The content type (model) this field belongs to."),
+        verbose_name=_("Content Type"),
+    )
     field_type = models.CharField(
         max_length=100, 
         choices=FieldType.choices(),
-        help_text=_("The type of the field.")
+        help_text=_("The type of the field."),
+        verbose_name=_("Field Type"),
         )
     related_model = models.ForeignKey(
         ContentType, 
@@ -45,12 +50,14 @@ class ApplicationField(models.Model):
         null=True, 
         blank=True,
         related_name='related_models', 
-        help_text=_("Related model for ForeignKey, OneToOneField, ManyToManyField")
-        )
+        help_text=_("Related model for ForeignKey, OneToOneField, ManyToManyField"),
+        verbose_name=_("Related Model"),
+    )
     meta = models.JSONField(
         null=True, 
         blank=True,
-        help_text=_("Additional metadata about the field.")
+        help_text=_("Additional metadata about the field."),
+        verbose_name=_("Meta"),
         )
 
     # Database related fields
@@ -58,16 +65,20 @@ class ApplicationField(models.Model):
         max_length=100, 
         null=True, 
         blank=True,
-        help_text=_("The database table this field belongs to.")
+        help_text=_("The database table this field belongs to."),
+        verbose_name=_("DB Table"),
     )
     db_field_type = models.CharField(
         max_length=100, 
         null=True, 
-        blank=True)
+        blank=True,
+        verbose_name=_("DB Field Type"),
+        )
     db_column = models.CharField(
         max_length=100, 
         null=True, 
-        blank=True
+        blank=True,
+        verbose_name=_("DB Column"),
         )
 
     def __str__(self):

@@ -13,8 +13,8 @@ class SqlQuery(BloomerpModel):
     class Meta(BloomerpModel.Meta):
         managed = True
         db_table = 'sql_query'
-        verbose_name = 'SQL Query'
-        verbose_name_plural = 'SQL Queries'
+        verbose_name = _('SQL Query')
+        verbose_name_plural = _('SQL Queries')
         permissions = [
             ('execute_sql_query', 'Can execute SQL queries')
             # Maybe add more permissions here corresponding to the actions that can be performed on the query
@@ -27,8 +27,8 @@ class SqlQuery(BloomerpModel):
     )
     
     
-    name = models.CharField(max_length=255)
-    query = CodeField(language='sql', help_text=_("SQL Query to execute"))
+    name = models.CharField(max_length=255, verbose_name=_("Name"))
+    query = CodeField(language='sql', help_text=_("SQL Query to execute"), verbose_name=_("Query"))
 
     # String fields
     search_fields = ['name']

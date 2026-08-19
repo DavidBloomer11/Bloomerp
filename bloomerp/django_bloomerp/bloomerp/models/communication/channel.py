@@ -5,8 +5,8 @@ from django.utils.translation import gettext_lazy as _
 
 class Channel(BloomerpModel):
     class Meta:
-        verbose_name = "Channel"
-        verbose_name_plural = "Channels"
+        verbose_name = _("Channel")
+        verbose_name_plural = _("Channels")
         db_table = "bloomerp_channel"
     
     # Type related fields

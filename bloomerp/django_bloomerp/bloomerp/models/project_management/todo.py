@@ -4,7 +4,7 @@ from slugify import slugify
 from bloomerp.model_fields.text_editor_field import TextEditorField
 from bloomerp.models import BloomerpModel
 from django.conf import settings
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _, gettext_noop
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.core.exceptions import ValidationError
@@ -13,31 +13,32 @@ from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutR
 from bloomerp.models.definition import BloomerpModelConfig, ObjectAction, ObjectHTML
 from bloomerp.permissions.definition import BloomerpPermission
 from bloomerp.utils.requests import render_message
+from bloomerp.workspaces.analytics_tile.model import AnalyticsTileConfig
 from bloomerp.workspaces.form_tile import render
 
 class TodoPriority(models.TextChoices):
-    URGENT = ('urgent', 'Urgent')
-    HIGH = ('high', 'High')
-    MEDIUM = ('medium','Medium')
-    LOW = ('low', 'Low')
+    URGENT = ('urgent', _('Urgent'))
+    HIGH = ('high', _('High'))
+    MEDIUM = ('medium', _('Medium'))
+    LOW = ('low', _('Low'))
     
 # TODO: Create effort model based on t-shirt sizing (check linear for this)
 class TodoEffort(models.IntegerChoices):
-    XS = (1, 'XS')
-    S = (2, 'S')
-    M = (4, 'M')
-    L = (8, 'L')
-    XL = (16, 'XL')
+    XS = (1, _('XS'))
+    S = (2, _('S'))
+    M = (4, _('M'))
+    L = (8, _('L'))
+    XL = (16, _('XL'))
 
 # TODO: Status should be based on what is defined in the overall bloomerp settings module
 # TODO: Use status field for this one -> status field can be used later on in table views 
 class TodoStatus(models.TextChoices):
-    BACKLOG = ('backlog', 'Backlog')
-    IN_PROGRESS = ('in_progress', 'In Progress')
-    IN_REVIEW = ('in_review', 'In Review')
-    COMPLETED = ('completed', 'Completed')
-    CANCELLED = ('cancelled', 'Cancelled')
-    DUPLICATE = ('duplicate', 'Duplicate')
+    BACKLOG = ('backlog', _('Backlog'))
+    IN_PROGRESS = ('in_progress', _('In Progress'))
+    IN_REVIEW = ('in_review', _('In Review'))
+    COMPLETED = ('completed', _('Completed'))
+    CANCELLED = ('cancelled', _('Cancelled'))
+    DUPLICATE = ('duplicate', _('Duplicate'))
 
 
 def _mark_as_completed(request:HttpRequest, object:"Todo") -> HttpResponse:
@@ -66,7 +67,7 @@ class Todo(BloomerpModel):
         layout=FieldLayout(
             rows=[
                 LayoutRow(
-                    title="Details",
+                    title=gettext_noop("Details"),
                     columns=4,
                     items=[
                         LayoutItem(id="title", colspan=3),
@@ -79,7 +80,7 @@ class Todo(BloomerpModel):
                     ],
                 ),
                 LayoutRow(
-                    title="Users",
+                    title=gettext_noop("Users"),
                     columns=4,
                     items=[
                         LayoutItem(id="requested_by"),
@@ -87,7 +88,7 @@ class Todo(BloomerpModel):
                     ],
                 ),
                 LayoutRow(
-                    title="Timeline",
+                    title=gettext_noop("Timeline"),
                     columns=4,
                     items=[
                         LayoutItem(id="required_by"),
@@ -104,14 +105,16 @@ class Todo(BloomerpModel):
             ),
             ObjectAction(
                 id="mark_as_completed",
-                label="Mark as Completed",
+                label=gettext_noop("Mark as Completed"),
                 should_render_func=lambda _, object: object.status != TodoStatus.COMPLETED,
                 execution_func=_mark_as_completed
             )
-        ]
+        ],
     )
 
     class Meta(BloomerpModel.Meta):
+        verbose_name = _("Todo")
+        verbose_name_plural = _("Todos")
         managed = True
         db_table = 'bloomerp_todo'
 

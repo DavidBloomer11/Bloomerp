@@ -5,7 +5,7 @@ from django.db import models
 from django.db.models import Count
 from django.utils import timezone
 from django.utils.functional import cached_property
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _, gettext_noop
 
 from bloomerp.form_fields.behavior import BehaviorAction, BehaviorConfig, BehaviorRule
 from bloomerp.models.base_bloomerp_model import BloomerpModel, FieldLayout, LayoutItem, LayoutRow
@@ -13,11 +13,11 @@ from bloomerp.models.definition import BloomerpModelConfig
 
 
 class InitiativeStatus(models.TextChoices):
-    BACKLOG = ("backlog", "Backlog")
-    IN_PROGRESS = ("in_progress", "In Progress")
-    ON_HOLD = ("on_hold", "On Hold")
-    COMPLETED = ("completed", "Completed")
-    CANCELED = ("canceled", "Canceled")
+    BACKLOG = ("backlog", _("Backlog"))
+    IN_PROGRESS = ("in_progress", _("In Progress"))
+    ON_HOLD = ("on_hold", _("On Hold"))
+    COMPLETED = ("completed", _("Completed"))
+    CANCELED = ("canceled", _("Canceled"))
 
 
 class Initiative(BloomerpModel):
@@ -30,7 +30,7 @@ class Initiative(BloomerpModel):
         layout=FieldLayout(
             rows=[
                 LayoutRow(
-                    title="Details",
+                    title=gettext_noop("Details"),
                     columns=4,
                     items=[
                         LayoutItem(id="name", colspan=2),
@@ -40,7 +40,7 @@ class Initiative(BloomerpModel):
                     ],
                 ),
                 LayoutRow(
-                    title="Timeline",
+                    title=gettext_noop("Timeline"),
                     columns=3,
                     items=[
                         LayoutItem(id="start_date", colspan=1),
@@ -49,14 +49,14 @@ class Initiative(BloomerpModel):
                     ],
                 ),
                 LayoutRow(
-                    title="Labels",
+                    title=gettext_noop("Labels"),
                     columns=1,
                     items=[
                         LayoutItem(id="labels", colspan=1),
                     ],
                 ),
                 LayoutRow(
-                    title="Todo's",
+                    title=gettext_noop("Todos"),
                     columns=1,
                     items=[
                         LayoutItem(
@@ -82,6 +82,8 @@ class Initiative(BloomerpModel):
     )
 
     class Meta(BloomerpModel.Meta):
+        verbose_name = _("Initiative")
+        verbose_name_plural = _("Initiatives")
         managed = True
         db_table = "bloomerp_initiative"
 

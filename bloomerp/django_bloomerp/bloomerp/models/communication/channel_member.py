@@ -6,8 +6,8 @@ from django.utils.translation import gettext_lazy as _
 
 class ChannelMember(BloomerpModel):
     class Meta:
-        verbose_name = "Channel Member"
-        verbose_name_plural = "Channel Members"
+        verbose_name = _("Channel Member")
+        verbose_name_plural = _("Channel Members")
         db_table = "bloomerp_channel_member"
         
         constraints = [
@@ -18,9 +18,9 @@ class ChannelMember(BloomerpModel):
         ]
     
     class Role(models.TextChoices):
-        MEMBER = "member", "Member"
-        ADMIN = "admin", "Admin"
-        OWNER = "owner", "Owner"
+        MEMBER = "member", _("Member")
+        ADMIN = "admin", _("Admin")
+        OWNER = "owner", _("Owner")
 
     avatar = None
     

@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from django.db import models, transaction
 from django.db.models import Q
 
@@ -7,6 +8,8 @@ from bloomerp.models.users.base_preference import BasePreference
 class Sidebar(BasePreference):
     """A named sidebar configuration belonging to a user."""
     class Meta:
+        verbose_name = _("Sidebar")
+        verbose_name_plural = _("Sidebars")
         db_table = "bloomerp_sidebar"
         constraints = [
             models.UniqueConstraint(

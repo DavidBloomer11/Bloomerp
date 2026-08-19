@@ -6,6 +6,7 @@ from bloomerp.services.activity_log_services import ActivityLogManager
 from bloomerp.views.generic.detail.base import BaseBloomerpDetailView
 from django.apps import apps
 from django.shortcuts import render
+from django.utils.translation import gettext as _
 
 @router.register(
     path="components/activity-log/",
@@ -20,18 +21,18 @@ def activity_log(request:HttpRequest) -> HttpResponse:
     try:
         content_type_id_int = int(content_type_id) if content_type_id else None
     except ValueError:
-        return HttpResponse("Invalid content_type_id", status=400)
+        return HttpResponse(_("Invalid content type ID"), status=400)
     
     content_type = apps.get_model("contenttypes.ContentType").objects.filter(id=content_type_id_int).first() if content_type_id_int else None
     model_class = content_type.model_class() if content_type else None
     object_instance = model_class.objects.filter(id=object_id).first() if model_class and object_id else None
     
     if not ActivityLogManager.should_record_change(model_class):
-        return HttpResponse("Activity logging is not enabled for this model.", status=400)
+        return HttpResponse(_("Activity logging is not enabled for this model."), status=400)
     
     
     if not object_id or not content_type_id:
-        return HttpResponse("Missing object_id or content_type_id", status=400)
+        return HttpResponse(_("Missing object ID or content type ID"), status=400)
     
     manager = ActivityLogManager(object_instance)
     
@@ -44,4 +45,3 @@ def activity_log(request:HttpRequest) -> HttpResponse:
             "queryset": manager.get_for_object(),
         }
     )
-    
