@@ -52,11 +52,7 @@ TODO: This and dataview_kanban_cards need to be merged
             <!-- Column Body (Drop Zone) -->
             <div
                 class="kanban-column-body flex-1 p-2 space-y-2 overflow-y-auto min-h-[100px]"
-                {% if group.is_destination %}
                 data-kanban-dropzone
-                {% else %}
-                data-kanban-source-zone
-                {% endif %}
                 data-column-value="{{ group.request_value }}"
             >
                 {% include "components/objects/dataview_kanban_cards.html" %}

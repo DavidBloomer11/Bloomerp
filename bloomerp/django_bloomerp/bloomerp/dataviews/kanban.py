@@ -1,19 +1,23 @@
 from __future__ import annotations
 
-from django.db.models import Count, ForeignKey, OneToOneField, Q
+from django.db.models import Count, ForeignKey, OneToOneField, Q, QuerySet
 from django.http import HttpResponse
 from django.shortcuts import render
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from bloomerp.models import ApplicationField
+    from bloomerp.models.users.user import AbstractBloomerpUser
     from bloomerp.models.users.user_list_view_preference import UserListViewPreference
 
 from .base import BaseDataviewRenderer
-from bloomerp.services.related_value_services import get_allowed_related_queryset
+from bloomerp.services.permission_services import (
+    UserPermissionManager,
+    create_permission_str,
+)
 
 
 KANBAN_EMPTY_COLUMN_VALUE = "__none__"
-KANBAN_UNAVAILABLE_COLUMN_VALUE = "__unavailable__"
 KANBAN_MAX_RELATED_COLUMNS = 50
 
 
@@ -35,16 +39,22 @@ class KanbanDataviewRenderer(BaseDataviewRenderer):
                 self.state.queryset,
                 group_by_field.field,
             )
+            allowed_related_queryset = None
             if isinstance(model_field, (ForeignKey, OneToOneField)):
-                kanban_too_many_groups = self.has_too_many_related_columns(
+                allowed_related_queryset = self.get_allowed_related_queryset(
                     group_by_field,
                     self.state.request.user,
                 )
+                kanban_too_many_groups = self.has_too_many_related_columns(
+                    allowed_related_queryset
+                )
+
             if not kanban_too_many_groups:
                 kanban_groups = self.build_groups(
                     self.state.queryset,
                     group_by_field,
                     user=self.state.request.user,
+                    allowed_related_queryset=allowed_related_queryset,
                     preference=self.state.preference,
                     page_size=page_size,
                 )
@@ -62,16 +72,29 @@ class KanbanDataviewRenderer(BaseDataviewRenderer):
         return context
 
     @staticmethod
-    def has_too_many_related_columns(group_by_field, user) -> bool:
-        """Return whether eligible related destinations exceed the safe limit."""
-        return (
-            get_allowed_related_queryset(group_by_field, user)
-            .order_by()
-            .values("pk")
-            .distinct()
-            .count()
-            > KANBAN_MAX_RELATED_COLUMNS
+    def get_allowed_related_queryset(
+        group_by_field: ApplicationField,
+        user: AbstractBloomerpUser,
+    ) -> QuerySet:
+        """Return related lane values allowed by permissions and field limits."""
+        model_field = group_by_field._get_model_field()
+        if not isinstance(model_field, (ForeignKey, OneToOneField)):
+            raise ValueError("Kanban related lanes require a foreign-key field.")
+
+        related_model = model_field.remote_field.model
+        queryset = UserPermissionManager(user).get_queryset(
+            related_model,
+            create_permission_str(related_model, "view"),
         )
+        limit_choices_to = model_field.get_limit_choices_to()
+        if limit_choices_to:
+            queryset = queryset.complex_filter(limit_choices_to)
+        return queryset.distinct()
+
+    @staticmethod
+    def has_too_many_related_columns(related_queryset: QuerySet) -> bool:
+        """Return whether the eligible foreign-key lane count exceeds the limit."""
+        return related_queryset.order_by().count() > KANBAN_MAX_RELATED_COLUMNS
 
     @classmethod
     def build_page_querystring(cls, request) -> str:
@@ -107,7 +130,6 @@ class KanbanDataviewRenderer(BaseDataviewRenderer):
             preference=state.preference,
             page_size=getattr(state.dataview_options, "page_size", 25),
             page_number=request.GET.get("kanban_page", 1),
-            user=request.user,
         )
         if group is None:
             return HttpResponse("Kanban column not found.", status=404)
@@ -133,43 +155,11 @@ class KanbanDataviewRenderer(BaseDataviewRenderer):
         preference=None,
         page_size: int | None = None,
         page_number=1,
-        user=None,
     ) -> dict | None:
         field_name = group_by_field.field
+        field_type = group_by_field.field_type
         model_field = cls._get_model_field(queryset, field_name)
         value = cls._coerce_column_value(column_value, model_field)
-
-        if value == KANBAN_UNAVAILABLE_COLUMN_VALUE:
-            allowed_ids = get_allowed_related_queryset(
-                group_by_field,
-                user,
-            ).values("pk")
-            column_queryset = queryset.exclude(
-                **{f"{field_name}__isnull": True}
-            ).exclude(**{f"{field_name}__in": allowed_ids})
-            item_count = column_queryset.count()
-            if item_count == 0:
-                return None
-            return cls._build_group(
-                KANBAN_UNAVAILABLE_COLUMN_VALUE,
-                "Unavailable value",
-                column_queryset,
-                page_size,
-                page_number,
-                item_count=item_count,
-                is_destination=False,
-                hide_field_name=field_name,
-            )
-
-        if (
-            value is not None
-            and isinstance(model_field, (ForeignKey, OneToOneField))
-            and not get_allowed_related_queryset(
-                group_by_field,
-                user,
-            ).filter(pk=value).exists()
-        ):
-            return None
 
         column_queryset = cls._build_column_queryset(queryset, field_name, model_field, value, preference=preference)
         item_count = column_queryset.count()
@@ -178,7 +168,7 @@ class KanbanDataviewRenderer(BaseDataviewRenderer):
 
         if value is None:
             label = "Unassigned"
-        elif isinstance(model_field, (ForeignKey, OneToOneField)):
+        elif field_type in ["ForeignKey", "OneToOneField"]:
             label = cls._get_related_label(queryset, field_name, value)
         else:
             label = cls._get_choice_label(model_field, value)
@@ -193,7 +183,16 @@ class KanbanDataviewRenderer(BaseDataviewRenderer):
         )
 
     @classmethod
-    def build_groups(cls, queryset, group_by_field, user=None, preference=None, page_size: int | None = None, page_number=1) -> list[dict]:
+    def build_groups(
+        cls,
+        queryset,
+        group_by_field,
+        user=None,
+        allowed_related_queryset=None,
+        preference=None,
+        page_size: int | None = None,
+        page_number=1,
+    ) -> list[dict]:
         field_name = group_by_field.field
         model_field = cls._get_model_field(queryset, field_name)
         groups = []
@@ -217,35 +216,28 @@ class KanbanDataviewRenderer(BaseDataviewRenderer):
                     item_count=counts_by_value[None]
                 ))
 
-            allowed_related = get_allowed_related_queryset(group_by_field, user)
-            allowed_ids = []
-            for related_obj in allowed_related:
-                value = related_obj.pk
-                allowed_ids.append(value)
+            if allowed_related_queryset is None:
+                allowed_related_queryset = cls.get_allowed_related_queryset(
+                    group_by_field,
+                    user,
+                )
+
+            for related_object in allowed_related_queryset:
+                value = related_object.pk
                 items = cls._build_column_queryset(
-                    queryset, field_name, model_field, value, preference=preference
+                    queryset,
+                    field_name,
+                    model_field,
+                    value,
+                    preference=preference,
                 )
                 groups.append(cls._build_group(
-                    value, str(related_obj), items, page_size, page_number,
-                    item_count=counts_by_value.get(value, 0)
-                ))
-
-            unavailable_count = queryset.exclude(
-                **{f"{field_name}__isnull": True}
-            ).exclude(**{f"{field_name}__in": allowed_ids}).count()
-            if unavailable_count:
-                unavailable_items = queryset.exclude(
-                    **{f"{field_name}__isnull": True}
-                ).exclude(**{f"{field_name}__in": allowed_ids})
-                groups.append(cls._build_group(
-                    KANBAN_UNAVAILABLE_COLUMN_VALUE,
-                    "Unavailable value",
-                    unavailable_items,
+                    value,
+                    str(related_object),
+                    items,
                     page_size,
                     page_number,
-                    item_count=unavailable_count,
-                    is_destination=False,
-                    hide_field_name=field_name,
+                    item_count=counts_by_value.get(value, 0),
                 ))
         else:
             empty_count = queryset.filter(cls._build_empty_filter(field_name, model_field)).count()
@@ -349,8 +341,6 @@ class KanbanDataviewRenderer(BaseDataviewRenderer):
     def _coerce_column_value(cls, raw_value: str, model_field):
         if raw_value == KANBAN_EMPTY_COLUMN_VALUE:
             return None
-        if raw_value == KANBAN_UNAVAILABLE_COLUMN_VALUE:
-            return KANBAN_UNAVAILABLE_COLUMN_VALUE
 
         if model_field is None:
             return raw_value
@@ -413,8 +403,6 @@ class KanbanDataviewRenderer(BaseDataviewRenderer):
         page_size: int | None = None,
         page_number=1,
         item_count: int | None = None,
-        is_destination: bool = True,
-        hide_field_name: str | None = None,
     ) -> dict:
         total_count = item_count if item_count is not None else len(items)
 
@@ -434,6 +422,4 @@ class KanbanDataviewRenderer(BaseDataviewRenderer):
             "page_obj": page_obj,
             "has_next_page": page_obj.has_next() if page_obj else False,
             "next_page_number": page_obj.next_page_number() if page_obj and page_obj.has_next() else None,
-            "is_destination": is_destination,
-            "hide_field_name": hide_field_name,
         }

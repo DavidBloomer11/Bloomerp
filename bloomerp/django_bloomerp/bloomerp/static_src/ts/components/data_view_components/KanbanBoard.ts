@@ -120,9 +120,7 @@ export class KanbanBoard extends BaseDataViewComponent {
         if (!target) return;
 
         this.activeDragCard = target;
-        this.activeDragSource = target.closest(
-            '[data-kanban-dropzone], [data-kanban-source-zone]'
-        ) as HTMLElement | null;
+        this.activeDragSource = target.closest('[data-kanban-dropzone]') as HTMLElement | null;
         this.activeDragSourceValue = this.activeDragSource?.dataset.columnValue ?? null;
 
         target.classList.add('dragging');
@@ -181,9 +179,7 @@ export class KanbanBoard extends BaseDataViewComponent {
     }
 
     private async moveCardTo(card: HTMLElement, destinationDropzone: HTMLElement): Promise<void> {
-        const originDropzone = card.closest(
-            '[data-kanban-dropzone], [data-kanban-source-zone]'
-        ) as HTMLElement | null;
+        const originDropzone = card.closest('[data-kanban-dropzone]') as HTMLElement | null;
         const originValue = originDropzone?.dataset.columnValue ?? null;
         const destinationValue = destinationDropzone.dataset.columnValue ?? null;
 
@@ -282,9 +278,7 @@ export class KanbanBoard extends BaseDataViewComponent {
         const columns = Array.from(this.element.querySelectorAll<HTMLElement>('.kanban-column'));
         for (const column of columns) {
             const countEl = column.querySelector<HTMLElement>('[data-kanban-count]');
-            const dropzone = column.querySelector<HTMLElement>(
-                '[data-kanban-dropzone], [data-kanban-source-zone]'
-            );
+            const dropzone = column.querySelector<HTMLElement>('[data-kanban-dropzone]');
             if (!countEl || !dropzone) continue;
 
             const totalCount = column.dataset.kanbanTotalCount;

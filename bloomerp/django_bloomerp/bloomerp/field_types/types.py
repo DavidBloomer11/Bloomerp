@@ -248,10 +248,8 @@ class FieldTypeDefinition:
     def build_widget(self, application_field: "ApplicationField", layout_config: dict[str, Any] | None = None) -> forms.Widget:
         """Build the widget for this field type and application field."""
         attrs = {
-            "class" : "input w-full",
+            "class" : "input w-full"
         }
-        if issubclass(self.get_widget_cls(), ForeignFieldWidget):
-            attrs["application_field_id"] = application_field.pk
         attrs.update(self.default_widget_args)
         if application_field.meta:
             attrs.update(application_field.meta)

@@ -21,7 +21,6 @@ export default class ForeignFieldWidget extends BaseWidget {
     private debounceTimer: number | null = null;
     private isM2M: boolean = false;
     private contentTypeId: string | null = null;
-    private applicationFieldId: string | null = null;
     private fieldName: string | null = null;
     private isDisabled: boolean = false;
     private outsideClickHandler: (e: MouseEvent) => void;
@@ -51,7 +50,6 @@ export default class ForeignFieldWidget extends BaseWidget {
 
         this.isM2M = this.element.dataset.isM2m === 'true';
         this.contentTypeId = this.element.dataset.contentTypeId || null;
-        this.applicationFieldId = this.element.dataset.applicationFieldId || null;
         this.fieldName = this.element.dataset.fieldName || null;
         this.isDisabled = this.element.dataset.disabled === 'true';
         this.widgetInstanceId = this.ensureWidgetInstanceId();
@@ -281,9 +279,7 @@ export default class ForeignFieldWidget extends BaseWidget {
 
     private async fetchResults(query: string) {
         if (!this.contentTypeId) return;
-        const params = new URLSearchParams({ fk_search_results_query: query });
-        if (this.applicationFieldId) params.set('application_field_id', this.applicationFieldId);
-        const url = `/components/search-objects/${this.contentTypeId}/?${params.toString()}`;
+        const url = `/components/search-objects/${this.contentTypeId}/?fk_search_results_query=${encodeURIComponent(query)}`;
         try {
             const resp = await fetch(url, { credentials: 'same-origin' });
             if (!resp.ok) return;

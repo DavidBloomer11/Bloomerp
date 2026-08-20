@@ -111,7 +111,6 @@ class ForeignFieldWidget(widgets.Widget):
         context = super().get_context(name, value, attrs)
         context["widget"]["is_m2m"] = self.is_m2m
         context["content_type_id"] = self.get_related_content_type_id() or ""
-        context["application_field_id"] = self.attrs.get("application_field_id", "")
 
         # Check if an invalid entry was made
         if (attrs or {}).get('aria-invalid', 'false') == 'true':

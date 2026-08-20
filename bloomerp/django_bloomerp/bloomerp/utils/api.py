@@ -7,7 +7,6 @@ import logging
 import django_filters
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import FieldDoesNotExist
-from django.db import models
 from django.db.models import Model, Q, QuerySet
 from rest_framework import serializers
 from rest_framework import viewsets
@@ -462,47 +461,6 @@ def generate_serializer(model:Model) -> type[serializers.ModelSerializer]:
 
     class GeneratedSerializer(serializers.ModelSerializer):
         Meta = meta_class
-
-        def validate(self, attrs):
-            """Keep generated API relation writes aligned with UI eligibility."""
-            attrs = super().validate(attrs)
-            request = self.context.get("request")
-            if request is None:
-                return attrs
-
-            from bloomerp.models.application_field import ApplicationField
-            from bloomerp.services.related_value_services import (
-                get_allowed_related_queryset,
-            )
-
-            errors = {}
-            relation_names = [
-                field.name
-                for field in self.Meta.model._meta.fields
-                if isinstance(field, (models.ForeignKey, models.OneToOneField))
-                and field.name in attrs
-                and attrs[field.name] is not None
-            ]
-            application_fields = {
-                field.field: field
-                for field in ApplicationField.get_for_model(self.Meta.model).filter(
-                    field__in=relation_names
-                )
-            }
-            for field_name in relation_names:
-                application_field = application_fields.get(field_name)
-                value = attrs[field_name]
-                if (
-                    application_field is not None
-                    and not get_allowed_related_queryset(
-                        application_field,
-                        request.user,
-                    ).filter(pk=value.pk).exists()
-                ):
-                    errors[field_name] = "Select a valid related value."
-            if errors:
-                raise serializers.ValidationError(errors)
-            return attrs
 
         def build_standard_field(self, field_name, model_field):
             field_class, field_kwargs = super().build_standard_field(
