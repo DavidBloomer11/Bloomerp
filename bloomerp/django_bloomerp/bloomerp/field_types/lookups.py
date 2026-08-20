@@ -13,7 +13,7 @@ from typing import Optional
 from typing import TYPE_CHECKING
 
 from bloomerp.widgets.foreign_field_widget import ForeignFieldWidget
-from django.db.models import BooleanField, Count, DateField, DateTimeField, DecimalField, DurationField, Field, FloatField, IntegerField, QuerySet, TextField, TimeField, UUIDField
+from django.db.models import BooleanField, Count, DateField, DateTimeField, DecimalField, DurationField, Field, FloatField, IntegerField, Q, QuerySet, TextField, TimeField, UUIDField
 from django.db.models.functions import Cast
 from django.db.models.fields.json import KeyTextTransform
 from django.conf import settings
@@ -107,6 +107,58 @@ def _hidden_true(application_field: "ApplicationField") -> forms.Widget:
 # Filter class funcs
 # ---------------------
 class CharInFilter(django_filters.BaseInFilter, django_filters.CharFilter):
+    pass
+
+
+class AddressComponentFilterMixin:
+    """Filter an address JSON component with a composable ORM condition."""
+
+    def __init__(
+        self,
+        *args,
+        address_field_name: str,
+        component: str,
+        lookup_enum: "Lookup",
+        **kwargs,
+    ):
+        self.address_field_name = address_field_name
+        self.component = component
+        self.lookup_enum = lookup_enum
+        super().__init__(*args, **kwargs)
+
+    def as_q(self, value) -> Q:
+        expression = Cast(
+            KeyTextTransform(self.component, self.address_field_name),
+            output_field=TextField(),
+        )
+        lookup_expr = self.lookup_enum.value.django_representation
+        exclude = self.lookup_enum in {Lookup.NOT_EQUALS, Lookup.NOT_IN}
+        if self.lookup_enum == Lookup.NOT_EQUALS:
+            lookup_expr = "exact"
+        elif self.lookup_enum == Lookup.NOT_IN:
+            lookup_expr = "in"
+        elif self.lookup_enum == Lookup.IS_NULL:
+            lookup_expr = "isnull"
+
+        lookup_cls = expression.get_lookup(lookup_expr)
+        condition = Q(lookup_cls(expression, value))
+        return ~condition if exclude else condition
+
+    def filter(self, queryset: QuerySet, value) -> QuerySet:
+        if value in django_filters.constants.EMPTY_VALUES:
+            return queryset
+        return queryset.filter(self.as_q(value))
+
+
+class AddressCharFilter(AddressComponentFilterMixin, django_filters.CharFilter):
+    pass
+
+
+class AddressCharInFilter(AddressComponentFilterMixin, CharInFilter):
+    pass
+
+
+class AddressBooleanFilter(AddressComponentFilterMixin, django_filters.BooleanFilter):
     pass
 
 
@@ -258,49 +310,21 @@ def _address_filter_classes(application_field: "ApplicationField") -> dict[str, 
             lookup = lookup_enum.value
             names = [f"{field_name}{alias}" for alias in lookup.aliases]
 
-            def filter_component(
-                queryset: QuerySet,
-                _name: str,
-                value,
-                *,
-                component=component,
-                lookup_enum=lookup_enum,
-                lookup_definition=lookup,
-            ):
-                if value in django_filters.constants.EMPTY_VALUES:
-                    return queryset
-
-                annotation = f"_address_{application_field.field}_{component}"
-                queryset = queryset.annotate(
-                    **{
-                        annotation: Cast(
-                            KeyTextTransform(component, application_field.field),
-                            output_field=TextField(),
-                        )
-                    }
-                )
-                if lookup_enum == Lookup.NOT_EQUALS:
-                    return queryset.exclude(**{f"{annotation}__exact": value})
-                if lookup_enum == Lookup.NOT_IN:
-                    return queryset.exclude(**{f"{annotation}__in": value})
-
-                lookup_expr = (
-                    "isnull"
-                    if lookup_enum == Lookup.IS_NULL
-                    else lookup_definition.django_representation
-                )
-                return queryset.filter(**{f"{annotation}__{lookup_expr}": value})
-
             if lookup_enum == Lookup.IS_NULL:
-                filter_cls = django_filters.BooleanFilter
+                filter_cls = AddressBooleanFilter
             elif lookup_enum in {Lookup.IN, Lookup.NOT_IN}:
-                filter_cls = CharInFilter
+                filter_cls = AddressCharInFilter
             else:
-                filter_cls = django_filters.CharFilter
+                filter_cls = AddressCharFilter
 
             filters.update(
                 {
-                    name: filter_cls(field_name=field_name, method=filter_component)
+                    name: filter_cls(
+                        field_name=field_name,
+                        address_field_name=application_field.field,
+                        component=component,
+                        lookup_enum=lookup_enum,
+                    )
                     for name in names
                 }
             )

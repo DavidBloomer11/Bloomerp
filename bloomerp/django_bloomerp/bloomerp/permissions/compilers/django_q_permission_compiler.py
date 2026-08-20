@@ -46,6 +46,16 @@ class DjangoQPermissionCompiler(BasePermissionCompiler[CompiledDjangoAccess]):
         if isinstance(condition.field, str) and "__" in condition.field:
             field_name = condition.field
 
+        if operator.startswith("__"):
+            filter_key = operator.lstrip("_")
+            lookup_name = filter_key.rsplit("__", 1)[-1]
+            value = self.normalize_lookup_value(
+                application_field,
+                lookup_name,
+                condition.value,
+            )
+            return Q(**{filter_key: value})
+
         if (
             self.resolve_lookup_globally(operator) == Lookup.EQUALS_USER
             or str(condition.value) == "$user"
@@ -54,25 +64,42 @@ class DjangoQPermissionCompiler(BasePermissionCompiler[CompiledDjangoAccess]):
                 return None
             return Q(**{field_name: self.user})
 
-        from bloomerp.utils.filters import dynamic_filterset_factory, resolve_filter_key
+        lookup = self.resolve_lookup(application_field, operator)
+        if lookup is not None:
+            value = self.normalize_lookup_value(
+                application_field,
+                lookup,
+                condition.value,
+            )
+            if lookup == Lookup.NOT_EQUALS:
+                return ~Q(**{field_name: value})
+            django_lookup = (lookup.value.django_representation or "").strip()
+            filter_key = (
+                f"{field_name}__{django_lookup}"
+                if django_lookup
+                else field_name
+            )
+            return Q(**{filter_key: value})
+
+        from bloomerp.utils.filters import resolve_filter
 
         model = application_field.content_type.model_class()
-        filter_key = resolve_filter_key(
+        resolved_filter = resolve_filter(
             model,
             application_field,
             field_name,
             operator,
         )
-        if filter_key is None:
+        if resolved_filter is None:
             return None
-
-        filterset = dynamic_filterset_factory(model, {filter_key: condition.value})(
-            data={filter_key: condition.value},
-            queryset=model.objects.all(),
-        )
-        if not filterset.is_valid():
-            return None
-        return Q(pk__in=filterset.qs.values("pk"))
+        _filter_key, configured_filter = resolved_filter
+        if hasattr(configured_filter, "as_q"):
+            try:
+                value = configured_filter.field.clean(condition.value)
+            except Exception:
+                return None
+            return configured_filter.as_q(value)
+        return None
 
     def compile_row_rule(
         self,

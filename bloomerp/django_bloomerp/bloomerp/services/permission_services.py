@@ -166,49 +166,24 @@ class UserPermissionManager:
             return None
 
         application_field_id = rule_condition.get("application_field_id")
-        operator_id = rule_condition.get("operator")
-        value = rule_condition.get("value")
         field_path = rule_condition.get("field")
 
         if field_path == "__all__" or application_field_id == "__all__":
             return Q()
 
-        if not application_field_id or not operator_id:
+        if not application_field_id or not rule_condition.get("operator"):
             return None
 
         application_field = ApplicationField.objects.filter(id=application_field_id).first()
         if not application_field:
             return None
 
-        operator_str = str(operator_id)
-        field_name = application_field.field
-        if isinstance(field_path, str) and "__" in field_path:
-            field_name = field_path
+        from bloomerp.permissions.compilers import DjangoQPermissionCompiler
 
-        field_type = application_field.get_field_type_enum()
-        lookup_enum = field_type.get_lookup_by_id(operator_str)
-        if lookup_enum == Lookup.EQUALS_USER or str(value) == "$user":
-            return Q(**{field_name: self.user})
-
-        from bloomerp.utils.filters import dynamic_filterset_factory, resolve_filter_key
-
-        model = application_field.content_type.model_class()
-        filter_key = resolve_filter_key(
-            model,
-            application_field,
-            field_name,
-            operator_str,
+        return DjangoQPermissionCompiler([], user=self.user).compile_condition(
+            rule_condition,
+            {str(application_field.pk): application_field},
         )
-        if filter_key is None:
-            return None
-
-        filterset = dynamic_filterset_factory(model, {filter_key: value})(
-            data={filter_key: value},
-            queryset=model.objects.all(),
-        )
-        if not filterset.is_valid():
-            return None
-        return Q(pk__in=filterset.qs.values("pk"))
 
     def build_q_for_rule_dict(self, rule_dict: dict) -> Q | None:
         if not isinstance(rule_dict, dict):
@@ -218,24 +193,25 @@ class UserPermissionManager:
         if not isinstance(conditions, list) or not conditions:
             return None
 
-        condition_qs: list[Q] = []
-        for condition in conditions:
-            condition_q = self.build_q_for_rule_condition(condition)
-            if condition_q is not None:
-                condition_qs.append(condition_q)
+        application_field_ids = {
+            str(condition.get("application_field_id"))
+            for condition in conditions
+            if isinstance(condition, dict)
+            and condition.get("application_field_id") not in (None, "", "__all__")
+        }
+        application_fields = {
+            str(field.pk): field
+            for field in ApplicationField.objects.filter(
+                pk__in=application_field_ids
+            ).select_related("content_type", "related_model")
+        }
 
-        if not condition_qs:
-            return None
+        from bloomerp.permissions.compilers import DjangoQPermissionCompiler
 
-        connector = str(rule_dict.get("connector") or "AND").upper()
-        combined_q = condition_qs[0]
-        for condition_q in condition_qs[1:]:
-            if connector == "OR":
-                combined_q |= condition_q
-            else:
-                combined_q &= condition_q
-
-        return combined_q
+        return DjangoQPermissionCompiler([], user=self.user).compile_row_rule(
+            rule_dict,
+            application_fields,
+        )
 
     def build_queryset_from_rule_dicts(
         self,

@@ -37,6 +37,22 @@ DJANGO_LOOKUP_SUFFIXES = {
 }
 
 
+def _configured_filters(
+    application_field: ApplicationField,
+) -> dict[str, django_filters.Filter]:
+    field_type = application_field.get_field_type_enum().value
+    if not field_type.allow_in_model and field_type.id != "OneToManyField":
+        return {}
+
+    configured: dict[str, django_filters.Filter] = {}
+    for lookup in field_type.lookups:
+        if lookup.value.filter_class_funcs:
+            configured.update(
+                lookup.value.filter_class_funcs(application_field)
+            )
+    return configured
+
+
 def dynamic_filterset_factory(model: type[Model], filters:dict[str, str]=None) -> type[django_filters.FilterSet]:
     """
     Dynamically creates a FilterSet class for the given model and filters.
@@ -51,19 +67,8 @@ def dynamic_filterset_factory(model: type[Model], filters:dict[str, str]=None) -
             field__in=included_fields
         )
     
-    initiated_fields = set()
-    
     for field in application_fields:
-        field_type = field.get_field_type_enum().value
-        if not field_type.allow_in_model and field_type.id != "OneToManyField":
-            continue
-        
-        for lookup in field_type.lookups:
-            if not lookup.value.filter_class_funcs:
-                continue
-            
-            filter_overrides.update(lookup.value.filter_class_funcs(field))
-            initiated_fields.add(field.field)
+        filter_overrides.update(_configured_filters(field))
             
     for filter_key in filters or {}:
         if filter_key in filter_overrides or "__" not in filter_key:
@@ -104,13 +109,13 @@ def dynamic_filterset_factory(model: type[Model], filters:dict[str, str]=None) -
     return filterset_class
 
 
-def resolve_filter_key(
+def resolve_filter(
     model: type[Model],
     application_field: ApplicationField,
     field_path: str,
     operator: str,
-) -> str | None:
-    """Resolve a submitted field/operator pair against the model's filters."""
+) -> tuple[str, django_filters.Filter] | None:
+    """Resolve a submitted field/operator pair to its configured filter."""
     if not model or not application_field or not operator:
         return None
 
@@ -159,10 +164,10 @@ def resolve_filter_key(
                     f"{field_name}__{lookup.value.django_representation}"
                 )
 
-    generated_filters = dynamic_filterset_factory(model).base_filters
+    generated_filters = _configured_filters(application_field)
     for candidate in dict.fromkeys(candidates):
         if candidate in generated_filters:
-            return candidate
+            return candidate, generated_filters[candidate]
 
     root_field_name = candidates[0].split("__", 1)[0]
     try:
@@ -174,11 +179,27 @@ def resolve_filter_key(
 
     for candidate in dict.fromkeys(candidates):
         try:
-            filterset_class = dynamic_filterset_factory(model, {candidate: ""})
+            path_parts = candidate.split("__")
+            if path_parts[-1] in DJANGO_LOOKUP_SUFFIXES:
+                field_name = "__".join(path_parts[:-1])
+                lookup_expr = (
+                    "exact" if path_parts[-1] == "equals" else path_parts[-1]
+                )
+            else:
+                field_name = candidate
+                lookup_expr = "exact"
+            filter_cls = (
+                django_filters.BooleanFilter
+                if lookup_expr == "isnull"
+                else filter_class_for_model_field_path(model, field_name)
+            )
         except Exception:
             continue
-        if candidate in filterset_class.base_filters:
-            return candidate
+        return candidate, filter_cls(
+            field_name=field_name,
+            lookup_expr=lookup_expr,
+            distinct=True,
+        )
     return None
 
 

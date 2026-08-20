@@ -63,6 +63,10 @@ class TestAddressRowPolicy(BaseBloomerpModelTestCase):
         )
         content_type = ContentType.objects.get_for_model(self.AddressPolicyModel)
         address_field = ApplicationField.get_by_field(self.AddressPolicyModel, "address")
+        address_field = ApplicationField.objects.select_related(
+            "content_type",
+            "related_model",
+        ).get(pk=address_field.pk)
         rule = {
             "connector": "AND",
             "conditions": [
@@ -96,13 +100,16 @@ class TestAddressRowPolicy(BaseBloomerpModelTestCase):
 
         # 4. Verify the production queryset compiler uses the same generated filter.
         application_fields = {str(address_field.id): address_field}
-        compiled_q = DjangoQPermissionCompiler(
-            [],
-            user=self.normal_user,
-        ).compile_condition(rule["conditions"][0], application_fields)
+        with self.assertNumQueries(0):
+            compiled_q = DjangoQPermissionCompiler(
+                [],
+                user=self.normal_user,
+            ).compile_condition(rule["conditions"][0], application_fields)
         self.assertIsNotNone(compiled_q)
+        compiled_queryset = self.AddressPolicyModel.objects.filter(compiled_q)
+        self.assertNotIn(" IN (SELECT", str(compiled_queryset.query).upper())
         self.assertQuerySetEqual(
-            self.AddressPolicyModel.objects.filter(compiled_q),
+            compiled_queryset,
             [belgian_record],
             transform=lambda value: value,
             ordered=False,

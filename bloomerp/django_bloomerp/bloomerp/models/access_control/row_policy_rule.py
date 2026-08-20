@@ -140,9 +140,9 @@ class RowPolicyRule(AbsoluteUrlModelMixin, models.Model):
         if not application_field.content_type == self.content_type:
             raise ValidationError("Content type of the application field does not match that of the field policy")
 
-        from bloomerp.utils.filters import resolve_filter_key
+        from bloomerp.utils.filters import resolve_filter
 
-        if resolve_filter_key(
+        if resolve_filter(
             self.content_type.model_class(),
             application_field,
             rule_condition.field,
