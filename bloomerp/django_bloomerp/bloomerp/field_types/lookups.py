@@ -252,27 +252,9 @@ def _address_filter_classes(application_field: "ApplicationField") -> dict[str, 
     from bloomerp.widgets.address_widget import ADDRESS_COMPONENTS
 
     filters: dict[str, django_filters.Filter] = {}
-    text_lookups = (
-        Lookup.EQUALS,
-        Lookup.IEXACT,
-        Lookup.CONTAINS,
-        Lookup.STARTS_WITH,
-        Lookup.ENDS_WITH,
-        Lookup.IN,
-        Lookup.IS_NULL,
-        Lookup.NOT_EQUALS,
-    )
-    country_lookups = (
-        Lookup.EQUALS,
-        Lookup.NOT_EQUALS,
-        Lookup.IS_NULL,
-        Lookup.IN,
-        Lookup.NOT_IN,
-    )
-
     for component, _label, _autocomplete in ADDRESS_COMPONENTS:
         field_name = f"{application_field.field}__{component}"
-        for lookup_enum in country_lookups if component == "country" else text_lookups:
+        for lookup_enum in get_address_component_lookups(component):
             lookup = lookup_enum.value
             names = [f"{field_name}{alias}" for alias in lookup.aliases]
 
@@ -1140,3 +1122,28 @@ TEXT_LOOKUPS = [
     Lookup.IS_NULL,
     Lookup.NOT_EQUALS,
 ]
+
+ADDRESS_COUNTRY_LOOKUPS = [
+    Lookup.EQUALS,
+    Lookup.NOT_EQUALS,
+    Lookup.IS_NULL,
+    Lookup.IN,
+    Lookup.NOT_IN,
+]
+
+
+def get_address_component_lookups(component: str) -> list[Lookup]:
+    """Return the supported lookups for a structured address component."""
+    return ADDRESS_COUNTRY_LOOKUPS if component == "country" else TEXT_LOOKUPS
+
+
+def resolve_address_component_lookup(component: str, operator: str) -> Lookup | None:
+    """Resolve an address lookup by id, Django representation, or alias."""
+    for lookup in get_address_component_lookups(component):
+        if operator == lookup.value.id:
+            return lookup
+        if operator == lookup.value.django_representation:
+            return lookup
+        if operator in (lookup.value.aliases or []):
+            return lookup
+    return None

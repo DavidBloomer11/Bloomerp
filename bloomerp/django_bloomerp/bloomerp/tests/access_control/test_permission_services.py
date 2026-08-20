@@ -21,9 +21,77 @@ from bloomerp.models.users import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.models import AnonymousUser
+from django.db import models
 from bloomerp.field_types.lookups import Lookup
+from bloomerp.model_fields.address_field import AddressField
 from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.utils.dynamic_models import create_test_models
 from rest_framework.test import APIRequestFactory, force_authenticate
+
+
+class TestAddressRowPolicy(BaseBloomerpModelTestCase):
+    auto_create_customers = False
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.AddressPolicyModel = create_test_models(
+            app_label="bloomerp",
+            model_defs={
+                "AddressPolicyRecord": {
+                    "name": models.CharField(max_length=100),
+                    "address": AddressField(null=True, blank=True),
+                }
+            },
+            use_bloomerp_base=True,
+        )["AddressPolicyRecord"]
+
+    def test_country_equals_rule_validates_and_filters_address_records(self):
+        """
+        Use case: An administrator creates a row policy for address country equals Belgium.
+        Expected result: The nested rule saves and its preview includes only Belgian records.
+        """
+        # 1. Create records with Belgian and French structured addresses.
+        belgian_record = self.AddressPolicyModel.objects.create(
+            name="Belgian customer",
+            address={"city": "Brussels", "country": "BE"},
+        )
+        self.AddressPolicyModel.objects.create(
+            name="French customer",
+            address={"city": "Paris", "country": "FR"},
+        )
+        content_type = ContentType.objects.get_for_model(self.AddressPolicyModel)
+        address_field = ApplicationField.get_by_field(self.AddressPolicyModel, "address")
+        rule = {
+            "connector": "AND",
+            "conditions": [
+                {
+                    "application_field_id": address_field.id,
+                    "field": "address__country",
+                    "operator": "exact",
+                    "value": "BE",
+                }
+            ],
+        }
+
+        # 2. Save the row-policy rule through the model validation path.
+        row_policy = RowPolicy.objects.create(
+            content_type=content_type,
+            name="Belgian addresses",
+        )
+        saved_rule = RowPolicyRule.objects.create(row_policy=row_policy, rule=rule)
+
+        # 3. Build the same filtered queryset used by the permissions preview.
+        queryset = UserPermissionManager(self.normal_user).build_queryset_from_rule_dicts(
+            content_type,
+            [saved_rule.rule],
+        )
+        self.assertQuerySetEqual(
+            queryset,
+            [belgian_record],
+            transform=lambda value: value,
+            ordered=False,
+        )
 
 class TestUserPermissionManager(BaseBloomerpModelTestCase):
     auto_create_customers = False

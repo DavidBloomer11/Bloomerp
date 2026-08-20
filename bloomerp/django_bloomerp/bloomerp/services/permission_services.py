@@ -10,7 +10,9 @@ Functions:
 """Services regarding permissions"""
 from django.apps import apps
 from django.db import models
-from django.db.models import Model
+from django.db.models import Model, TextField
+from django.db.models.fields.json import KeyTextTransform
+from django.db.models.functions import Cast
 from bloomerp.models.base_bloomerp_model import BloomerpModel
 from bloomerp.models.users.user import AbstractBloomerpUser
 from django.db.models.query import QuerySet
@@ -24,7 +26,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import Permission
 from typing import Literal, Type
 from django.db.models import Q
-from bloomerp.field_types.lookups import Lookup
+from bloomerp.field_types.lookups import Lookup, resolve_address_component_lookup
+from bloomerp.model_fields.address_field import resolve_address_component_path
 from django.core.exceptions import FieldDoesNotExist
 from pydantic import ValidationError as PydanticValidationError
 
@@ -219,6 +222,38 @@ class UserPermissionManager:
         field_name = application_field.field
         if isinstance(field_path, str) and "__" in field_path:
             field_name = field_path
+
+        address_path = resolve_address_component_path(
+            application_field.content_type.model_class(),
+            field_name,
+        )
+        if address_path:
+            base_path, component = address_path
+            address_lookup = resolve_address_component_lookup(component, operator_str)
+            if not address_lookup:
+                return None
+
+            django_lookup = address_lookup.value.django_representation
+            exclude = address_lookup in {Lookup.NOT_EQUALS, Lookup.NOT_IN}
+            if address_lookup == Lookup.NOT_EQUALS:
+                django_lookup = "exact"
+            elif address_lookup == Lookup.NOT_IN:
+                django_lookup = "in"
+
+            normalized_value = self._normalize_lookup_value(
+                django_lookup,
+                value,
+                application_field,
+            )
+            expression = Cast(
+                KeyTextTransform(component, base_path),
+                output_field=TextField(),
+            )
+            lookup_cls = expression.get_lookup(django_lookup)
+            if lookup_cls is None:
+                return None
+            condition = Q(lookup_cls(expression, normalized_value))
+            return ~condition if exclude else condition
 
         if operator_str.startswith("__"):
             filter_key = operator_str.lstrip("_")

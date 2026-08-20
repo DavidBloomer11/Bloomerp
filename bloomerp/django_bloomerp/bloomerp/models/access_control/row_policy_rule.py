@@ -7,6 +7,8 @@ from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
 from bloomerp.models import ApplicationField
 from bloomerp.field_types import FieldType
+from bloomerp.field_types.lookups import resolve_address_component_lookup
+from bloomerp.model_fields.address_field import resolve_address_component_path
 from bloomerp.models.mixins.absolute_url_model_mixin import AbsoluteUrlModelMixin
 from bloomerp.permissions.definition import RowPolicyRuleCondition, RowPolicyRuleContent
 from pydantic import ValidationError as PydanticValidationError
@@ -197,6 +199,15 @@ class RowPolicyRule(AbsoluteUrlModelMixin, models.Model):
 
         field_path = rule_condition.field
         if isinstance(field_path, str) and "__" in field_path:
+            address_path = resolve_address_component_path(
+                self.content_type.model_class(),
+                field_path,
+            )
+            if address_path:
+                _base_path, component = address_path
+                if not resolve_address_component_lookup(component, str(operator)):
+                    raise ValidationError("Invalid operator")
+                return
             if not (
                 self._is_valid_related_path_by_fields(self.content_type, field_path)
                 or self._is_valid_related_path(self.content_type.model_class(), field_path)

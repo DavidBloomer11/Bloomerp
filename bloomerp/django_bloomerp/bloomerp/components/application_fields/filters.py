@@ -6,7 +6,7 @@ from django.shortcuts import render
 from bloomerp.models.application_field import ApplicationField
 from django.contrib.contenttypes.models import ContentType
 from bloomerp.router import router
-from bloomerp.field_types.lookups import TEXT_LOOKUPS, Lookup
+from bloomerp.field_types.lookups import Lookup, get_address_component_lookups
 from bloomerp.field_types.types import FieldType
 from bloomerp.widgets.address_widget import ADDRESS_COMPONENTS, COUNTRY_CHOICES
 
@@ -15,24 +15,11 @@ FILTERABLE_FIELD_TYPES = [
 ]
 
 ADDRESS_COMPONENT_KEYS = {component for component, _label, _autocomplete in ADDRESS_COMPONENTS}
-ADDRESS_COUNTRY_LOOKUPS = [
-    Lookup.EQUALS,
-    Lookup.NOT_EQUALS,
-    Lookup.IS_NULL,
-    Lookup.IN,
-    Lookup.NOT_IN,
-]
-
-
 def _address_component_from_path(field_path: str | None) -> str | None:
     if not field_path:
         return None
     component = field_path.rsplit("__", 1)[-1]
     return component if component in ADDRESS_COMPONENT_KEYS else None
-
-
-def _address_lookups(component: str) -> list[Lookup]:
-    return ADDRESS_COUNTRY_LOOKUPS if component == "country" else TEXT_LOOKUPS
 
 
 def _render_address_lookup_value(
@@ -173,7 +160,7 @@ def filters_lookup_operators(
         field_type = application_field.get_field_type_enum()
         address_component = _address_component_from_path(field_path)
         lookups = (
-            _address_lookups(address_component)
+            get_address_component_lookups(address_component)
             if field_type == FieldType.ADDRESS_FIELD and address_component
             else field_type.lookups
         )
@@ -225,7 +212,7 @@ def value_input(
         # the top-level Address Lookup entry and are not top-level field lookups.
         address_component = _address_component_from_path(field_path)
         lookup_options = (
-            _address_lookups(address_component)
+            get_address_component_lookups(address_component)
             if field_type == FieldType.ADDRESS_FIELD and address_component
             else field_type.lookups
         )
