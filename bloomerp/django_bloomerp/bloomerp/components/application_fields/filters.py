@@ -14,6 +14,7 @@ FILTERABLE_FIELD_TYPES = [
     field_type.value.id for field_type in FieldType if len(field_type.value.lookups) > 0
 ]
 
+# TODO: This is a bit of a mess -> this component should ideally be agnostic of the field type.
 ADDRESS_COMPONENT_KEYS = {component for component, _label, _autocomplete in ADDRESS_COMPONENTS}
 def _address_component_from_path(field_path: str | None) -> str | None:
     if not field_path:
