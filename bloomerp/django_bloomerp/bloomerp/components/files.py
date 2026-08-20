@@ -11,14 +11,12 @@ from django.http import HttpRequest, HttpResponse, JsonResponse, QueryDict
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 
-from bloomerp.components.objects.dataviews.dataview import data_view
+from bloomerp.components.objects.dataviews.dataview import dataview
 from bloomerp.models import ApplicationField, File, FileFolder
 from bloomerp.router import router
 from bloomerp.services.file_services import ensure_folder_hierarchy_for_object
 from bloomerp.permissions.manager import UserPermissionManager
 from bloomerp.permissions.manager import create_permission_str
-from bloomerp.services.preference_services import PreferenceManager
-from bloomerp.utils.filters import filter_model
 
 
 __path__ = [str(Path(__file__).with_name("files"))]
@@ -112,56 +110,6 @@ def _hydrate_legacy_querystring(request: HttpRequest, legacy_query: str | None =
         for value in values:
             query_dict.appendlist(key, value)
     request.GET = query_dict
-
-
-def _get_file_preference(user, content_type: ContentType) -> UserListViewPreference:
-    preference = PreferenceManager(user).get_or_create_selected(
-        UserListViewPreference,
-        scope={
-            "content_type_id" : content_type.id
-        }
-    )
-    
-    if preference.view_type not in FILE_BROWSER_VIEW_TYPES:
-        preference.view_type = FILE_BROWSER_VIEW_TYPES[0]
-        preference.save(update_fields=["view_type"])
-    return preference
-
-
-def _sanitize_filter_params(query_params) -> dict[str, list[str]]:
-    allowed = set(FILE_BROWSER_FILTER_FIELDS)
-    sanitized: dict[str, list[str]] = {}
-
-    for key in query_params.keys():
-        if key in FILE_BROWSER_RESERVED_QUERY_KEYS:
-            continue
-
-        base_key = key.split("__", 1)[0]
-        if base_key not in allowed:
-            continue
-
-        values = [value for value in query_params.getlist(key) if value != ""]
-        if values:
-            sanitized[key] = values
-
-    return sanitized
-
-
-def _get_filter_section(request: HttpRequest, file_content_type_id: int) -> str:
-    application_fields = ApplicationField.get_for_content_type_id(file_content_type_id).filter(
-        field__in=FILE_BROWSER_FILTER_FIELDS,
-        field_type__in=FILTERABLE_FIELD_TYPES,
-    )
-    return render(
-        request,
-        "components/filters/init.html",
-        {
-            "content_type_id": file_content_type_id,
-            "application_fields": application_fields,
-            "selected_application_field": None,
-            "html_content": "",
-        },
-    ).content.decode("utf-8")
 
 
 def _folder_path(folder: FileFolder) -> str:
@@ -836,7 +784,7 @@ def _render_file_browser(
         "hide-filters": ",".join(sorted(FILE_BROWSER_RESERVED_QUERY_KEYS)),
     }
 
-    return data_view(
+    return dataview(
         request,
         file_content_type.id,
         base_queryset=visible_files,

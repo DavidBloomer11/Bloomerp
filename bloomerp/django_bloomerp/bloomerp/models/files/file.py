@@ -1,3 +1,4 @@
+from django.core.files.uploadedfile import UploadedFile
 from django.utils.translation import gettext_lazy as _
 from typing import Iterable
 
@@ -32,6 +33,12 @@ class File(
     UserStampModelMixin,
     models.Model,
 ):
+    class Meta(BloomerpModel.Meta):
+        verbose_name = _("File")
+        verbose_name_plural = _("Files")
+        managed = True
+        db_table = "bloomerp_file"
+
     bloomerp_config = BloomerpModelConfig(
         string_search_fields=["name"],
         object_actions=[
@@ -47,40 +54,57 @@ class File(
         ],
     )
 
-    class Meta(BloomerpModel.Meta):
-        verbose_name = _("File")
-        verbose_name_plural = _("Files")
-        managed = True
-        db_table = "bloomerp_file"
-
-
-    def upload_to(self, filename):
-        '''Returns the upload path for the file'''
+    def upload_to(self, filename: str) -> str:
+        """Return the upload path for the file."""
         # TODO: Can fetch this from settings in the future
-        ROOT = 'bloomerp'
+        root = "bloomerp"
 
         if self.content_type is None:
             # Default folder for files with no content type
-            folder = f'others'
+            folder = "others"
         else:
             # Use the content type's app_label for organization
-            folder = f'{self.content_type.app_label}'
-        
+            folder = self.content_type.app_label
+
         # Ensure unique file names
         unique_filename = f"{uuid.uuid4()}_{filename}"
-        
+
         # Return the full path
-        return f'{ROOT}/{folder}/{unique_filename}'
-    
-    # -----------------------------
-    # File Fields
-    # -----------------------------
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, verbose_name=_("ID"))
-    file = models.FileField(upload_to=upload_to, verbose_name=_("File"))
-    name = models.CharField(max_length=100, null=True, blank=True, verbose_name=_("Name"))
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True, verbose_name=_("Content Type"))
-    object_id = models.CharField(max_length=36, null=True, blank=True, verbose_name=_("Object ID")) # In order to support both UUID and integer primary keys
-    content_object = GenericForeignKey("content_type", "object_id")
+        return f"{root}/{folder}/{unique_filename}"
+
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        verbose_name=_("ID"),
+    )
+    file = models.FileField(
+        upload_to=upload_to,
+        verbose_name=_("File"),
+    )
+    name = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+        verbose_name=_("Name"),
+    )
+    content_type = models.ForeignKey(
+        ContentType,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        verbose_name=_("Content Type"),
+    )
+    object_id = models.CharField(
+        max_length=36,
+        null=True,
+        blank=True,
+        verbose_name=_("Object ID"),
+    )  # In order to support both UUID and integer primary keys
+    content_object = GenericForeignKey(
+        "content_type",
+        "object_id",
+    )
     folder : "FileFolder" = models.ForeignKey(
         "bloomerp.FileFolder",
         on_delete=models.SET_NULL,
@@ -89,7 +113,10 @@ class File(
         related_name="files",
         verbose_name=_("Folder"),
     )
-    persisted = models.BooleanField(default=False, verbose_name=_("Persisted")) # A field to indicate if the file is temporary or persisted
+    persisted = models.BooleanField(
+        default=False,
+        verbose_name=_("Persisted"),
+    )  # A field to indicate if the file is temporary or persisted
 
     # Created/updated utils
     meta = models.JSONField(blank=True, null=True, verbose_name=_("Meta"))

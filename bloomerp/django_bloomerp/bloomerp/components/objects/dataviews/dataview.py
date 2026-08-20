@@ -74,6 +74,7 @@ class DataViewQueryState:
 def _build_data_view_query_state(
     request: HttpRequest,
     content_type_id: int,
+    preference: UserListViewPreference | None = None,
     *,
     base_queryset: QuerySet | None = None,
     additional_reserved_query_keys: set[str] | None = None,
@@ -358,9 +359,10 @@ def _render_dataview_body(
     path="components/dataview/<int:content_type_id>/",
     name="components_dataview",
 )
-def data_view(
+def dataview(
     request: HttpRequest,
     content_type_id: int,
+    preference: UserListViewPreference | None = None,
     *,
     base_queryset: QuerySet | None = None,
     additional_reserved_query_keys: set[str] | None = None,
@@ -380,6 +382,7 @@ def data_view(
     state = _build_data_view_query_state(
         request,
         content_type_id,
+        preference,
         base_queryset=base_queryset,
         additional_reserved_query_keys=additional_reserved_query_keys,
     )
