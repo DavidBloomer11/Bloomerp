@@ -13,7 +13,9 @@ from typing import Optional
 from typing import TYPE_CHECKING
 
 from bloomerp.widgets.foreign_field_widget import ForeignFieldWidget
-from django.db.models import BooleanField, Count, DateField, DateTimeField, DecimalField, DurationField, Field, FloatField, IntegerField, QuerySet, TimeField, UUIDField
+from django.db.models import BooleanField, Count, DateField, DateTimeField, DecimalField, DurationField, Field, FloatField, IntegerField, QuerySet, TextField, TimeField, UUIDField
+from django.db.models.functions import Cast
+from django.db.models.fields.json import KeyTextTransform
 from django.conf import settings
 from django.utils import timezone
 
@@ -243,6 +245,85 @@ def _not_equals_filter_class(application_field: "ApplicationField", lookup: "Loo
         name: filter_cls(field_name=application_field.field, method=filter_not_equal)
         for name in _filter_names(application_field, lookup)
     }
+
+
+def _address_filter_classes(application_field: "ApplicationField") -> dict[str, django_filters.Filter]:
+    """Build filters for each structured address component stored in JSON."""
+    from bloomerp.widgets.address_widget import ADDRESS_COMPONENTS
+
+    filters: dict[str, django_filters.Filter] = {}
+    text_lookups = (
+        Lookup.EQUALS,
+        Lookup.IEXACT,
+        Lookup.CONTAINS,
+        Lookup.STARTS_WITH,
+        Lookup.ENDS_WITH,
+        Lookup.IN,
+        Lookup.IS_NULL,
+        Lookup.NOT_EQUALS,
+    )
+    country_lookups = (
+        Lookup.EQUALS,
+        Lookup.NOT_EQUALS,
+        Lookup.IS_NULL,
+        Lookup.IN,
+        Lookup.NOT_IN,
+    )
+
+    for component, _label, _autocomplete in ADDRESS_COMPONENTS:
+        field_name = f"{application_field.field}__{component}"
+        for lookup_enum in country_lookups if component == "country" else text_lookups:
+            lookup = lookup_enum.value
+            names = [f"{field_name}{alias}" for alias in lookup.aliases]
+
+            def filter_component(
+                queryset: QuerySet,
+                _name: str,
+                value,
+                *,
+                component=component,
+                lookup_enum=lookup_enum,
+                lookup_definition=lookup,
+            ):
+                if value in django_filters.constants.EMPTY_VALUES:
+                    return queryset
+
+                annotation = f"_address_{application_field.field}_{component}"
+                queryset = queryset.annotate(
+                    **{
+                        annotation: Cast(
+                            KeyTextTransform(component, application_field.field),
+                            output_field=TextField(),
+                        )
+                    }
+                )
+                if lookup_enum == Lookup.NOT_EQUALS:
+                    return queryset.exclude(**{f"{annotation}__exact": value})
+                if lookup_enum == Lookup.NOT_IN:
+                    return queryset.exclude(**{f"{annotation}__in": value})
+
+                lookup_expr = (
+                    "isnull"
+                    if lookup_enum == Lookup.IS_NULL
+                    else lookup_definition.django_representation
+                )
+                return queryset.filter(**{f"{annotation}__{lookup_expr}": value})
+
+            if lookup_enum == Lookup.IS_NULL:
+                filter_cls = django_filters.BooleanFilter
+            elif lookup_enum in {Lookup.IN, Lookup.NOT_IN}:
+                filter_cls = CharInFilter
+            else:
+                filter_cls = django_filters.CharFilter
+
+            filters.update(
+                {
+                    name: filter_cls(field_name=field_name, method=filter_component)
+                    for name in names
+                }
+            )
+
+    return filters
 
 
 def _relative_date_filter_class(application_field: "ApplicationField", lookup: "LookupDefinition") -> dict[str, django_filters.Filter]:
@@ -718,6 +799,24 @@ class Lookup(Enum):
         widget_func=_equals_widget,
         filter_class_funcs=lambda value, lookup=None: _not_equals_filter_class(value, lookup or Lookup.NOT_EQUALS.value),
         python_eval=lambda actual, expected: not _python_equals(actual, expected),
+    )
+
+    NOT_IN = LookupDefinition(
+        id="not_in",
+        display_name="Not In",
+        django_representation="not_in",
+        aliases=["__not_in"],
+        description="Checks if value is not in a list of values.",
+        sql_operator=lambda value: f"NOT {_sql_in_values(value)}",
+        widget_func=_in_widget,
+        python_eval=lambda actual, expected: not _python_in(actual, expected),
+    )
+
+    ADDRESS_ADVANCED = LookupDefinition(
+        id="address_advanced",
+        display_name="Address Lookup",
+        django_representation="",
+        filter_class_funcs=_address_filter_classes,
     )
 
     EQUALS_USER = LookupDefinition(
