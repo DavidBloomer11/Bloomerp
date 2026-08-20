@@ -11,7 +11,8 @@ from django.db.models.functions import Cast
 from django.http import HttpRequest
 
 from bloomerp.models.application_field import ApplicationField
-from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
+from bloomerp.permissions.definition import BloomerpPermission
+from bloomerp.permissions.manager import UserPermissionManager, create_permission_str
 from bloomerp.utils.labels import safe_object_label
 
 from .base import BaseDataviewRenderer, DataviewPagination
@@ -25,6 +26,11 @@ NUMERIC_FIELD_TYPES = (
 )
 NUMERIC_AGGREGATIONS = {"count", "sum", "min", "max", "avg"}
 BOOLEAN_AGGREGATIONS = {"count", "sum"}
+MAX_PIVOT_LEAF_COLUMNS = 100
+
+
+class PivotTableTooWide(Exception):
+    """Raised when a pivot would render an unsafe number of columns."""
 
 
 def _hashable(value: Any) -> Any:
@@ -108,7 +114,6 @@ class PivotTable:
     _related_labels: dict[tuple[str, Any], str] = field(default_factory=dict, init=False)
 
     def build(self, top_level_values: Iterable[Any]) -> PivotTableResult:
-        self._prepare_related_labels()
         effective_aggregations = [
             self._effective_aggregation(value_field)
             for value_field in self.value_fields
@@ -120,6 +125,7 @@ class PivotTable:
         aggregate_expressions = self._aggregate_expressions(effective_aggregations)
         page_queryset = self._filter_top_level_rows(top_level_values)
         column_paths, raw_column_paths = self._column_paths()
+        self._prepare_related_labels()
         leaf_column_paths = [
             (*column_path, value_index)
             for column_path in column_paths
@@ -235,14 +241,25 @@ class PivotTable:
         return self.queryset.filter(query)
 
     def _column_paths(self) -> tuple[list[tuple[Any, ...]], dict[tuple[Any, ...], tuple[Any, ...]]]:
+        value_count = len(self.value_fields)
+        if value_count > MAX_PIVOT_LEAF_COLUMNS:
+            raise PivotTableTooWide
+
         if not self.column_fields:
             return [()], {(): ()}
 
         names = [item.name for item in self.column_fields]
-        raw_paths = self.queryset.values_list(*names).order_by(*names).distinct()
+        max_column_paths = MAX_PIVOT_LEAF_COLUMNS // max(value_count, 1)
+        raw_paths = (
+            self.queryset.values_list(*names)
+            .order_by(*names)
+            .distinct()[: max_column_paths + 1]
+        )
         paths: list[tuple[Any, ...]] = []
         raw_by_path: dict[tuple[Any, ...], tuple[Any, ...]] = {}
-        for raw_path in raw_paths:
+        for index, raw_path in enumerate(raw_paths):
+            if index >= max_column_paths:
+                raise PivotTableTooWide
             if len(names) == 1:
                 raw_path = (raw_path[0],)
             path = tuple(_hashable(value) for value in raw_path)
@@ -452,6 +469,7 @@ class PivotTableDataviewRenderer(BaseDataviewRenderer):
         context.update({
             "pivot_configured": bool(row_fields and value_fields),
             "pivot_result": None,
+            "pivot_too_wide": False,
             "pivot_show_row_totals": bool(getattr(self.options, "show_row_totals", True)),
             "pivot_show_column_totals": bool(getattr(self.options, "show_column_totals", True)),
         })
@@ -467,7 +485,10 @@ class PivotTableDataviewRenderer(BaseDataviewRenderer):
             show_column_totals=getattr(self.options, "show_column_totals", True),
             totals_scope=getattr(self.options, "totals_scope", "page"),
         )
-        context["pivot_result"] = pivot_table.build(pagination.page_obj.object_list)
+        try:
+            context["pivot_result"] = pivot_table.build(pagination.page_obj.object_list)
+        except PivotTableTooWide:
+            context["pivot_too_wide"] = True
         return context
 
     def _resolve_fields(self, field_ids: Iterable[Any]) -> list[PivotField]:
@@ -499,7 +520,6 @@ class PivotTableDataviewRenderer(BaseDataviewRenderer):
         except (TypeError, ValueError, ApplicationField.DoesNotExist, FieldDoesNotExist):
             return None
 
-        permission = create_permission_str(preference.content_type.model_class(), "view")
-        if not UserPermissionManager(request.user).has_field_permission(application_field, permission):
+        if not UserPermissionManager(request.user).has_field_permission(application_field, BloomerpPermission.VIEW):
             return None
         return application_field

@@ -17,6 +17,15 @@ fields:
     type: CharField
     options:
       max_length: 100
+
+  - id: sequence_prefix
+    name: Sequence Prefix
+    description: Prefix used when numbering entries in this journal
+    type: CharField
+    options:
+      max_length: 10
+      null: true
+      blank: true
       
   - id: journal_type
     name: Journal Type
@@ -69,3 +78,17 @@ fields:
     type: BooleanField
     options:
       default: false
+
+  - id: default_currency
+    name: Default Currency
+    type: CharField
+    options:
+      max_length: 10
+      default: USD
+
+  - id: notes
+    name: Notes
+    type: TextField
+    options:
+      null: true
+      blank: true

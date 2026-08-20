@@ -6,7 +6,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import FieldDoesNotExist
 from django.db.models.query import QuerySet
 from typing import Any, Optional, Type
-from django.utils.translation import gettext_lazy as _
+from django.utils.encoding import force_str
+from django.utils.translation import gettext, gettext_lazy as _
 from bloomerp.field_types.types import FieldType
 
 class ApplicationField(models.Model):
@@ -19,6 +20,8 @@ class ApplicationField(models.Model):
     and other useful information.
     """
     class Meta:
+        verbose_name = _("Application Field")
+        verbose_name_plural = _("Application Fields")
         managed = True
         db_table = "bloomerp_application_field"
     
@@ -26,17 +29,20 @@ class ApplicationField(models.Model):
 
     field = models.CharField(
         max_length=100,
-        help_text=_("The name of the field.")
+        help_text=_("The name of the field."),
+        verbose_name=_("Field"),
         )
     content_type = models.ForeignKey(
         ContentType, 
         on_delete=models.CASCADE,
-        help_text=_("The content type (model) this field belongs to.")
-        )
+        help_text=_("The content type (model) this field belongs to."),
+        verbose_name=_("Content Type"),
+    )
     field_type = models.CharField(
         max_length=100, 
         choices=FieldType.choices(),
-        help_text=_("The type of the field.")
+        help_text=_("The type of the field."),
+        verbose_name=_("Field Type"),
         )
     related_model = models.ForeignKey(
         ContentType, 
@@ -44,12 +50,14 @@ class ApplicationField(models.Model):
         null=True, 
         blank=True,
         related_name='related_models', 
-        help_text=_("Related model for ForeignKey, OneToOneField, ManyToManyField")
-        )
+        help_text=_("Related model for ForeignKey, OneToOneField, ManyToManyField"),
+        verbose_name=_("Related Model"),
+    )
     meta = models.JSONField(
         null=True, 
         blank=True,
-        help_text=_("Additional metadata about the field.")
+        help_text=_("Additional metadata about the field."),
+        verbose_name=_("Meta"),
         )
 
     # Database related fields
@@ -57,16 +65,20 @@ class ApplicationField(models.Model):
         max_length=100, 
         null=True, 
         blank=True,
-        help_text=_("The database table this field belongs to.")
+        help_text=_("The database table this field belongs to."),
+        verbose_name=_("DB Table"),
     )
     db_field_type = models.CharField(
         max_length=100, 
         null=True, 
-        blank=True)
+        blank=True,
+        verbose_name=_("DB Field Type"),
+        )
     db_column = models.CharField(
         max_length=100, 
         null=True, 
-        blank=True
+        blank=True,
+        verbose_name=_("DB Column"),
         )
 
     def __str__(self):
@@ -177,53 +189,18 @@ class ApplicationField(models.Model):
     
     @property
     def title(self):
-        return self.field.replace("_", " ").title()
+        try:
+            model_field = self._get_model_field()
+        except FieldDoesNotExist:
+            return gettext(self.field.replace("_", " ").title())
 
-    @staticmethod
-    def get_related_models(model: models.Model, skip_auto_created=True):
-        """Returns all related models for a specific model"""
-        content_type_id = ContentType.objects.get_for_model(model).pk
-        qs = ApplicationField.objects.filter(
-            meta__related_model=content_type_id
-        ).exclude(content_type=content_type_id)
-        if skip_auto_created:
-            qs = qs.exclude(meta__auto_created=True)
-        return qs
-
-    @staticmethod
-    def get_db_tables_and_columns(user= None) -> list[tuple[str, list[str]]]:
-        """
-        Returns a tuple for each database table.
-        The tuple contains the table name and a tuple of the list of columns and there datatype.
-        
-        Args:
-            user (User): The user object
-
-
-        Example output:
-        [
-            ('auth_user', [('id', 'int'), ('username','varchar'), ...]),
-            ('auth_group', [('id', 'int'), ('name','varchar'), ...]),
-        ]
-
-        """
-        tables = []
-
-        qs = ApplicationField.objects.filter(db_table__isnull=False)
-
-        if user:
-            content_types = user.get_content_types_for_user(permission_types=["view"])
-            qs = qs.filter(content_type__in=content_types)
-
-
-        for table in qs.values("db_table").distinct():
-            table_name = table["db_table"]
-            columns = ApplicationField.objects.filter(db_table=table_name).values_list(
-                "db_column", "db_field_type"
-            )
-            tables.append((table_name, columns))
-        return tables
-
+        declared_label = getattr(model_field, "_verbose_name", None)
+        if declared_label is not None:
+            # gettext_lazy values resolve here; plain strings can still be supplied
+            # by an extension app and resolved from the extracted model catalog.
+            return gettext(force_str(declared_label))
+        return gettext(self.field.replace("_", " ").title())
+    
     @staticmethod
     def get_for_content_type_id(content_type_id: int) -> QuerySet:
         """Retrieves the application fields for a particular content type ID.
@@ -328,3 +305,5 @@ class ApplicationField(models.Model):
     @property
     def field_type_enum(self):
         return self.get_field_type_enum()
+    
+    

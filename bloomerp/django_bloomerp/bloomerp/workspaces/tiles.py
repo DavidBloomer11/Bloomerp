@@ -1,13 +1,14 @@
 
-from django.http import HttpRequest
 from django.utils.translation import gettext_lazy as _
 from enum import Enum
 
-from bloomerp.models.forms import form
 from bloomerp.workspaces.analytics_tile.model import AnalyticsTileConfig
 from bloomerp.workspaces.analytics_tile.render import AnalyticsTileRenderer
 from bloomerp.workspaces.canvas_tile.model import CanvasTileConfig
 from bloomerp.workspaces.canvas_tile.render import CanvasTileRenderer
+from bloomerp.workspaces.dataview_tile.form import DataViewTileForm
+from bloomerp.workspaces.dataview_tile.model import DataViewTileConfig
+from bloomerp.workspaces.dataview_tile.render import DataViewTileRenderer
 from bloomerp.workspaces.form_tile.model import FormTileConfig, FormTileForm
 from bloomerp.workspaces.form_tile.render import FormTileRenderer
 from bloomerp.workspaces.links_tile.model import LinkTileConfig
@@ -51,14 +52,14 @@ class TileType(Enum):
         render_cls=TextTileRenderer
     )
 
-    # DATAVIEW_TILE = TileTypeDefinition(
-    #     name=str(_("Data View")),
-    #     description=str(_("Displays and manages records from a selected model in a structured view with filtering, sorting, and interaction capabilities.")),
-    #     icon="fa-table",
-    #     form_cls=DataViewTileForm,
-    #     model=DataViewTileConfig,
-    #     render_cls=DataViewTileRenderer
-    # )
+    DATAVIEW_TILE = TileTypeDefinition(
+        name=str(_("Data View")),
+        description=str(_("Displays and manages records from a selected model in a structured view with filtering, sorting, and interaction capabilities.")),
+        icon="fa-table",
+        form_cls=DataViewTileForm,
+        model=DataViewTileConfig,
+        render_cls=DataViewTileRenderer,
+    )
     
     FORM_TILE = TileTypeDefinition(
         name=str(_("Form")),

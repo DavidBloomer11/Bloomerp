@@ -2,8 +2,8 @@
 
 from django.http import Http404, HttpRequest, HttpResponse
 from bloomerp.models.forms.form import Form
-from bloomerp.models.users.user_create_view_preference import UserCreateViewPreference
-from bloomerp.models.users.user_detail_view_preference import UserDetailViewPreference
+
+from bloomerp.models.users.user_object_layout_preference import UserObjectLayoutPreference
 from bloomerp.models.workspaces.tile import Tile
 from bloomerp.models.workspaces.workspace import Workspace
 from bloomerp.router import router
@@ -11,7 +11,7 @@ from bloomerp.router import router
 from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import get_object_or_404, render
 
-from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
+from bloomerp.permissions.manager import UserPolicyManager, create_permission_str
 from bloomerp.services.sectioned_layout_services import get_available_layout_fields
 from bloomerp.services.workspace_services import UserWorkspaceService
 
@@ -21,26 +21,30 @@ def _get_tiles(request: HttpRequest, content_type: ContentType):
     return service.get_available_workspace_tiles()
 
 
-def _get_scope_from_content_type(content_type: ContentType) -> str | None:
+def _get_scope_from_content_type(
+    request: HttpRequest,
+    content_type: ContentType,
+) -> str | None:
     model_cls = content_type.model_class()
-    if model_cls is UserCreateViewPreference:
-        return "create"
-    if model_cls is UserDetailViewPreference:
-        return "detail"
     if model_cls is Form:
         return "create"
+    if model_cls is UserObjectLayoutPreference:
+        scope = request.GET.get("layout_mode", "detail")
+        return scope if scope in {"create", "detail"} else None
     return None
 
 
 def _get_application_fields(request: HttpRequest, content_type: ContentType):
-    manager = UserPermissionManager(request.user)
-    scope = _get_scope_from_content_type(content_type)
+    manager = UserPolicyManager(request.user)
+    scope = _get_scope_from_content_type(request, content_type)
     if scope is None:
         return HttpResponse("Unsupported content type for application fields", status=400)
 
-    model_id = request.GET.get("content_type_id")
+    model_id = request.GET.get("target_content_type_id") or request.GET.get(
+        "content_type_id"
+    )
     if not model_id:
-        return HttpResponse("Missing content_type_id", status=400)
+        return HttpResponse("Missing target_content_type_id", status=400)
 
     model_content_type = get_object_or_404(ContentType, id=model_id)
     model = model_content_type.model_class()
@@ -61,8 +65,7 @@ def _get_application_fields(request: HttpRequest, content_type: ContentType):
 CALLABLES = {
     Workspace: _get_tiles,
     Form: _get_application_fields,
-    UserCreateViewPreference: _get_application_fields,
-    UserDetailViewPreference: _get_application_fields
+    UserObjectLayoutPreference: _get_application_fields,
 }
 
 

@@ -2,9 +2,7 @@
 
 <div class="h-full min-w-0 w-full p-2" id="tile-preview-section">
     <div class="min-w-0 w-full">
-        <c-features.workspaces.tile colspan="1" max_cols="1" icon="{{ tile_preview_icon }}" title="{{ tile_preview_title }}" description="{{ tile_preview_description}}">
-            {{ tile_preview_html|safe}}
-        </c-features.workspaces.tile>
+        <c-features.layout.item :item="tile_preview_item" />
     </div>
 </div>
 

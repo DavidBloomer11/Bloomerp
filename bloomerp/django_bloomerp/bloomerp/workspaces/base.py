@@ -31,6 +31,13 @@ class TileOperationDefinition:
 
 
 class BaseTileConfig(BaseModel):
+    """Shared metadata and behavior for declarative tile configurations."""
+
+    id: str | None = None
+    name: str | None = None
+    description: str | None = None
+    icon: str | None = None
+
     @classmethod
     @abstractmethod
     def get_default(cls, *args, **kwargs) -> Self:

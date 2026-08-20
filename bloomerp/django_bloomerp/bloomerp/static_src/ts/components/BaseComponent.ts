@@ -36,6 +36,11 @@ class BaseComponent {
     public onAfterSwap(): void {
         // Override this method if needed
     }
+
+    public getDataAttribute(attributeName: string): string | null {
+        if (!this.element) return null;
+        return this.element.dataset[attributeName] || null;
+    }
 }
 
 // Registry to store all component classes

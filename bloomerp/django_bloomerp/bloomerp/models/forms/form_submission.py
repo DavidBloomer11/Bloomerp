@@ -3,7 +3,7 @@ from django.http import HttpRequest, HttpResponse
 
 from bloomerp.models.base_bloomerp_model import BloomerpModel, FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.definition import BloomerpModelConfig, ObjectAction
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _, gettext_noop
 from bloomerp.utils.requests import render_message
 
 def execute_persist(request:HttpRequest, obj:"FormSubmission") -> HttpResponse:
@@ -17,27 +17,25 @@ def execute_persist(request:HttpRequest, obj:"FormSubmission") -> HttpResponse:
     
     
     manager = FormManager(obj.form)
-    try:
-        manager.persist_form_submission(obj, request)
-        return render_message(
-            request,
-            "Form persisted succesfully",
-            "success"
-        )
-    except Exception as e:
-        return render_message(
-            request,
-            "An error occurred.",
-            "error"
-        )
+    manager.persist_form_submission(obj, request)
+    return render_message(
+        request,
+        "Form persisted succesfully",
+        "success"
+    )
+    
 
 
 class FormSubmission(BloomerpModel):
+    class Meta:
+        verbose_name = _("Form Submission")
+        verbose_name_plural = _("Form Submissions")
+
     bloomerp_config = BloomerpModelConfig(
         layout=FieldLayout(
             rows=[
                 LayoutRow(
-                    title="Details",
+                    title=gettext_noop("Details"),
                     columns=2,
                     items=[
                         LayoutItem(id="form"),
@@ -50,7 +48,7 @@ class FormSubmission(BloomerpModel):
         object_actions=[
             ObjectAction(
                 id="persist",
-                label="Persist",
+                label=gettext_noop("Persist"),
                 execution_func=execute_persist,
                 should_render_func=lambda req, obj: obj.persisted == False
             )
@@ -64,19 +62,20 @@ class FormSubmission(BloomerpModel):
         on_delete=models.SET_NULL, # We probs don't wanna lose all of our submissions if the form is deleted.
         blank=False,
         null=True,
-        related_name="submissions"
+        related_name="submissions",
+        verbose_name=_("Form"),
     )
-    data : dict = models.JSONField(
-        
-    )
+    data: dict = models.JSONField(verbose_name=_("Data"))
     persisted = models.BooleanField(
         default=False,
         help_text=_("Whether the form was persisted"),
-        editable=False
+        editable=False,
+        verbose_name=_("Persisted"),
     )
     ip_address = models.GenericIPAddressField(
         null=True,
         blank=True,
+        verbose_name=_("IP Address"),
     )
     
     def __str__(self):

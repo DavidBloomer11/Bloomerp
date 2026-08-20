@@ -1,22 +1,33 @@
-<div class="flex justify-center mt-14">
-    <div class="container mx-auto px-4">
-        <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-8 justify-center">
-        {% for module in modules %}
-            <a 
-                hx-get="/{{ module.id }}/"
-                hx-target="#main-content"
-                hx-push-url="true"
-                hx-swap="innerHTML"
-            >
-                <div class="h-full border hover:cursor-pointer border-gray-200 bg-white text-primary-900 rounded-xl p-4 flex flex-col items-center justify-center gap-3 hover:shadow-md transition-transform duration-150 ease-in-out transform hover:-translate-y-1">
-                        <div class="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br bg-primary-50 text-primary-700 shadow">
-                            <i class="fas {{module.icon}} fa-lg"></i>
-                        </div>
-                        <span class="text-sm font-semibold tracking-wide">{{ module.name }}</span>
-                        <c-ui.text.muted class="mt-2 text-xs text-center">{{ module.description }}</c-ui.text.muted>
-                </div>
-            </a>
-        {% endfor %}
+{% load i18n %}
+
+{% if workspace %}
+    {% include "views/workspaces/bloomerp_workspace_view.html" %}
+{% else %}
+
+    <div class="flex justify-center mt-14">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-8 justify-center">
+            {% for module in modules %}
+                <a
+                    hx-get="/{{ module.route_path|default:module.id }}/"
+                    hx-target="#main-content"
+                    hx-push-url="true"
+                    hx-swap="innerHTML"
+                >
+                    <div class="h-full border hover:cursor-pointer border-gray-200 bg-white text-primary-900 rounded-xl p-4 flex flex-col items-center justify-center gap-3 hover:shadow-md transition-transform duration-150 ease-in-out transform hover:-translate-y-1">
+                            <div class="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br bg-primary-50 text-primary-700 shadow">
+                                <i class="fas {{ module.icon }} fa-lg"></i>
+                            </div>
+                            <span class="text-sm font-semibold tracking-wide">{{ module.localized_name|default:module.name }}</span>
+                            <c-ui.text.muted class="mt-2 text-xs text-center">{{ module.localized_description|default:module.description }}</c-ui.text.muted>
+                    </div>
+                </a>
+            
+            {% empty %}
+                <p class="col-span-1 sm:col-span-3 lg:col-span-4 text-center text-gray-500">{% blocktrans %}No accessible modules available. Please contact your administrator.{% endblocktrans %}</p>
+            {% endfor %}
+
+            </div>
         </div>
     </div>
-</div>
+{% endif %}

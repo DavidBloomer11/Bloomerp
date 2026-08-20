@@ -1,8 +1,11 @@
+import json
+
+import bleach
 from django import template
-from django.db.models.manager import Manager
+from django.conf import settings
 from django.db.models import Model
-from django.http import HttpRequest, HttpResponse
-from bloomerp.models.definition import ObjectAction, ObjectHTML
+from django.http import HttpRequest
+from bloomerp.models.definition import ObjectAction, ObjectHTML, ObjectModalAction
 from bloomerp.models.users.base_preference import BasePreference
 from bloomerp.services.preference_services import PreferenceManager
 from bloomerp.utils.models import get_initials, get_detail_view_url, get_delete_view_url
@@ -10,19 +13,16 @@ from django.urls import reverse
 from django.contrib.contenttypes.models import ContentType
 from django.utils.safestring import mark_safe
 from django.utils.html import escape, format_html
+from django.utils.text import Truncator
+from django.utils.translation import gettext
 from django.middleware.csrf import get_token
 import re
 import uuid
 from bloomerp.models import Bookmark, AbstractBloomerpUser, ApplicationField
-from django.db.models.functions import Cast
-from django.db.models import DateTimeField, F
-from django.db.models import QuerySet
-from django.core.signing import dumps, loads
-from bloomerp.models import File
 import uuid
 from django.template.loader import render_to_string
 from bloomerp.field_types import FieldType
-from bloomerp.modules.definition import module_registry
+from bloomerp.config.settings import BLOOMERP_LANGUAGES
 from bloomerp.services.sectioned_layout_services import (
     build_crud_layout_field_context,
     dump_layout_json as dump_layout_json_service,
@@ -31,6 +31,51 @@ from bloomerp.services.sectioned_layout_services import (
 from bloomerp.widgets.icon_picker_widget import parse_icon_value as parse_icon_value_service
 
 register = template.Library()
+
+ACTIVITY_LOG_VALUE_MAX_LENGTH = 300
+ACTIVITY_LOG_ALLOWED_TAGS = {
+    "a",
+    "blockquote",
+    "br",
+    "code",
+    "em",
+    "li",
+    "ol",
+    "p",
+    "pre",
+    "strong",
+    "ul",
+}
+ACTIVITY_LOG_ALLOWED_ATTRIBUTES = {
+    "a": ["href", "title"],
+}
+ACTIVITY_LOG_ALLOWED_PROTOCOLS = ["http", "https", "mailto"]
+
+
+@register.simple_tag
+def get_bloomerp_languages() -> list[tuple[str, str]]:
+    """Return the languages exposed by BloomERP's language selector."""
+    return getattr(settings, "BLOOMERP_LANGUAGES", BLOOMERP_LANGUAGES)
+
+
+@register.filter
+def activity_log_html(value):
+    """Return length-limited editor HTML that is safe to render in an activity log."""
+    if value is None:
+        return ""
+
+    cleaned_html = bleach.clean(
+        str(value),
+        tags=ACTIVITY_LOG_ALLOWED_TAGS,
+        attributes=ACTIVITY_LOG_ALLOWED_ATTRIBUTES,
+        protocols=ACTIVITY_LOG_ALLOWED_PROTOCOLS,
+        strip=True,
+    )
+    truncated_html = Truncator(cleaned_html).chars(
+        ACTIVITY_LOG_VALUE_MAX_LENGTH,
+        html=True,
+    )
+    return mark_safe(truncated_html)
 
 
 @register.filter(name="dump_layout_json")
@@ -42,6 +87,16 @@ def dump_layout_json_filter(layout):
     {{ layout|dump_layout_json }}
     """
     return dump_layout_json_service(layout)
+
+@register.filter(name="dump_json")
+def dump_json_filter(data):
+    """
+    Serialize a Python object to JSON for use in `data-*` attributes.
+
+    Example usage:
+    {{ data|dump_json }}
+    """
+    return json.dumps(data)
 
 @register.filter(name='get_dict_value')
 def get_dict_value(dictionary:dict, key:str):
@@ -468,6 +523,26 @@ def render_object_action(
                 request=request,
             )
         )
+    
+    if isinstance(action, ObjectModalAction):
+        return format_html(
+            (
+                '<button class="btn btn-xs btn-{style}" '
+                'hx-get="{url}" '
+                'hx-target="#bloomerp-general-use-modal-body" '
+                'bloomerp-set-modal-title-for="bloomerp-general-use-modal" '
+                'bloomerp-set-modal-title-to="{title}" '
+                'bloomerp-set-modal-size-to="{size}" '
+                'bloomerp-open-modal="bloomerp-general-use-modal">'
+                '{label}'
+                '</button>'
+            ),
+            style=action.style,
+            url=action.endpoint(object),
+            label=gettext(action.label),
+            title=gettext(action.modal_title) if action.modal_title else "",
+            size=action.modal_size,
+        )
 
     if content_type_id is None:
         content_type_id = ContentType.objects.get_for_model(object).pk
@@ -489,7 +564,7 @@ def render_object_action(
             },
         ),
         get_token(request),
-        action.label,
+        gettext(action.label),
     )
     
 @register.simple_tag

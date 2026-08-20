@@ -46,7 +46,10 @@ class RowPolicyRuleSerializer(serializers.ModelSerializer):
 
     def validate_rule(self, value):
         try:
-            return RowPolicyRuleContent.model_validate(value).model_dump(exclude_none=True)
+            return RowPolicyRuleContent.model_validate(value).model_dump(
+                exclude={"permissions"},
+                exclude_none=True,
+            )
         except PydanticValidationError as exc:
             raise serializers.ValidationError(str(exc)) from exc
 

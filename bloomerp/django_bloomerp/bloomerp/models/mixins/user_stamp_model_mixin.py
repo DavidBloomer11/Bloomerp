@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from bloomerp.model_fields.user_field import UserField
 
 
@@ -13,13 +14,17 @@ class UserStampModelMixin(models.Model):
         related_name='%(class)s_created',
         null=True,
         blank=True,
+        verbose_name=_("Created By"),
         )
     updated_by = UserField(
         on_delete=models.SET_NULL,
         related_name='%(class)s_updated',
         null=True,
         blank=True,
+        verbose_name=_("Updated By"),
         )
 
     class Meta:
+        verbose_name = _("User Stamp Model Mixin")
+        verbose_name_plural = _("User Stamp Model Mixins")
         abstract = True

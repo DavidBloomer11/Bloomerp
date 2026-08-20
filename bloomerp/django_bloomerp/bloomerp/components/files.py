@@ -17,6 +17,8 @@ from bloomerp.router import router
 from bloomerp.services.file_services import ensure_folder_hierarchy_for_object
 from bloomerp.permissions.manager import UserPermissionManager
 from bloomerp.permissions.manager import create_permission_str
+from bloomerp.services.preference_services import PreferenceManager
+from bloomerp.utils.filters import filter_model
 
 
 __path__ = [str(Path(__file__).with_name("files"))]
@@ -112,6 +114,56 @@ def _hydrate_legacy_querystring(request: HttpRequest, legacy_query: str | None =
     request.GET = query_dict
 
 
+def _get_file_preference(user, content_type: ContentType) -> UserListViewPreference:
+    preference = PreferenceManager(user).get_or_create_selected(
+        UserListViewPreference,
+        scope={
+            "content_type_id" : content_type.id
+        }
+    )
+    
+    if preference.view_type not in FILE_BROWSER_VIEW_TYPES:
+        preference.view_type = FILE_BROWSER_VIEW_TYPES[0]
+        preference.save(update_fields=["view_type"])
+    return preference
+
+
+def _sanitize_filter_params(query_params) -> dict[str, list[str]]:
+    allowed = set(FILE_BROWSER_FILTER_FIELDS)
+    sanitized: dict[str, list[str]] = {}
+
+    for key in query_params.keys():
+        if key in FILE_BROWSER_RESERVED_QUERY_KEYS:
+            continue
+
+        base_key = key.split("__", 1)[0]
+        if base_key not in allowed:
+            continue
+
+        values = [value for value in query_params.getlist(key) if value != ""]
+        if values:
+            sanitized[key] = values
+
+    return sanitized
+
+
+def _get_filter_section(request: HttpRequest, file_content_type_id: int) -> str:
+    application_fields = ApplicationField.get_for_content_type_id(file_content_type_id).filter(
+        field__in=FILE_BROWSER_FILTER_FIELDS,
+        field_type__in=FILTERABLE_FIELD_TYPES,
+    )
+    return render(
+        request,
+        "components/filters/init.html",
+        {
+            "content_type_id": file_content_type_id,
+            "application_fields": application_fields,
+            "selected_application_field": None,
+            "html_content": "",
+        },
+    ).content.decode("utf-8")
+
+
 def _folder_path(folder: FileFolder) -> str:
     return " / ".join([_get_folder_display_name(parent) for parent in folder.parents] + [_get_folder_display_name(folder)])
 
@@ -128,6 +180,24 @@ def _get_folder_display_name(folder: FileFolder) -> str:
         model = folder.content_type.model_class() if folder.content_type else None
         if model is not None:
             return str(model._meta.verbose_name_plural)
+
+    if (
+        folder.parent_id is None
+        and folder.content_type_id is None
+        and not folder.object_id
+    ):
+        from bloomerp.modules.definition import module_registry
+
+        module = next(
+            (
+                item
+                for item in module_registry.get_root_modules()
+                if item.name == folder.name
+            ),
+            None,
+        )
+        if module is not None:
+            return module.localized_name
 
     return folder.name
 
@@ -352,6 +422,73 @@ def _build_visible_files_queryset(
     )
 
     return queryset.order_by("name")
+
+
+def _serialize_file_row(request: HttpRequest, file: File, current_folder: FileFolder | None) -> dict:
+    folder_label = (
+        _get_folder_display_name(current_folder)
+        if current_folder
+        else (_get_folder_display_name(file.folder) if file.folder_id else "Root")
+    )
+    linked_object = _get_file_linked_object(file)
+
+    return {
+        "id": str(file.id),
+        "name": file.name or str(file),
+        "kind": "file",
+        "folder_label": folder_label,
+        "size": file.size_str,
+        "datetime_updated": file.datetime_updated,
+        "content_object_label": str(linked_object) if linked_object else "Unlinked",
+        "content_object_url": getattr(linked_object, "get_absolute_url", None) if linked_object else None,
+        "content_type_label": file.content_type.name if file.content_type_id else "Unlinked",
+        "view_url": file.url if file.file else None,
+        "download_url": file.url if file.file else None,
+        "rename_allowed": file.persisted and _user_can_mutate_file(request, file, ("change", "add")),
+        "move_allowed": file.persisted and _user_can_mutate_file(request, file, ("change", "add")),
+        "delete_allowed": file.persisted and _user_can_mutate_file(request, file, ("delete",)),
+        "file": file,
+    }
+
+
+def _prepare_file_rows(
+    request: HttpRequest,
+    queryset: QuerySet[File],
+    current_folder: FileFolder | None,
+) -> list[dict]:
+    return [_serialize_file_row(request, file, current_folder) for file in queryset]
+
+
+def _prepare_file_cards(
+    request: HttpRequest,
+    queryset: QuerySet[File],
+    current_folder: FileFolder | None,
+) -> list[dict]:
+    cards: list[dict] = []
+    for file in queryset:
+        linked_object = _get_file_linked_object(file)
+        cards.append(
+            {
+                "id": str(file.id),
+                "name": file.name or str(file),
+                "size": file.size_str,
+                "updated_at": file.datetime_updated,
+                "object_label": str(linked_object) if linked_object else "Unlinked",
+                "object_url": getattr(linked_object, "get_absolute_url", None) if linked_object else None,
+                "folder_label": (
+                    _get_folder_display_name(current_folder)
+                    if current_folder
+                    else (_get_folder_display_name(file.folder) if file.folder_id else "Root")
+                ),
+                "view_url": file.url if file.file else None,
+                "download_url": file.url if file.file else None,
+                "rename_allowed": file.persisted and _user_can_mutate_file(request, file, ("change", "add")),
+                "move_allowed": file.persisted and _user_can_mutate_file(request, file, ("change", "add")),
+                "delete_allowed": file.persisted and _user_can_mutate_file(request, file, ("delete",)),
+                "file": file,
+            }
+        )
+    return cards
 
 
 def _get_model_scope_folder(content_type: ContentType | None) -> FileFolder | None:

@@ -13,15 +13,41 @@ export default class UiMessage extends BaseComponent {
     private messageType: MessageType;
     private duration: number = 5;
     private position: string = "bottom-right";
+    private pauseWhenHidden: boolean = false;
+    private remainingDurationMs: number = 0;
+    private timerStartedAt: number = 0;
+    private removalTimer: number | null = null;
+    private fadeTimer: number | null = null;
+    private messageContainer: HTMLElement | null = null;
+    private closeButton: HTMLButtonElement | null = null;
+    private dismissed: boolean = false;
+
+    private readonly visibilityChangeHandler = (): void => {
+        if (document.hidden) {
+            this.pauseRemovalTimer();
+        } else {
+            this.startRemovalTimer();
+        }
+    };
+
+    private readonly closeHandler = (): void => {
+        this.fadeOutAndRemove();
+    };
 
     public initialize(): void {
+        if (!this.element) {
+            return;
+        }
+
         this.messageText = this.element.dataset.messageText || "";
         this.messageType = (this.element.dataset.messageType as MessageType) || MessageType.INFO;
         this.position = this.element.dataset.position || this.position;
+        this.pauseWhenHidden = this.element.dataset.pauseWhenHidden === "true";
         const durationData = this.element.dataset.duration;
         if (durationData) {
             this.duration = parseInt(durationData, 10);
         }
+        this.remainingDurationMs = this.duration * 1000;
 
         this.showMessage();
     }
@@ -30,32 +56,28 @@ export default class UiMessage extends BaseComponent {
      * Method to show the actual message on the screen
      */
     public showMessage(): void {
+        if (!this.element) {
+            return;
+        }
+
         const messageContainer = document.createElement("div");
-        // Map logical message types to Tailwind color names
-        const colorMap: Record<MessageType, string> = {
-            [MessageType.INFO]: "blue",
-            [MessageType.SUCCESS]: "green",
-            [MessageType.WARNING]: "amber",
-            [MessageType.ERROR]: "red",
+        const alertClassMap: Record<MessageType, string> = {
+            [MessageType.INFO]: "alert-info",
+            [MessageType.SUCCESS]: "alert-success",
+            [MessageType.WARNING]: "alert-warning",
+            [MessageType.ERROR]: "alert-danger",
         };
 
-        const color = colorMap[this.messageType] || "blue";
-
         messageContainer.classList.add(
-            `bg-${color}-100`,
-            `border-${color}-400`,
-            `text-${color}-800`,
-            "px-4",
-            "py-3",
-            "rounded",
+            "alert",
+            alertClassMap[this.messageType] || "alert-info",
+            "flex",
+            "items-center",
+            "justify-between",
             "shadow-md",
             "my-2",
-            "message-container",
-            "alert-message"
+            "message-container"
         );
-
-        // Add a specific alert class so custom CSS can also target it
-        messageContainer.classList.add(`alert-message-${this.messageType}`);
 
         // Create message inside the element with an icon and close button
         const left = document.createElement('div');
@@ -93,29 +115,95 @@ export default class UiMessage extends BaseComponent {
         const wrapper = this.getOrCreateWrapper(this.position);
         wrapper.appendChild(messageContainer);
 
-        // Remove the message after the specified duration with a fade-out
-        let removalTimer = window.setTimeout(() => {
-            fadeOutAndRemove();
-        }, this.duration * 1000);
+        this.messageContainer = messageContainer;
+        this.closeButton = closeBtn;
+        closeBtn.addEventListener("click", this.closeHandler);
+        if (this.pauseWhenHidden) {
+            document.addEventListener(
+                "visibilitychange",
+                this.visibilityChangeHandler,
+            );
+        }
+        this.startRemovalTimer();
+    }
 
-        // Close button dismisses immediately
-        closeBtn.addEventListener('click', () => {
-            window.clearTimeout(removalTimer);
-            fadeOutAndRemove();
-        });
+    private startRemovalTimer(): void {
+        if (
+            this.dismissed
+            || this.removalTimer !== null
+            || (this.pauseWhenHidden && document.hidden)
+        ) {
+            return;
+        }
 
-        const fadeOutAndRemove = (): void => {
-            messageContainer.classList.add('fade-out');
-            setTimeout(() => {
-                messageContainer.remove();
-                // If the host element was created programmatically and marked
-                // for auto removal, remove it too to avoid leaks.
-                if (this.element && this.element.dataset && this.element.dataset.autoRemove === 'true') {
-                    this.element.remove();
+        this.timerStartedAt = Date.now();
+        this.removalTimer = window.setTimeout(
+            () => {
+                if (this.pauseWhenHidden && document.hidden) {
+                    this.pauseRemovalTimer();
+                    return;
                 }
-            }, 500);
-        };
 
+                this.removalTimer = null;
+                this.fadeOutAndRemove();
+            },
+            this.remainingDurationMs,
+        );
+    }
+
+    private pauseRemovalTimer(): void {
+        if (!this.pauseWhenHidden || this.removalTimer === null) {
+            return;
+        }
+
+        window.clearTimeout(this.removalTimer);
+        this.removalTimer = null;
+        this.remainingDurationMs = Math.max(
+            0,
+            this.remainingDurationMs - (Date.now() - this.timerStartedAt),
+        );
+    }
+
+    private fadeOutAndRemove(): void {
+        if (this.dismissed || !this.messageContainer) {
+            return;
+        }
+
+        this.dismissed = true;
+        this.cleanupListenersAndTimers();
+        this.messageContainer.classList.add("fade-out");
+        this.fadeTimer = window.setTimeout(() => {
+            this.messageContainer?.remove();
+            if (this.element?.dataset.autoRemove === "true") {
+                this.element.remove();
+            }
+            this.messageContainer = null;
+            this.closeButton = null;
+            this.fadeTimer = null;
+        }, 500);
+    }
+
+    private cleanupListenersAndTimers(): void {
+        if (this.removalTimer !== null) {
+            window.clearTimeout(this.removalTimer);
+            this.removalTimer = null;
+        }
+        document.removeEventListener(
+            "visibilitychange",
+            this.visibilityChangeHandler,
+        );
+        this.closeButton?.removeEventListener("click", this.closeHandler);
+    }
+
+    public override destroy(): void {
+        this.cleanupListenersAndTimers();
+        if (this.fadeTimer !== null) {
+            window.clearTimeout(this.fadeTimer);
+            this.fadeTimer = null;
+        }
+        this.messageContainer?.remove();
+        this.messageContainer = null;
+        this.closeButton = null;
     }
 
     private getOrCreateWrapper(position: string): HTMLElement {

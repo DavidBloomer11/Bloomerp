@@ -161,15 +161,6 @@ export class Sidebar extends BaseComponent {
         this.floatingButton.classList.add('hidden');
     }
 
-    private toggleFloatingByTouch(): void {
-        if (!this.floatingButton) return;
-        if (this.floatingButton.classList.contains('hidden')) {
-            this.showFloating();
-        } else {
-            this.hideFloating();
-        }
-    }
-
 	private setupEventListeners(): void {
         // Close on overlay click
         if (this.overlayElement) {
@@ -236,8 +227,11 @@ export class Sidebar extends BaseComponent {
         this.handlePointer(event.clientX, event.clientY);
     };
 
-    private readonly onWindowTouchStart = (): void => {
-        this.toggleFloatingByTouch();
+    private readonly onWindowTouchStart = (event: TouchEvent): void => {
+        const touch = event.touches.item(0);
+        if (!touch) return;
+
+        this.handlePointer(touch.clientX, touch.clientY);
     };
 
     private readonly onDragStart = (event: DragEvent): void => {

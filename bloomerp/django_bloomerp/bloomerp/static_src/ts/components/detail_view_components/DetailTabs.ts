@@ -1,1069 +1,700 @@
+import htmx from 'htmx.org';
+
 import BaseComponent from '../BaseComponent';
 import { getCsrfToken } from '../../utils/cookies';
 import { getContextMenu, type ContextMenuItem } from '../../utils/contextMenu';
 import getGeneralModal from '../../utils/modals';
-import htmx from 'htmx.org';
-
-type FolderStatePayload = {
-    id: string;
-    name: string;
-    tab_order: string[];
-};
-
-type TabStatePayload = {
-    version: 2;
-    top_level_order: string[];
-    folders: FolderStatePayload[];
-    active: string | null;
-};
 
 type TabMeta = {
-    key: string;
+    id: string;
     name: string;
     url: string;
-    requiresPk: boolean;
-    isActive: boolean;
-    hxGet: string;
-    elementId: string;
+    active?: boolean;
+};
+
+type TabItemPayload = {
+    id: string;
+    name: string;
+    url: string | null;
+    parent_id: string | null;
+    position: number;
+};
+
+type TabItemSavedDetail = {
+    mode: 'create' | 'edit';
+    item_type: 'folder' | 'url';
+    item_id: string;
+    name: string;
+    url: string;
 };
 
 export default class DetailTabs extends BaseComponent {
     private stripContainer: HTMLElement | null = null;
     private stripList: HTMLElement | null = null;
-
-    private keydownHandler: ((event: KeyboardEvent) => void) | null = null;
-    private contextMenuHandler: ((event: MouseEvent) => void) | null = null;
-    private documentClickHandler: ((event: MouseEvent) => void) | null = null;
-    private modalAfterSwapHandler: ((event: Event) => void) | null = null;
-
-    private draggedItem: HTMLElement | null = null;
-    private draggedFolderTabButton: HTMLButtonElement | null = null;
-    private draggedFolderSource: HTMLElement | null = null;
-    private activeFolderPanelOwner: HTMLElement | null = null;
-    private activeKey: string | null = null;
+    private canManage = false;
+    private activeId: string | null = null;
     private saveTimer: number | null = null;
+
+    private draggedTopLevel: HTMLElement | null = null;
+    private draggedFolderTab: HTMLElement | null = null;
+    private draggedFolderSource: HTMLElement | null = null;
+
+    private readonly clickHandler = (event: Event) => this.onClick(event);
+    private readonly contextMenuHandler = (event: MouseEvent) => this.onContextMenu(event);
+    private readonly dragStartHandler = (event: DragEvent) => this.onDragStart(event);
+    private readonly dragEndHandler = () => this.clearDragState();
+    private readonly dragOverHandler = (event: DragEvent) => this.onDragOver(event);
+    private readonly dropHandler = (event: DragEvent) => this.onDrop(event);
+    private readonly documentClickHandler = (event: MouseEvent) => this.onDocumentClick(event);
+    private readonly keydownHandler = (event: KeyboardEvent) => this.onKeyDown(event);
+    private readonly modalSavedHandler = (event: Event) => this.onModalSaved(event as CustomEvent<TabItemSavedDetail>);
+    private readonly modalInputHandler = (event: Event) => this.onModalInput(event);
 
     public initialize(): void {
         if (!this.element) return;
 
-        this.stripContainer = this.element.querySelector<HTMLElement>('[data-tabs-strip-container]');
-        this.stripList = this.element.querySelector<HTMLElement>('[data-tabs-strip]');
+        this.stripContainer = this.element.querySelector('[data-tabs-strip-container]');
+        this.stripList = this.element.querySelector('[data-tabs-strip]');
         if (!this.stripContainer || !this.stripList) return;
 
-        this.initializeActiveKey();
-        this.bindAllTopLevelItems();
-        this.bindStripDnD();
-        this.bindStripContextMenu();
-        this.bindFolderPanelClickAway();
-        this.bindFolderModalSuccess();
-
-        this.keydownHandler = (event: KeyboardEvent) => this.onKeyDown(event);
+        this.canManage = this.element.dataset.canManage === 'true';
+        this.activeId = this.findActiveId();
+        this.element.addEventListener('click', this.clickHandler);
+        document.addEventListener('click', this.documentClickHandler);
         document.addEventListener('keydown', this.keydownHandler);
+
+        if (this.canManage) {
+            this.setDraggableState();
+            this.stripContainer.addEventListener('contextmenu', this.contextMenuHandler);
+            this.element.addEventListener('dragstart', this.dragStartHandler);
+            this.element.addEventListener('dragend', this.dragEndHandler);
+            this.stripContainer.addEventListener('dragover', this.dragOverHandler);
+            this.stripContainer.addEventListener('drop', this.dropHandler);
+
+            document.addEventListener('detail-tabs-item-saved', this.modalSavedHandler);
+            const modalBody = document.getElementById('bloomerp-general-use-modal-body');
+            modalBody?.addEventListener('input', this.modalInputHandler);
+        }
 
         this.applyActiveStyles();
     }
 
     public destroy(): void {
-        if (this.keydownHandler) {
-            document.removeEventListener('keydown', this.keydownHandler);
-            this.keydownHandler = null;
-        }
+        this.element?.removeEventListener('click', this.clickHandler);
+        this.stripContainer?.removeEventListener('contextmenu', this.contextMenuHandler);
+        this.element?.removeEventListener('dragstart', this.dragStartHandler);
+        this.element?.removeEventListener('dragend', this.dragEndHandler);
+        this.stripContainer?.removeEventListener('dragover', this.dragOverHandler);
+        this.stripContainer?.removeEventListener('drop', this.dropHandler);
+        document.removeEventListener('click', this.documentClickHandler);
+        document.removeEventListener('keydown', this.keydownHandler);
 
-        if (this.contextMenuHandler && this.stripContainer) {
-            this.stripContainer.removeEventListener('contextmenu', this.contextMenuHandler);
-            this.contextMenuHandler = null;
-        }
-
-        if (this.documentClickHandler) {
-            document.removeEventListener('click', this.documentClickHandler);
-            this.documentClickHandler = null;
-        }
-
-        if (this.modalAfterSwapHandler) {
-            const modalBody = document.getElementById('bloomerp-general-use-modal-body');
-            modalBody?.removeEventListener('htmx:afterSwap', this.modalAfterSwapHandler);
-            this.modalAfterSwapHandler = null;
-        }
-
-        if (this.saveTimer) {
-            window.clearTimeout(this.saveTimer);
-            this.saveTimer = null;
-        }
-
-        this.draggedItem = null;
-        this.draggedFolderTabButton = null;
-        this.draggedFolderSource = null;
-        this.activeFolderPanelOwner = null;
-    }
-
-    private initializeActiveKey(): void {
-        const currentLocationKey = this.getActiveKeyForCurrentLocation();
-        if (currentLocationKey) {
-            this.activeKey = currentLocationKey;
-            return;
-        }
-
-        const activeTopLevel = this.getTopLevelItems().find((item) => item.dataset.tabActive === 'true');
-        if (activeTopLevel) {
-            this.activeKey = activeTopLevel.dataset.tabKey || null;
-            return;
-        }
-
-        for (const folder of this.getFolderItems()) {
-            const folderTabs = this.getFolderTabButtons(folder);
-            const activeFolderTab = folderTabs.find((button) => button.dataset.tabActive === 'true');
-            if (activeFolderTab) {
-                this.activeKey = activeFolderTab.dataset.tabKey || null;
-                return;
-            }
-        }
-
-        this.activeKey = this.getTopLevelTabItems()[0]?.dataset.tabKey || null;
-    }
-
-    private getActiveKeyForCurrentLocation(): string | null {
-        if (typeof window === 'undefined') return null;
-
-        const currentPath = this.normalizePath(window.location.pathname);
-        if (!currentPath) return null;
-
-        for (const item of this.getTopLevelTabItems()) {
-            const link = item.querySelector<HTMLElement>('[data-tab-link]');
-            const href = link?.getAttribute('hx-get') || '';
-            if (this.normalizePath(href) === currentPath) {
-                return item.dataset.tabKey || null;
-            }
-        }
-
-        for (const folder of this.getFolderItems()) {
-            for (const button of this.getFolderTabButtons(folder)) {
-                const href = button.getAttribute('hx-get') || '';
-                if (this.normalizePath(href) === currentPath) {
-                    return button.dataset.tabKey || null;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    private normalizePath(value: string): string | null {
-        if (!value) return null;
-
-        try {
-            const url = new URL(value, window.location.origin);
-            return url.pathname.replace(/\/+$/, '') || '/';
-        } catch {
-            return null;
-        }
-    }
-
-    private bindAllTopLevelItems(): void {
-        this.getTopLevelItems().forEach((item) => this.bindTopLevelItem(item));
-    }
-
-    private bindTopLevelItem(item: HTMLElement): void {
-        item.setAttribute('draggable', 'true');
-
-        item.addEventListener('dragstart', (event: DragEvent) => {
-            this.draggedItem = item;
-            if (event.dataTransfer) {
-                event.dataTransfer.effectAllowed = 'move';
-                event.dataTransfer.setData('text/tab-item-type', item.dataset.tabType || '');
-                event.dataTransfer.setData('text/tab-key', item.dataset.tabKey || '');
-                event.dataTransfer.setData('text/folder-id', item.dataset.folderId || '');
-            }
-            item.classList.add('opacity-50');
-        });
-
-        item.addEventListener('dragend', () => {
-            this.clearDragState();
-            this.scheduleSave();
-        });
-
-        const tabType = item.dataset.tabType;
-        if (tabType === 'folder') {
-            this.bindFolderItem(item);
-        } else {
-            this.bindTabItem(item);
-        }
-    }
-
-    private bindTabItem(item: HTMLElement): void {
-        const link = item.querySelector<HTMLElement>('[data-tab-link]');
-        if (!link) return;
-
-        item.addEventListener('click', (event: MouseEvent) => {
-            if (event.target instanceof HTMLElement && event.target.closest('[data-tab-link]')) return;
-            link.click();
-        });
-
-        link.addEventListener('click', () => {
-            const key = item.dataset.tabKey || null;
-            this.setActiveKey(key);
-            this.closeAllFolderPanels();
-        });
-
-        item.addEventListener('contextmenu', (event: MouseEvent) => {
-            event.preventDefault();
-            event.stopPropagation();
-            const key = item.dataset.tabKey;
-            if (!key) return;
-            const menuItems = this.getMoveToFolderMenuItems(key);
-            if (menuItems.length === 0) return;
-            getContextMenu('detail-tabs-tab-menu').show(event, item, menuItems);
-        });
-    }
-
-    private bindFolderItem(folderItem: HTMLElement): void {
-        const toggle = folderItem.querySelector<HTMLElement>('[data-folder-toggle]');
-        if (!toggle) return;
-
-        folderItem.addEventListener('click', (event: MouseEvent) => {
-            if (!(event.target instanceof HTMLElement)) return;
-            if (event.target.closest('[data-folder-toggle]')) return;
-            if (event.target.closest('[data-folder-tabs]')) return;
-            toggle.click();
-        });
-
-        toggle.addEventListener('keydown', (event: KeyboardEvent) => {
-            if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                this.openFolderPanelAndFocusFirst(folderItem);
-                return;
-            }
-
-            if (event.key === 'ArrowDown') {
-                event.preventDefault();
-                this.openFolderPanelAndFocusFirst(folderItem);
-                return;
-            }
-
-            if (event.key === 'Escape') {
-                event.preventDefault();
-                this.closeAllFolderPanels();
-            }
-        });
-
-        toggle.addEventListener('click', (event: MouseEvent) => {
-            event.preventDefault();
-            event.stopPropagation();
-            this.toggleFolderPanel(folderItem);
-        });
-
-        folderItem.addEventListener('contextmenu', (event: MouseEvent) => {
-            event.preventDefault();
-            event.stopPropagation();
-
-            const folderId = folderItem.dataset.folderId || '';
-            const folderName = folderItem.dataset.folderName || '';
-            getContextMenu('detail-tabs-folder-actions').show(event, folderItem, [
-                {
-                    label: 'Rename folder',
-                    onClick: () => {
-                        if (!folderId) return;
-                        this.openFolderModal('rename', folderId, folderName);
-                    },
-                },
-                {
-                    label: 'Create folder',
-                    onClick: () => this.openFolderModal('create'),
-                },
-                {
-                    label: 'Delete folder',
-                    onClick: () => {
-                        if (!folderId) return;
-                        this.deleteFolder(folderId);
-                    },
-                },
-            ]);
-        });
-
-        folderItem.addEventListener('dragover', (event: DragEvent) => {
-            const hasTopLevelTabDrag = this.draggedItem?.dataset.tabType === 'tab';
-            const hasFolderTabDrag = Boolean(this.draggedFolderTabButton);
-            if (!hasTopLevelTabDrag && !hasFolderTabDrag) return;
-            event.preventDefault();
-            folderItem.classList.add('ring-2', 'ring-primary/40');
-        });
-
-        folderItem.addEventListener('dragleave', () => {
-            folderItem.classList.remove('ring-2', 'ring-primary/40');
-        });
-
-        folderItem.addEventListener('drop', (event: DragEvent) => {
-            event.preventDefault();
-            folderItem.classList.remove('ring-2', 'ring-primary/40');
-            if (this.draggedItem && this.draggedItem.dataset.tabType === 'tab') {
-                const draggedTab = this.draggedItem;
-                const folderId = folderItem.dataset.folderId;
-                if (!folderId) return;
-                this.moveTopLevelTabToFolder(draggedTab, folderId);
-                this.clearDragState();
-                return;
-            }
-
-            if (this.draggedFolderTabButton && this.draggedFolderSource) {
-                const targetFolderId = folderItem.dataset.folderId || '';
-                if (!targetFolderId) return;
-                this.moveFolderTabToFolder(this.draggedFolderSource, folderItem, this.draggedFolderTabButton.dataset.tabKey || '');
-                this.clearDragState();
-            }
-        });
-
-        this.getFolderTabButtons(folderItem).forEach((button) => this.bindFolderTabButton(button));
-    }
-
-    private bindStripContextMenu(): void {
-        if (!this.stripContainer) return;
-
-        this.contextMenuHandler = (event: MouseEvent) => {
-            event.preventDefault();
-            const items: ContextMenuItem[] = [
-                {
-                    label: 'Create folder',
-                    onClick: () => {
-                        this.openFolderModal('create');
-                    },
-                },
-            ];
-            getContextMenu('detail-tabs-strip-menu').show(event, this.stripContainer as HTMLElement, items);
-        };
-
-        this.stripContainer.addEventListener('contextmenu', this.contextMenuHandler);
-    }
-
-    private bindFolderPanelClickAway(): void {
-        this.documentClickHandler = (event: MouseEvent) => {
-            if (!this.element) return;
-            const target = event.target as HTMLElement | null;
-            if (target && this.element.contains(target)) {
-                return;
-            }
-            this.closeAllFolderPanels();
-        };
-
-        document.addEventListener('click', this.documentClickHandler);
-    }
-
-    private bindFolderModalSuccess(): void {
         const modalBody = document.getElementById('bloomerp-general-use-modal-body');
-        if (!modalBody) return;
+        document.removeEventListener('detail-tabs-item-saved', this.modalSavedHandler);
+        modalBody?.removeEventListener('input', this.modalInputHandler);
 
-        this.modalAfterSwapHandler = () => {
-            const modalState = modalBody.querySelector<HTMLElement>('[data-detail-tabs-folder-modal]');
-            if (!modalState || modalState.dataset.success !== 'true') return;
-
-            const mode = modalState.dataset.mode === 'rename' ? 'rename' : 'create';
-            const folderName = (modalState.dataset.folderName || '').trim();
-            if (!folderName) return;
-
-            if (mode === 'rename') {
-                const folderId = modalState.dataset.folderId || '';
-                this.renameFolder(folderId, folderName);
-            } else {
-                this.createFolderFromModal(folderName);
-            }
-
-            this.scheduleSave();
-            getGeneralModal().close();
-        };
-
-        modalBody.addEventListener('htmx:afterSwap', this.modalAfterSwapHandler);
+        if (this.saveTimer) window.clearTimeout(this.saveTimer);
+        this.saveTimer = null;
+        this.clearDragState();
     }
 
-    private bindStripDnD(): void {
-        if (!this.stripList) return;
-
-        this.stripList.addEventListener('dragover', (event: DragEvent) => {
-            if (this.draggedFolderTabButton && this.draggedFolderSource) {
-                event.preventDefault();
-                return;
-            }
-
-            if (!this.draggedItem) return;
-            event.preventDefault();
-
-            const afterElement = this.getDragAfterElement(this.stripList as HTMLElement, event.clientX);
-            if (!afterElement) {
-                this.stripList?.appendChild(this.draggedItem);
-            } else {
-                this.stripList?.insertBefore(this.draggedItem, afterElement);
-            }
-        });
-
-        this.stripList.addEventListener('drop', (event: DragEvent) => {
-            if (this.draggedFolderTabButton && this.draggedFolderSource) {
-                event.preventDefault();
-                const tabKey = this.draggedFolderTabButton.dataset.tabKey || '';
-                if (tabKey) {
-                    this.moveFolderTabToTopLevel(this.draggedFolderSource, tabKey, event.clientX);
-                }
-                this.clearDragState();
-                return;
-            }
-
-            event.preventDefault();
-            this.clearDragState();
-            this.scheduleSave();
-        });
-    }
-
-    private getDragAfterElement(list: HTMLElement, clientX: number): HTMLElement | null {
-        const draggableElements = [...list.querySelectorAll<HTMLElement>('[data-tab-item]:not(.opacity-50)')];
-        let closest: { offset: number; element: HTMLElement | null } = {
-            offset: Number.NEGATIVE_INFINITY,
-            element: null,
-        };
-
-        draggableElements.forEach((child) => {
-            const box = child.getBoundingClientRect();
-            const offset = clientX - box.left - box.width / 2;
-
-            if (offset < 0 && offset > closest.offset) {
-                closest = { offset, element: child };
-            }
-        });
-
-        return closest.element;
-    }
-
-    private setActiveKey(key: string | null): void {
-        this.activeKey = key;
-        this.applyActiveStyles();
-    }
-
-    private applyActiveStyles(): void {
-        this.getTopLevelTabItems().forEach((item) => {
-            const isActive = item.dataset.tabKey === this.activeKey;
-            item.dataset.tabActive = isActive ? 'true' : 'false';
-            item.classList.toggle('border-primary', isActive);
-            item.classList.toggle('bg-primary/5', isActive);
-            item.classList.toggle('text-primary', isActive);
-            item.classList.toggle('font-medium', isActive);
-
-            item.classList.toggle('border-transparent', !isActive);
-            item.classList.toggle('text-gray-700', !isActive);
-
-            const link = item.querySelector<HTMLElement>('[data-tab-link]');
-            if (link) {
-                link.setAttribute('aria-selected', isActive ? 'true' : 'false');
-            }
-        });
-
+    private setDraggableState(): void {
+        this.getTopLevelItems().forEach((item) => item.setAttribute('draggable', 'true'));
         this.getFolderItems().forEach((folder) => {
-            const folderHasActive = this.getFolderTabButtons(folder).some(
-                (button) => button.dataset.tabKey === this.activeKey
-            );
+            this.getFolderTabs(folder).forEach((tab) => tab.setAttribute('draggable', 'true'));
+        });
+    }
 
-            folder.classList.toggle('border-primary', folderHasActive);
-            folder.classList.toggle('bg-primary/5', folderHasActive);
-            folder.classList.toggle('font-medium', folderHasActive);
+    private onClick(event: Event): void {
+        const target = event.target as HTMLElement | null;
+        if (!target) return;
 
-            folder.classList.toggle('border-transparent', !folderHasActive);
+        const folderToggle = target.closest<HTMLElement>('[data-folder-toggle]');
+        if (folderToggle) {
+            event.preventDefault();
+            const folder = folderToggle.closest<HTMLElement>('[data-tab-type="folder"]');
+            if (folder) this.toggleFolder(folder);
+            return;
+        }
 
-            const toggle = folder.querySelector<HTMLElement>('[data-folder-toggle]');
-            if (toggle) {
-                toggle.classList.toggle('text-primary', folderHasActive);
-                toggle.classList.toggle('text-gray-700', !folderHasActive);
+        const tab = target.closest<HTMLElement>('[data-tab-link], [data-folder-tab-item]');
+        if (tab) {
+            const item = tab.closest<HTMLElement>('[data-tab-item]');
+            this.activeId = tab.dataset.itemId || item?.dataset.itemId || null;
+            this.applyActiveStyles();
+            this.closeFolders();
+        }
+    }
+
+    private onContextMenu(event: MouseEvent): void {
+        event.preventDefault();
+        const target = event.target as HTMLElement;
+        const folderTab = target.closest<HTMLElement>('[data-folder-tab-item]');
+        const topLevelItem = target.closest<HTMLElement>('[data-tab-item]');
+
+        if (folderTab) {
+            event.stopPropagation();
+            this.showTabMenu(event, folderTab);
+            return;
+        }
+
+        if (topLevelItem) {
+            event.stopPropagation();
+            if (topLevelItem.dataset.tabType === 'folder') {
+                this.showFolderMenu(event, topLevelItem);
+            } else {
+                this.showTabMenu(event, topLevelItem);
             }
-
-            this.getFolderTabButtons(folder).forEach((button) => {
-                const isActive = button.dataset.tabKey === this.activeKey;
-                button.dataset.tabActive = isActive ? 'true' : 'false';
-                button.classList.toggle('bg-primary/5', isActive);
-                button.classList.toggle('font-medium', isActive);
-                button.classList.toggle('text-primary', isActive);
-                button.classList.toggle('text-gray-700', !isActive);
-            });
-        });
-    }
-
-    private toggleFolderPanel(folderItem: HTMLElement): void {
-        const panel = this.getFolderPanel(folderItem);
-        if (!panel) return;
-
-        const isOpen = !panel.classList.contains('hidden');
-        this.closeAllFolderPanels();
-
-        if (!isOpen) {
-            const rect = folderItem.getBoundingClientRect();
-            panel.classList.add('fixed');
-            panel.style.left = `${Math.round(rect.left)}px`;
-            panel.style.top = `${Math.round(rect.bottom + 4)}px`;
-            panel.style.minWidth = `${Math.max(Math.round(rect.width), 224)}px`;
-            panel.classList.remove('hidden');
-            this.activeFolderPanelOwner = folderItem;
-        } else {
-            this.activeFolderPanelOwner = null;
-        }
-    }
-
-    private openFolderPanelAndFocusFirst(folderItem: HTMLElement): void {
-        this.toggleFolderPanel(folderItem);
-        const panel = this.getFolderPanel(folderItem);
-        if (!panel || panel.classList.contains('hidden')) return;
-        this.getFolderTabButtons(folderItem)[0]?.focus();
-    }
-
-    private closeAllFolderPanels(exceptFolderItem: HTMLElement | null = null): void {
-        this.getFolderItems().forEach((folderItem) => {
-            if (exceptFolderItem && folderItem === exceptFolderItem) return;
-            const panel = this.getFolderPanel(folderItem);
-            if (!panel) return;
-            panel.classList.add('hidden');
-            panel.classList.remove('fixed');
-            panel.style.left = '';
-            panel.style.top = '';
-            panel.style.minWidth = '';
-        });
-        if (!exceptFolderItem) {
-            this.activeFolderPanelOwner = null;
-        }
-    }
-
-    private getMoveToFolderMenuItems(tabKey: string): ContextMenuItem[] {
-        return this.getFolderItems().map((folderItem) => {
-            const folderId = folderItem.dataset.folderId || '';
-            const folderName = folderItem.dataset.folderName || 'Folder';
-            return {
-                label: `Move to \"${folderName}\"`,
-                onClick: () => {
-                    const tabItem = this.getTopLevelTabItems().find((item) => item.dataset.tabKey === tabKey);
-                    if (!tabItem || !folderId) return;
-                    this.moveTopLevelTabToFolder(tabItem, folderId);
-                },
-            };
-        });
-    }
-
-    private moveTopLevelTabToFolder(tabItem: HTMLElement, folderId: string): void {
-        const folderItem = this.getFolderItems().find((folder) => folder.dataset.folderId === folderId);
-        if (!folderItem) return;
-
-        const folderTabsContainer = folderItem.querySelector<HTMLElement>('[data-folder-tabs]');
-        if (!folderTabsContainer) return;
-
-        const tabMeta = this.extractTabMeta(tabItem, '[data-tab-link]');
-        if (!tabMeta) return;
-
-        const existing = this.getFolderTabButtons(folderItem).find((button) => button.dataset.tabKey === tabMeta.key);
-        if (!existing) {
-            const newButton = this.createFolderTabButton(tabMeta);
-            folderTabsContainer.appendChild(newButton);
-            this.bindFolderTabButton(newButton);
-            htmx.process(newButton);
+            return;
         }
 
-        tabItem.remove();
-        this.updateFolderEmptyState(folderItem);
-        this.closeAllFolderPanels();
-        this.applyActiveStyles();
-        this.scheduleSave();
+        const menu: ContextMenuItem[] = [
+            { label: 'Create folder', onClick: () => this.openItemModal('folder', 'create') },
+            { label: 'Create URL', onClick: () => this.openItemModal('url', 'create') },
+        ];
+        getContextMenu('detail-tabs-strip-menu').show(event, this.stripContainer as HTMLElement, menu);
     }
 
-    private moveFolderTabToTopLevel(folderItem: HTMLElement, tabKey: string, clientX?: number): void {
-        if (!this.stripList) return;
+    private showFolderMenu(event: MouseEvent, folder: HTMLElement): void {
+        getContextMenu('detail-tabs-folder-menu').show(event, folder, [
+            {
+                label: 'Edit',
+                onClick: () => this.openItemModal('folder', 'edit', {
+                    id: folder.dataset.itemId || '',
+                    name: folder.dataset.itemName || '',
+                    url: '',
+                }),
+            },
+            { label: 'Delete', onClick: () => this.deleteFolder(folder) },
+        ]);
+    }
 
-        const folderTabsContainer = folderItem.querySelector<HTMLElement>('[data-folder-tabs]');
-        if (!folderTabsContainer) return;
-
-        const folderTabButton = this.getFolderTabButtons(folderItem).find((button) => button.dataset.tabKey === tabKey);
-        if (!folderTabButton) return;
-
-        const meta = this.extractTabMeta(folderTabButton);
+    private showTabMenu(event: MouseEvent, tab: HTMLElement): void {
+        const meta = this.extractTabMeta(tab);
         if (!meta) return;
 
-        const topLevelItem = this.createTopLevelTabItem(meta);
-        if (typeof clientX === 'number') {
-            const afterElement = this.getDragAfterElement(this.stripList, clientX);
-            if (afterElement) {
-                this.stripList.insertBefore(topLevelItem, afterElement);
-            } else {
-                this.stripList.appendChild(topLevelItem);
-            }
-        } else {
-            this.stripList.insertBefore(topLevelItem, folderItem.nextSibling);
-        }
-        htmx.process(topLevelItem);
-
-        folderTabButton.remove();
-        this.updateFolderEmptyState(folderItem);
-        this.closeAllFolderPanels();
-        this.applyActiveStyles();
-        this.scheduleSave();
-    }
-
-    private moveFolderTabToFolder(sourceFolder: HTMLElement, targetFolder: HTMLElement, tabKey: string): void {
-        if (!tabKey) return;
-        if (sourceFolder === targetFolder) return;
-
-        const sourceButtons = this.getFolderTabButtons(sourceFolder);
-        const sourceButton = sourceButtons.find((button) => button.dataset.tabKey === tabKey);
-        if (!sourceButton) return;
-
-        const targetPanel = this.getFolderPanel(targetFolder);
-        if (!targetPanel) return;
-
-        const existing = this.getFolderTabButtons(targetFolder).find((button) => button.dataset.tabKey === tabKey);
-        if (existing) {
-            sourceButton.remove();
-        } else {
-            targetPanel.appendChild(sourceButton);
-            htmx.process(sourceButton);
-        }
-
-        this.updateFolderEmptyState(sourceFolder);
-        this.updateFolderEmptyState(targetFolder);
-        this.applyActiveStyles();
-        this.scheduleSave();
-    }
-
-    private deleteFolder(folderId: string): void {
-        if (!this.stripList) return;
-
-        const folderItem = this.getFolderItems().find((folder) => folder.dataset.folderId === folderId);
-        if (!folderItem) return;
-
-        const folderButtons = this.getFolderTabButtons(folderItem);
-        const insertionAnchor = folderItem.nextSibling;
-
-        for (const button of folderButtons) {
-            const meta = this.extractTabMeta(button);
-            if (!meta) continue;
-            const topLevelItem = this.createTopLevelTabItem(meta);
-            if (insertionAnchor) {
-                this.stripList.insertBefore(topLevelItem, insertionAnchor);
-            } else {
-                this.stripList.appendChild(topLevelItem);
-            }
-            htmx.process(topLevelItem);
-        }
-
-        folderItem.remove();
-        this.closeAllFolderPanels();
-        this.applyActiveStyles();
-        this.scheduleSave();
-    }
-
-    private openFolderModal(mode: 'create' | 'rename', folderId = '', folderName = ''): void {
-        if (!this.element) return;
-
-        const modalUrl = this.element.getAttribute('data-folder-modal-url');
-        const contentTypeId = this.element.getAttribute('data-content-type-id');
-        if (!modalUrl || !contentTypeId) return;
-
-        const modal = getGeneralModal();
-        modal.setTitle(mode === 'rename' ? 'Rename Folder' : 'Create Folder');
-
-        htmx
-            .ajax('get', modalUrl, {
-                target: modal.getBodyElement(),
-                swap: 'innerHTML',
-                push: 'false',
-                values: {
-                    mode,
-                    content_type_id: contentTypeId,
-                    folder_id: folderId,
-                    folder_name: folderName,
-                },
-            })
-            .then(() => {
-                modal.open();
-            })
-            .catch(() => {
-                // no-op
+        const menu: ContextMenuItem[] = [
+            { label: 'Edit', onClick: () => this.openItemModal('url', 'edit', meta) },
+            { label: 'Delete', onClick: () => this.deleteTab(tab) },
+        ];
+        for (const folder of this.getFolderItems()) {
+            if (tab.closest('[data-tab-type="folder"]') === folder) continue;
+            menu.push({
+                label: `Move to "${folder.dataset.itemName || 'Folder'}"`,
+                onClick: () => this.moveTabIntoFolder(tab, folder),
             });
-    }
-
-    private createFolderFromModal(folderName: string): void {
-        const name = folderName.trim();
-        if (!name) return;
-
-        const folderId = this.generateFolderId();
-        const folderItem = this.createFolderItem(folderId, name);
-        this.stripList?.appendChild(folderItem);
-        this.bindTopLevelItem(folderItem);
-        htmx.process(folderItem);
-    }
-
-    private renameFolder(folderId: string, folderName: string): void {
-        const item = this.getFolderItems().find((folder) => folder.dataset.folderId === folderId);
-        if (!item) return;
-
-        const name = folderName.trim();
-        if (!name) return;
-
-        item.dataset.folderName = name;
-        const toggle = item.querySelector<HTMLElement>('[data-folder-toggle]');
-        if (toggle) {
-            toggle.textContent = name;
         }
+        getContextMenu('detail-tabs-tab-menu').show(event, tab, menu);
     }
 
-    private generateFolderId(): string {
-        return `folder_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+    private onDragStart(event: DragEvent): void {
+        const target = event.target as HTMLElement;
+        const folderTab = target.closest<HTMLElement>('[data-folder-tab-item]');
+        if (folderTab) {
+            this.draggedFolderTab = folderTab;
+            this.draggedFolderSource = folderTab.closest('[data-tab-type="folder"]');
+            folderTab.classList.add('opacity-50');
+        } else {
+            this.draggedTopLevel = target.closest<HTMLElement>('[data-tab-item]');
+            this.draggedTopLevel?.classList.add('opacity-50');
+        }
+        if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
     }
 
-    private createFolderItem(folderId: string, folderName: string): HTMLElement {
-        const li = document.createElement('li');
-        li.setAttribute('data-tab-item', '');
-        li.setAttribute('data-tab-type', 'folder');
-        li.setAttribute('data-folder-id', folderId);
-        li.setAttribute('data-folder-name', folderName);
-        li.setAttribute('draggable', 'true');
-        li.className = 'shrink-0 border-b-2 border-transparent hover:bg-gray-50 cursor-pointer select-none';
+    private onDragOver(event: DragEvent): void {
+        const target = event.target as HTMLElement;
+        const folder = target.closest<HTMLElement>('[data-tab-type="folder"]');
+        const hasExternalLink = this.hasExternalLinkDrag(event.dataTransfer);
 
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.setAttribute('data-folder-toggle', '');
-        button.className = 'w-full h-full px-4 py-1.5 text-sm whitespace-nowrap text-gray-700';
-        button.textContent = folderName;
+        if (folder && (this.draggedFolderTab || this.draggedTopLevel?.dataset.tabType === 'tab' || hasExternalLink)) {
+            event.preventDefault();
+            folder.classList.add('ring-2', 'ring-primary/40');
 
-        const tabsContainer = document.createElement('div');
-        tabsContainer.className = 'hidden absolute left-0 top-full mt-1 min-w-56 rounded-md border border-gray-200 bg-white z-50 shadow-lg';
-        tabsContainer.setAttribute('data-folder-tabs', '');
-
-        const emptyState = document.createElement('div');
-        emptyState.className = 'px-3 py-2 text-sm text-gray-500';
-        emptyState.setAttribute('data-folder-empty', '');
-        emptyState.textContent = 'No tabs in folder';
-        tabsContainer.appendChild(emptyState);
-
-        li.appendChild(button);
-        li.appendChild(tabsContainer);
-        return li;
-    }
-
-    private updateFolderEmptyState(folderItem: HTMLElement): void {
-        const panel = this.getFolderPanel(folderItem);
-        if (!panel) return;
-
-        let emptyState = panel.querySelector<HTMLElement>('[data-folder-empty]');
-        const tabCount = this.getFolderTabButtons(folderItem).length;
-
-        if (tabCount === 0) {
-            if (!emptyState) {
-                emptyState = document.createElement('div');
-                emptyState.className = 'px-3 py-2 text-sm text-gray-500';
-                emptyState.setAttribute('data-folder-empty', '');
-                emptyState.textContent = 'No tabs in folder';
-                panel.appendChild(emptyState);
+            if (this.draggedFolderTab && target.closest('[data-folder-tabs]')) {
+                const panel = this.getFolderPanel(folder);
+                const after = panel ? this.getVerticalDragAfterElement(panel, event.clientY) : null;
+                if (panel) panel.insertBefore(this.draggedFolderTab, after);
             }
             return;
         }
 
-        emptyState?.remove();
-    }
-
-    private createTopLevelTabItem(meta: TabMeta): HTMLElement {
-        const li = document.createElement('li');
-        li.setAttribute('data-tab-item', '');
-        li.setAttribute('data-tab-type', 'tab');
-        li.setAttribute('data-tab-key', meta.key);
-        li.setAttribute('data-tab-name', meta.name);
-        li.setAttribute('data-tab-url', meta.url);
-        li.setAttribute('data-tab-requires-pk', meta.requiresPk ? 'true' : 'false');
-        li.setAttribute('data-tab-active', meta.isActive ? 'true' : 'false');
-        li.setAttribute('draggable', 'true');
-        li.className = 'shrink-0 border-b-2 border-transparent hover:bg-gray-50 cursor-pointer select-none';
-
-        const button = this.createTabButton(meta, 'top-level');
-
-        li.appendChild(button);
-        this.bindTopLevelItem(li);
-        return li;
-    }
-
-    private createFolderTabButton(meta: TabMeta): HTMLButtonElement {
-        return this.createTabButton(meta, 'folder');
-    }
-
-    private createTabButton(meta: TabMeta, variant: 'top-level' | 'folder'): HTMLButtonElement {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.setAttribute('data-tab-key', meta.key);
-        button.setAttribute('data-tab-name', meta.name);
-        button.setAttribute('data-tab-url', meta.url);
-        button.setAttribute('data-tab-requires-pk', meta.requiresPk ? 'true' : 'false');
-        button.setAttribute('data-tab-active', meta.isActive ? 'true' : 'false');
-        button.setAttribute('hx-get', meta.hxGet);
-        button.setAttribute('hx-swap', 'innerHTML');
-        button.setAttribute('hx-trigger', 'click');
-        button.setAttribute('hx-target', '#detail-view-content');
-        button.setAttribute('hx-push-url', 'true');
-        if (variant === 'top-level') {
-            button.setAttribute('data-tab-link', '');
-            button.setAttribute('role', 'tab');
-            button.setAttribute('aria-selected', meta.isActive ? 'true' : 'false');
-            button.id = meta.elementId;
-            button.className = 'w-full h-full px-4 py-1.5 text-sm whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-primary-500';
-        } else {
-            button.setAttribute('data-folder-tab-item', '');
-            button.className = 'block w-full text-left px-3 py-2 text-sm hover:bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500';
+        if (this.draggedTopLevel) {
+            event.preventDefault();
+            const after = this.getHorizontalDragAfterElement(event.clientX);
+            this.stripList?.insertBefore(this.draggedTopLevel, after);
+            return;
         }
-        button.textContent = meta.name;
 
-        return button;
+        if (this.draggedFolderTab || hasExternalLink) event.preventDefault();
     }
 
-    private bindFolderTabButton(button: HTMLButtonElement): void {
-        if (button.dataset.boundDetailTabs === 'true') return;
-        button.dataset.boundDetailTabs = 'true';
-        button.setAttribute('draggable', 'true');
+    private onDrop(event: DragEvent): void {
+        event.preventDefault();
+        const target = event.target as HTMLElement;
+        const folder = target.closest<HTMLElement>('[data-tab-type="folder"]');
 
-        button.addEventListener('dragstart', (event: DragEvent) => {
-            const ownerFolder = button.closest<HTMLElement>('[data-tab-type="folder"]');
-            if (!ownerFolder) return;
-
-            this.draggedFolderTabButton = button;
-            this.draggedFolderSource = ownerFolder;
-            if (event.dataTransfer) {
-                event.dataTransfer.effectAllowed = 'move';
-                event.dataTransfer.setData('text/tab-item-type', 'folder-tab');
-                event.dataTransfer.setData('text/tab-key', button.dataset.tabKey || '');
-                event.dataTransfer.setData('text/folder-id', ownerFolder.dataset.folderId || '');
+        if (folder && this.draggedTopLevel?.dataset.tabType === 'tab') {
+            this.moveTabIntoFolder(this.draggedTopLevel, folder);
+        } else if (folder && this.draggedFolderTab) {
+            this.moveTabIntoFolder(this.draggedFolderTab, folder);
+        } else if (this.draggedFolderTab) {
+            this.moveFolderTabToTopLevel(this.draggedFolderTab, event.clientX);
+        } else if (!this.draggedTopLevel) {
+            const dropped = this.getDroppedLink(event.dataTransfer);
+            if (dropped) {
+                const tab = this.createTopLevelTab(dropped);
+                const after = this.getHorizontalDragAfterElement(event.clientX);
+                this.stripList?.insertBefore(tab, after);
             }
-            button.classList.add('opacity-50');
-        });
+        }
 
-        button.addEventListener('dragend', () => {
-            this.clearDragState();
-        });
-
-        button.addEventListener('keydown', (event: KeyboardEvent) => {
-            const ownerFolder = button.closest<HTMLElement>('[data-tab-type="folder"]');
-            if (!ownerFolder) return;
-
-            const folderButtons = this.getFolderTabButtons(ownerFolder);
-            const currentIndex = folderButtons.indexOf(button);
-
-            if (event.key === 'Escape') {
-                event.preventDefault();
-                this.closeAllFolderPanels();
-                ownerFolder.querySelector<HTMLElement>('[data-folder-toggle]')?.focus();
-                return;
-            }
-
-            if (event.key === 'ArrowDown') {
-                event.preventDefault();
-                const next = folderButtons[(currentIndex + 1) % folderButtons.length];
-                next?.focus();
-                return;
-            }
-
-            if (event.key === 'ArrowUp') {
-                event.preventDefault();
-                const next = folderButtons[(currentIndex - 1 + folderButtons.length) % folderButtons.length];
-                next?.focus();
-                return;
-            }
-        });
-
-        button.addEventListener('click', () => {
-            const key = button.dataset.tabKey || null;
-            this.setActiveKey(key);
-            this.closeAllFolderPanels();
-        });
+        this.clearDragState();
+        this.updateAllFolderEmptyStates();
+        this.scheduleSave();
     }
 
-    private extractTabMeta(source: HTMLElement, triggerSelector?: string): TabMeta | null {
-        const trigger = triggerSelector ? source.querySelector<HTMLElement>(triggerSelector) : source;
-        const key = source.dataset.tabKey || '';
-        const name = source.dataset.tabName || trigger?.textContent?.trim() || '';
-        const url = source.dataset.tabUrl || '';
-        const requiresPk = source.dataset.tabRequiresPk === 'true';
-        const hxGet = trigger?.getAttribute('hx-get') || '';
-        const elementId = trigger?.id || hxGet;
+    private moveTabIntoFolder(tab: HTMLElement, folder: HTMLElement): void {
+        const meta = this.extractTabMeta(tab);
+        const panel = this.getFolderPanel(folder);
+        if (!meta || !panel) return;
 
-        if (!key || !name || !url || !hxGet) return null;
+        if (tab.matches('[data-folder-tab-item]')) {
+            panel.appendChild(tab);
+        } else {
+            const folderTab = this.createTabLink(meta, true);
+            panel.appendChild(folderTab);
+            tab.remove();
+            htmx.process(folderTab);
+        }
+        this.closeFolders();
+        this.updateAllFolderEmptyStates();
+        this.scheduleSave();
+    }
 
-        return {
-            key,
-            name,
-            url,
-            requiresPk,
-            isActive: source.dataset.tabActive === 'true',
-            hxGet,
-            elementId,
-        };
+    private moveFolderTabToTopLevel(tab: HTMLElement, clientX: number): void {
+        const meta = this.extractTabMeta(tab);
+        if (!meta) return;
+        const item = this.createTopLevelTab(meta);
+        const after = this.getHorizontalDragAfterElement(clientX);
+        this.stripList?.insertBefore(item, after);
+        tab.remove();
+        htmx.process(item);
+    }
+
+    private deleteTab(tab: HTMLElement): void {
+        tab.closest('[data-tab-item]')?.matches('[data-tab-type="tab"]')
+            ? tab.closest('[data-tab-item]')?.remove()
+            : tab.remove();
+        this.updateAllFolderEmptyStates();
+        this.scheduleSave();
+    }
+
+    private deleteFolder(folder: HTMLElement): void {
+        const anchor = folder.nextSibling;
+        for (const tab of this.getFolderTabs(folder)) {
+            const meta = this.extractTabMeta(tab);
+            if (!meta) continue;
+            const item = this.createTopLevelTab(meta);
+            this.stripList?.insertBefore(item, anchor);
+            htmx.process(item);
+        }
+        folder.remove();
+        this.closeFolders();
+        this.scheduleSave();
+    }
+
+    private openItemModal(
+        itemType: 'folder' | 'url',
+        mode: 'create' | 'edit',
+        item?: TabMeta,
+    ): void {
+        if (!this.element) return;
+        const url = this.element.dataset.itemModalUrl;
+        const contentTypeId = this.element.dataset.contentTypeId;
+        if (!url || !contentTypeId) return;
+
+        const modal = getGeneralModal();
+        modal.setTitle(`${mode === 'edit' ? 'Edit' : 'Create'} ${itemType === 'folder' ? 'Folder' : 'URL'}`);
+        htmx.ajax('get', url, {
+            target: modal.getBodyElement(),
+            swap: 'innerHTML',
+            push: 'false',
+            values: {
+                content_type_id: contentTypeId,
+                item_type: itemType,
+                mode,
+                item_id: item?.id || '',
+                name: item?.name || '',
+                url: item?.url || '',
+            },
+        }).then(() => modal.open());
+    }
+
+    private onModalInput(event: Event): void {
+        const urlInput = (event.target as HTMLElement).closest<HTMLInputElement>('[data-detail-tab-url-input]');
+        if (!urlInput) return;
+        const modalBody = document.getElementById('bloomerp-general-use-modal-body');
+        const nameInput = modalBody?.querySelector<HTMLInputElement>('[data-detail-tab-name-input]');
+        const options = modalBody?.querySelectorAll<HTMLOptionElement>('datalist option') || [];
+        const match = Array.from(options).find((option) => option.value === urlInput.value);
+        if (match && nameInput) nameInput.value = match.dataset.name || match.textContent || '';
+    }
+
+    private onModalSaved(event: CustomEvent<TabItemSavedDetail>): void {
+        const { mode, item_type: type, name, url } = event.detail;
+        const id = event.detail.item_id || this.generateId();
+
+        if (mode === 'edit') {
+            const item = this.findItem(id);
+            if (item && type === 'folder') this.updateFolder(item, name);
+            if (item && type === 'url') this.updateTab(item, { id, name, url });
+        } else if (type === 'folder') {
+            this.stripList?.appendChild(this.createFolder(id, name));
+        } else if (type === 'url') {
+            const item = this.createTopLevelTab({ id, name, url });
+            this.stripList?.appendChild(item);
+            htmx.process(item);
+        }
+
+        this.setDraggableState();
+        this.scheduleSave();
+        getGeneralModal().close();
+    }
+
+    private createFolder(id: string, name: string): HTMLElement {
+        const folder = document.createElement('li');
+        folder.dataset.tabItem = '';
+        folder.dataset.tabType = 'folder';
+        folder.dataset.itemId = id;
+        folder.dataset.itemName = name;
+        folder.className = 'relative shrink-0 cursor-pointer select-none border-b-2 border-transparent';
+        folder.innerHTML = `
+            <button type="button" data-folder-toggle class="h-full w-full px-4 py-2 text-sm whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-primary-500 hover:bg-gray-50"></button>
+            <div data-folder-tabs class="absolute left-0 top-full z-50 mt-1 hidden min-w-56 rounded-xl border border-gray-200 bg-white shadow-xs"></div>
+        `;
+        const toggle = folder.querySelector<HTMLElement>('[data-folder-toggle]');
+        if (toggle) toggle.textContent = name;
+        this.updateFolderEmptyState(folder);
+        return folder;
+    }
+
+    private createTopLevelTab(meta: TabMeta): HTMLElement {
+        const item = document.createElement('li');
+        item.dataset.tabItem = '';
+        item.dataset.tabType = 'tab';
+        item.dataset.itemId = meta.id;
+        item.dataset.itemName = meta.name;
+        item.dataset.itemUrl = meta.url;
+        item.dataset.tabActive = meta.active ? 'true' : 'false';
+        item.className = 'shrink-0 cursor-pointer select-none border-b-2 border-transparent';
+        item.appendChild(this.createTabLink(meta, false));
+        item.setAttribute('draggable', 'true');
+        return item;
+    }
+
+    private createTabLink(meta: TabMeta, inFolder: boolean): HTMLAnchorElement {
+        const link = document.createElement('a');
+        link.href = this.resolveUrl(meta.url);
+        link.dataset.itemId = meta.id;
+        link.dataset.itemName = meta.name;
+        link.dataset.itemUrl = meta.url;
+        link.dataset.tabActive = meta.active ? 'true' : 'false';
+        link.textContent = meta.name;
+
+        if (inFolder) {
+            link.dataset.folderTabItem = '';
+            link.className = 'block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500';
+            link.setAttribute('draggable', 'true');
+        } else {
+            link.dataset.tabLink = '';
+            link.setAttribute('role', 'tab');
+            link.className = 'block h-full w-full px-4 py-2 text-sm whitespace-nowrap hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500';
+        }
+
+        this.applyHtmxNavigation(link);
+        return link;
+    }
+
+    private updateFolder(folder: HTMLElement, name: string): void {
+        folder.dataset.itemName = name;
+        const toggle = folder.querySelector<HTMLElement>('[data-folder-toggle]');
+        if (toggle) toggle.textContent = name;
+    }
+
+    private updateTab(item: HTMLElement, meta: TabMeta): void {
+        const tab = item.matches('[data-folder-tab-item]')
+            ? item
+            : item.querySelector<HTMLElement>('[data-tab-link]');
+        if (!tab) return;
+
+        item.dataset.itemName = meta.name;
+        item.dataset.itemUrl = meta.url;
+        tab.dataset.itemName = meta.name;
+        tab.dataset.itemUrl = meta.url;
+        tab.textContent = meta.name;
+        tab.setAttribute('href', this.resolveUrl(meta.url));
+        this.applyHtmxNavigation(tab as HTMLAnchorElement);
+        htmx.process(tab);
+    }
+
+    private applyHtmxNavigation(link: HTMLAnchorElement): void {
+        if (this.isInternalUrl(link.getAttribute('href') || '')) {
+            link.setAttribute('hx-get', link.getAttribute('href') || '');
+            link.setAttribute('hx-swap', 'innerHTML');
+            link.setAttribute('hx-target', '#detail-view-content');
+            link.setAttribute('hx-push-url', 'true');
+        } else {
+            for (const attribute of ['hx-get', 'hx-swap', 'hx-target', 'hx-push-url']) {
+                link.removeAttribute(attribute);
+            }
+        }
+    }
+
+    private extractTabMeta(source: HTMLElement): TabMeta | null {
+        const tab = source.matches('[data-folder-tab-item], [data-tab-link]')
+            ? source
+            : source.querySelector<HTMLElement>('[data-tab-link]');
+        const id = tab?.dataset.itemId || source.dataset.itemId || '';
+        const name = tab?.dataset.itemName || source.dataset.itemName || tab?.textContent?.trim() || '';
+        const url = tab?.dataset.itemUrl || source.dataset.itemUrl || '';
+        if (!id || !name || !url) return null;
+        return { id, name, url, active: tab?.dataset.tabActive === 'true' };
+    }
+
+    private toggleFolder(folder: HTMLElement): void {
+        const panel = this.getFolderPanel(folder);
+        if (!panel) return;
+        const open = !panel.classList.contains('hidden');
+        this.closeFolders();
+        if (open) return;
+
+        const rect = folder.getBoundingClientRect();
+        panel.classList.add('fixed');
+        panel.style.left = `${Math.round(rect.left)}px`;
+        panel.style.top = `${Math.round(rect.bottom + 4)}px`;
+        panel.style.minWidth = `${Math.max(Math.round(rect.width), 224)}px`;
+        panel.classList.remove('hidden');
+    }
+
+    private closeFolders(): void {
+        for (const folder of this.getFolderItems()) {
+            const panel = this.getFolderPanel(folder);
+            panel?.classList.add('hidden');
+            panel?.classList.remove('fixed');
+            if (panel) panel.removeAttribute('style');
+        }
+    }
+
+    private onDocumentClick(event: MouseEvent): void {
+        const target = event.target as Node | null;
+        if (target && this.element?.contains(target)) return;
+        this.closeFolders();
     }
 
     private onKeyDown(event: KeyboardEvent): void {
         if (!this.element) return;
-
         const target = event.target as HTMLElement | null;
-
-        if (event.altKey && event.code === 'KeyT') {
-            if (this.isTypingTarget(target)) return;
+        if (event.altKey && event.code === 'KeyT' && !this.isTypingTarget(target)) {
             event.preventDefault();
-            this.focusActiveTab();
-            return;
+            this.findItem(this.activeId || '')?.querySelector<HTMLElement>('[data-tab-link], [data-folder-toggle]')?.focus();
         }
-
-        if (event.key === 'Escape') {
-            const active = document.activeElement as HTMLElement | null;
-            if (active && this.element.contains(active) && this.activeFolderPanelOwner) {
-                event.preventDefault();
-                const owner = this.activeFolderPanelOwner;
-                this.closeAllFolderPanels();
-                owner.querySelector<HTMLElement>('[data-folder-toggle]')?.focus();
-                return;
-            }
-        }
-
-        if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
-
-        const focusedTarget = document.activeElement as HTMLElement | null;
-        if (!focusedTarget || !this.element.contains(focusedTarget)) return;
-
-        const navigationTargets = this.getTopLevelNavigationTargets();
-        if (navigationTargets.length === 0) return;
-
-        const currentIndex = navigationTargets.indexOf(focusedTarget);
-        if (currentIndex === -1) return;
-
-        event.preventDefault();
-        const direction = event.key === 'ArrowRight' ? 1 : -1;
-        const nextIndex = (currentIndex + direction + navigationTargets.length) % navigationTargets.length;
-        navigationTargets[nextIndex]?.focus();
+        if (event.key === 'Escape') this.closeFolders();
     }
 
-    private isTypingTarget(target: HTMLElement | null): boolean {
-        if (!target) return false;
-        const tag = target.tagName.toLowerCase();
-        return tag === 'input' || tag === 'textarea' || tag === 'select' || target.isContentEditable;
+    private findActiveId(): string | null {
+        const active = this.element?.querySelector<HTMLElement>('[data-tab-active="true"]');
+        return active?.dataset.itemId || active?.closest<HTMLElement>('[data-tab-item]')?.dataset.itemId || null;
     }
 
-    private focusActiveTab(): void {
-        const activeTopLevel = this.getTopLevelTabItems().find((item) => item.dataset.tabKey === this.activeKey);
-        if (activeTopLevel) {
-            activeTopLevel.querySelector<HTMLElement>('[data-tab-link]')?.focus();
-            return;
+    private applyActiveStyles(): void {
+        for (const item of this.getTopLevelItems()) {
+            const folderActive = item.dataset.tabType === 'folder'
+                && this.getFolderTabs(item).some((tab) => tab.dataset.itemId === this.activeId);
+            const active = item.dataset.itemId === this.activeId || folderActive;
+            item.classList.toggle('border-primary', active);
+            item.classList.toggle('bg-primary/5', active);
+            item.classList.toggle('text-primary', active);
+            item.classList.toggle('font-medium', active);
+            item.classList.toggle('border-transparent', !active);
+            item.classList.toggle('text-gray-700', !active);
         }
+        this.element?.querySelectorAll<HTMLElement>('[data-folder-tab-item]').forEach((tab) => {
+            const active = tab.dataset.itemId === this.activeId;
+            tab.classList.toggle('bg-primary/5', active);
+            tab.classList.toggle('text-primary', active);
+            tab.classList.toggle('font-medium', active);
+        });
+    }
 
-        const activeFolder = this.getFolderItems().find((folder) =>
-            this.getFolderTabButtons(folder).some((button) => button.dataset.tabKey === this.activeKey)
-        );
-
-        if (activeFolder) {
-            activeFolder.querySelector<HTMLElement>('[data-folder-toggle]')?.focus();
+    private getHorizontalDragAfterElement(clientX: number): HTMLElement | null {
+        let result: { offset: number; element: HTMLElement | null } = {
+            offset: Number.NEGATIVE_INFINITY,
+            element: null,
+        };
+        for (const item of this.getTopLevelItems().filter((entry) => entry !== this.draggedTopLevel)) {
+            const box = item.getBoundingClientRect();
+            const offset = clientX - box.left - box.width / 2;
+            if (offset < 0 && offset > result.offset) result = { offset, element: item };
         }
+        return result.element;
+    }
+
+    private getVerticalDragAfterElement(panel: HTMLElement, clientY: number): HTMLElement | null {
+        let result: { offset: number; element: HTMLElement | null } = {
+            offset: Number.NEGATIVE_INFINITY,
+            element: null,
+        };
+        const tabs = Array.from(panel.querySelectorAll<HTMLElement>('[data-folder-tab-item]'))
+            .filter((tab) => tab !== this.draggedFolderTab);
+        for (const tab of tabs) {
+            const box = tab.getBoundingClientRect();
+            const offset = clientY - box.top - box.height / 2;
+            if (offset < 0 && offset > result.offset) result = { offset, element: tab };
+        }
+        return result.element;
+    }
+
+    private hasExternalLinkDrag(dataTransfer: DataTransfer | null): boolean {
+        if (!dataTransfer || this.draggedTopLevel || this.draggedFolderTab) return false;
+        return dataTransfer.types.includes('text/uri-list') || dataTransfer.types.includes('text/plain');
+    }
+
+    private getDroppedLink(dataTransfer: DataTransfer | null): TabMeta | null {
+        if (!dataTransfer) return null;
+        const uriList = dataTransfer.getData('text/uri-list')
+            .split('\n')
+            .map((value) => value.trim())
+            .find((value) => value && !value.startsWith('#'));
+        const url = uriList || dataTransfer.getData('text/plain').trim();
+        if (!url || (!this.isInternalUrl(url) && !/^https?:\/\//i.test(url))) return null;
+
+        let name = url;
+        const html = dataTransfer.getData('text/html');
+        if (html) {
+            const documentFragment = new DOMParser().parseFromString(html, 'text/html');
+            name = documentFragment.querySelector('a')?.textContent?.trim() || url;
+        }
+        return { id: this.generateId(), name, url };
+    }
+
+    private updateFolderEmptyState(folder: HTMLElement): void {
+        const panel = this.getFolderPanel(folder);
+        if (!panel) return;
+        panel.querySelector('[data-folder-empty]')?.remove();
+        if (this.getFolderTabs(folder).length > 0) return;
+
+        const empty = document.createElement('div');
+        empty.dataset.folderEmpty = '';
+        empty.className = 'px-4 py-2 text-sm text-gray-500';
+        empty.textContent = 'No tabs in folder';
+        panel.appendChild(empty);
+    }
+
+    private updateAllFolderEmptyStates(): void {
+        this.getFolderItems().forEach((folder) => this.updateFolderEmptyState(folder));
     }
 
     private getTopLevelItems(): HTMLElement[] {
-        if (!this.stripList) return [];
-        return Array.from(this.stripList.querySelectorAll<HTMLElement>(':scope > [data-tab-item]'));
-    }
-
-    private getTopLevelTabItems(): HTMLElement[] {
-        return this.getTopLevelItems().filter((item) => item.dataset.tabType === 'tab');
+        return this.stripList
+            ? Array.from(this.stripList.querySelectorAll<HTMLElement>(':scope > [data-tab-item]'))
+            : [];
     }
 
     private getFolderItems(): HTMLElement[] {
         return this.getTopLevelItems().filter((item) => item.dataset.tabType === 'folder');
     }
 
-    private getFolderTabButtons(folderItem: HTMLElement): HTMLButtonElement[] {
-        return Array.from(folderItem.querySelectorAll<HTMLButtonElement>('[data-folder-tabs] [data-folder-tab-item]'));
+    private getFolderTabs(folder: HTMLElement): HTMLElement[] {
+        return Array.from(folder.querySelectorAll<HTMLElement>('[data-folder-tabs] > [data-folder-tab-item]'));
     }
 
-    private getFolderPanel(folderItem: HTMLElement): HTMLElement | null {
-        return folderItem.querySelector<HTMLElement>('[data-folder-tabs]');
+    private getFolderPanel(folder: HTMLElement): HTMLElement | null {
+        return folder.querySelector('[data-folder-tabs]');
     }
 
-    private getTopLevelNavigationTargets(): HTMLElement[] {
-        if (!this.stripList) return [];
-        return Array.from(this.stripList.querySelectorAll<HTMLElement>('[data-tab-link], [data-folder-toggle]'));
+    private findItem(id: string): HTMLElement | null {
+        return this.element?.querySelector<HTMLElement>(`[data-item-id="${CSS.escape(id)}"]`) || null;
+    }
+
+    private resolveUrl(url: string): string {
+        return url.split('{{pk}}').join(this.element?.dataset.objectPk || '');
+    }
+
+    private isInternalUrl(url: string): boolean {
+        try {
+            const parsed = new URL(url, window.location.origin);
+            return parsed.origin === window.location.origin;
+        } catch {
+            return false;
+        }
+    }
+
+    private isTypingTarget(target: HTMLElement | null): boolean {
+        return Boolean(target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
+    }
+
+    private generateId(): string {
+        if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (character) => {
+            const random = Math.floor(Math.random() * 16);
+            const value = character === 'x' ? random : (random & 0x3) | 0x8;
+            return value.toString(16);
+        });
     }
 
     private clearDragState(): void {
-        this.draggedItem = null;
-        this.draggedFolderTabButton = null;
+        this.draggedTopLevel = null;
+        this.draggedFolderTab = null;
         this.draggedFolderSource = null;
-
-        this.getTopLevelItems().forEach((item) => {
-            item.classList.remove('opacity-50');
-            item.classList.remove('ring-2', 'ring-primary/40');
-        });
-
-        this.getFolderItems().forEach((folder) => {
-            this.getFolderTabButtons(folder).forEach((button) => {
-                button.classList.remove('opacity-50');
-            });
-        });
+        this.element?.querySelectorAll<HTMLElement>('.opacity-50').forEach((item) => item.classList.remove('opacity-50'));
+        this.getFolderItems().forEach((folder) => folder.classList.remove('ring-2', 'ring-primary/40'));
     }
 
     private scheduleSave(): void {
-        if (this.saveTimer) {
-            window.clearTimeout(this.saveTimer);
-        }
-
-        this.saveTimer = window.setTimeout(() => {
-            this.saveTabState().catch(() => {
-                // no-op
-            });
-        }, 200);
+        if (!this.canManage) return;
+        if (this.saveTimer) window.clearTimeout(this.saveTimer);
+        this.saveTimer = window.setTimeout(() => void this.save(), 200);
     }
 
-    private buildStatePayload(): TabStatePayload {
-        const topLevelOrder: string[] = [];
-        const folders: FolderStatePayload[] = [];
-
-        for (const item of this.getTopLevelItems()) {
-            if (item.dataset.tabType === 'tab') {
-                const key = item.dataset.tabKey;
-                if (key) topLevelOrder.push(key);
-                continue;
-            }
-
+    private buildPayload(): TabItemPayload[] {
+        const payload: TabItemPayload[] = [];
+        this.getTopLevelItems().forEach((item, position) => {
+            const id = item.dataset.itemId || '';
+            const name = item.dataset.itemName || '';
             if (item.dataset.tabType === 'folder') {
-                const folderId = item.dataset.folderId;
-                const folderName = item.dataset.folderName || item.querySelector('[data-folder-toggle]')?.textContent?.trim() || 'Folder';
-                if (!folderId) continue;
-
-                const tabOrder = this.getFolderTabButtons(item)
-                    .map((button) => button.dataset.tabKey || '')
-                    .filter((value) => Boolean(value));
-
-                folders.push({
-                    id: folderId,
-                    name: folderName,
-                    tab_order: tabOrder,
+                payload.push({ id, name, url: null, parent_id: null, position });
+                this.getFolderTabs(item).forEach((tab, childPosition) => {
+                    payload.push({
+                        id: tab.dataset.itemId || '',
+                        name: tab.dataset.itemName || '',
+                        url: tab.dataset.itemUrl || '',
+                        parent_id: id,
+                        position: childPosition,
+                    });
                 });
+            } else {
+                payload.push({ id, name, url: item.dataset.itemUrl || '', parent_id: null, position });
             }
-        }
-
-        return {
-            version: 2,
-            top_level_order: topLevelOrder,
-            folders,
-            active: this.activeKey,
-        };
+        });
+        return payload;
     }
 
-    private async saveTabState(): Promise<void> {
+    private async save(): Promise<void> {
         if (!this.element) return;
-
-        const saveUrl = this.element.getAttribute('data-save-url');
-        const contentTypeId = this.element.getAttribute('data-content-type-id');
+        const saveUrl = this.element.dataset.saveUrl;
+        const contentTypeId = this.element.dataset.contentTypeId;
         if (!saveUrl || !contentTypeId) return;
 
-        const state = this.buildStatePayload();
-        const formData = new FormData();
-        formData.append('content_type_id', contentTypeId);
-        formData.append('state', JSON.stringify(state));
-
+        const form = new FormData();
+        form.append('content_type_id', contentTypeId);
+        form.append('items', JSON.stringify(this.buildPayload()));
         const csrfToken = getCsrfToken();
-
-        await fetch(saveUrl, {
+        const response = await fetch(saveUrl, {
             method: 'POST',
             credentials: 'same-origin',
-            headers: {
-                ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
-                'HX-Request': 'true',
-            },
-            body: formData,
+            headers: csrfToken ? { 'X-CSRFToken': csrfToken } : {},
+            body: form,
         });
+        if (!response.ok) throw new Error('Unable to save tabs preference.');
     }
 }

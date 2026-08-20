@@ -1,10 +1,26 @@
+{% comment %}
+container
+
+A container to search through certain items
+
+Parameters:
+- container_query_selector (str): the query selector related to each item
+- search_text_attribute (str): the attribute on the item to look for when comparing with the active query
+
+Slots:
+- default:
+- buttons: (html) the (optional) buttons to display in the search section
+{% endcomment %}
+
 <div 
     bloomerp-component="search-section"
+    data-container-query-selector="{{ container_query_selector }}"
+    data-search-text-attribute="{{ search_text_attribute }}"
     >
     <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div class="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
             <div
-                class="flex w-full items-center gap-3 rounded-xl border border-gray-200 bg-white px-2 py-1 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary sm:max-w-80 sm:flex-none">
+                class="flex w-full items-center gap-3 rounded-xl border border-gray-200 bg-white px-2 py-1 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary{% if buttons %} sm:max-w-80 sm:flex-none{% endif %}">
                 <span class="pointer-events-none shrink-0 text-gray-400">
                     <i class="fa fa-search"></i>
                 </span>
@@ -13,14 +29,14 @@
             </div>
         </div>
 
+        {% if buttons %}
         <div class="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">
             {{ buttons }}
         </div>
+        {% endif %}
     </div>
 
     <div>
-
-
         {{ slot }}
     </div>
 </div>

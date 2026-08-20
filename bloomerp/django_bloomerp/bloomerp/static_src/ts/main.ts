@@ -50,6 +50,7 @@ import { SidebarItem } from './components/sidebar/SidebarItem';
 import FocusIn from './components/inputs/FocusIn';
 import ShortcutTooltip from './components/ShortcutTooltip';
 import OrderedFieldSelect from './components/inputs/OrderedFieldSelect';
+import BehaviorBuilder from './components/inputs/BehaviorBuilder';
 import FocusOnForm from './components/FocusOnForm';
 import { BloomerpTextEditor } from './components/text_editor/BloomerpTextEditor';
 import { DocumentTemplateBuilder } from './components/DocumentTemplateBuilder';
@@ -59,11 +60,19 @@ import showMessage from './utils/messages';
 import Breadcrumb from './components/Breadcrumb';
 import ResizableDiv from './components/ResizableDiv';
 import { DataViewDisplayOptions } from './components/data_view_components/DisplayOptions';
+import { GantChart, GantChartItem, GantChartSidebarItem } from './components/data_view_components/GantChart';
 import { PivotTable } from './components/data_view_components/PivotTable';
+import { Calendar, CalendarCell } from './components/data_view_components/Calendar';
 
 import { openModal } from './utils/modals';
 import { closeModal } from './utils/modals';
+import { Inbox } from './components/inbox/Inbox';
+import { InboxItem } from './components/inbox/InboxItem';
+import { EmailEditor } from './components/inbox/EmailEditor';
 import { SelectPreference } from './components/SelectPreference';
+import BaseSectionedLayoutContainer from './components/layouts/BaseSectionedLayoutContainer';
+import ThemeProvider from './components/theme/ThemeProvider';
+import { loadTranslations } from './utils/i18n';
 
 Object.assign(window, { showMessage });
 
@@ -73,12 +82,15 @@ registerComponent('drawer', Drawer);
 registerComponent('sidebar', Sidebar);
 registerComponent('breadcrumb', Breadcrumb);
 registerComponent('resizable-div', ResizableDiv);
+registerComponent('theme-provider', ThemeProvider);
 
 // Dataview component
 registerComponent('dataview-container', DataViewContainer);
 registerComponent('document-templates-dataview', DocumentTemplateDataViewContainer);
 registerComponent('dataview-display-options', DataViewDisplayOptions);
 registerComponent('pivot-table', PivotTable);
+registerComponent('calendar', Calendar);
+registerComponent('calendar-cell', CalendarCell);
 
 // Datatable
 registerComponent('datatable', DataTable);
@@ -92,6 +104,11 @@ registerComponent('kanban-card', KanbanCard);
 // Card view
 registerComponent('card-view', CardView);
 registerComponent('card-view-card', CardViewCard);
+
+// Gantt chart
+registerComponent('gant-chart', GantChart);
+registerComponent('gant-chart-item', GantChartItem);
+registerComponent('gant-chart-sidebar-item', GantChartSidebarItem);
 
 // Permissions table
 registerComponent('permissions-table', PermissionsTable)
@@ -151,18 +168,22 @@ registerComponent('sidebar-item', SidebarItem)
 registerComponent('focus-in', FocusIn)
 registerComponent('shortcut-tooltip', ShortcutTooltip);
 registerComponent('ordered-field-select', OrderedFieldSelect);
+registerComponent('behavior-builder', BehaviorBuilder);
 
 registerComponent('focus-on-form', FocusOnForm);
 registerComponent('base-wizard', BaseWizard)
 registerComponent('select-preference', SelectPreference)
 
-// Auto init comonents
-setupComponentAutoInit();
+registerComponent('inbox', Inbox)
+registerComponent('inbox-item', InboxItem)
 
+registerComponent('email-editor', EmailEditor)
 
-// Realtime messages
-initMessagesWebsocket();
-
-
-// Setup animation listener
-SetupAnimationListener()
+loadTranslations()
+    .catch((error) => console.warn('Could not load the translation catalog', error))
+    .finally(() => {
+        // Components may synchronously render translated frontend labels.
+        setupComponentAutoInit();
+        initMessagesWebsocket();
+        SetupAnimationListener();
+    });

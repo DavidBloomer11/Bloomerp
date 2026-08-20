@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from ast import mod
 from typing import Any
 from django.db import models
@@ -10,10 +11,10 @@ from bloomerp.models.users.user import User
     
     
 class ActivityLogSource(models.TextChoices):
-    DETAIL = "DETAIL", "DETAIL"
-    API = "API", "API"
-    CREATE = "CREATE", "CREATE"
-    BULK = "BULK", "BULK"    
+    DETAIL = "DETAIL", _("Detail")
+    API = "API", _("API")
+    CREATE = "CREATE", _("Create")
+    BULK = "BULK", _("Bulk")
 
 
 class ActivityLogChange(BaseModel):
@@ -22,9 +23,9 @@ class ActivityLogChange(BaseModel):
     to_value : Any
     
 class ActivityLogAction(models.TextChoices):
-    CHANGE = "CHANGE", "Change"
-    CREATE = "CREATE", "Create"
-    DELETE = "DELETE", "Delete"
+    CHANGE = "CHANGE", _("Change")
+    CREATE = "CREATE", _("Create")
+    DELETE = "DELETE", _("Delete")
     
 
 class ActivityLog(models.Model):
@@ -37,55 +38,64 @@ class ActivityLog(models.Model):
     )
 
     class Meta:
-        verbose_name = "Activity Log"
-        verbose_name_plural = "Activity Logs"
+        verbose_name = _("Activity Log")
+        verbose_name_plural = _("Activity Logs")
         ordering = ["-timestamp"]
         db_table = "bloomerp_activity_log"
 
     timestamp = models.DateTimeField(
-        auto_now_add=True
+        auto_now_add=True,
+        verbose_name=_("Timestamp"),
     )
     actor = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
         on_delete=models.SET_NULL, 
         null=True, 
-        blank=True
+        blank=True,
+        verbose_name=_("Actor"),
     )
     content_type = models.ForeignKey(
         to=ContentType, 
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        verbose_name=_("Content Type"),
     )
     object_id = models.CharField(
-        max_length=255
+        max_length=255,
+        verbose_name=_("Object ID"),
     )
     object: models.Model = GenericForeignKey(
         ct_field="content_type", fk_field="object_id"
     )
     payload = models.JSONField(
         blank=True, 
-        null=True
+        null=True,
+        verbose_name=_("Payload"),
     )
     is_create = models.BooleanField(
-        default=False
+        default=False,
+        verbose_name=_("Is Create"),
     )
     source = models.CharField(
         max_length=12,
-        default=ActivityLogSource.DETAIL.value
+        choices=ActivityLogSource.choices,
+        default=ActivityLogSource.DETAIL.value,
+        verbose_name=_("Source"),
     )
     action = models.CharField(
         max_length=12,
         choices=ActivityLogAction.choices,
-        default=ActivityLogAction.CHANGE
+        default=ActivityLogAction.CHANGE,
+        verbose_name=_("Action"),
     )
 
     @property
     def summary_string(self) -> str:
         action = ActivityLogAction(self.action)
-        actor = self.actor or "System"
+        actor = self.actor or _("System")
         
         match action:
             case ActivityLogAction.DELETE:
-                return f"{actor} deleted this object"    
+                return _("%(actor)s deleted this object") % {"actor": actor}
             case ActivityLogAction.CHANGE:
                 if isinstance(self.payload, list):
                     fields: list[str] = []
@@ -100,20 +110,32 @@ class ActivityLog(models.Model):
                                 first_to_value = change.get("to")
 
                     if not fields:
-                        return f"{actor} changed the object"
+                        return _("%(actor)s changed the object") % {"actor": actor}
 
                     if len(fields) == 1:
-                        return f"{actor} changed the field {fields[0]} to {first_to_value}"
+                        return _("%(actor)s changed the field %(field)s to %(value)s") % {
+                            "actor": actor,
+                            "field": fields[0],
+                            "value": first_to_value,
+                        }
 
                     if len(fields) == 2:
-                        return f"{actor} changed the fields {fields[0]} and {fields[1]}"
+                        return _("%(actor)s changed the fields %(first)s and %(second)s") % {
+                            "actor": actor,
+                            "first": fields[0],
+                            "second": fields[1],
+                        }
                     
-                    return f"{actor} changed the fields {fields[0]}, {fields[1]} and more"
+                    return _("%(actor)s changed the fields %(first)s, %(second)s and more") % {
+                        "actor": actor,
+                        "first": fields[0],
+                        "second": fields[1],
+                    }
                 
-                return f"{actor} changed the object"
+                return _("%(actor)s changed the object") % {"actor": actor}
                 
             case ActivityLogAction.CREATE:
-                return f"{actor} created this object"
+                return _("%(actor)s created this object") % {"actor": actor}
             
-        return f"{actor} changed the object"
+        return _("%(actor)s changed the object") % {"actor": actor}
         

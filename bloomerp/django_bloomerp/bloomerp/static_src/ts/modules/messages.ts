@@ -4,20 +4,32 @@
 import showMessage from '../utils/messages';
 import { MessageType } from '../components/UiMessage';
 
+type MessagePayload = {
+    type: "toast" | "inbox_notification";
+    data: ToastPayload | NotificationPayload;
+}
+
 type ToastPayload = {
-    type?: string;
     message?: string;
-    level?: string;
+    message_type?: string;
     duration?: number;
 };
+
+type NotificationPayload = {
+    notification_count?: number;
+    toast_payload?: ToastPayload;
+}
+
+let notificationAudio: HTMLAudioElement | null = null;
 
 const coerceMessageType = (value?: string): MessageType => {
     switch ((value || '').toLowerCase()) {
         case 'success':
             return MessageType.SUCCESS;
         case 'warning':
-        case 'warn':
             return MessageType.WARNING;
+        case 'danger':
+            return MessageType.ERROR;
         case 'error':
             return MessageType.ERROR;
         case 'info':
@@ -32,11 +44,52 @@ const handleToast = (payload: ToastPayload): void => {
         return;
     }
 
-    const messageType = coerceMessageType(payload.level ?? payload.type);
+    const messageType = coerceMessageType(payload.message_type);
     const duration = payload.duration ?? 5;
 
     showMessage(message, messageType, duration);
 };
+
+/**
+ * Plays the notification sound resolved by Django's staticfiles system.
+ */
+const playNotificationSound = (): void => {
+    const soundUrl = document.querySelector<HTMLMetaElement>(
+        'meta[name="bloomerp-message-sound-url"]'
+    )?.content;
+    if (!soundUrl) {
+        return;
+    }
+
+    notificationAudio ??= new Audio(soundUrl);
+    notificationAudio.currentTime = 0;
+    void notificationAudio.play().catch((error: unknown) => {
+        console.warn('Failed to play notification sound', error);
+    });
+};
+
+const handleNotification = (payload: NotificationPayload): void => {
+    playNotificationSound();
+
+    const toastPayload = payload.toast_payload;
+    if (!toastPayload || !toastPayload.message) {
+        return;
+    }
+
+    const messageType = coerceMessageType(toastPayload.message_type);
+    const duration = toastPayload.duration ?? 5;
+
+    showMessage(toastPayload.message, messageType, duration, true);
+
+    const notificationCountEl = document.getElementById('inbox-notification-count');
+    if (notificationCountEl && payload.notification_count !== undefined) {
+        notificationCountEl.textContent = payload.notification_count.toString();
+    }
+
+
+
+};
+
 
 export const initMessagesWebsocket = (): void => {
     if (typeof window === 'undefined') {
@@ -50,9 +103,11 @@ export const initMessagesWebsocket = (): void => {
 
     socket.onmessage = (event: MessageEvent<string>): void => {
         try {
-            const data = JSON.parse(event.data) as ToastPayload;
-            if (data.type === 'toast' || data.message) {
-                handleToast(data);
+            const data = JSON.parse(event.data) as MessagePayload;
+            if (data.type === 'inbox_notification') {
+                handleNotification(data.data as NotificationPayload);
+            } else if (data.type === 'toast') {
+                handleToast(data.data as ToastPayload);
             }
         } catch (error) {
             console.warn('Failed to parse websocket message', error);

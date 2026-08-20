@@ -1,6 +1,11 @@
+{% load i18n %}
 {% if not pivot_configured %}
-<div class="rounded-xl border border-warning-light bg-base p-6 text-sm text-dark">
-    <c-i18n.blocktrans>Select at least one row field and one value field in the display options to configure the pivot table.</c-i18n.blocktrans>
+<div class="rounded-xl border border-gray-200 bg-base p-6 text-sm text-dark">
+    {% blocktrans %}Select at least one row field and one value field in the display options to configure the pivot table.{% endblocktrans %}
+</div>
+{% elif pivot_too_wide %}
+<div class="rounded-xl border border-gray-200 bg-base p-6 text-sm text-dark">
+    {% blocktrans %}This pivot has too many columns to display safely. Refine the active filters or select fewer column or value fields.{% endblocktrans %}
 </div>
 {% else %}
 <div
@@ -17,7 +22,7 @@
                     rowspan="{{ pivot_result.header_rows|length }}"
                     class="sticky left-0 z-20 min-w-64 border-r border-gray-200 bg-base px-3 py-2 text-left font-semibold text-dark"
                 >
-                    <c-i18n.blocktrans>Rows</c-i18n.blocktrans>
+                    {% blocktrans %}Rows{% endblocktrans %}
                 </th>
                 {% endif %}
                 {% for header in header_row %}
@@ -34,7 +39,7 @@
                         rowspan="{{ pivot_result.header_rows|length }}"
                         class="min-w-32 border-l border-gray-200 px-3 py-2 text-right font-semibold text-dark"
                     >
-                        <c-i18n.blocktrans>Total {{ value_header }}</c-i18n.blocktrans>
+                        {% blocktrans %}Total {{ value_header }}{% endblocktrans %}
                     </th>
                     {% endfor %}
                 {% endif %}
@@ -87,7 +92,7 @@
             {% empty %}
             <tr>
                 <td colspan="100" class="px-6 py-8 text-center text-sm text-gray-500">
-                    <c-i18n.blocktrans>No records found.</c-i18n.blocktrans>
+                    {% blocktrans %}No records found.{% endblocktrans %}
                 </td>
             </tr>
             {% endfor %}
@@ -96,7 +101,7 @@
         <tfoot>
             <tr class="border-t-2 border-gray-200 bg-base font-semibold">
                 <th class="sticky left-0 z-10 border-r border-gray-200 bg-base px-3 py-2 text-left text-dark">
-                    <c-i18n.blocktrans>Column totals</c-i18n.blocktrans>
+                    {% blocktrans %}Column totals{% endblocktrans %}
                 </th>
                 {% for value in pivot_result.column_totals %}
                 <td class="border-r border-gray-200 px-3 py-2 text-right tabular-nums text-dark last:border-r-0">

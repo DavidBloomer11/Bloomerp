@@ -22,7 +22,7 @@
                 {{ preference.effective_preference.name }}
             </button>
 
-            {% if preference.selected %}
+            {% if preference.selected and preference.user_id == request.user.id %}
                 <span class="text-xs font-medium text-primary-700">Selected</span>
             {% endif %}
             
@@ -44,6 +44,7 @@
         </div>
     {% endfor %}
 </div>
+
 
 <div class="border-t border-gray-200 px-4 py-3">
     <div class="mb-2 text-xs font-medium uppercase tracking-wide text-gray-500">
@@ -73,3 +74,4 @@
         </button>
     </form>
 </div>
+

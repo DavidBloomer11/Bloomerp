@@ -29,15 +29,18 @@ class RowPolicyRule(AbsoluteUrlModelMixin, models.Model):
         "RowPolicy",
         related_name="rules",
         on_delete=models.CASCADE,
-        help_text=_("The row-level access control policy this rule belongs to.")
+        help_text=_("The row-level access control policy this rule belongs to."),
+        verbose_name=_("Row Policy"),
     )
     rule : dict = models.JSONField(
-        help_text=_("A JSON representation of the row-level access control rule.")
+        help_text=_("A JSON representation of the row-level access control rule."),
+        verbose_name=_("Rule"),
     )
     permissions = models.ManyToManyField(
             to=Permission,
             related_name="row_policy_rules",
-            through="RowPolicyRulePermission"            
+            through="RowPolicyRulePermission"            ,
+        verbose_name=_("Permissions"),
         )
     
     @property
@@ -261,7 +264,9 @@ class RowPolicyRule(AbsoluteUrlModelMixin, models.Model):
             condition["operator"] = condition.get("operator")
 
         try:
-            self.rule = RowPolicyRuleContent.model_validate(self.rule).model_dump()
+            self.rule = RowPolicyRuleContent.model_validate(self.rule).model_dump(
+                exclude={"permissions"}
+            )
         except PydanticValidationError:
             return
 
@@ -291,11 +296,13 @@ class RowPolicyRule(AbsoluteUrlModelMixin, models.Model):
 
 class RowPolicyRulePermission(models.Model):
     class Meta:
+        verbose_name = _("Row Policy Rule Permission")
+        verbose_name_plural = _("Row Policy Rule Permissions")
         managed = True
         db_table = "bloomerp_row_policy_rule_permission"
     
-    row_policy_rule = models.ForeignKey(RowPolicyRule, on_delete=models.CASCADE)
-    permission = models.ForeignKey(Permission, on_delete=models.CASCADE)
+    row_policy_rule = models.ForeignKey(RowPolicyRule, on_delete=models.CASCADE, verbose_name=_("Row Policy Rule"))
+    permission = models.ForeignKey(Permission, on_delete=models.CASCADE, verbose_name=_("Permission"))
 
     def clean(self):
         rp = self.row_policy_rule.row_policy

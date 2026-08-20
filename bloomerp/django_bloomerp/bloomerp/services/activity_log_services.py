@@ -5,6 +5,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Model, QuerySet
 from django.http import HttpRequest
 
+from bloomerp.communication.inbox_sources import publish_event
 from bloomerp.models.activity_log import ActivityLog, ActivityLogAction, ActivityLogSource
 from bloomerp.models.definition import BloomerpModelConfig
 from bloomerp.models.users.user import User
@@ -71,12 +72,11 @@ class ActivityLogManager:
         if user is None:
             return
 
-        if hasattr(self.instance, "created_by") and not (user.is_anonymous):
+        if self.is_create and hasattr(self.instance, "created_by") and not user.is_anonymous:
             setattr(self.instance, "created_by", user)
             
-        if hasattr(self.instance, "updated_by") and not (user.is_anonymous):
+        if hasattr(self.instance, "updated_by") and not user.is_anonymous:
             setattr(self.instance, "updated_by", user)
-        
         
     def set_delete(self) -> None:
         """Capture a full JSON-safe representation before the object is deleted."""
@@ -90,8 +90,8 @@ class ActivityLogManager:
         """Persists the activity log"""
         if self.action == ActivityLogAction.CHANGE and len(self.payload) == 0:
             return None
-
-        return ActivityLog.objects.create(
+        
+        object = ActivityLog.objects.create(
             actor=self.get_actor() if self.get_actor() and not self.get_actor().is_anonymous else None,
             is_create=self.is_create,
             payload=self._make_json_safe(self.payload),
@@ -100,6 +100,7 @@ class ActivityLogManager:
             object_id=str(self.instance.id),
             action=self.action,
         )
+        
              
     def get_activity_log_source(self) -> ActivityLogSource:
         """Returns the activity log source

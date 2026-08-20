@@ -1,3 +1,4 @@
+{% load i18n %}
 {% load bloomerp %}
 {% load crispy_forms_tags %}
 
@@ -47,7 +48,7 @@
                                 menu_class="h-72 overflow-scroll"
                                 >
                                 <div class="p-1">
-                                    <input type="text" class="input w-full" placeholder="<c-i18n.blocktrans>Search fields</c-i18n.blocktrans>">
+                                    <input type="text" class="input w-full" placeholder="{% blocktrans %}Search fields{% endblocktrans %}">
                                 </div>
                                 <c-ui.dropdown.divider />
                                 {% with selectable_fields=available_output_fields|get_item:draggable_field.key %}
@@ -124,7 +125,7 @@
                                                 hx-trigger="click"
                                                 class="w-full text-left"
                                             >
-                                                <c-i18n.blocktrans>Remove field</c-i18n.blocktrans>
+                                                {% blocktrans %}Remove field{% endblocktrans %}
                                             </button>
                                         </c-ui.dropdown.item>
                                     </c-ui.dropdown.body>
@@ -194,7 +195,7 @@
                                 direction="up"
                                 >
                                 <div class="p-1">
-                                    <input type="text" class="input w-full" placeholder="<c-i18n.blocktrans>Search fields</c-i18n.blocktrans>">
+                                    <input type="text" class="input w-full" placeholder="{% blocktrans %}Search fields{% endblocktrans %}">
                                 </div>
                                 <c-ui.dropdown.divider />
                                 
@@ -233,7 +234,7 @@
                     <!--Selected-->
                     <div class="border p-2 border rounded-xl border-gray-200">
                         <div class="flex flex-wrap gap-2">
-                            {% for filter in config.filters.values %}
+                            {% for filter in config.filters %}
                                 <c-ui.dropdown.body
                                     trigger_text="{{ filter.field }}"
                                     trigger_button_class="badge badge-primary"
@@ -268,7 +269,7 @@
                                             hx-trigger="click"
                                             class="w-full text-left"
                                         >
-                                            <c-i18n.blocktrans>Remove field</c-i18n.blocktrans>
+                                            {% blocktrans %}Remove field{% endblocktrans %}
                                         </button>
                                     </c-ui.dropdown.item>
                                 </c-ui.dropdown.body>

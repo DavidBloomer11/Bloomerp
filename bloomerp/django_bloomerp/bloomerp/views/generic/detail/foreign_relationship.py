@@ -107,15 +107,17 @@ for spec in _iter_foreign_relationship_specs():
 
     router.register(
         path=attribute_name,
-        name=related_model._meta.verbose_name_plural.title(),
+        name="{related_model_plural}",
         url_name=f"{attribute_name}_relationship",
-        description=f"{related_model._meta.verbose_name_plural.title()} relationship for {{model}}",
+        description="{related_model_plural} relationship for {model}",
         route_type="detail",
         models=[model],
+        message_format_values={
+            "related_model_plural": related_model._meta.verbose_name_plural,
+        },
     )(DynamicForeignRelationshipView)
     
     
-
 
 
 

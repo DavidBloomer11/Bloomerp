@@ -1,0 +1,24 @@
+<div
+    bloomerp-component="behavior-builder"
+    class="overflow-hidden rounded-xl border border-gray-200 bg-base shadow-xs"
+    data-behavior-field-catalog="{{ widget.field_catalog_json }}"
+    data-behavior-source-field-id="{{ widget.source_field_id }}"
+    data-behavior-source-field-label="{{ widget.source_field_label }}"
+    data-behavior-source-field-type="{{ widget.source_field_type }}"
+>
+    <input
+        type="hidden"
+        name="{{ widget.name }}"
+        value="{{ widget.value }}"
+        {% include "django/forms/widgets/attrs.html" %}
+        data-behavior-input
+    >
+    <div data-behavior-rules></div>
+
+    <div class="border-t border-gray-200 bg-white px-4 py-3">
+        <button type="button" class="btn btn-primary btn-sm" data-behavior-add-rule>
+            <i class="fa-solid fa-plus"></i>
+            Add behavior
+        </button>
+    </div>
+</div>

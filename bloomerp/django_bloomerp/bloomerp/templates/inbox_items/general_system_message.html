@@ -1,0 +1,6 @@
+<section class="rounded-xl border border-gray-200 bg-white p-5 shadow-xs">
+    <p class="mb-2 text-xs font-semibold uppercase tracking-wide {% if severity == 'success' %}text-success-dark{% elif severity == 'warning' %}text-warning-dark{% elif severity == 'error' %}text-danger-dark{% else %}text-primary-700{% endif %}">
+        {{ severity }}
+    </p>
+    <p class="whitespace-pre-wrap text-sm leading-6 text-dark">{{ item.snippet }}</p>
+</section>

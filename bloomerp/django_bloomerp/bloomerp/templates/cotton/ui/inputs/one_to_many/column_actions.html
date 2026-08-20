@@ -1,0 +1,47 @@
+{% load i18n %}
+{% translate "Column actions" as column_actions_label %}
+{% translate "Autofill" as autofill_label %}
+
+<div class="font-normal" data-one-to-many-column-actions="{{ column.field }}">
+    <c-ui.dropdown.body
+        trigger_icon_class="fa-solid fa-ellipsis-vertical"
+        trigger_class="h-7 w-7 p-0 text-gray-500"
+        trigger_aria_label="{{ column_actions_label }}"
+        position="right"
+        size="sm"
+        fixed=True
+        menu_class="font-normal"
+    >
+        <c-ui.dropdown.item icon="fa-solid fa-arrow-up-wide-short" close_menu=True>
+            <button type="button" class="w-full text-left font-normal" data-one-to-many-sort="ascending" data-column-field="{{ column.field }}">
+                {% blocktrans %}Sort ascending{% endblocktrans %}
+            </button>
+        </c-ui.dropdown.item>
+        <c-ui.dropdown.item icon="fa-solid fa-arrow-down-wide-short" close_menu=True>
+            <button type="button" class="w-full text-left font-normal" data-one-to-many-sort="descending" data-column-field="{{ column.field }}">
+                {% blocktrans %}Sort descending{% endblocktrans %}
+            </button>
+        </c-ui.dropdown.item>
+        <c-ui.dropdown.divider />
+        {% if column.kind == "number" or column.kind == "date" %}
+            <c-ui.dropdown.submenu text="{{ autofill_label }}" icon="fa-solid fa-wand-magic-sparkles">
+                <c-ui.dropdown.item close_menu=True>
+                    <button type="button" class="w-full text-left font-normal" data-one-to-many-autofill="copy" data-column-field="{{ column.field }}" {% if not can_edit %}disabled{% endif %}>
+                        {% blocktrans %}Copy first value{% endblocktrans %}
+                    </button>
+                </c-ui.dropdown.item>
+                <c-ui.dropdown.item close_menu=True>
+                    <button type="button" class="w-full text-left font-normal" data-one-to-many-autofill="increment" data-column-field="{{ column.field }}" {% if not can_edit %}disabled{% endif %}>
+                        {% blocktrans %}Increment first value{% endblocktrans %}
+                    </button>
+                </c-ui.dropdown.item>
+            </c-ui.dropdown.submenu>
+        {% else %}
+            <c-ui.dropdown.item close_menu=True>
+                <button type="button" class="w-full text-left font-normal" data-one-to-many-autofill="copy" data-column-field="{{ column.field }}" {% if not can_edit %}disabled{% endif %}>
+                    {% blocktrans %}Autofill{% endblocktrans %}
+                </button>
+            </c-ui.dropdown.item>
+        {% endif %}
+    </c-ui.dropdown.body>
+</div>

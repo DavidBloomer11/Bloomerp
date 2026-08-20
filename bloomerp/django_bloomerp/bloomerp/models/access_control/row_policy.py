@@ -18,12 +18,14 @@ class RowPolicy(absolute_url_model_mixin.AbsoluteUrlModelMixin, models.Model):
     content_type = models.ForeignKey(
         to=ContentType,
         on_delete=models.CASCADE,
+        verbose_name=_("Content Type"),
     )
     name = models.CharField(
         max_length=255, 
         blank=True, 
         default="",
-        help_text=_("The name of the row-level access control policy.")
+        help_text=_("The name of the row-level access control policy."),
+        verbose_name=_("Name"),
         )
     
     def __str__(self):

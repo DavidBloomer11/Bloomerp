@@ -1,25 +1,59 @@
+from django.utils.translation import gettext_lazy as _
+from abc import ABCMeta, abstractmethod
+from copy import deepcopy
 from typing import Any
 
+from django.conf import settings
 from django.db import models, transaction
+from django.db.models.base import ModelBase
 
 from bloomerp.models.definition import ApiSettings, BloomerpModelConfig, UserAccessRule
 from bloomerp.models.mixins.absolute_url_model_mixin import AbsoluteUrlModelMixin
 from bloomerp.models.users.user import AbstractBloomerpUser
-from django.conf import settings
+
+BASE_PREFERENCE_FIELD_NAMES = {
+    "id",
+    "pk",
+    "user",
+    "user_id",
+    "name",
+    "selected",
+    "source_object",
+    "source_object_id",
+    "shared_with_users",
+    "shared_with_groups",
+    "initial_default",
+}
 
 
-class BasePreference(AbsoluteUrlModelMixin, models.Model):
+class AbstractPreferenceModelBase(ModelBase, ABCMeta):
+    """Combine Django model construction with Python abstract methods."""
+
+
+class BasePreference(
+    AbsoluteUrlModelMixin,
+    models.Model,
+    metaclass=AbstractPreferenceModelBase,
+):
     """
     Abstract base model for user preferences.
     This model is intended to be inherited by other models that represent specific user preferences.
     """
     class Meta:
+        verbose_name = _("Base Preference")
+        verbose_name_plural = _("Base Preferences")
         abstract = True
 
     # Subclasses declare the fields that partition a user's selections, for
     # example ("content_type",) for view preferences or ("module_id",) for
     # workspace preferences.
     preference_scope_fields: tuple[str, ...] = ()
+
+    # When set to true, rather than creating a reference
+    # to the object, the source object is copied into a new
+    # object owned by the user copying from it
+    # This also disallows the user from referencing to it
+    force_copy_initial_default: bool = False
 
     bloomerp_config = BloomerpModelConfig(
         api_settings=ApiSettings(
@@ -41,11 +75,13 @@ class BasePreference(AbsoluteUrlModelMixin, models.Model):
         max_length=255,
         help_text="Optional name for this preference, for user reference",
         default="Default",
+        verbose_name=_("Name"),
     )
     user = models.ForeignKey(
         to=settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="%(class)s_preferences",
+        verbose_name=_("User"),
     )
     selected = models.BooleanField(
         default=False,
@@ -53,6 +89,7 @@ class BasePreference(AbsoluteUrlModelMixin, models.Model):
             "Indicates if this preference is currently selected for the user. "
             "Only one preference per user can be selected at a time."
         ),
+        verbose_name=_("Selected"),
     )
     source_object = models.ForeignKey(
         to="self",
@@ -64,6 +101,7 @@ class BasePreference(AbsoluteUrlModelMixin, models.Model):
             "Reference to the original preference from which this preference was derived. "
             "This is used to track the origin of derived preferences."
         ),
+        verbose_name=_("Source Object"),
     )
 
     # Fields for sharing preferences with other users
@@ -72,12 +110,14 @@ class BasePreference(AbsoluteUrlModelMixin, models.Model):
         related_name="shared_%(class)s_preferences",
         blank=True,
         help_text="Users with whom this preference is shared.",
+        verbose_name=_("Shared With Users"),
     )
     shared_with_groups = models.ManyToManyField(
         to="auth.Group",
         related_name="shared_%(class)s_preferences",
         blank=True,
         help_text="Groups with whom this preference is shared.",
+        verbose_name=_("Shared With Groups"),
     )
     initial_default = models.BooleanField(
         default=False,
@@ -85,9 +125,70 @@ class BasePreference(AbsoluteUrlModelMixin, models.Model):
             "Indicates if this preference is the initial default for the user. "
             "This is used to determine the user's default preference when they first create an account."
         ),
+        verbose_name=_("Initial Default"),
     )
 
     @classmethod
+    @abstractmethod
+    def copy_preference_for_user(
+        cls,
+        *,
+        user: AbstractBloomerpUser,
+        source: "BasePreference",
+        name: str,
+        scope: dict[str, Any] | None = None,
+    ) -> "BasePreference":
+        """Copy ``source`` into an independent preference owned by ``user``.
+
+        Subclasses implement this hook explicitly so relational configuration
+        can be copied where necessary.
+        """
+        raise NotImplementedError(
+            "Subclasses must implement copy_preference_for_user method."
+        )
+
+    @classmethod
+    def _copy_values(cls, source: "BasePreference") -> dict[str, Any]:
+        """Deep-copy concrete configuration values for a new preference.
+
+        Ownership, sharing, selection, identity, and source-reference fields
+        are excluded.
+        """
+        values: dict[str, Any] = {}
+        for field in source._meta.concrete_fields:
+            if (
+                field.primary_key
+                or field.auto_created
+                or field.name in BASE_PREFERENCE_FIELD_NAMES
+            ):
+                continue
+            key = field.attname if field.many_to_one else field.name
+            values[key] = deepcopy(getattr(source, key))
+        return values
+
+    @classmethod
+    def _create_preference_copy(
+        cls,
+        *,
+        user: AbstractBloomerpUser,
+        source: "BasePreference",
+        name: str,
+        scope: dict[str, Any] | None = None,
+    ) -> "BasePreference":
+        """Create the independent model row used by subclass copy hooks."""
+        values = cls._copy_values(source)
+        values.update(scope or {})
+        values.update(
+            user=user,
+            name=name,
+            selected=False,
+            source_object=None,
+            initial_default=False,
+        )
+        return cls.objects.create(**values)
+
+    @classmethod
+    @abstractmethod
     def create_default_for_user(
         cls,
         user: AbstractBloomerpUser,
@@ -118,7 +219,7 @@ class BasePreference(AbsoluteUrlModelMixin, models.Model):
         unrelated request parameters are ignored.
 
         Example:
-            scope = UserDetailViewPreference.normalize_scope(
+            scope = UserObjectViewPreference.normalize_scope(
                 {"content_type_id": "12", "page": "2"}
             )
             # {"content_type_id": "12"}

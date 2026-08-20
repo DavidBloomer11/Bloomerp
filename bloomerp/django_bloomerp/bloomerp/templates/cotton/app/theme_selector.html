@@ -1,0 +1,22 @@
+{% load i18n %}
+{% comment %}
+Theme preference selector. ThemeProvider owns persistence and effective-theme
+resolution; this component only declares the available preferences.
+{% endcomment %}
+<div class="min-w-48 py-1" bloomerp-component="theme-provider" role="radiogroup" aria-label="Theme">
+    <button type="button" class="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800" data-theme-option="light" role="radio" aria-checked="false">
+        <i class="bi bi-sun mr-3 w-4" aria-hidden="true"></i>
+        <span class="flex-1">{% blocktrans %}Light{% endblocktrans %}</span>
+        <i class="fa-solid fa-check text-primary opacity-0" data-theme-check aria-hidden="true"></i>
+    </button>
+    <button type="button" class="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800" data-theme-option="dark" role="radio" aria-checked="false">
+        <i class="bi bi-moon-stars mr-3 w-4" aria-hidden="true"></i>
+        <span class="flex-1">{% blocktrans %}Dark{% endblocktrans %}</span>
+        <i class="fa-solid fa-check text-primary opacity-0" data-theme-check aria-hidden="true"></i>
+    </button>
+    <button type="button" class="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800" data-theme-option="auto" role="radio" aria-checked="false">
+        <i class="bi bi-circle-half mr-3 w-4" aria-hidden="true"></i>
+        <span class="flex-1">{% blocktrans %}Automatic{% endblocktrans %}</span>
+        <i class="fa-solid fa-check text-primary opacity-0" data-theme-check aria-hidden="true"></i>
+    </button>
+</div>

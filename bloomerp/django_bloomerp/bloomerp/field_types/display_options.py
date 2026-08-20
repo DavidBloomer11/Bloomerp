@@ -32,3 +32,19 @@ class FieldDisplayOption:
         if self.get_form_field_kwargs:
             kwargs.update(self.get_form_field_kwargs(application_field))
         return self.form_field_cls(**kwargs)
+
+
+LABEL_OPTION = FieldDisplayOption(
+    id="label",
+    label="Label",
+    form_field_cls=forms.CharField,
+    required=False,
+)
+
+HELP_TEXT_FIELD_OPTION = FieldDisplayOption(
+    id="help_text",
+    label="Help Text",
+    form_field_cls=forms.CharField,
+    required=False,
+    help_text="This text will be displayed below the field in the form.",
+)

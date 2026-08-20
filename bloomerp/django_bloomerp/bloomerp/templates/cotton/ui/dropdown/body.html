@@ -7,6 +7,7 @@ Parameters:
 - trigger_icon_class : CSS classes for a Font Awesome or other icon element rendered before the trigger text
 - trigger_button_class : use btn-based trigger styling instead of the default inline trigger styling
 - trigger_class : additional CSS classes for the trigger button
+- trigger_aria_label : accessible name for an icon-only trigger
 - menu_class : additional CSS classes for the dropdown menu
 - position : dropdown position - "left", "right", or "center" (default: "right")
 - direction : dropdown direction - "up" or "down" (default: "down")
@@ -24,6 +25,7 @@ Parameters:
 {% if icon %}{% endif %}
 
 <div class="relative inline-block text-left {% if wrapper_class %}{{ wrapper_class }}{% endif %}"
+    id="{{ id }}"
     x-data="{
         open: false,
         wasOpen: false,
@@ -142,6 +144,7 @@ Parameters:
         @click="{% if not disabled %}open = !open; if (open) $nextTick(() => resolvePlacement()){% endif %}"
         :aria-expanded="open.toString()"
         aria-haspopup="true"
+        {% if trigger_aria_label %}aria-label="{{ trigger_aria_label }}"{% endif %}
         {% if disabled %}disabled{% endif %}
         id="{{ trigger_button_id }}"
     >

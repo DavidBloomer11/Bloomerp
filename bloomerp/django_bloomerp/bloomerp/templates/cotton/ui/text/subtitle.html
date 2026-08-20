@@ -1,3 +1,4 @@
+{% load i18n %}
 <h2 class="font-bold text-primary-900 {{ class }}">
-    <c-i18n.blocktrans>{{ slot }}</c-i18n.blocktrans>
+    {% translate slot %}
 </h2>

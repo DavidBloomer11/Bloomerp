@@ -1,3 +1,4 @@
+{% load i18n %}
 {% load static %}
 {% load bloomerp %}
 {% load crispy_forms_tags %}
@@ -7,6 +8,7 @@
 	bloomerp-component="detail-view-frame"
 	class="grid gap-6 xl:h-full xl:min-h-0 xl:overflow-hidden xl:gap-0 {% if include_detail_aside %}xl:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)_auto]{% else %}xl:grid-cols-[minmax(0,1fr)_auto]{% endif %}"
 	data-detail-view-grid
+	data-sidebar-preference-url="{% url 'components_detail_sidebar_preference' %}"
 >
 
 	<section class="min-w-0 xl:h-full xl:min-h-0 xl:overflow-hidden">
@@ -15,138 +17,83 @@
 			<div
 				bloomerp-component="detail-tabs"
 				data-content-type-id="{{ detail_view_content_type_id }}"
+				data-object-pk="{{ object.pk }}"
+				data-can-manage="{% if can_manage_detail_tabs_preference %}true{% else %}false{% endif %}"
 				data-save-url="{% url 'components_detail_tabs_preference' %}"
-				data-folder-modal-url="{% url 'components_detail_tabs_folder_modal' %}"
+				data-item-modal-url="{% url 'components_detail_tabs_item_modal' %}"
 				data-tab-strip
-				class="sticky top-0 z-40 shrink-0 bg-white"
+				class="sticky top-0 z-40 flex shrink-0 border-b border-gray-200 bg-white"
 			>
-				<div class="relative overflow-x-auto no-scrollbar border-b border-gray-200 bg-white" style="overflow-y: visible;" data-tabs-strip-container>
+				<div class="relative min-w-0 flex-1 overflow-x-auto no-scrollbar bg-white" style="overflow-y: visible;" data-tabs-strip-container>
 					<ul class="flex min-w-max items-end gap-1" role="tablist" data-tabs-strip>
-						{% for tab in tabs_top_level %}
-							{% if not tab.is_delete %}
-							{% if tab.requires_pk %}
-								{% url tab.url object.pk as tab_href %}
-							{% else %}
-								{% url tab.url as tab_href %}
-							{% endif %}
-							<li
-								data-tab-item
-								data-tab-type="tab"
-								data-tab-key="{{ tab.key|default:tab.url }}"
-								data-tab-name="{{ tab.name }}"
-								data-tab-url="{{ tab.url }}"
-								data-tab-requires-pk="{% if tab.requires_pk %}true{% else %}false{% endif %}"
-								data-tab-active="{% if tab.is_active or request.path == tab_href %}true{% else %}false{% endif %}"
-								draggable="true"
-								class="shrink-0 border-b-2 border-transparent cursor-pointer select-none"
-							>
-								<button
-									type="button"
-									data-tab-link
-									role="tab"
-									aria-selected="{% if tab.is_active or request.path == tab_href %}true{% else %}false{% endif %}"
-									hx-get="{{ tab_href }}"
-									hx-swap="innerHTML"
-									hx-trigger="click"
-									hx-target="#detail-view-content"
-									hx-push-url="true"
-									id="{{ tab_href }}"
-									class="h-full w-full px-4 py-2 text-sm whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-primary-500 hover:cursor-pointer hover:bg-gray-50"
-								>
-									{{ tab.name }}
-								</button>
-							</li>
-							{% endif %}
-						{% endfor %}
-
-						{% for folder in tab_folders %}
+						{% for item in tab_items %}
+							{% if item.is_folder %}
 							<li
 								data-tab-item
 								data-tab-type="folder"
-								data-folder-id="{{ folder.id }}"
-								data-folder-name="{{ folder.name }}"
-								draggable="true"
-								class="relative shrink-0 border-b-2 border-transparent cursor-pointer select-none"
+								data-item-id="{{ item.id }}"
+								data-item-name="{{ item.name }}"
+								class="relative shrink-0 cursor-pointer select-none border-b-2 border-transparent"
 							>
 								<button
 									type="button"
 									data-folder-toggle
-									class="h-full w-full px-4 py-2 text-sm whitespace-nowrap text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 hover:cursor-pointer hover:bg-gray-50"
+									class="h-full w-full px-4 py-2 text-sm whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-primary-500 hover:cursor-pointer hover:bg-gray-50"
 								>
-									{{ folder.name }}
+									{{ item.name }}
 								</button>
-
-								<div class="absolute left-0 top-full z-50 mt-1 hidden min-w-56 rounded-md border border-gray-200 bg-white shadow-lg" data-folder-tabs>
-									{% for tab in folder.tabs %}
-										{% if tab.requires_pk %}
-											{% url tab.url object.pk as tab_href %}
-										{% else %}
-											{% url tab.url as tab_href %}
-										{% endif %}
-										<button
-											type="button"
+								<div class="absolute left-0 top-full z-50 mt-1 hidden min-w-56 rounded-xl border border-gray-200 bg-white shadow-xs" data-folder-tabs>
+									{% for tab in item.tabs %}
+										<a
+											href="{{ tab.href }}"
 											data-folder-tab-item
-											data-tab-key="{{ tab.key|default:tab.url }}"
-											data-tab-name="{{ tab.name }}"
-											data-tab-url="{{ tab.url }}"
-											data-tab-requires-pk="{% if tab.requires_pk %}true{% else %}false{% endif %}"
-											data-tab-active="{% if tab.is_active or request.path == tab_href %}true{% else %}false{% endif %}"
-											hx-get="{{ tab_href }}"
-											hx-swap="innerHTML"
-											hx-trigger="click"
-											hx-target="#detail-view-content"
-											hx-push-url="true"
+											data-item-id="{{ tab.id }}"
+											data-item-name="{{ tab.name }}"
+											data-item-url="{{ tab.url }}"
+											data-tab-active="{% if tab.is_active %}true{% else %}false{% endif %}"
+											{% if not tab.is_external %}hx-get="{{ tab.href }}" hx-swap="innerHTML" hx-target="#detail-view-content" hx-push-url="true"{% endif %}
 											class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
-										>
-											{{ tab.name }}
-										</button>
+										>{{ tab.name }}</a>
+									{% empty %}
+										<div class="px-4 py-2 text-sm text-gray-500" data-folder-empty>{% blocktrans %}No tabs in folder{% endblocktrans %}</div>
 									{% endfor %}
-									{% if not folder.tabs %}
-										<div class="px-4 py-2 text-sm text-gray-500" data-folder-empty>
-											No tabs in folder
-										</div>
-									{% endif %}
 								</div>
 							</li>
-						{% endfor %}
-
-						{% for tab in tabs_top_level %}
-							{% if tab.is_delete %}
-							{% if tab.requires_pk %}
-								{% url tab.url object.pk as tab_href %}
 							{% else %}
-								{% url tab.url as tab_href %}
-							{% endif %}
 							<li
 								data-tab-item
 								data-tab-type="tab"
-								data-tab-key="{{ tab.key|default:tab.url }}"
-								data-tab-name="{{ tab.name }}"
-								data-tab-url="{{ tab.url }}"
-								data-tab-requires-pk="{% if tab.requires_pk %}true{% else %}false{% endif %}"
-								data-tab-active="{% if tab.is_active or request.path == tab_href %}true{% else %}false{% endif %}"
-								draggable="true"
-								class="shrink-0 border-b-2 border-transparent cursor-pointer select-none"
+								data-item-id="{{ item.id }}"
+								data-item-name="{{ item.name }}"
+								data-item-url="{{ item.url }}"
+								data-tab-active="{% if item.is_active %}true{% else %}false{% endif %}"
+								class="shrink-0 cursor-pointer select-none border-b-2 border-transparent"
 							>
-								<button
-									type="button"
+								<a
+									href="{{ item.href }}"
 									data-tab-link
 									role="tab"
-									aria-selected="{% if tab.is_active or request.path == tab_href %}true{% else %}false{% endif %}"
-									hx-get="{{ tab_href }}"
-									hx-swap="innerHTML"
-									hx-trigger="click"
-									hx-target="#detail-view-content"
-									hx-push-url="true"
-									id="{{ tab_href }}"
-									class="h-full w-full px-4 py-2 text-sm whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-primary-500 hover:cursor-pointer hover:bg-gray-50"
-								>
-									{{ tab.name }}
-								</button>
+									aria-selected="{% if item.is_active %}true{% else %}false{% endif %}"
+									{% if not item.is_external %}hx-get="{{ item.href }}" hx-swap="innerHTML" hx-target="#detail-view-content" hx-push-url="true"{% endif %}
+									class="block h-full w-full px-4 py-2 text-sm whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-primary-500 hover:bg-gray-50"
+								>{{ item.name }}</a>
 							</li>
 							{% endif %}
 						{% endfor %}
 					</ul>
+				</div>
+				<div class="flex shrink-0 items-stretch border-l border-gray-200">
+					<c-features.preferences.select_preference_button
+						model="UserDetailViewTabsPreference"
+						selected_preference_name="{{ detail_tabs_preference.name }}"
+						:args="detail_tabs_preference.get_scope"
+						icon_only=True
+						trigger_icon_class="fa fa-chevron-down"
+						trigger_button_class="btn-ghost"
+						trigger_class="h-full rounded-none px-4"
+						trigger_aria_label="Select tabs preference"
+						wrapper_class="h-full"
+					/>
 				</div>
 			</div>
 			<!--End Card Tabs-->
@@ -178,21 +125,23 @@
 					<div class="flex flex-wrap justify-center gap-2">
 						<button 
 							class="btn btn-secondary btn-sm"
+							data-detail-sidebar-view="activity"
 							hx-get="{% url 'components_activity_log' %}?content_type_id={{ content_type_id }}&object_id={{ object.id }}"
 							hx-target="#object-sidesection"
 							hx-animation	
 							>
 							<i class="fa fa-history"></i>
-							<c-i18n.blocktrans>Activity</c-i18n.blocktrans>
+							{% blocktrans %}Activity{% endblocktrans %}
 						</button>
 						<button 
 							class="btn btn-secondary btn-sm"
+							data-detail-sidebar-view="comments"
 							hx-get="{% url 'components_comments' content_type_id=content_type_id object_id=object.id %}"
 							hx-target="#object-sidesection"
 							hx-animation	
 							>
 							<i class="fa fa-comments"></i>
-							<c-i18n.blocktrans>Comments</c-i18n.blocktrans>
+							{% blocktrans %}Comments{% endblocktrans %}
 						</button>
 						{% if model_name != 'todo' and model_name != 'initiative' %}
 						<button 
@@ -205,18 +154,16 @@
 							bloomerp-open-modal="detail-todo-modal"	
 							>
 							<i class="fa fa-list-check"></i>
-							<c-i18n.blocktrans>Create Todo</c-i18n.blocktrans>
+							{% blocktrans %}Create Todo{% endblocktrans %}
 						</button>
 						{% endif %}
-						{% for button in extra_buttons %}
-							{% render_object_action action=button object=object request=request content_type_id=content_type_id %}
-						{% endfor %}
 						{% for action in object_actions %}
 							{% render_object_action action=action object=object request=request content_type_id=content_type_id %}
 						{% endfor %}
 					</div>
 					<div
-						hx-get="{% url 'components_activity_log' %}?content_type_id={{ content_type_id }}&object_id={{ object.id }}" 
+						data-detail-sidebar-loader
+						hx-get="{% if detail_sidebar_view == 'comments' %}{% url 'components_comments' content_type_id=content_type_id object_id=object.id %}{% else %}{% url 'components_activity_log' %}?content_type_id={{ content_type_id }}&object_id={{ object.id }}{% endif %}"
 						hx-target="#object-sidesection" 
 						hx-trigger="load"
 						hx-swap="innerHTML"

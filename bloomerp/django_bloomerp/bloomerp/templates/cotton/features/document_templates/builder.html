@@ -1,3 +1,4 @@
+{% load i18n %}
 {% load crispy_forms_tags %}
 
 {% with field_config_id=id|add:"-fields" variable_catalog_id=id|add:"-variable-catalog" template_tags_id=id|add:"-template-tags" %}
@@ -47,19 +48,19 @@
                 <button class="btn btn-sm transition-colors" type="button" @click="activeSection = 'variables'"
                     :class="activeSection === 'variables' ? 'bg-black text-white' : 'bg-white text-slate-700'"
                     :aria-pressed="activeSection === 'variables'">
-                    <c-i18n.blocktrans>Variables</c-i18n.blocktrans>
+                    {% blocktrans %}Variables{% endblocktrans %}
                 </button>
 
                 <button class="btn btn-sm transition-colors" type="button" @click="activeSection = 'styling'"
                     :class="activeSection === 'styling' ? 'bg-black text-white' : 'bg-white text-slate-700'"
                     :aria-pressed="activeSection === 'styling'">
-                    <c-i18n.blocktrans>Styling</c-i18n.blocktrans>
+                    {% blocktrans %}Styling{% endblocktrans %}
                 </button>
 
                 <button class="btn btn-sm transition-colors" type="button" @click="activeSection = 'settings'"
                     :class="activeSection === 'settings' ? 'bg-black text-white' : 'bg-white text-slate-700'"
                     :aria-pressed="activeSection === 'settings'">
-                    <c-i18n.blocktrans>Settings</c-i18n.blocktrans>
+                    {% blocktrans %}Settings{% endblocktrans %}
                 </button>
             </div>
 
@@ -107,7 +108,7 @@
                             >
                             <label class="flex items-center gap-2 text-sm text-slate-700">
                                 <input type="checkbox" class="checkbox" id="id_free_variable_required">
-                                <span><c-i18n.blocktrans>Required</c-i18n.blocktrans></span>
+                                <span>{% blocktrans %}Required{% endblocktrans %}</span>
                             </label>
                             <button 
                                 class="btn btn-secondary btn-sm self-start"

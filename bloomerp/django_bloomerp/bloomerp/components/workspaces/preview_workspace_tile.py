@@ -2,9 +2,11 @@ import json
 from typing import Any
 
 from django.http import HttpRequest
+from django.urls import NoReverseMatch, reverse
 from django.utils.translation import gettext_lazy as _
 
 from bloomerp.forms.workspaces import DEFAULT_TILE_ICON, TileMetadataForm
+from bloomerp.models.base_bloomerp_model import LayoutItem
 from bloomerp.router import router
 from bloomerp.services.permission_services import UserPermissionManager
 from bloomerp.services.sql_services import DatabaseTable
@@ -16,6 +18,7 @@ from bloomerp.views.workspaces.create_tile import (
     TILE_ICON_SESSION_KEY,
     TILE_NAME_SESSION_KEY,
 )
+from bloomerp.widgets.icon_picker_widget import IconPickerWidget
 from bloomerp.workspaces import orchestrator
 from bloomerp.workspaces.analytics_tile.model import (
     AnalyticsTileConfig,
@@ -28,11 +31,75 @@ from bloomerp.workspaces.analytics_tile.model import (
 from bloomerp.workspaces.analytics_tile.utils import get_primitive_field_icon
 from bloomerp.workspaces.base import BaseTileConfig
 from bloomerp.workspaces.dataview_tile.model import DataViewTileConfig
-from bloomerp.workspaces.links_tile.model import LinkTileConfig
+from bloomerp.workspaces.links_tile.model import Link, LinkTileConfig
 from bloomerp.workspaces.text_tile.model import TextTileConfig
 from bloomerp.workspaces.tiles import TileType
 from django.views.generic import TemplateView
 from django import forms
+
+
+def _render_link_icon_picker(name: str, value: str = "") -> str:
+    """Render the shared optional icon picker for a link-tile item."""
+    return IconPickerWidget(attrs={"class": "input input-sm w-full"}).render(name, value)
+
+
+def _build_link_builder_items(links: list[Link], parent_path: list[int] | None = None) -> list[dict[str, Any]]:
+    """Build recursive template data with stable index paths for link operations."""
+    parent_path = parent_path or []
+    return [
+        {
+            "link": link,
+            "path": [*parent_path, index],
+            "icon_picker": _render_link_icon_picker(
+                f"edit_link_icon_{'_'.join(map(str, [*parent_path, index]))}",
+                link.icon,
+            ),
+            "children": _build_link_builder_items(link.children, [*parent_path, index]),
+        }
+        for index, link in enumerate(links)
+    ]
+
+
+def _build_link_folder_options(
+    links: list[Link],
+    parent_path: list[int] | None = None,
+    depth: int = 0,
+) -> list[dict[str, Any]]:
+    """Flatten folders into choices while preserving their hierarchy labels."""
+    parent_path = parent_path or []
+    options: list[dict[str, Any]] = []
+    for index, link in enumerate(links):
+        if not link.is_folder:
+            continue
+        path = [*parent_path, index]
+        options.append({"name": f"{'— ' * depth}{link.name}", "path": path})
+        options.extend(_build_link_folder_options(link.children, path, depth + 1))
+    return options
+
+
+def _get_link_route_suggestions() -> list[dict[str, str]]:
+    """Return navigable application routes for the editable URL datalist."""
+    suggestions: list[dict[str, str]] = []
+    seen_urls: set[str] = set()
+    for route in router.get_routes():
+        path = route.path or ""
+        if path.lstrip("/").startswith(("api/", "components/")) or route.nr_of_args() > 0:
+            continue
+        try:
+            url = reverse(route.url_name)
+        except NoReverseMatch:
+            continue
+        if url in seen_urls:
+            continue
+        seen_urls.add(url)
+        suggestions.append(
+            {
+                "url": url,
+                "name": route.localized_name or url,
+                "description": " ".join(route.localized_description.split()),
+            }
+        )
+    return sorted(suggestions, key=lambda suggestion: (suggestion["name"].lower(), suggestion["url"]))
 
 @router.register(
     path="components/preview_workspace_tile/",
@@ -135,12 +202,24 @@ class PreviewWorkspaceTile(TemplateView):
         ctx["tile_preview_title"] = ctx["tile_name"] or _("Untitled tile")
         ctx["tile_preview_description"] = ctx["tile_description"]
         ctx["tile_preview_icon"] = ctx["tile_icon"] or DEFAULT_TILE_ICON
+        ctx["tile_preview_item"] = LayoutItem(
+            id="preview",
+            icon=ctx["tile_preview_icon"],
+            label=str(ctx["tile_preview_title"]),
+            content=ctx["tile_preview_html"],
+            component_name="workspace-tile",
+            border=True,
+            search_keywords=ctx["tile_preview_description"],
+        )
         ctx["include_builder_section"] = parse_bool_parameter(
             self.request.GET.get("include_builder_section", True),
             True
         )
         if self.get_tile_type().value.form_cls:
-            ctx["form"] = self.get_tile_type().value.form_cls()
+            form_kwargs = {"initial": config.model_dump()}
+            if self.get_tile_type() == TileType.DATAVIEW_TILE:
+                form_kwargs["user"] = self.request.user
+            ctx["form"] = self.get_tile_type().value.form_cls(**form_kwargs)
         
         return ctx
     
@@ -153,8 +232,8 @@ class PreviewWorkspaceTile(TemplateView):
                 return "components/workspaces/tile_builders/links_tile_builder.html"
             case TileType.TEXT_TILE:
                 return "components/workspaces/tile_builders/text_tile_builder.html"
-            # case TileType.DATAVIEW_TILE:
-            #     return "components/workspaces/tile_builders/dataview_tile_builder.html"
+            case TileType.CANVAS_TILE:
+                return "components/workspaces/tile_builders/canvas_tile_builder.html"
             # case TileType.FORM_TILE:
             #     return "components/workspaces/tile_builders/form_tile_builder.html"
             case _:
@@ -237,7 +316,11 @@ class PreviewWorkspaceTile(TemplateView):
                 extra_context["filter_variables"] = get_filters_from_query(output_table, config.query)
                 
             case TileType.LINKS_TILE:
-                pass
+                extra_context["link_builder_items"] = _build_link_builder_items(config.links)
+                extra_context["link_folder_options"] = _build_link_folder_options(config.links)
+                extra_context["link_route_suggestions"] = _get_link_route_suggestions()
+                extra_context["add_link_icon_picker"] = _render_link_icon_picker("add_link_icon")
+                extra_context["add_folder_icon_picker"] = _render_link_icon_picker("add_folder_icon")
             
             # case TileType.DATAVIEW_TILE:
             #     manager = UserPermissionManager(self.request.user)
@@ -277,8 +360,11 @@ class PreviewWorkspaceTile(TemplateView):
         try:
             # Get the new configuration based on the handler
             
-            if isinstance(operation_def.validation_model, forms.Form):
-                data = operation_def.validation_model(data=request.POST, files=request.FILES)
+            if issubclass(operation_def.validation_model, forms.Form):
+                form_kwargs = {"data": request.POST, "files": request.FILES}
+                if tile_type == TileType.DATAVIEW_TILE:
+                    form_kwargs["user"] = request.user
+                data = operation_def.validation_model(**form_kwargs)
             else:
                 data = operation_def.validation_model(**data)
             

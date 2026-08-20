@@ -6,19 +6,15 @@ from django.db import transaction
 from django.http import HttpRequest
 from django.http import QueryDict
 
+from bloomerp.field_types.types import FieldType
+from bloomerp.forms.model_form import BloomerpModelForm
 from bloomerp.forms.model_form import bloomerp_modelform_factory
 from bloomerp.models import ApplicationField
+from bloomerp.models.files.file import File
 from bloomerp.models.forms.form import Form
 from bloomerp.models.forms.form_submission import FormSubmission
-from bloomerp.services.one_to_many_field_services import (
-    collect_submitted_one_to_many_data,
-    save_submitted_one_to_many_fields,
-)
-from bloomerp.services.object_file_field_services import (
-    FILES_FIELD_NAME,
-    attach_uploaded_files_to_form_submission,
-    move_form_submission_files_to_object,
-)
+
+
 from bloomerp.utils.json_serialization import make_json_safe
 from dataclasses import dataclass
 from django.forms import ModelForm
@@ -37,7 +33,7 @@ class FormManager:
     def __init__(self, form:Form):
         self.form = form
         
-    def register_submission(self, data:dict, request:HttpRequest) -> FormSubmissionResponse:
+    def register_submission(self, form:BloomerpModelForm, request:HttpRequest) -> FormSubmissionResponse:
         """Registers a form submission
 
         Args:
@@ -52,25 +48,21 @@ class FormManager:
                 None,
             )
         
+        submission_data = form.serialize_cleaned_data()
         
-        submission_data = self.build_submission_data(data=data, request=request)
-
         submission = FormSubmission.objects.create(
             form=self.form,
             data=make_json_safe(submission_data),
         )
-        uploaded_files = attach_uploaded_files_to_form_submission(
-            form_submission=submission,
-            request=request,
-            target_model=self.form.content_type.model_class(),
-            layout=self.form.layout_obj,
-        )
-        if uploaded_files:
-            submission.data = {
-                **(submission.data or {}),
-                FILES_FIELD_NAME: [str(file.id) for file in uploaded_files],
-            }
-            submission.save(update_fields=["data"])
+        if form.files:
+            File.upload_files_to_object(
+                submission,
+                [
+                    uploaded_file
+                    for _, uploaded_files in form.files.lists()
+                    for uploaded_file in uploaded_files
+                ],
+            )
         
         if not self.form.requires_review:
             submission = self.persist_form_submission(submission, request=request)
@@ -81,7 +73,7 @@ class FormManager:
             submission,
         )
         
-                
+             
     def can_submit(self, request:HttpRequest) -> bool:
         """Checks whether a form can be submitted
 
@@ -95,30 +87,6 @@ class FormManager:
             
         return True
 
-    def build_submission_data(self, *, data: dict, request: HttpRequest | None) -> dict:
-        """Combine ModelForm data with layout-only submitted fields."""
-        initial_payload = self.get_initial_payload()
-        submission_data = {
-            **self.get_initial_model_payload(initial_payload),
-            **dict(data),
-        }
-        target_model = self.form.content_type.model_class()
-        submitted_data = getattr(request, "POST", None)
-        if target_model is None or submitted_data is None:
-            return submission_data
-
-        submitted_one_to_many_data = collect_submitted_one_to_many_data(
-            parent_model=target_model,
-            layout=self.form.layout_obj,
-            submitted_data=submitted_data,
-        )
-        submission_data.update(
-            self.apply_one_to_many_initial_payload(
-                initial_payload=initial_payload,
-                submitted_one_to_many_data=submitted_one_to_many_data,
-            )
-        )
-        return submission_data
 
     def get_initial_payload(self) -> dict:
         """Return the configured initial payload as a dict."""
@@ -129,7 +97,7 @@ class FormManager:
         """Return initial payload values that are direct model fields."""
         payload = initial_payload if isinstance(initial_payload, dict) else self.get_initial_payload()
         layout_only_field_names = {
-            FILES_FIELD_NAME,
+            "files",
             *self.layout_one_to_many_field_names(),
         }
         return {
@@ -165,15 +133,6 @@ class FormManager:
             one_to_many_data.setdefault(field_name, rows)
         return one_to_many_data
 
-    def get_one_to_many_initial_value(self, field_name: str) -> list[dict]:
-        config = self.normalize_one_to_many_initial_payload(self.get_initial_payload().get(field_name))
-        return [
-            {
-                **config["row_defaults"],
-                **row,
-            }
-            for row in config["initial_rows"]
-        ]
 
     def normalize_one_to_many_initial_payload(self, value) -> dict:
         if isinstance(value, dict):
@@ -191,7 +150,7 @@ class FormManager:
         return {
             field.field
             for field in self.layout_application_fields()
-            if field.get_field_type_enum().value.id == "OneToManyField"
+            if field.get_field_type_enum().value.id == FieldType.ONE_TO_MANY_FIELD.value.id
         }
 
     def get_initial_form_data(self) -> dict:
@@ -260,7 +219,6 @@ class FormManager:
         field_names = [
             field.field
             for field in self.layout_application_fields()
-            if field.get_field_type_enum().value.allow_in_model
         ]
         seen = set(field_names)
 
@@ -291,7 +249,7 @@ class FormManager:
             return False
         return True
 
-    def layout_form_cls(self, extra_fields:Optional[list[str]]=None) -> Optional[Type[ModelForm]]:
+    def layout_form_cls(self, extra_fields:Optional[list[str]]=None) -> Optional[Type[BloomerpModelForm]]:
         """Returns the layout form for this form object
 
         Returns:
@@ -301,31 +259,9 @@ class FormManager:
         field_names = self.layout_model_form_field_names(extra_fields=extra_fields)
         if target_model is None or not field_names:
             return None
-
+        
         return bloomerp_modelform_factory(target_model, fields=field_names)
         
-    def build_persist_form_data(self, data: dict) -> QueryDict:
-        """Build POST-like data from stored submission data."""
-        querydict = QueryDict("", mutable=True)
-        for field_name, value in (data or {}).items():
-            if field_name == FILES_FIELD_NAME:
-                continue
-            if isinstance(value, list) and all(isinstance(item, dict) for item in value):
-                for row_index, row_data in enumerate(value):
-                    for row_field_name, row_value in row_data.items():
-                        key = f"{field_name}__{row_index}__{row_field_name}"
-                        if isinstance(row_value, list):
-                            querydict.setlist(key, [str(item) for item in row_value])
-                        elif row_value is not None:
-                            querydict[key] = str(row_value)
-                continue
-
-            if isinstance(value, list):
-                querydict.setlist(field_name, [str(item) for item in value])
-            elif value is not None:
-                querydict[field_name] = str(value)
-        return querydict
-
     def persist_form_submission(self, form_submission:FormSubmission, request: HttpRequest | None = None):
         """Method to persist a form submission. Can be used
 
@@ -334,42 +270,26 @@ class FormManager:
         """
         if form_submission.persisted:
             return form_submission
-
-        form_class = self.layout_form_cls(
-            extra_fields=[
-                field_name
-                for field_name in (form_submission.data or {}).keys()
-                if self.can_use_model_form_field(field_name)
-            ]
-        )
+        
+        form_class = self.layout_form_cls()
         target_model = self.form.content_type.model_class()
         if form_class is None or target_model is None:
             raise ValidationError("This form submission cannot be persisted.")
 
-        data = self.build_persist_form_data(form_submission.data)
-        target_form = form_class(data=data)
+        target_form = form_class.from_deserialized_data(form_submission.data)
         if not target_form.is_valid():
             raise ValidationError(target_form.errors)
-
+        
         with transaction.atomic():
-            obj = target_form.save(commit=False)
-            obj.save()
-            if hasattr(target_form, "save_m2m"):
-                target_form.save_m2m()
-            if hasattr(obj, "save_file_fields"):
-                obj.save_file_fields()
-            move_form_submission_files_to_object(
-                form_submission=form_submission,
-                obj=obj,
-                user=getattr(request, "user", None),
-            )
-            save_submitted_one_to_many_fields(
-                parent_object=obj,
-                layout=self.form.layout_obj,
-                submitted_data=data,
-                user=request.user,
-                enforce_permissions=False,
-            )
+            target_object = target_form.save()
+            
+            files = form_submission.files.all()
+            if files:
+                File.move_files_to_object(
+                    target=target_object,
+                    files=files
+                )
+            
             form_submission.persisted = True
             form_submission.save(update_fields=["persisted"])
 

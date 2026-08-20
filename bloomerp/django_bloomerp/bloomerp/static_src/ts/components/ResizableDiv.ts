@@ -3,7 +3,7 @@ import { getCookie, setCookie } from "../utils/cookies";
 
 const DEFAULT_START_WIDTH = "320px";
 const MIN_WIDTH = 0;
-const MAX_WIDTH_RATIO = 0.5;
+const MAX_WIDTH_RATIO = 0.75;
 const DESKTOP_MEDIA_QUERY = "(min-width: 1280px)";
 const HANDLE_SELECTOR = "[data-resizable-div-handle]";
 const PANEL_SELECTOR = "[data-resizable-div-panel]";
@@ -22,11 +22,13 @@ export default class ResizableDiv extends BaseComponent {
     private resizeHandler: (() => void) | null = null;
     private cookieKey = "";
     private currentWidth = "";
+    private resizeFrom: "left" | "right" = "left";
 
     public initialize(): void {
         if (!this.element) return;
 
         const id = this.element.dataset.id?.trim() || this.element.id || "default";
+        this.resizeFrom = this.element.dataset.resizeFrom === "right" ? "right" : "left";
         this.cookieKey = `bloomerp_resizable_div_width_v3_${id}`;
         this.currentWidth = parseWidth(getCookie(this.cookieKey) || this.element.dataset.startWidth);
 
@@ -51,7 +53,9 @@ export default class ResizableDiv extends BaseComponent {
             const onMove = (moveEvent: PointerEvent): void => {
                 if (!this.element) return;
 
-                const delta = startX - moveEvent.clientX;
+                const delta = this.resizeFrom === "right"
+                    ? moveEvent.clientX - startX
+                    : startX - moveEvent.clientX;
                 const nextWidth = this.clampWidth(startWidthPx + delta);
                 this.applyWidth(`${nextWidth}px`);
             };
@@ -99,6 +103,7 @@ export default class ResizableDiv extends BaseComponent {
         this.handleDoubleClickHandler = null;
         this.currentWidth = "";
         this.cookieKey = "";
+        this.resizeFrom = "left";
         super.destroy();
     }
 
@@ -140,14 +145,14 @@ export default class ResizableDiv extends BaseComponent {
     }
 
     private clampWidth(width: number): number {
-        const container = this.element?.closest<HTMLElement>("[data-detail-view-grid]");
+        const container = this.getResizeContainer();
         const containerWidth = container?.getBoundingClientRect().width || window.innerWidth;
         const maxWidth = Math.max(MIN_WIDTH, containerWidth * MAX_WIDTH_RATIO);
         return Math.min(Math.max(width, MIN_WIDTH), maxWidth);
     }
 
     private setupResizeObserver(): void {
-        const container = this.element?.closest<HTMLElement>("[data-detail-view-grid]");
+        const container = this.getResizeContainer();
         const main = document.querySelector<HTMLElement>(MAIN_SELECTOR);
         if (!container || typeof ResizeObserver === "undefined") return;
 
@@ -160,6 +165,12 @@ export default class ResizableDiv extends BaseComponent {
         if (main && main !== container) {
             this.resizeObserver.observe(main);
         }
+    }
+
+    private getResizeContainer(): HTMLElement | null {
+        return this.element?.closest<HTMLElement>(
+            "[data-resizable-div-container], [data-detail-view-grid]",
+        ) ?? null;
     }
 
     private setupHeightFitting(): void {
@@ -215,24 +226,40 @@ export default class ResizableDiv extends BaseComponent {
 
         const panel = this.element.querySelector<HTMLElement>(PANEL_SELECTOR);
         panel?.classList.add("relative");
-        this.element.classList.add("relative");
+        if (window.getComputedStyle(this.element).position === "static") {
+            this.element.classList.add("relative");
+        }
 
         const handle = document.createElement("div");
         handle.className = [
             "absolute",
-            "left-0",
+            this.resizeFrom === "right" ? "right-0" : "left-0",
             "top-0",
-            "z-50",
+            "z-40",
             "h-full",
-            "w-3",
-            "-translate-x-1/2",
+            "group",
+            "w-2",
+            this.resizeFrom === "right" ? "translate-x-1/2" : "-translate-x-1/2",
             "cursor-col-resize",
-            "transition-colors",
-            "hover:bg-primary-500/25",
         ].join(" ");
         handle.setAttribute("aria-label", "Resize panel");
         handle.setAttribute("role", "separator");
         handle.setAttribute("data-resizable-div-handle", "true");
+
+        const handleLine = document.createElement("div");
+        handleLine.className = [
+            "pointer-events-none",
+            "absolute",
+            "inset-y-0",
+            "left-1/2",
+            "w-px",
+            "-translate-x-1/2",
+            "bg-gray-200",
+            "transition-colors",
+            "group-hover:bg-primary",
+        ].join(" ");
+        handleLine.setAttribute("aria-hidden", "true");
+        handle.appendChild(handleLine);
 
         this.handleDoubleClickHandler = (event: MouseEvent) => {
             event.preventDefault();

@@ -4,6 +4,7 @@ from pathlib import Path
 from string import Formatter
 from typing import Any, Callable
 
+from pydantic import BaseModel, Field
 import yaml
 from django.db import models
 from django.db.models import Model
@@ -11,7 +12,8 @@ from django.db.models import Model
 from bloomerp.field_types.types import FieldType, FieldTypeDefinition
 from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.definition import BloomerpModelConfig
-from bloomerp.modules.definition import FieldConfig, ModelConfig, ModuleConfig, module_registry
+from bloomerp.modules.definition import ModuleConfig, module_registry
+from bloomerp.modules.definition import BaseConfig
 
 
 def _get_field_type_definition(field_type: str) -> FieldTypeDefinition:
@@ -21,6 +23,12 @@ def _get_field_type_definition(field_type: str) -> FieldTypeDefinition:
     if field_definition.model_field_cls is None:
         raise ValueError(f"Field type '{field_type}' has no Django field class mapping.")
     return field_definition
+
+
+class FieldConfig(BaseConfig):
+    type: str
+    options: dict | None = None
+    validators: list[str] = Field(default_factory=list)
 
 
 def _get_validator_functions(field_config: FieldConfig) -> list[Callable]:
@@ -135,6 +143,19 @@ def _normalize_field_layout(field_layout: Any) -> FieldLayout | None:
         )
 
     return FieldLayout(rows=rows) if rows else None
+
+
+class PermissionConfig(BaseModel):
+    id: str
+    name: str
+
+
+class ModelConfig(BaseConfig):
+    name_plural: str | None = None
+    fields: list[FieldConfig] = Field(default_factory=list)
+    custom_permissions: list[PermissionConfig] = Field(default_factory=list)
+    string_representation: str | None = None
+    field_layout: FieldLayout | None = None
 
 
 def create_model_from_config(
@@ -280,6 +301,7 @@ def _scan_module_tree(module_dir: Path, parent_module_id: str | None = None) -> 
         parent_module_id=module_data.get("parent_module_id", parent_module_id),
         full_id=full_id,
         visible=module_data.get("visible", True),
+        owner_app_label="bloomerp_modules",
     )
 
     modules = [module]
@@ -347,4 +369,5 @@ def parse_yaml_config(yaml_file_path: str) -> ModuleConfig:
         icon=module_data.get("icon", "fa-solid fa-folder"),
         parent_module_id=module_data.get("parent_module_id"),
         visible=module_data.get("visible", True),
+        owner_app_label="bloomerp_modules",
     )

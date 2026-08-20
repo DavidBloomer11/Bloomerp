@@ -7,6 +7,7 @@ from django.views.generic import DetailView
     path="workspaces/<int:pk>/",
     name="workspace",
     route_type="app",
+
 )
 class BloomerpModuleWorkspace(BaseWorkspaceView, DetailView):
     model = Workspace 

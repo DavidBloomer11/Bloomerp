@@ -1,3 +1,6 @@
+from django.utils.translation import gettext_lazy as _
+from typing import Iterable
+
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -7,7 +10,6 @@ from bloomerp.models.base_bloomerp_model import BloomerpModel
 from bloomerp.models.mixins.string_search_model_mixin import StringSearchModelMixin
 from bloomerp.models.mixins.timestamp_model_mixin import TimestampModelMixin
 from bloomerp.models.mixins.user_stamp_model_mixin import UserStampModelMixin
-from django.db.models.query import QuerySet
 from bloomerp.services.file_services import ensure_folder_hierarchy_for_object
 from bloomerp.models.definition import BloomerpModelConfig, ObjectHTML
 
@@ -46,6 +48,8 @@ class File(
     )
 
     class Meta(BloomerpModel.Meta):
+        verbose_name = _("File")
+        verbose_name_plural = _("Files")
         managed = True
         db_table = "bloomerp_file"
 
@@ -71,11 +75,11 @@ class File(
     # -----------------------------
     # File Fields
     # -----------------------------
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    file = models.FileField(upload_to=upload_to)
-    name = models.CharField(max_length=100, null=True, blank=True)
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
-    object_id = models.CharField(max_length=36, null=True, blank=True) # In order to support both UUID and integer primary keys
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, verbose_name=_("ID"))
+    file = models.FileField(upload_to=upload_to, verbose_name=_("File"))
+    name = models.CharField(max_length=100, null=True, blank=True, verbose_name=_("Name"))
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True, verbose_name=_("Content Type"))
+    object_id = models.CharField(max_length=36, null=True, blank=True, verbose_name=_("Object ID")) # In order to support both UUID and integer primary keys
     content_object = GenericForeignKey("content_type", "object_id")
     folder : "FileFolder" = models.ForeignKey(
         "bloomerp.FileFolder",
@@ -83,11 +87,12 @@ class File(
         null=True,
         blank=True,
         related_name="files",
+        verbose_name=_("Folder"),
     )
-    persisted = models.BooleanField(default=False) # A field to indicate if the file is temporary or persisted
+    persisted = models.BooleanField(default=False, verbose_name=_("Persisted")) # A field to indicate if the file is temporary or persisted
 
     # Created/updated utils
-    meta = models.JSONField(blank=True, null=True)
+    meta = models.JSONField(blank=True, null=True, verbose_name=_("Meta"))
 
     @property
     def url(self):
@@ -174,53 +179,52 @@ class File(
         """Returns the name of the file."""
         return self.file.name
 
-    def get_accesible_files_for_user(
-        query: str, 
-        user, 
-        folder=None, 
-        content_type=None, 
-        object_id=None
-    ) -> QuerySet:
+    @classmethod
+    def upload_files_to_object(cls, object:models.Model, files:Iterable[UploadedFile]) -> list['File']:
+        """Uploads files to a certain object
         """
-        Returns a queryset of files that are accessible for the user.
+        files = [uploaded for uploaded in files if uploaded]
+        if not files:
+            return []
+
+        content_type = ContentType.objects.get_for_model(object.__class__)
+        created_files: list[File] = []
+        for uploaded in files:
+            created_files.append(
+                File.objects.create(
+                    file=uploaded,
+                    name=uploaded.name,
+                    persisted=True,
+                    content_type=content_type,
+                    object_id=str(object.pk),
+                )
+            )
+        return created_files
+    
+    
+    @classmethod
+    def move_files_to_object(cls, target:models.Model, files:Iterable['File']) -> list['File']:
+        """Moves files from one object to another
 
         Args:
-            query (str): The search query
-            user (User): The user object
-            folder (FileFolder): The folder object
-            content_type (ContentType): The content type
-            object_id (int): The object id
-
+            target (models.Model): the object to move the files to
+            files (Iterable[&#39;File&#39;]): the file objects to be moved
+            
         Returns:
-            QuerySet: A queryset of files
+            list of moved files
         """
-
-        # Get the content types the user has access to
-        content_types = user.get_content_types_for_user(permission_types=["view"])
-
-        if folder:
-            qs = File.objects.filter(folder=folder, content_type__in=content_types).order_by(
-                "-datetime_created"
-            )
-        else:
-            qs = File.objects.filter(content_type__in=content_types).order_by(
-                "-datetime_created"
-            )
-
-        # Filter the queryset based on the content type
-        if content_type:
-            qs = qs.filter(content_type=content_type)
-
-        # Filter the queryset based on the object id
-        if object_id:
-            qs = qs.filter(object_id=object_id)
-
-        # Filter the queryset based on the query
-        if query:
-            qs = qs.filter(models.Q(name__icontains=query)).order_by(
-                "-datetime_created"
-            )
-
-        return qs
+        content_type = ContentType.objects.get_for_model(target.__class__)
+        moved_files: list[File] = []
+        for file in files:
+            file.content_type = content_type
+            file.object_id = str(target.pk)
+            file.folder = None
+            file.persisted = True
+            file.save()
+            moved_files.append(file)
+        return moved_files
+    
+        
+    
 
     

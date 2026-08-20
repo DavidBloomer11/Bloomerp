@@ -5,7 +5,6 @@ from bloomerp.models import AbstractBloomerpUser
 from django.contrib.contenttypes.models import ContentType
 from bloomerp.field_types import FieldType
 from django.utils.translation import gettext_lazy as _
-from bloomerp.models.users.user_detail_view_preference import UserDetailViewPreference
 from bloomerp.router import router
 from bloomerp.services.sectioned_layout_services import create_default_layout
 
@@ -365,7 +364,7 @@ def get_router_detail_tabs(model: type[Model]) -> list[dict]:
         tabs.append(
             {
                 "key": route.url_name,
-                "name": route.name,
+                "name": route.localized_name,
                 "url": route.url_name,
                 "path": route.path,
                 "requires_pk": True,
@@ -373,16 +372,6 @@ def get_router_detail_tabs(model: type[Model]) -> list[dict]:
         )
     return tabs
 
-
-def save_detail_tab_state(
-    preference: UserDetailViewPreference,
-    tabs: list[dict],
-    state: dict,
-) -> dict:
-    _, normalized_state = resolve_tabs_with_state(tabs=tabs, state=state)
-    preference.tab_state = normalized_state
-    preference.save(update_fields=["tab_state"])
-    return normalized_state
 
 
 def get_default_layout(content_type:ContentType, user:AbstractBloomerpUser) -> FieldLayout:
@@ -424,27 +413,7 @@ def get_default_layout(content_type:ContentType, user:AbstractBloomerpUser) -> F
         )
         
         
-def create_default_detail_view_preference(content_type:ContentType, user:AbstractBloomerpUser) -> UserDetailViewPreference:
-    """Creates a default detail view preference
 
-    Args:
-        content_type (ContentType): the content type
-        user (AbstractBloomerpUser): the user
-
-    Returns:
-        UserDetailViewPreference: the detail view preference object
-    """
-    default_layout = get_default_layout(content_type, user)
-
-    model = content_type.model_class()
-    default_tabs = get_router_detail_tabs(model) if model else []
-
-    return UserDetailViewPreference.objects.create(
-        user=user,
-        content_type=content_type,
-        layout=default_layout.model_dump(),
-        tab_state=build_default_tab_state_from_tabs(default_tabs),
-    )
     
     
 

@@ -1,24 +1,96 @@
 from django.http import QueryDict
 from django.test import SimpleTestCase
 import pandas as pd
+from pydantic import ValidationError
 
 from bloomerp.field_types.lookups import Lookup
 from bloomerp.workspaces.analytics_tile.kpi import KpiAggregatedField, _build_section_vars, _render_section, _render_value, build_kpi_aggregation_query
-from bloomerp.workspaces.analytics_tile.model import AnalyticsTileConfig, AnalyticsTileFilter, get_filtered_query
-from bloomerp.workspaces.analytics_tile.model import FieldConfig
+from bloomerp.workspaces.analytics_tile.model import (
+    AddFilterHandler,
+    AddFilterOperation,
+    AnalyticsTileConfig,
+    AnalyticsTileFilter,
+    FieldConfig,
+    RemoveFilterHandler,
+    RemoveFilterOperation,
+    get_filtered_query,
+)
 from bloomerp.workspaces.analytics_tile.pie_chart import build_pie_chart_query
 from bloomerp.workspaces.analytics_tile.table import _format_value
 from bloomerp.workspaces.analytics_tile.two_dim_chart import build_two_dim_chart_query
 from bloomerp.workspaces.analytics_tile.utils import TileFieldType
 
 class TestAnalyticsTile(SimpleTestCase):
-    def _get_config(self, query: str, filters: dict[str, AnalyticsTileFilter]) -> AnalyticsTileConfig:
+    def _get_config(
+        self,
+        query: str,
+        filters: list[AnalyticsTileFilter] | dict[str, AnalyticsTileFilter],
+    ) -> AnalyticsTileConfig:
         return AnalyticsTileConfig(
             query=query,
             type="table",
             fields={},
             filters=filters,
         )
+
+    def test_filter_list_is_serialized_as_a_list(self):
+        config = self._get_config(
+            "SELECT * FROM sample_table",
+            [AnalyticsTileFilter(field="first_name", type="text")],
+        )
+
+        self.assertEqual(config.filters[0].field, "first_name")
+        self.assertIsInstance(config.model_dump()["filters"], list)
+
+    def test_legacy_filter_dict_is_normalized_to_a_list(self):
+        config = self._get_config(
+            "SELECT * FROM sample_table",
+            {
+                "first_name": AnalyticsTileFilter(
+                    field="first_name",
+                    type="text",
+                )
+            },
+        )
+
+        self.assertEqual(
+            config.filters,
+            [AnalyticsTileFilter(field="first_name", type="text")],
+        )
+        self.assertIsInstance(config.model_dump()["filters"], list)
+
+    def test_filter_fields_must_be_unique(self):
+        with self.assertRaisesRegex(
+            ValidationError,
+            "Analytics tile filter fields must be unique",
+        ):
+            self._get_config(
+                "SELECT * FROM sample_table",
+                [
+                    AnalyticsTileFilter(field="first_name", type="text"),
+                    AnalyticsTileFilter(field="first_name", type="text"),
+                ],
+            )
+
+    def test_add_and_remove_filter_handlers_use_filter_lists(self):
+        config = self._get_config("SELECT * FROM sample_table", [])
+
+        AddFilterHandler.handle(
+            config,
+            AddFilterOperation(field="first_name", type="text"),
+        )
+
+        self.assertEqual(
+            config.filters,
+            [AnalyticsTileFilter(field="first_name", type="text")],
+        )
+
+        RemoveFilterHandler.handle(
+            config,
+            RemoveFilterOperation(field="first_name"),
+        )
+
+        self.assertEqual(config.filters, [])
     
     def test_get_filtered_query_with_non_defined_filter(self):
         # 1. Start query

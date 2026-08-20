@@ -1,12 +1,14 @@
 from django.shortcuts import redirect
 from django_htmx.http import HttpResponseClientRedirect
 
+from bloomerp.permissions.definition import BloomerpPermission
+from bloomerp.permissions.manager import UserPolicyManager
 from bloomerp.router import router
 from bloomerp.models.workspaces.workspace import Workspace
 from bloomerp.services.preference_services import PreferenceManager
 from bloomerp.views.workspaces.base import BaseWorkspaceView
 from django.views.generic import TemplateView
-
+from bloomerp.modules.definition import module_registry
 
 @router.register(
     path=f"/",
@@ -16,6 +18,12 @@ from django.views.generic import TemplateView
     modules="__all__"
 )
 class BloomerpModuleHomeView(BaseWorkspaceView, TemplateView):
+    def has_permission(self):
+        manager = UserPolicyManager(self.request.user)
+        accessible_models = manager.get_accessible_models(BloomerpPermission.VIEW)
+        models = module_registry.get_models_for_module(self.module.id, include_descendants=True)
+        return any(model in accessible_models for model in models)
+        
     
     def get_visible_workspaces(self):
         module_id = self.get_module_id()

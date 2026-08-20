@@ -3,6 +3,33 @@
 
 <meta charset="utf-8" />
 <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+<meta name="htmx-config" content='{"refreshOnHistoryMiss": true}' />
+<meta name="bloomerp-message-sound-url" content="{% static 'bloomerp/message-sound.mp3' %}" />
+
+<!-- Apply the persisted theme before styles and application JavaScript load. -->
+<script>
+    (() => {
+        const storageKey = 'bloomerp_theme_preference';
+        const allowedPreferences = ['light', 'dark', 'auto'];
+        let preference = 'auto';
+
+        try {
+            const storedPreference = window.localStorage.getItem(storageKey);
+            if (allowedPreferences.includes(storedPreference)) {
+                preference = storedPreference;
+            }
+        } catch (_error) {
+            // Storage can be unavailable in privacy-restricted browser contexts.
+        }
+
+        const isDark = preference === 'dark'
+            || (preference === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.classList.toggle('dark', isDark);
+        document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
+        document.documentElement.dataset.themePreference = preference;
+        document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+    })();
+</script>
 
 <title>
     Bloomerp {% block title %}{% endblock title %}
@@ -14,7 +41,7 @@
 <link href="{% static 'bloomerp/img/bloomerp-touch-icon.png' %}" rel="icon" />
 <link href="{% static 'bloomerp/img/bloomerp-touch-icon.png' %}" rel="logo-touch-icon" />
 
-<!-- Icons (Font Awesome) -->
+<!-- Icons (Font Awesome Free, including Brands) -->
 <link href="{% static 'bloomerp/vendor/fontawesome/css/all.min.css' %}" rel="stylesheet" />
 
 <!-- Fonts -->

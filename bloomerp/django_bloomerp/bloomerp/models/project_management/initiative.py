@@ -1,20 +1,28 @@
+from tabnanny import verbose
+
 from django.conf import settings
 from django.db import models
 from django.db.models import Count
 from django.utils import timezone
 from django.utils.functional import cached_property
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _, gettext_noop
 
+from bloomerp.form_fields.behavior import BehaviorAction, BehaviorConfig, BehaviorRule
 from bloomerp.models.base_bloomerp_model import BloomerpModel, FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.definition import BloomerpModelConfig
+from bloomerp.workspaces.analytics_tile.model import (
+    AnalyticsTileConfig,
+    AnalyticsTileType,
+    FieldConfig,
+)
 
 
 class InitiativeStatus(models.TextChoices):
-    BACKLOG = ("backlog", "Backlog")
-    IN_PROGRESS = ("in_progress", "In Progress")
-    ON_HOLD = ("on_hold", "On Hold")
-    COMPLETED = ("completed", "Completed")
-    CANCELED = ("canceled", "Canceled")
+    BACKLOG = ("backlog", _("Backlog"))
+    IN_PROGRESS = ("in_progress", _("In Progress"))
+    ON_HOLD = ("on_hold", _("On Hold"))
+    COMPLETED = ("completed", _("Completed"))
+    CANCELED = ("canceled", _("Canceled"))
 
 
 class Initiative(BloomerpModel):
@@ -23,11 +31,11 @@ class Initiative(BloomerpModel):
     """
 
     bloomerp_config = BloomerpModelConfig(
-        module="misc",
+        module="todos_and_initiatives",
         layout=FieldLayout(
             rows=[
                 LayoutRow(
-                    title="Details",
+                    title=gettext_noop("Details"),
                     columns=4,
                     items=[
                         LayoutItem(id="name", colspan=2),
@@ -37,7 +45,7 @@ class Initiative(BloomerpModel):
                     ],
                 ),
                 LayoutRow(
-                    title="Timeline",
+                    title=gettext_noop("Timeline"),
                     columns=3,
                     items=[
                         LayoutItem(id="start_date", colspan=1),
@@ -46,18 +54,76 @@ class Initiative(BloomerpModel):
                     ],
                 ),
                 LayoutRow(
-                    title="Labels",
+                    title=gettext_noop("Labels"),
                     columns=1,
                     items=[
                         LayoutItem(id="labels", colspan=1),
                     ],
                 ),
+                LayoutRow(
+                    title=gettext_noop("Todos"),
+                    columns=1,
+                    items=[
+                        LayoutItem(
+                            id="todos",
+                            colspan=1,
+                            config={
+                                "inline_fields": ["title", "status"],
+                                # "behaviors" : BehaviorConfig(
+                                #     rules=[
+                                #         BehaviorRule(
+                                #             name="Set todo count based on inline fields",
+                                #             actions=[
+                                                
+                                #             ]
+                                # )]),     
+                            },
+                        ),
+                    ]
+                ),
             ]
         ),
         string_search_fields=["name", "description"],
+        tiles=[
+            AnalyticsTileConfig(
+                type=AnalyticsTileType.PIE_CHART.value.key,
+                id="initiatives:status_distribution",
+                name="Initiatives by status",
+                description="Distribution of visible initiatives across states.",
+                query="""
+                    SELECT
+                        CASE status
+                            WHEN 'backlog' THEN 'Backlog'
+                            WHEN 'in_progress' THEN 'In progress'
+                            WHEN 'on_hold' THEN 'On hold'
+                            WHEN 'completed' THEN 'Completed'
+                            WHEN 'canceled' THEN 'Canceled'
+                            ELSE status
+                        END AS status_label,
+                        1 AS initiative_count
+                    FROM bloomerp_initiative
+                """,
+                icon="fa-solid fa-bullseye",
+                fields={
+                    "labels": [FieldConfig(name="status_label")],
+                    "values": [
+                        FieldConfig(
+                            name="initiative_count",
+                            opts={
+                                "label": "Initiatives",
+                                "formatter": "INTEGER",
+                            },
+                        )
+                    ],
+                },
+                opts={"legend_position": "right", "show_legend": True},
+            )
+        ],
     )
 
     class Meta(BloomerpModel.Meta):
+        verbose_name = _("Initiative")
+        verbose_name_plural = _("Initiatives")
         managed = True
         db_table = "bloomerp_initiative"
 
@@ -67,23 +133,48 @@ class Initiative(BloomerpModel):
         max_length=20,
         choices=InitiativeStatus.choices,
         default=InitiativeStatus.BACKLOG,
+        verbose_name=_("Status")
     )
-    name = models.CharField(max_length=255, help_text=_("The name of the initiative"))
-    description = models.TextField(blank=True, null=True)
-    start_date = models.DateField(blank=True, null=True)
-    target_date = models.DateField(blank=True, null=True)
-    completed_at = models.DateTimeField(blank=True, null=True, editable=False)
+    name = models.CharField(
+        max_length=255,
+        verbose_name=_("Name"),
+        help_text=_("The name of the initiative")
+    )
+    description = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name=_("Description"),
+        help_text=_("A detailed description of the initiative")
+    )
+    start_date = models.DateField(
+        blank=True, 
+        null=True,
+        verbose_name=_("Start Date"),
+    )
+    target_date = models.DateField(
+        blank=True, 
+        null=True,
+        verbose_name=_("Target Date"),    
+    )
+    completed_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        editable=False,
+        verbose_name=_("Completed At"),
+    )
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
         related_name="owned_initiatives",
+        verbose_name=_("Owner"),
     )
     labels = models.ManyToManyField(
         "bloomerp.TodoLabel",
         blank=True,
         related_name="initiatives",
+        verbose_name=_("Labels"),
         help_text=_("Labels assigned to the initiative"),
     )
 

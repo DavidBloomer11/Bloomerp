@@ -11,15 +11,18 @@ from bloomerp.automation.actions.enrich import EnrichExecutor
 from bloomerp.automation.actions.extract_field import ExtractFieldExecutor
 from bloomerp.automation.actions.generate_pdf import GeneratePdfExecutor
 from bloomerp.automation.actions.get_object import GetObjectExecutor
+from bloomerp.automation.actions.human_in_the_loop import HumanInTheLoopExecutor
 from bloomerp.automation.actions.list_objects import ListObjectsExecutor
 from bloomerp.automation.actions.merge_branches import MergeBranchExecutor
 from bloomerp.automation.actions.send_user_message import SendUserMessage
 from bloomerp.automation.actions.sql_query import SqlQueryActionExecutor
 from bloomerp.automation.actions.update_object import UpdateObjectExecutor
+from bloomerp.automation.actions.wait import WaitExecutor
 from bloomerp.automation.base_executor import BaseExecutor
 from bloomerp.automation.actions.create_object import CreateObjectExecutor
 from bloomerp.automation.actions.send_email import SendEmailExecutor
 from bloomerp.automation.flows.filter_objects import FilterObjectsExecutor
+from bloomerp.automation.flows.collect import CollectExecutor
 from bloomerp.automation.flows.for_each import ForEachExecutor
 from bloomerp.automation.flows.if_condition import IfConditionExecutor
 from bloomerp.automation.flows.object_if_condition import ObjectIfConditionExecutor
@@ -64,6 +67,13 @@ class WorkflowNodeType(Enum):
                 executor_cls=ObjectCrudTrigger,
                 icon="fa-solid fa-pen-to-square"
             ),
+            NodeSubTypeDefinition(
+                id="ON_OBJECT_CREATE_OR_UPDATE",
+                name="On Object Create or Update",
+                description="Triggered when an object is created or updated",
+                executor_cls=ObjectCrudTrigger,
+                icon="fa-solid fa-arrows-rotate"
+            ),
             NodeSubTypeDefinition( 
                 id="ON_OBJECT_DELETE",
                 name="On Object Deletion",
@@ -100,13 +110,13 @@ class WorkflowNodeType(Enum):
         name=_("Action"),
         description=_("An action to perform"),
         types=[
-            # NodeSubTypeDefinition( 
-            #     id="SEND_EMAIL",
-            #     name="Send Email",
-            #     description="Sends an email to specified recipients",
-            #     executor_cls=SendEmailExecutor,
-            #     icon="fa-solid fa-envelope"
-            # ),
+            NodeSubTypeDefinition( 
+                id="SEND_EMAIL",
+                name="Send Email",
+                description="Sends an email to specified recipients",
+                executor_cls=SendEmailExecutor,
+                icon="fa-solid fa-envelope"
+            ),
             NodeSubTypeDefinition(
                 id="GET_OBJECT",
                 name="Get Object",
@@ -190,6 +200,20 @@ class WorkflowNodeType(Enum):
                 description="Compute a value using a custom Python function",
                 executor_cls=ComputeExecutor,
                 icon="fa-solid fa-calculator"
+            ),
+            NodeSubTypeDefinition(
+                id="HUMAN_IN_THE_LOOP",
+                name="Human in the Loop",
+                description="Pauses the workflow and waits for a human to provide input",
+                executor_cls=HumanInTheLoopExecutor,
+                icon="fa-solid fa-hand-paper"
+            ),
+            NodeSubTypeDefinition(
+                id="WAIT",
+                name="Wait",
+                description="Pauses the workflow for a certain amount of seconds",
+                executor_cls=WaitExecutor,
+                icon="fa-solid fa-clock"
             )
         ]
     )
@@ -219,6 +243,13 @@ class WorkflowNodeType(Enum):
                 description="Runs the downstream branch once for each item in a collection",
                 executor_cls=ForEachExecutor,
                 icon="fa-solid fa-repeat"
+            ),
+            NodeSubTypeDefinition(
+                id="COLLECT",
+                name="Collect",
+                description="Collects all results from a For Each into one ordered list",
+                executor_cls=CollectExecutor,
+                icon="fa-solid fa-layer-group"
             ),
             NodeSubTypeDefinition(
                 id="MERGE_BRANCHES",

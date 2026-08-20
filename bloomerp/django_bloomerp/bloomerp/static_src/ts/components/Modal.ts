@@ -6,6 +6,10 @@ const CLOSE_MODAL_ATTRIBUTE = 'bloomerp-close-modal'
 const TOGGLE_FULL_SCREEN_ATTRIBUTE = 'bloomerp-full-screen-modal'
 const MODAL_PADDING_ATTRIBUTE = 'data-modal-padding'
 const DEFAULT_MODAL_PADDING_ATTRIBUTE = 'data-default-modal-padding'
+const SET_MODAL_TITLE_FOR_ATTRIBUTE = 'bloomerp-set-modal-title-for'
+const SET_MODAL_TITLE_VALUE_ATTRIBUTE = 'bloomerp-set-modal-title-to'
+const SET_MODAL_SIZE_VALUE_ATTRIBUTE = 'bloomerp-set-modal-size-to'
+
 
 /**
  * Modal Component
@@ -163,6 +167,27 @@ export class Modal extends BaseComponent {
             });
             (trigger as HTMLElement).setAttribute(this.triggerBoundAttribute, `${this.modalId}:fullscreen`);
         })
+
+        let setTitleTriggers = document.querySelectorAll(`[${SET_MODAL_TITLE_FOR_ATTRIBUTE}="${this.element.id}"]`);
+
+        setTitleTriggers.forEach((trigger)=>{
+            if ((trigger as HTMLElement).getAttribute(this.triggerBoundAttribute) === `${this.modalId}:set-title`) {
+                return;
+            }
+
+            trigger.addEventListener('click', (e) =>{
+                const title = (trigger as HTMLElement).getAttribute(SET_MODAL_TITLE_VALUE_ATTRIBUTE);
+                if (title) {
+                    this.setTitle(title);
+                }
+
+                const size = (trigger as HTMLElement).getAttribute(SET_MODAL_SIZE_VALUE_ATTRIBUTE);
+                if (size) {
+                    this.setSize(size);
+                }
+            });
+            (trigger as HTMLElement).setAttribute(this.triggerBoundAttribute, `${this.modalId}:set-title`);
+        });
     }
 
     private setupDelegatedTriggerHandler(): void {
@@ -620,4 +645,5 @@ export class Modal extends BaseComponent {
         this.element.setAttribute(MODAL_PADDING_ATTRIBUTE, normalizedPadding);
         this.applyPaddingToBody(normalizedPadding);
     }
+
 }

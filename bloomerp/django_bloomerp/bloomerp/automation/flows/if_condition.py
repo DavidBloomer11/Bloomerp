@@ -95,6 +95,8 @@ def _matches(value: Any, expected: Any, operator: str) -> bool:
 
 
 def _resolve_field_value(input_data: Any, field: str) -> Any:
+    if field == "input":
+        return input_data
     if field.startswith("input."):
         return get_path_value({"input": input_data}, field)
     return get_path_value(input_data, field)

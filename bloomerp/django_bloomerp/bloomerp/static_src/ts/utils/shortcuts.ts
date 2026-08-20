@@ -128,7 +128,9 @@ export function normalizeKeyboardEventKey(event: KeyboardEvent): string {
     return normalizeShortcutKey(event.key);
 }
 
-function normalizeShortcutKey(key: string): string {
+function normalizeShortcutKey(key: string | null | undefined): string {
+    if (typeof key !== "string") return "";
+
     const trimmed = key.trim().toLowerCase();
     if (KEY_ALIASES[trimmed]) return KEY_ALIASES[trimmed];
     if (trimmed === "space") return "space";

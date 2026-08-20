@@ -46,6 +46,7 @@ class TestPolicyManager(BaseBloomerpModelTestCase):
             row_permissions=[
                 RowPolicyRuleContent(
                     connector="AND",
+                    permissions=[BloomerpPermission.VIEW],
                     conditions=[
                         RowPolicyRuleCondition(
                             field="first_name",
@@ -83,9 +84,10 @@ class TestPolicyManager(BaseBloomerpModelTestCase):
 
         # 4. Check that the policy has the correct row permissions
         row_rule = policy.row_policy.rules.get()
+        self.assertNotIn("permissions", row_rule.rule)
         self.assertEqual(
             set(row_rule.permissions.values_list("codename", flat=True)),
-            {"view_customer", "change_customer"},
+            {"view_customer"},
         )
         stored_rule = RowPolicyRuleContent.model_validate(row_rule.rule)
         self.assertEqual(stored_rule.connector, "AND")
@@ -175,6 +177,7 @@ class TestPolicyManager(BaseBloomerpModelTestCase):
                 row_permissions=[
                     RowPolicyRuleContent(
                         connector="AND",
+                        permissions=[BloomerpPermission.VIEW],
                         conditions=[
                             RowPolicyRuleCondition(
                                 field="does_not_exist",
@@ -193,7 +196,7 @@ class TestPolicyManager(BaseBloomerpModelTestCase):
     def test_explicit_global_permissions_must_include_field_permissions(self):
         with self.assertRaisesMessage(
             ValueError,
-            "Field permissions must also be global permissions: change_customer",
+            "Row and field permissions must also be global permissions: change_customer",
         ):
             PolicyManager.create_policy(
                 model_or_content_type=self.CustomerModel,
@@ -218,3 +221,93 @@ class TestPolicyManager(BaseBloomerpModelTestCase):
 
         self.assertEqual(policy.row_policy.content_type, self.content_type)
         self.assertEqual(policy.field_policy.content_type, self.content_type)
+
+    def test_create_policy_preserves_permissions_per_row_rule(self):
+        policy = PolicyManager.create_policy(
+            model_or_content_type=self.CustomerModel,
+            field_permissions={},
+            row_permissions=[
+                RowPolicyRuleContent(
+                    connector="AND",
+                    permissions=[BloomerpPermission.VIEW],
+                    conditions=[
+                        RowPolicyRuleCondition(
+                            field="first_name",
+                            operator=Lookup.EQUALS.value.id,
+                            value="John",
+                        )
+                    ],
+                ),
+                RowPolicyRuleContent(
+                    connector="AND",
+                    permissions=[BloomerpPermission.CHANGE],
+                    conditions=[
+                        RowPolicyRuleCondition(
+                            field="last_name",
+                            operator=Lookup.EQUALS.value.id,
+                            value="Doe",
+                        )
+                    ],
+                ),
+            ],
+        )
+
+        rules = list(policy.row_policy.rules.order_by("pk"))
+        self.assertEqual(
+            list(rules[0].permissions.values_list("codename", flat=True)),
+            ["view_customer"],
+        )
+        self.assertEqual(
+            list(rules[1].permissions.values_list("codename", flat=True)),
+            ["change_customer"],
+        )
+        self.assertEqual(
+            set(policy.global_permissions.values_list("codename", flat=True)),
+            {"view_customer", "change_customer"},
+        )
+
+    def test_create_policy_requires_permissions_on_each_row_rule(self):
+        with self.assertRaisesMessage(
+            ValueError,
+            "Each row policy rule requires at least one permission",
+        ):
+            PolicyManager.create_policy(
+                model_or_content_type=self.CustomerModel,
+                field_permissions={"first_name": [BloomerpPermission.VIEW]},
+                row_permissions=[
+                    RowPolicyRuleContent(
+                        connector="AND",
+                        conditions=[
+                            RowPolicyRuleCondition(
+                                field="first_name",
+                                operator=Lookup.EQUALS.value.id,
+                                value="John",
+                            )
+                        ],
+                    )
+                ],
+            )
+
+    def test_explicit_global_permissions_must_include_row_permissions(self):
+        with self.assertRaisesMessage(
+            ValueError,
+            "Row and field permissions must also be global permissions: change_customer",
+        ):
+            PolicyManager.create_policy(
+                model_or_content_type=self.CustomerModel,
+                field_permissions={},
+                row_permissions=[
+                    RowPolicyRuleContent(
+                        connector="AND",
+                        permissions=[BloomerpPermission.CHANGE],
+                        conditions=[
+                            RowPolicyRuleCondition(
+                                field="first_name",
+                                operator=Lookup.EQUALS.value.id,
+                                value="John",
+                            )
+                        ],
+                    )
+                ],
+                global_permissions=[BloomerpPermission.VIEW],
+            )

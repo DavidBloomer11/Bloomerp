@@ -4,6 +4,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 
 from django.apps import apps
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from django.contrib.auth.hashers import make_password
@@ -32,7 +33,6 @@ FIRST_NAMES = [
     "Jacob", "Elizabeth", "Logan", "Ella", "Jackson", "Avery", "Sebastian", "Sofia", "Aiden", "Scarlett",
     "Matthew", "Victoria", "Samuel", "Madison", "David", "Chloe", "Joseph", "Penelope", "Carter", "Layla",
     "Thomas", "Lillian", "Charles", "Grace", "Christopher", "Zoey", "Daniel", "Nora", "Matthew", "Riley",
-    
 ]
 
 LAST_NAMES = [
@@ -61,7 +61,6 @@ LAST_NAMES = [
     "Hudson", "Kline", "Knox", "Lacey", "Larsen", "Latham", "Lawson", "Leach",
     "Rosenberg", "Eisenberg", "Feldman", "Friedman", "Kaplan", "Rosen", "Mendelsohn",
     "Lipman", "Wasserstein", "Weintraub", "Blumenthal", "Berkowitz", "Horowitz", "Levin", "Zuckerman",
-    
 ]
 
 
@@ -91,9 +90,9 @@ class Command(BaseCommand):
 
         self._create_manufacturing_master_data(force)
         self._create_hrm_data(force, employee_multiplier)
-        self._create_finance_data(force)
-        self._create_crm_data(force)
         self._create_user_data(force)
+        self._create_crm_data(force)
+        self._create_finance_data(force)
 
         self.stdout.write(self.style.SUCCESS("Test data creation complete."))
 
@@ -958,39 +957,946 @@ class Command(BaseCommand):
             )
 
     def _create_finance_data(self, force: bool) -> None:
-        bank_account_model = self._get_model("BankAccount")
-        if not self._should_create(bank_account_model, force):
-            self.stdout.write("Skipping Bank Account data (already exists).")
-            return
+        bank_accounts = self._create_finance_bank_accounts(force)
+        self._create_general_ledger_data(force, bank_accounts)
 
+    def _create_finance_bank_accounts(self, force: bool) -> dict[str, object]:
+        bank_account_model = self._get_model("BankAccount")
+        if bank_account_model is None:
+            return {}
+
+        bank_records = [
+            {
+                "bank_name": "First National Bank",
+                "account_name": "Bloomerp Operating",
+                "account_number": "111222333",
+                "account_type": "checking",
+                "currency": "USD",
+                "iban": "US00FNB0000111222333",
+                "swift_code": "FNBUS33",
+                "branch": "Downtown",
+                "opening_balance": Decimal("90000.00"),
+                "last_reconciled_date": date.today() - timedelta(days=5),
+                "last_reconciled_balance": Decimal("103842.17"),
+                "is_primary": True,
+                "is_active": True,
+                "notes": "Primary operating account used for payroll, suppliers, and customer receipts.",
+            },
+            {
+                "bank_name": "City Credit Union",
+                "account_name": "Bloomerp Reserve Savings",
+                "account_number": "444555666",
+                "account_type": "savings",
+                "currency": "USD",
+                "iban": None,
+                "swift_code": "CCUS44",
+                "branch": "Uptown",
+                "opening_balance": Decimal("20000.00"),
+                "last_reconciled_date": date.today() - timedelta(days=12),
+                "last_reconciled_balance": Decimal("22400.00"),
+                "is_primary": False,
+                "is_active": True,
+                "notes": "Liquidity reserve for tax payments and planned equipment purchases.",
+            },
+        ]
         self._create_records(
             bank_account_model,
-            [
-                {
-                    "bank_name": "First National Bank",
-                    "account_name": "Bloomerp Operating",
-                    "account_number": "111222333",
-                    "account_type": "checking",
-                    "currency": "USD",
-                    "iban": "US00FNB0000111222333",
-                    "swift_code": "FNBUS33",
-                    "branch": "Downtown",
-                    "is_active": True,
-                },
-                {
-                    "bank_name": "City Credit Union",
-                    "account_name": "Bloomerp Savings",
-                    "account_number": "444555666",
-                    "account_type": "savings",
-                    "currency": "USD",
-                    "iban": None,
-                    "swift_code": "CCUS44",
-                    "branch": "Uptown",
-                    "is_active": True,
-                },
-            ],
+            bank_records,
             ["bank_name", "account_number"],
         )
+        return {
+            record["account_number"]: bank_account_model.objects.get(
+                account_number=record["account_number"]
+            )
+            for record in bank_records
+        }
+
+    def _create_general_ledger_data(self, force: bool, bank_accounts: dict[str, object]) -> None:
+        account_model = self._get_model("Account")
+        fiscal_period_model = self._get_model("FiscalPeriod")
+        journal_model = self._get_model("Journal")
+        journal_entry_model = self._get_model("JournalEntry")
+        journal_entry_line_model = self._get_model("JournalEntryLine")
+        gl_transaction_model = self._get_model("GLTransaction")
+        account_balance_model = self._get_model("AccountBalance")
+        budget_model = self._get_model("Budget")
+
+        required_models = (
+            account_model,
+            fiscal_period_model,
+            journal_model,
+            journal_entry_model,
+            journal_entry_line_model,
+            gl_transaction_model,
+        )
+        if any(model is None for model in required_models):
+            self.stdout.write(self.style.WARNING("Skipping general ledger data (required model missing)."))
+            return
+
+        today = date.today()
+        current_year = today.year
+        current_month = today.month
+        ledger_user = get_user_model().objects.order_by("pk").first()
+        posting_timestamp = timezone.now()
+
+        account_rows = [
+            {"code": "1000", "name": "Assets", "type": "ASSET", "subtype": "CURRENT_ASSET", "normal": "DEBIT", "description": "All company assets", "parent": None},
+            {"code": "1010", "name": "Operating Checking Account", "type": "ASSET", "subtype": "CURRENT_ASSET", "normal": "DEBIT", "description": "Primary operating cash account", "parent": "1000", "bank": "111222333", "reconcile": True},
+            {"code": "1020", "name": "Reserve Savings Account", "type": "ASSET", "subtype": "CURRENT_ASSET", "normal": "DEBIT", "description": "Cash reserve account", "parent": "1000", "bank": "444555666", "reconcile": True},
+            {"code": "1100", "name": "Accounts Receivable", "type": "ASSET", "subtype": "CURRENT_ASSET", "normal": "DEBIT", "description": "Amounts due from customers", "parent": "1000"},
+            {"code": "1200", "name": "Inventory", "type": "ASSET", "subtype": "CURRENT_ASSET", "normal": "DEBIT", "description": "Finished goods and purchased components", "parent": "1000"},
+            {"code": "1300", "name": "Prepaid Expenses", "type": "ASSET", "subtype": "CURRENT_ASSET", "normal": "DEBIT", "description": "Insurance and service contracts paid in advance", "parent": "1000"},
+            {"code": "1400", "name": "Input Tax Receivable", "type": "ASSET", "subtype": "CURRENT_ASSET", "normal": "DEBIT", "description": "Recoverable tax on supplier invoices", "parent": "1000", "tax": "PURCHASE-8"},
+            {"code": "1500", "name": "Property and Equipment", "type": "ASSET", "subtype": "FIXED_ASSET", "normal": "DEBIT", "description": "Long-lived operating assets", "parent": "1000"},
+            {"code": "1510", "name": "Computer Equipment", "type": "ASSET", "subtype": "FIXED_ASSET", "normal": "DEBIT", "description": "Laptops, servers, and office equipment", "parent": "1500"},
+            {"code": "1520", "name": "Accumulated Depreciation", "type": "ASSET", "subtype": "FIXED_ASSET", "normal": "CREDIT", "description": "Accumulated depreciation on equipment", "parent": "1500"},
+            {"code": "2000", "name": "Liabilities", "type": "LIABILITY", "subtype": "CURRENT_LIABILITY", "normal": "CREDIT", "description": "All company liabilities", "parent": None},
+            {"code": "2010", "name": "Accounts Payable", "type": "LIABILITY", "subtype": "CURRENT_LIABILITY", "normal": "CREDIT", "description": "Amounts owed to vendors", "parent": "2000"},
+            {"code": "2020", "name": "Payroll Taxes Payable", "type": "LIABILITY", "subtype": "CURRENT_LIABILITY", "normal": "CREDIT", "description": "Payroll withholdings awaiting remittance", "parent": "2000"},
+            {"code": "2030", "name": "Sales Tax Payable", "type": "LIABILITY", "subtype": "CURRENT_LIABILITY", "normal": "CREDIT", "description": "Tax collected from customers", "parent": "2000", "tax": "SALES-8"},
+            {"code": "3000", "name": "Equity", "type": "EQUITY", "subtype": "OWNER_EQUITY", "normal": "CREDIT", "description": "Shareholders' equity", "parent": None},
+            {"code": "3010", "name": "Common Stock", "type": "EQUITY", "subtype": "OWNER_EQUITY", "normal": "CREDIT", "description": "Issued common shares", "parent": "3000"},
+            {"code": "3020", "name": "Retained Earnings", "type": "EQUITY", "subtype": "RETAINED_EARNINGS", "normal": "CREDIT", "description": "Accumulated retained earnings", "parent": "3000"},
+            {"code": "4000", "name": "Revenue", "type": "REVENUE", "subtype": "OPERATING_REVENUE", "normal": "CREDIT", "description": "Operating revenue", "parent": None},
+            {"code": "4010", "name": "Product Sales", "type": "REVENUE", "subtype": "OPERATING_REVENUE", "normal": "CREDIT", "description": "Revenue from manufactured products", "parent": "4000"},
+            {"code": "4020", "name": "Implementation Services", "type": "REVENUE", "subtype": "OPERATING_REVENUE", "normal": "CREDIT", "description": "Professional services revenue", "parent": "4000"},
+            {"code": "5000", "name": "Cost of Goods Sold", "type": "EXPENSE", "subtype": "COST_OF_GOODS_SOLD", "normal": "DEBIT", "description": "Cost of products shipped to customers", "parent": None},
+            {"code": "6000", "name": "Operating Expenses", "type": "EXPENSE", "subtype": "OPERATING_EXPENSE", "normal": "DEBIT", "description": "Operating expenses", "parent": None},
+            {"code": "6010", "name": "Salaries and Wages", "type": "EXPENSE", "subtype": "OPERATING_EXPENSE", "normal": "DEBIT", "description": "Employee payroll expense", "parent": "6000", "department": "Operations"},
+            {"code": "6020", "name": "Rent Expense", "type": "EXPENSE", "subtype": "OPERATING_EXPENSE", "normal": "DEBIT", "description": "Office and warehouse rent", "parent": "6000", "department": "Facilities"},
+            {"code": "6030", "name": "Utilities Expense", "type": "EXPENSE", "subtype": "OPERATING_EXPENSE", "normal": "DEBIT", "description": "Electricity, internet, and utilities", "parent": "6000", "department": "Facilities"},
+            {"code": "6040", "name": "Bank Fees", "type": "EXPENSE", "subtype": "OTHER_EXPENSE", "normal": "DEBIT", "description": "Bank service charges", "parent": "6000", "department": "Finance"},
+            {"code": "6050", "name": "Depreciation Expense", "type": "EXPENSE", "subtype": "OPERATING_EXPENSE", "normal": "DEBIT", "description": "Monthly depreciation expense", "parent": "6000", "department": "Finance"},
+        ]
+
+        accounts: dict[str, object] = {}
+        for row in account_rows:
+            parent = accounts.get(row["parent"])
+            account, _created = account_model.objects.get_or_create(
+                account_code=row["code"],
+                defaults={
+                    "account_name": row["name"],
+                    "account_type": row["type"],
+                    "account_subtype": row["subtype"],
+                    "parent_account": parent,
+                    "is_active": True,
+                    "is_system_account": row["code"] in {"1100", "2010", "2030"},
+                    "description": row["description"],
+                    "normal_balance": row["normal"],
+                    "currency": "USD",
+                    "opening_balance": Decimal("0"),
+                    "allow_manual_posting": row["code"] not in {"1100", "2010", "2030"},
+                    "requires_reconciliation": row.get("reconcile", False),
+                    "tax_code": row.get("tax"),
+                    "bank_account": bank_accounts.get(row.get("bank")),
+                },
+            )
+            accounts[row["code"]] = account
+
+        period_objects: dict[str, object] = {}
+        period_rows = []
+        for year in (current_year - 1, current_year):
+            for month in range(1, 13):
+                period_code = f"FY{year}-{month:02d}"
+                closed = year < current_year or month < current_month
+                period_rows.append(
+                    {
+                        "period_code": period_code,
+                        "period_name": date(year, month, 1).strftime("%B %Y"),
+                        "fiscal_year": year,
+                        "period_number": month,
+                        "quarter": ((month - 1) // 3) + 1,
+                        "start_date": date(year, month, 1),
+                        "end_date": self._finance_month_end(year, month),
+                        "status": "CLOSED" if closed else "OPEN",
+                        "is_adjusting_period": False,
+                        "is_year_end": month == 12,
+                        "closed_by": ledger_user if closed else None,
+                        "closed_date": posting_timestamp if closed else None,
+                        "notes": "Closed historical period." if closed else "Open reporting period for test transactions.",
+                    }
+                )
+        for row in period_rows:
+            period, _created = fiscal_period_model.objects.get_or_create(
+                period_code=row["period_code"],
+                defaults={key: value for key, value in row.items() if key != "period_code"},
+            )
+            period_objects[row["period_code"]] = period
+
+        journal_rows = [
+            {"code": "GJ", "name": "General Journal", "type": "GENERAL", "prefix": "GJ", "approval": False, "notes": "Opening entries and non-routine postings."},
+            {"code": "SJ", "name": "Sales Journal", "type": "SALES", "prefix": "SI", "approval": True, "notes": "Customer invoices and sales adjustments."},
+            {"code": "PJ", "name": "Purchase Journal", "type": "PURCHASE", "prefix": "PI", "approval": True, "notes": "Vendor invoices and inventory purchases."},
+            {"code": "CRJ", "name": "Cash Receipts Journal", "type": "CASH_RECEIPTS", "prefix": "CR", "approval": False, "notes": "Customer receipts and other deposits."},
+            {"code": "CDJ", "name": "Cash Disbursements Journal", "type": "CASH_DISBURSEMENTS", "prefix": "CD", "approval": True, "notes": "Supplier, payroll, and operating payments."},
+            {"code": "PRJ", "name": "Payroll Journal", "type": "PAYROLL", "prefix": "PR", "approval": True, "notes": "Monthly payroll and payroll tax accruals."},
+            {"code": "AJ", "name": "Adjusting Journal", "type": "ADJUSTING", "prefix": "AJ", "approval": True, "notes": "Depreciation, accruals, and period-end adjustments."},
+        ]
+        journals: dict[str, object] = {}
+        for row in journal_rows:
+            journal, _created = journal_model.objects.get_or_create(
+                journal_code=row["code"],
+                defaults={
+                    "journal_name": row["name"],
+                    "journal_type": row["type"],
+                    "description": row["notes"],
+                    "is_active": True,
+                    "auto_numbering": True,
+                    "next_entry_number": 1,
+                    "requires_approval": row["approval"],
+                    "sequence_prefix": row["prefix"],
+                    "default_currency": "USD",
+                    "notes": row["notes"],
+                },
+            )
+            journals[row["code"]] = journal
+
+        def finance_line(
+            account_code: str,
+            description: str,
+            debit: Decimal = Decimal("0"),
+            credit: Decimal = Decimal("0"),
+            quantity: Decimal = Decimal("1"),
+            unit_price: Decimal = Decimal("0"),
+            tax_rate: Decimal = Decimal("0"),
+            tax_amount: Decimal = Decimal("0"),
+            tax_code: str | None = None,
+            cost_center: str | None = None,
+            project_code: str | None = None,
+            department: str | None = None,
+            reference_number: str | None = None,
+            due_date: date | None = None,
+        ) -> dict[str, object]:
+            return {
+                "account_code": account_code,
+                "description": description,
+                "debit": debit,
+                "credit": credit,
+                "quantity": quantity,
+                "unit_price": unit_price,
+                "tax_rate": tax_rate,
+                "tax_amount": tax_amount,
+                "tax_code": tax_code,
+                "cost_center": cost_center,
+                "project_code": project_code,
+                "department": department,
+                "reference_number": reference_number,
+                "due_date": due_date,
+            }
+
+        entry_specs: list[dict[str, object]] = []
+        ar_invoice_specs: list[dict[str, object]] = []
+        ar_receipt_specs: list[dict[str, object]] = []
+        ap_invoice_specs: list[dict[str, object]] = []
+        ap_payment_specs: list[dict[str, object]] = []
+
+        def add_entry(
+            journal_code: str,
+            entry_number: str,
+            entry_date: date,
+            description: str,
+            lines: list[dict[str, object]],
+            source_type: str,
+            source_id: str,
+            reference_number: str | None = None,
+            due_date: date | None = None,
+            recurring: bool = False,
+        ) -> None:
+            entry_specs.append(
+                {
+                    "journal_code": journal_code,
+                    "entry_number": entry_number,
+                    "entry_date": entry_date,
+                    "description": description,
+                    "lines": lines,
+                    "source_type": source_type,
+                    "source_id": source_id,
+                    "reference_number": reference_number,
+                    "due_date": due_date,
+                    "recurring": recurring,
+                }
+            )
+
+        opening_date = self._finance_transaction_date(current_year, 1, 2)
+        add_entry(
+            "GJ",
+            f"GJ-{current_year}-0001",
+            opening_date,
+            "Opening capitalization and cash funding",
+            [
+                finance_line("1010", "Opening operating cash", debit=Decimal("90000.00"), reference_number="OPENING"),
+                finance_line("1020", "Opening reserve cash", debit=Decimal("20000.00"), reference_number="OPENING"),
+                finance_line("3010", "Common stock issued for initial funding", credit=Decimal("110000.00"), reference_number="OPENING"),
+            ],
+            "OTHER",
+            f"OPENING-{current_year}",
+            reference_number=f"OPENING-{current_year}",
+        )
+        equipment_date = self._finance_transaction_date(current_year, 1, 8)
+        add_entry(
+            "CDJ",
+            f"CD-{current_year}-0001",
+            equipment_date,
+            "Purchase of production and office computer equipment",
+            [
+                finance_line("1510", "New laptops and warehouse scanners", debit=Decimal("18000.00"), quantity=12, unit_price=Decimal("1500.00"), cost_center="IT-001", reference_number="PO-2026-0001"),
+                finance_line("1010", "Payment for computer equipment", credit=Decimal("18000.00"), cost_center="IT-001", reference_number="PO-2026-0001"),
+            ],
+            "PAYMENT",
+            f"PO-2026-0001",
+            reference_number="PO-2026-0001",
+        )
+
+        for month in range(1, current_month + 1):
+            month_tag = f"{current_year}-{month:02d}"
+            invoice_date = self._finance_transaction_date(current_year, month, 5)
+            receipt_date = self._finance_transaction_date(current_year, month, 18)
+            bill_date = self._finance_transaction_date(current_year, month, 7)
+            payment_date = self._finance_transaction_date(current_year, month, 24)
+            due_date = invoice_date + timedelta(days=30)
+            bill_due_date = bill_date + timedelta(days=30)
+
+            sales_subtotal = (Decimal("9000.00") + Decimal(month * 350)).quantize(Decimal("0.01"))
+            sales_tax = (sales_subtotal * Decimal("0.08")).quantize(Decimal("0.01"))
+            sales_total = sales_subtotal + sales_tax
+            invoice_number = f"INV-{month_tag}-001"
+            ar_invoice_specs.append(
+                {
+                    "invoice_number": invoice_number,
+                    "customer_code": ["CUST-ACME", "CUST-NOVA", "CUST-GREEN"][month % 3],
+                    "date": invoice_date,
+                    "due_date": due_date,
+                    "subtotal": sales_subtotal,
+                    "tax": sales_tax,
+                    "total": sales_total,
+                    "paid": sales_total if month in {1, 2, 4} else (sales_total * Decimal("0.45")).quantize(Decimal("0.01")),
+                    "source_id": invoice_number,
+                }
+            )
+            add_entry(
+                "SJ",
+                f"SI-{month_tag}-001",
+                invoice_date,
+                f"Product sale invoiced to customer ({invoice_number})",
+                [
+                    finance_line("1100", "Customer receivable including sales tax", debit=sales_total, tax_amount=sales_tax, tax_code="SALES-8", project_code=f"PRJ-{month:02d}", reference_number=invoice_number, due_date=due_date),
+                    finance_line("4010", "Product sales revenue", credit=sales_subtotal, quantity=Decimal("100"), unit_price=(sales_subtotal / Decimal("100")).quantize(Decimal("0.01")), project_code=f"PRJ-{month:02d}", reference_number=invoice_number),
+                    finance_line("2030", "Sales tax collected", credit=sales_tax, tax_amount=sales_tax, tax_code="SALES-8", reference_number=invoice_number),
+                ],
+                "INVOICE",
+                invoice_number,
+                reference_number=invoice_number,
+                due_date=due_date,
+            )
+
+            cogs_amount = (sales_subtotal * Decimal("0.43")).quantize(Decimal("0.01"))
+            add_entry(
+                "GJ",
+                f"GJ-{month_tag}-COGS",
+                self._finance_transaction_date(current_year, month, 6),
+                f"Recognize cost of goods sold for {invoice_number}",
+                [
+                    finance_line("5000", "Cost of products shipped", debit=cogs_amount, quantity=Decimal("100"), unit_price=(cogs_amount / Decimal("100")).quantize(Decimal("0.01")), project_code=f"PRJ-{month:02d}", reference_number=invoice_number),
+                    finance_line("1200", "Inventory relieved for shipment", credit=cogs_amount, project_code=f"PRJ-{month:02d}", reference_number=invoice_number),
+                ],
+                "OTHER",
+                f"COGS-{month_tag}",
+                reference_number=invoice_number,
+            )
+
+            receipt_amount = ar_invoice_specs[-1]["paid"]
+            receipt_number = f"RCT-{month_tag}-001"
+            ar_receipt_specs.append(
+                {
+                    "receipt_number": receipt_number,
+                    "customer_code": ar_invoice_specs[-1]["customer_code"],
+                    "date": receipt_date,
+                    "amount": receipt_amount,
+                    "invoice_number": invoice_number,
+                    "source_id": receipt_number,
+                }
+            )
+            add_entry(
+                "CRJ",
+                f"CR-{month_tag}-001",
+                receipt_date,
+                f"Customer receipt applied to {invoice_number}",
+                [
+                    finance_line("1010", "Deposit from customer", debit=receipt_amount, reference_number=receipt_number),
+                    finance_line("1100", "Apply receipt against customer receivable", credit=receipt_amount, reference_number=invoice_number),
+                ],
+                "RECEIPT",
+                receipt_number,
+                reference_number=receipt_number,
+            )
+
+            purchase_subtotal = (Decimal("4200.00") + Decimal(month * 210)).quantize(Decimal("0.01"))
+            purchase_tax = (purchase_subtotal * Decimal("0.08")).quantize(Decimal("0.01"))
+            purchase_total = purchase_subtotal + purchase_tax
+            vendor_invoice_number = f"BILL-{month_tag}-001"
+            ap_invoice_specs.append(
+                {
+                    "invoice_number": vendor_invoice_number,
+                    "vendor_code": ["VEND-ATLAS", "VEND-CLEAR", "VEND-CLOUD"][month % 3],
+                    "date": bill_date,
+                    "due_date": bill_due_date,
+                    "subtotal": purchase_subtotal,
+                    "tax": purchase_tax,
+                    "total": purchase_total,
+                    "paid": purchase_total if month % 3 == 0 else (purchase_total * Decimal("0.55")).quantize(Decimal("0.01")),
+                    "source_id": vendor_invoice_number,
+                }
+            )
+            add_entry(
+                "PJ",
+                f"PI-{month_tag}-001",
+                bill_date,
+                f"Inventory purchase from vendor ({vendor_invoice_number})",
+                [
+                    finance_line("1200", "Purchased components and finished goods", debit=purchase_subtotal, quantity=Decimal("120"), unit_price=(purchase_subtotal / Decimal("120")).quantize(Decimal("0.01")), reference_number=vendor_invoice_number, due_date=bill_due_date),
+                    finance_line("1400", "Recoverable tax on supplier invoice", debit=purchase_tax, tax_amount=purchase_tax, tax_code="PURCHASE-8", reference_number=vendor_invoice_number),
+                    finance_line("2010", "Vendor payable including tax", credit=purchase_total, tax_amount=purchase_tax, tax_code="PURCHASE-8", reference_number=vendor_invoice_number, due_date=bill_due_date),
+                ],
+                "INVOICE",
+                vendor_invoice_number,
+                reference_number=vendor_invoice_number,
+                due_date=bill_due_date,
+            )
+
+            vendor_payment_amount = ap_invoice_specs[-1]["paid"]
+            payment_number = f"VPMT-{month_tag}-001"
+            ap_payment_specs.append(
+                {
+                    "payment_number": payment_number,
+                    "vendor_code": ap_invoice_specs[-1]["vendor_code"],
+                    "date": payment_date,
+                    "amount": vendor_payment_amount,
+                    "invoice_number": vendor_invoice_number,
+                    "source_id": payment_number,
+                }
+            )
+            add_entry(
+                "CDJ",
+                f"CD-{month_tag}-001",
+                payment_date,
+                f"Vendor payment applied to {vendor_invoice_number}",
+                [
+                    finance_line("2010", "Reduce vendor payable", debit=vendor_payment_amount, reference_number=vendor_invoice_number),
+                    finance_line("1010", "Payment from operating account", credit=vendor_payment_amount, reference_number=payment_number),
+                ],
+                "PAYMENT",
+                payment_number,
+                reference_number=payment_number,
+            )
+
+            gross_pay = (Decimal("14500.00") + Decimal(month * 175)).quantize(Decimal("0.01"))
+            payroll_tax = (gross_pay * Decimal("0.21")).quantize(Decimal("0.01"))
+            net_pay = gross_pay - payroll_tax
+            add_entry(
+                "PRJ",
+                f"PR-{month_tag}-001",
+                self._finance_transaction_date(current_year, month, 25),
+                f"Monthly payroll accrual for {date(current_year, month, 1).strftime('%B %Y')}",
+                [
+                    finance_line("6010", "Gross payroll expense", debit=gross_pay, cost_center="HR-001", department="People Operations", reference_number=f"PAYROLL-{month_tag}"),
+                    finance_line("1010", "Net payroll paid", credit=net_pay, cost_center="HR-001", department="People Operations", reference_number=f"PAYROLL-{month_tag}"),
+                    finance_line("2020", "Payroll taxes withheld", credit=payroll_tax, cost_center="HR-001", department="People Operations", reference_number=f"PAYROLL-{month_tag}"),
+                ],
+                "PAYMENT",
+                f"PAYROLL-{month_tag}",
+                reference_number=f"PAYROLL-{month_tag}",
+                recurring=True,
+            )
+
+            rent_amount = Decimal("4000.00")
+            add_entry(
+                "CDJ",
+                f"CD-{month_tag}-RENT",
+                self._finance_transaction_date(current_year, month, 3),
+                f"Monthly office and warehouse rent for {month_tag}",
+                [
+                    finance_line("6020", "Office and warehouse rent", debit=rent_amount, cost_center="FAC-001", department="Facilities", reference_number=f"LEASE-{current_year}"),
+                    finance_line("1010", "Rent payment", credit=rent_amount, cost_center="FAC-001", department="Facilities", reference_number=f"LEASE-{current_year}"),
+                ],
+                "PAYMENT",
+                f"RENT-{month_tag}",
+                reference_number=f"LEASE-{current_year}",
+                recurring=True,
+            )
+
+            utility_amount = (Decimal("520.00") + Decimal(month * 40)).quantize(Decimal("0.01"))
+            add_entry(
+                "PJ",
+                f"PI-{month_tag}-UTIL",
+                self._finance_transaction_date(current_year, month, 12),
+                f"Utilities accrual for {month_tag}",
+                [
+                    finance_line("6030", "Electricity, internet, and utilities", debit=utility_amount, cost_center="FAC-001", department="Facilities", reference_number=f"UTIL-{month_tag}"),
+                    finance_line("2010", "Utilities payable", credit=utility_amount, cost_center="FAC-001", department="Facilities", reference_number=f"UTIL-{month_tag}"),
+                ],
+                "OTHER",
+                f"UTIL-{month_tag}",
+                reference_number=f"UTIL-{month_tag}",
+                recurring=True,
+            )
+
+            depreciation_amount = Decimal("650.00")
+            add_entry(
+                "AJ",
+                f"AJ-{month_tag}-DEP",
+                self._finance_transaction_date(current_year, month, 28),
+                f"Monthly depreciation for {month_tag}",
+                [
+                    finance_line("6050", "Depreciation expense", debit=depreciation_amount, cost_center="FIN-001", department="Finance", reference_number=f"DEP-{current_year}"),
+                    finance_line("1520", "Accumulated depreciation", credit=depreciation_amount, cost_center="FIN-001", department="Finance", reference_number=f"DEP-{current_year}"),
+                ],
+                "ADJUSTMENT",
+                f"DEP-{month_tag}",
+                reference_number=f"DEP-{current_year}",
+                recurring=True,
+            )
+
+            if month % 2 == 0:
+                bank_fee = Decimal("45.00")
+                add_entry(
+                    "CDJ",
+                    f"CD-{month_tag}-FEE",
+                    self._finance_transaction_date(current_year, month, 27),
+                    f"Bank service charges for {month_tag}",
+                    [
+                        finance_line("6040", "Monthly bank fees", debit=bank_fee, cost_center="FIN-001", department="Finance", reference_number=f"BANK-{month_tag}"),
+                        finance_line("1010", "Bank fees paid", credit=bank_fee, cost_center="FIN-001", department="Finance", reference_number=f"BANK-{month_tag}"),
+                    ],
+                    "PAYMENT",
+                    f"BANK-{month_tag}",
+                    reference_number=f"BANK-{month_tag}",
+                    recurring=True,
+                )
+
+        if current_month >= 3:
+            transfer_amount = Decimal("5000.00")
+            add_entry(
+                "GJ",
+                f"GJ-{current_year}-RESERVE",
+                self._finance_transaction_date(current_year, 3, 29),
+                "Transfer excess operating cash to reserve savings",
+                [
+                    finance_line("1020", "Transfer into reserve savings", debit=transfer_amount, reference_number=f"XFER-{current_year}-Q1"),
+                    finance_line("1010", "Transfer from operating checking", credit=transfer_amount, reference_number=f"XFER-{current_year}-Q1"),
+                ],
+                "TRANSFER",
+                f"XFER-{current_year}-Q1",
+                reference_number=f"XFER-{current_year}-Q1",
+            )
+
+        if current_month >= 6:
+            prepaid_amount = Decimal("3600.00")
+            add_entry(
+                "AJ",
+                f"AJ-{current_year}-PREPAID",
+                self._finance_transaction_date(current_year, 6, 30),
+                "Annual insurance premium paid in advance",
+                [
+                    finance_line("1300", "Prepaid insurance", debit=prepaid_amount, cost_center="FIN-001", department="Finance", reference_number=f"INS-{current_year}"),
+                    finance_line("1010", "Insurance premium paid", credit=prepaid_amount, cost_center="FIN-001", department="Finance", reference_number=f"INS-{current_year}"),
+                ],
+                "ADJUSTMENT",
+                f"INS-{current_year}",
+                reference_number=f"INS-{current_year}",
+            )
+
+        entry_by_source: dict[str, object] = {}
+        activity: dict[tuple[str, str], dict[str, Decimal]] = {}
+        running_balances = {code: Decimal("0") for code in accounts}
+        line_by_source: dict[str, object] = {}
+        for spec in sorted(entry_specs, key=lambda item: (item["entry_date"], item["entry_number"])):
+            journal = journals[spec["journal_code"]]
+            entry_defaults = {
+                "reference_number": spec["reference_number"],
+                "entry_date": spec["entry_date"],
+                "document_date": spec["entry_date"],
+                "posting_date": spec["entry_date"],
+                "description": spec["description"],
+                "total_debit": sum(line["debit"] for line in spec["lines"]),
+                "total_credit": sum(line["credit"] for line in spec["lines"]),
+                "currency": "USD",
+                "exchange_rate": Decimal("1"),
+                "due_date": spec["due_date"],
+                "status": "POSTED",
+                "approved_by": ledger_user,
+                "approved_date": posting_timestamp,
+                "posted_by": ledger_user,
+                "posted_date": posting_timestamp,
+                "source_document_type": spec["source_type"],
+                "source_document_id": spec["source_id"],
+                "source_system": "seed-fixture",
+                "is_recurring": spec["recurring"],
+                "recurrence_key": spec["source_id"] if spec["recurring"] else None,
+                "notes": "Generated by create_test_data for finance reporting demos.",
+            }
+            entry, _created = journal_entry_model.objects.get_or_create(
+                journal=journal,
+                entry_number=spec["entry_number"],
+                defaults=entry_defaults,
+            )
+            entry_by_source[spec["source_id"]] = entry
+            for line_number, line in enumerate(spec["lines"], start=1):
+                account = accounts[line["account_code"]]
+                period_code = f"FY{spec['entry_date'].year}-{spec['entry_date'].month:02d}"
+                activity_key = (line["account_code"], period_code)
+                activity.setdefault(activity_key, {"debit": Decimal("0"), "credit": Decimal("0")})
+                activity[activity_key]["debit"] += line["debit"]
+                activity[activity_key]["credit"] += line["credit"]
+                running_balances[line["account_code"]] += line["debit"] - line["credit"]
+                line_defaults = {
+                    "account": account,
+                    "description": line["description"],
+                    "debit_amount": line["debit"],
+                    "credit_amount": line["credit"],
+                    "currency": "USD",
+                    "exchange_rate": Decimal("1"),
+                    "quantity": line["quantity"],
+                    "unit_price": line["unit_price"],
+                    "tax_rate": line["tax_rate"],
+                    "tax_code": line["tax_code"],
+                    "tax_amount": line["tax_amount"],
+                    "cost_center": line["cost_center"],
+                    "project_code": line["project_code"],
+                    "department": line["department"],
+                    "reference_number": line["reference_number"],
+                    "due_date": line["due_date"],
+                }
+                entry_line, _created = journal_entry_line_model.objects.get_or_create(
+                    journal_entry=entry,
+                    line_number=line_number,
+                    defaults=line_defaults,
+                )
+                if spec["source_type"] in {"INVOICE", "RECEIPT", "PAYMENT"} and spec["source_id"] not in line_by_source:
+                    line_by_source[spec["source_id"]] = entry_line
+                transaction_defaults = {
+                    "account": account,
+                    "fiscal_period": period_objects[period_code],
+                    "transaction_date": spec["entry_date"],
+                    "posting_date": spec["entry_date"],
+                    "description": line["description"],
+                    "debit_amount": line["debit"],
+                    "credit_amount": line["credit"],
+                    "running_balance": running_balances[line["account_code"]],
+                    "currency": "USD",
+                    "exchange_rate": Decimal("1"),
+                    "transaction_type": "DEBIT" if line["debit"] else "CREDIT",
+                    "batch_number": spec["source_id"],
+                    "line_number": line_number,
+                    "is_reconciled": line["account_code"] in {"1010", "1020"} and spec["entry_date"] < today - timedelta(days=30),
+                    "reconciliation_date": today - timedelta(days=5) if line["account_code"] in {"1010", "1020"} and spec["entry_date"] < today - timedelta(days=30) else None,
+                    "reference_number": line["reference_number"],
+                    "cost_center": line["cost_center"],
+                    "project_code": line["project_code"],
+                    "department": line["department"],
+                }
+                gl_transaction_model.objects.get_or_create(
+                    journal_entry_line=entry_line,
+                    defaults=transaction_defaults,
+                )
+
+        if account_balance_model:
+            for account_code, account in accounts.items():
+                running_balance = Decimal("0")
+                ytd_debit = Decimal("0")
+                ytd_credit = Decimal("0")
+                for period_row in period_rows:
+                    period_code = period_row["period_code"]
+                    values = activity.get((account_code, period_code), {"debit": Decimal("0"), "credit": Decimal("0")})
+                    if period_row["fiscal_year"] == current_year:
+                        ytd_debit += values["debit"]
+                        ytd_credit += values["credit"]
+                    opening_balance = running_balance
+                    net_change = values["debit"] - values["credit"]
+                    running_balance += net_change
+                    account_balance_model.objects.get_or_create(
+                        account=account,
+                        fiscal_period=period_objects[period_code],
+                        defaults={
+                            "opening_balance": opening_balance,
+                            "debit_total": values["debit"],
+                            "credit_total": values["credit"],
+                            "closing_balance": running_balance,
+                            "currency": "USD",
+                            "net_change": net_change,
+                            "year_to_date_debit": ytd_debit if period_row["fiscal_year"] == current_year else Decimal("0"),
+                            "year_to_date_credit": ytd_credit if period_row["fiscal_year"] == current_year else Decimal("0"),
+                            "year_to_date_balance": (ytd_debit - ytd_credit) if period_row["fiscal_year"] == current_year else Decimal("0"),
+                            "as_of_date": min(period_row["end_date"], today),
+                            "is_locked": period_row["status"] in {"CLOSED", "LOCKED"},
+                        },
+                    )
+
+        if budget_model:
+            budget_templates = {
+                "4010": Decimal("21000.00"),
+                "5000": Decimal("9500.00"),
+                "6010": Decimal("18000.00"),
+                "6020": Decimal("4000.00"),
+                "6030": Decimal("1500.00"),
+                "6040": Decimal("250.00"),
+                "6050": Decimal("700.00"),
+            }
+            for month in range(1, 13):
+                period_code = f"FY{current_year}-{month:02d}"
+                for account_code, budgeted_amount in budget_templates.items():
+                    actual_values = activity.get((account_code, period_code), {"debit": Decimal("0"), "credit": Decimal("0")})
+                    actual_amount = actual_values["credit"] if account_code == "4010" else actual_values["debit"]
+                    variance_amount = actual_amount - budgeted_amount if account_code == "4010" else budgeted_amount - actual_amount
+                    variance_percentage = (variance_amount / budgeted_amount * Decimal("100")).quantize(Decimal("0.01")) if budgeted_amount else Decimal("0")
+                    forecast_amount = actual_amount if month <= current_month and actual_amount else budgeted_amount
+                    committed_amount = (budgeted_amount * Decimal("0.15")).quantize(Decimal("0.01")) if account_code != "4010" else Decimal("0")
+                    budget_code = f"BUD-{current_year}-{month:02d}-{account_code}"
+                    budget_model.objects.get_or_create(
+                        budget_code=budget_code,
+                        defaults={
+                            "budget_name": f"{current_year} monthly budget - {accounts[account_code].account_name}",
+                            "budget_version": f"{current_year}-BASE",
+                            "account": accounts[account_code],
+                            "fiscal_period": period_objects[period_code],
+                            "budget_type": "OPERATING" if account_code not in {"4010", "5000"} else "MASTER",
+                            "budgeted_amount": budgeted_amount,
+                            "actual_amount": actual_amount,
+                            "variance_amount": variance_amount,
+                            "variance_percentage": variance_percentage,
+                            "forecast_amount": forecast_amount,
+                            "committed_amount": committed_amount,
+                            "currency": "USD",
+                            "department": "Sales" if account_code == "4010" else "Finance" if account_code in {"6040", "6050"} else "Operations",
+                            "cost_center": "SALES-001" if account_code == "4010" else "OPS-001",
+                            "status": "ACTIVE" if month <= current_month else "APPROVED",
+                            "notes": "Seeded monthly budget for dashboard and variance reporting.",
+                        },
+                    )
+
+        self._create_accounts_receivable_payable_data(
+            account_objects=accounts,
+            bank_accounts=bank_accounts,
+            entry_by_source=entry_by_source,
+            ar_invoice_specs=ar_invoice_specs,
+            ar_receipt_specs=ar_receipt_specs,
+            ap_invoice_specs=ap_invoice_specs,
+            ap_payment_specs=ap_payment_specs,
+            crm_account_model=self._get_model("CrmAccount"),
+        )
+
+    def _create_accounts_receivable_payable_data(
+        self,
+        account_objects: dict[str, object],
+        bank_accounts: dict[str, object],
+        entry_by_source: dict[str, object],
+        ar_invoice_specs: list[dict[str, object]],
+        ar_receipt_specs: list[dict[str, object]],
+        ap_invoice_specs: list[dict[str, object]],
+        ap_payment_specs: list[dict[str, object]],
+        crm_account_model,
+    ) -> None:
+        customer_model = self._get_model("Customer")
+        customer_invoice_model = self._get_model("CustomerInvoice")
+        customer_invoice_line_model = self._get_model("CustomerInvoiceLine")
+        customer_receipt_model = self._get_model("CustomerReceipt")
+        vendor_model = self._get_model("Vendor")
+        vendor_invoice_model = self._get_model("VendorInvoice")
+        vendor_invoice_line_model = self._get_model("VendorInvoiceLine")
+        vendor_payment_model = self._get_model("VendorPayment")
+
+        crm_accounts = {}
+        if crm_account_model:
+            crm_accounts = {
+                obj.account_name: obj
+                for obj in crm_account_model.objects.filter(
+                    account_name__in=["Acme Manufacturing", "Nova Retailers"]
+                )
+            }
+
+        customers: dict[str, object] = {}
+        if customer_model:
+            customer_rows = [
+                {"code": "CUST-ACME", "name": "Acme Manufacturing", "crm": crm_accounts.get("Acme Manufacturing"), "email": "ap@acme.example.com", "phone": "+1-555-0100", "terms": 30, "limit": Decimal("75000.00"), "tax": "US-ACME-8842"},
+                {"code": "CUST-NOVA", "name": "Nova Retailers", "crm": crm_accounts.get("Nova Retailers"), "email": "finance@nova.example.com", "phone": "+1-555-0200", "terms": 45, "limit": Decimal("50000.00"), "tax": "US-NOVA-2194"},
+                {"code": "CUST-GREEN", "name": "Greenline Distribution", "crm": None, "email": "billing@greenline.example.com", "phone": "+1-555-0300", "terms": 30, "limit": Decimal("35000.00"), "tax": "US-GREEN-7731"},
+            ]
+            for row in customer_rows:
+                customer, _created = customer_model.objects.get_or_create(
+                    customer_code=row["code"],
+                    defaults={
+                        "customer_name": row["name"],
+                        "crm_account": row["crm"],
+                        "email": row["email"],
+                        "phone": row["phone"],
+                        "billing_address": f"{row['name']} Finance Department, Springfield",
+                        "currency": "USD",
+                        "payment_terms_days": row["terms"],
+                        "credit_limit": row["limit"],
+                        "tax_number": row["tax"],
+                        "status": "ACTIVE",
+                        "is_active": True,
+                        "notes": "Seed customer for receivables, aging, and collection demos.",
+                    },
+                )
+                customers[row["code"]] = customer
+
+        if customer_invoice_model and customers:
+            for spec in ar_invoice_specs:
+                invoice, _created = customer_invoice_model.objects.get_or_create(
+                    invoice_number=spec["invoice_number"],
+                    defaults={
+                        "customer": customers[spec["customer_code"]],
+                        "journal_entry": entry_by_source.get(spec["source_id"]),
+                        "invoice_date": spec["date"],
+                        "due_date": spec["due_date"],
+                        "currency": "USD",
+                        "exchange_rate": Decimal("1"),
+                        "subtotal": spec["subtotal"],
+                        "tax_amount": spec["tax"],
+                        "total_amount": spec["total"],
+                        "paid_amount": spec["paid"],
+                        "outstanding_amount": spec["total"] - spec["paid"],
+                        "status": "PAID" if spec["paid"] == spec["total"] else "PARTIALLY_PAID",
+                        "sales_order_number": f"SO-{spec['invoice_number'][4:]}",
+                        "customer_reference": f"PO-{spec['invoice_number'][4:]}" ,
+                        "notes": "Seed invoice generated from the sales journal.",
+                    },
+                )
+                if customer_invoice_line_model:
+                    first_line = (spec["subtotal"] * Decimal("0.60")).quantize(Decimal("0.01"))
+                    second_line = spec["subtotal"] - first_line
+                    for line_number, amount, description, product_code in [
+                        (1, first_line, "Standard production widgets", "PROD-100"),
+                        (2, second_line, "Implementation and configuration services", "SERV-200"),
+                    ]:
+                        tax_amount = (amount * Decimal("0.08")).quantize(Decimal("0.01"))
+                        customer_invoice_line_model.objects.get_or_create(
+                            invoice=invoice,
+                            line_number=line_number,
+                            defaults={
+                                "product_code": product_code,
+                                "description": description,
+                                "quantity": Decimal("50") if line_number == 1 else Decimal("1"),
+                                "unit_price": (amount / (Decimal("50") if line_number == 1 else Decimal("1"))).quantize(Decimal("0.01")),
+                                "tax_rate": Decimal("0.08"),
+                                "tax_amount": tax_amount,
+                                "line_total": amount + tax_amount,
+                                "revenue_account": account_objects["4010"] if line_number == 1 else account_objects["4020"],
+                            },
+                        )
+
+        if customer_receipt_model and customers:
+            for spec in ar_receipt_specs:
+                customer_receipt_model.objects.get_or_create(
+                    receipt_number=spec["receipt_number"],
+                    defaults={
+                        "customer": customers[spec["customer_code"]],
+                        "bank_account": bank_accounts["111222333"],
+                        "journal_entry": entry_by_source.get(spec["source_id"]),
+                        "receipt_date": spec["date"],
+                        "amount": spec["amount"],
+                        "currency": "USD",
+                        "payment_method": "ACH" if spec["customer_code"] != "CUST-NOVA" else "WIRE",
+                        "reference_number": f"ACH-{spec['receipt_number'][4:]}",
+                        "status": "POSTED",
+                        "notes": f"Applied against {spec['invoice_number']}.",
+                    },
+                )
+
+        vendors: dict[str, object] = {}
+        if vendor_model:
+            vendor_rows = [
+                {"code": "VEND-ATLAS", "name": "Atlas Components LLC", "email": "invoices@atlas.example.com", "phone": "+1-555-0400", "terms": 30, "tax": "US-ATLAS-4410"},
+                {"code": "VEND-CLEAR", "name": "Clearwater Utilities", "email": "billing@clearwater.example.com", "phone": "+1-555-0500", "terms": 15, "tax": "US-CLEAR-5521"},
+                {"code": "VEND-CLOUD", "name": "CloudNine Software", "email": "accounts@cloudnine.example.com", "phone": "+1-555-0600", "terms": 30, "tax": "US-CLOUD-6632"},
+            ]
+            for row in vendor_rows:
+                vendor, _created = vendor_model.objects.get_or_create(
+                    vendor_code=row["code"],
+                    defaults={
+                        "vendor_name": row["name"],
+                        "email": row["email"],
+                        "phone": row["phone"],
+                        "address": f"{row['name']} Accounts Payable, Springfield",
+                        "currency": "USD",
+                        "payment_terms_days": row["terms"],
+                        "tax_number": row["tax"],
+                        "status": "ACTIVE",
+                        "is_active": True,
+                        "notes": "Seed vendor for payables, aging, and payment workflow demos.",
+                    },
+                )
+                vendors[row["code"]] = vendor
+
+        if vendor_invoice_model and vendors:
+            for spec in ap_invoice_specs:
+                invoice, _created = vendor_invoice_model.objects.get_or_create(
+                    invoice_number=spec["invoice_number"],
+                    defaults={
+                        "vendor": vendors[spec["vendor_code"]],
+                        "journal_entry": entry_by_source.get(spec["source_id"]),
+                        "invoice_date": spec["date"],
+                        "due_date": spec["due_date"],
+                        "currency": "USD",
+                        "exchange_rate": Decimal("1"),
+                        "subtotal": spec["subtotal"],
+                        "tax_amount": spec["tax"],
+                        "total_amount": spec["total"],
+                        "paid_amount": spec["paid"],
+                        "outstanding_amount": spec["total"] - spec["paid"],
+                        "status": "PAID" if spec["paid"] == spec["total"] else "PARTIALLY_PAID",
+                        "purchase_order_number": f"PO-{spec['invoice_number'][5:]}" ,
+                        "vendor_reference": f"{spec['vendor_code']}-{spec['invoice_number']}",
+                        "notes": "Seed invoice generated from the purchase journal.",
+                    },
+                )
+                if vendor_invoice_line_model:
+                    vendor_invoice_line_model.objects.get_or_create(
+                        invoice=invoice,
+                        line_number=1,
+                        defaults={
+                            "item_code": "COMP-100",
+                            "description": "Production components and replenishment stock",
+                            "quantity": Decimal("120"),
+                            "unit_price": (spec["subtotal"] / Decimal("120")).quantize(Decimal("0.01")),
+                            "tax_rate": Decimal("0.08"),
+                            "tax_amount": spec["tax"],
+                            "line_total": spec["total"],
+                            "expense_account": account_objects["1200"],
+                        },
+                    )
+
+        if vendor_payment_model and vendors:
+            for spec in ap_payment_specs:
+                vendor_payment_model.objects.get_or_create(
+                    payment_number=spec["payment_number"],
+                    defaults={
+                        "vendor": vendors[spec["vendor_code"]],
+                        "bank_account": bank_accounts["111222333"],
+                        "journal_entry": entry_by_source.get(spec["source_id"]),
+                        "payment_date": spec["date"],
+                        "amount": spec["amount"],
+                        "currency": "USD",
+                        "payment_method": "ACH" if spec["vendor_code"] != "VEND-CLOUD" else "CARD",
+                        "reference_number": f"PAY-{spec['payment_number'][5:]}",
+                        "status": "PAID",
+                        "notes": f"Applied against {spec['invoice_number']}.",
+                    },
+                )
+
+    @staticmethod
+    def _finance_month_end(year: int, month: int) -> date:
+        if month == 12:
+            return date(year, 12, 31)
+        return date(year, month + 1, 1) - timedelta(days=1)
+
+    @staticmethod
+    def _finance_transaction_date(year: int, month: int, day: int) -> date:
+        today = date.today()
+        safe_day = min(day, Command._finance_month_end(year, month).day)
+        if year == today.year and month == today.month:
+            safe_day = min(safe_day, today.day)
+        return date(year, month, safe_day)
 
     def _create_crm_data(self, force: bool) -> None:
         account_model = self._get_model("CrmAccount")
@@ -1295,8 +2201,6 @@ class Command(BaseCommand):
                     position=i
                 )
 
-            
 
 
 
-    

@@ -135,6 +135,21 @@ fields:
       on_delete: SET_NULL
       null: true
       blank: true
+
+  - id: active
+    name: Active
+    description: Whether the employee is currently active
+    type: BooleanField
+    options:
+      default: true
+
+  - id: start_week
+    name: Start week
+    description: The week the employee started
+    type: WeekField
+    options:
+      null: true
+      blank: true
       
   
 

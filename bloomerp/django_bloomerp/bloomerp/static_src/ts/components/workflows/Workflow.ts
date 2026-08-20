@@ -50,11 +50,13 @@ interface WorkflowEdgeMetadata {
     name: string;
 }
 
-const WORKFLOW_CANVAS_WIDTH = 4000;
-const WORKFLOW_CANVAS_HEIGHT = 3000;
+const WORKFLOW_CANVAS_WIDTH = 12000;
+const WORKFLOW_CANVAS_HEIGHT = 12000;
 const WORKFLOW_CANVAS_OFFSET_X = 1200;
 const WORKFLOW_CANVAS_OFFSET_Y = 900;
-const WORKFLOW_DEFAULT_ZOOM_STEP = 0.05;
+const WORKFLOW_DEFAULT_ZOOM_STEP = 0.1;
+const WORKFLOW_MIN_ZOOM = 0.2;
+const WORKFLOW_MAX_ZOOM = 3;
 const WORKFLOW_FIT_PADDING = 120;
 const WORKFLOW_FIT_MAX_ZOOM = 1;
 const WORKFLOW_FIT_MIN_ZOOM = 0.45;
@@ -204,13 +206,6 @@ interface Coordinates {
     y:number
 }
 
-function createRandomCoordinates() : Coordinates {
-    return {
-        x: Math.random() * 300 + WORKFLOW_CANVAS_OFFSET_X + 120,
-        y: Math.random() * 200 + WORKFLOW_CANVAS_OFFSET_Y + 120,
-    }
-}
-
 function safePosition(value: any): number {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? Math.round(parsed) : 0;
@@ -235,6 +230,7 @@ export default class Workflow extends BaseComponent {
 
     private nodeFormEditMode: 'form' | 'json' = 'form';
 
+    private startNodeId: number | null = null;
 
     public initialize(): void {
         if (!this.element) return;
@@ -279,16 +275,16 @@ export default class Workflow extends BaseComponent {
         });
         
         this.drawflow.on('nodeSelected', (id: number) => {
-
+            
         });
         
         // Create initial editor module
         this.drawflow.addModule('Home');
         this.drawflow.changeModule('Home');
+        (this.drawflow as any).zoom_max = WORKFLOW_MAX_ZOOM;
         this.workflowId = this.element.getAttribute('data-workflow-id');
         this.buildNodeDefinitions();
         this.importSavedWorkflow();
-        
         
         // Setup toolbar buttons
         this.setupToolbar();
@@ -300,8 +296,9 @@ export default class Workflow extends BaseComponent {
         this.setupNodeContextMenu();
         this.setupEdgeContextMenu();
 
-        //
+        // Setup node drawer for adding new nodes
         this.setupNodeDrawer();
+
     }
 
     private buildNodeDefinitions(): void {
@@ -341,11 +338,12 @@ export default class Workflow extends BaseComponent {
             console.error('Invalid workflow JSON', error);
             return;
         }
-
+        
         this.workflowId = workflow.workflow_id?.toString() || this.workflowId;
         this.workflowName = workflow.name || this.workflowName;
         const nodeIdMap = new Map<string, number>();
         let maxNodeId = 0;
+        let firstImportedDrawflowNodeId: number | null = null;
         this.isImportingWorkflow = true;
 
         for (const node of workflow.nodes || []) {
@@ -361,7 +359,7 @@ export default class Workflow extends BaseComponent {
                 config: node.config || { sub_type: nodeSubType, parameters: {} },
             };
             const inputs = node.type === 'TRIGGER' ? 0 : 1;
-
+            
             const addedNodeId = Number(this.drawflow.addNode(
                 node.type,
                 inputs,
@@ -373,6 +371,10 @@ export default class Workflow extends BaseComponent {
                 createNodeHtml(node.type, nodeSubType, drawflowId, definition, nodeData.config, node.id, node.name),
                 false
             ));
+
+            if (firstImportedDrawflowNodeId === null) {
+                firstImportedDrawflowNodeId = addedNodeId;
+            }
 
             nodeIdMap.set(node.client_id, addedNodeId);
             maxNodeId = Math.max(maxNodeId, addedNodeId);
@@ -395,13 +397,24 @@ export default class Workflow extends BaseComponent {
         this.nodeId = Math.max(this.nodeId, maxNodeId + 1);
         this.isImportingWorkflow = false;
         this.refreshWorkflowEdgeLabels();
-        this.fitWorkflowToViewport();
+
+        if (firstImportedDrawflowNodeId) {
+            this.centerNodeInViewport(firstImportedDrawflowNodeId);
+        } else {
+            this.fitWorkflowToViewport();
+        }
     }
 
+    /**
+     * Setup the canvas workspace with initial dimensions and zoom level
+     * @param container 
+     * @returns 
+     */
     private setupCanvasWorkspace(container: HTMLElement): void {
         const precanvas = (this.drawflow as any).precanvas as HTMLElement | null;
         if (!precanvas) return;
 
+        //Setup height and width of the canvas
         precanvas.style.width = `${WORKFLOW_CANVAS_WIDTH}px`;
         precanvas.style.height = `${WORKFLOW_CANVAS_HEIGHT}px`;
         precanvas.style.minWidth = `${WORKFLOW_CANVAS_WIDTH}px`;
@@ -409,15 +422,42 @@ export default class Workflow extends BaseComponent {
         precanvas.style.transformOrigin = '0 0';
 
         (this.drawflow as any).zoom_value = WORKFLOW_DEFAULT_ZOOM_STEP;
+        (this.drawflow as any).zoom_max = WORKFLOW_MAX_ZOOM;
+        
+    }
+    
+    private centerNodeInViewport(nodeId: number): void {
+        window.requestAnimationFrame(() => {
+            const container = this.element?.querySelector<HTMLElement>('#drawflow');
+            const precanvas = (this.drawflow as any).precanvas as HTMLElement | null;
+            if (!container || !precanvas) return;
 
-        const initialCanvasX = Math.round((container.clientWidth / 2) - WORKFLOW_CANVAS_OFFSET_X);
-        const initialCanvasY = Math.round((container.clientHeight / 2) - WORKFLOW_CANVAS_OFFSET_Y);
-        (this.drawflow as any).canvas_x = initialCanvasX;
-        (this.drawflow as any).canvas_y = initialCanvasY;
-        precanvas.style.transform = `translate(${(this.drawflow as any).canvas_x}px, ${(this.drawflow as any).canvas_y}px) scale(${(this.drawflow as any).zoom})`;
+            const node = this.drawflow.getNodeFromId(nodeId);
+            if (!node) {
+                this.fitWorkflowToViewport();
+                return;
+            }
+
+            const nodeLeft = safePosition((node as any).pos_x);
+            const nodeTop = safePosition((node as any).pos_y);
+            const nodeWidth = 240;
+            const nodeHeight = 120;
+            const targetCenterX = nodeLeft + (nodeWidth / 2);
+            const targetCenterY = nodeTop + (nodeHeight / 2);
+            const zoom = WORKFLOW_FIT_MAX_ZOOM;
+            const canvasX = Math.round((container.clientWidth / 2) - (targetCenterX * zoom));
+            const canvasY = Math.round((container.clientHeight / 2) - (targetCenterY * zoom));
+
+            (this.drawflow as any).zoom = zoom;
+            (this.drawflow as any).zoom_last_value = zoom;
+            (this.drawflow as any).canvas_x = canvasX;
+            (this.drawflow as any).canvas_y = canvasY;
+            precanvas.style.transform = `translate(${canvasX}px, ${canvasY}px) scale(${zoom})`;
+        });
     }
 
-    private fitWorkflowToViewport(): void {
+    
+    private fitWorkflowToViewport(options: { focusNodeId?: number } = {}): void {
         window.requestAnimationFrame(() => {
             const container = this.element?.querySelector<HTMLElement>('#drawflow');
             const precanvas = (this.drawflow as any).precanvas as HTMLElement | null;
@@ -452,7 +492,7 @@ export default class Workflow extends BaseComponent {
             const contentHeight = Math.max(1, maxY - minY);
             const availableWidth = Math.max(1, container.clientWidth - (WORKFLOW_FIT_PADDING * 2));
             const availableHeight = Math.max(1, container.clientHeight - (WORKFLOW_FIT_PADDING * 2));
-            const fitZoom = Math.min(
+            let fitZoom = Math.min(
                 WORKFLOW_FIT_MAX_ZOOM,
                 Math.max(
                     WORKFLOW_FIT_MIN_ZOOM,
@@ -462,8 +502,24 @@ export default class Workflow extends BaseComponent {
 
             const contentCenterX = minX + (contentWidth / 2);
             const contentCenterY = minY + (contentHeight / 2);
-            const canvasX = Math.round((container.clientWidth / 2) - (contentCenterX * fitZoom));
-            const canvasY = Math.round((container.clientHeight / 2) - (contentCenterY * fitZoom));
+            let targetCenterX = contentCenterX;
+            let targetCenterY = contentCenterY;
+
+            if (options.focusNodeId) {
+                const focusNodeElement = container.querySelector<HTMLElement>(`#node-${options.focusNodeId}`);
+                if (focusNodeElement) {
+                    const firstNodeLeft = safePosition(focusNodeElement.style.left);
+                    const firstNodeTop = safePosition(focusNodeElement.style.top);
+                    const firstNodeWidth = focusNodeElement.offsetWidth || 240;
+                    const firstNodeHeight = focusNodeElement.offsetHeight || 120;
+                    targetCenterX = firstNodeLeft + (firstNodeWidth / 2);
+                    targetCenterY = firstNodeTop + (firstNodeHeight / 2);
+                    fitZoom = WORKFLOW_FIT_MAX_ZOOM;
+                }
+            }
+
+            const canvasX = Math.round((container.clientWidth / 2) - (targetCenterX * fitZoom));
+            const canvasY = Math.round((container.clientHeight / 2) - (targetCenterY * fitZoom));
 
             (this.drawflow as any).zoom = fitZoom;
             (this.drawflow as any).zoom_last_value = fitZoom;
@@ -832,6 +888,7 @@ export default class Workflow extends BaseComponent {
         const zoomInBtn = this.element.querySelector('#zoom-in-btn');
         const zoomOutBtn = this.element.querySelector('#zoom-out-btn');
         const zoomResetBtn = this.element.querySelector('#zoom-reset-btn');
+        const focusFirstNodeBtn = this.element.querySelector('#focus-first-node-btn');
         
         if (addNodeBtn) {
             addNodeBtn.addEventListener('click', () => void this.openNodeDrawer());
@@ -846,16 +903,83 @@ export default class Workflow extends BaseComponent {
         }
         
         if (zoomInBtn) {
-            zoomInBtn.addEventListener('click', () => this.drawflow.zoom_in());
+            zoomInBtn.addEventListener('click', () => {
+                this.adjustZoom(WORKFLOW_DEFAULT_ZOOM_STEP);
+            });
         }
         
         if (zoomOutBtn) {
-            zoomOutBtn.addEventListener('click', () => this.drawflow.zoom_out());
+            zoomOutBtn.addEventListener('click', () => {
+                this.adjustZoom(-WORKFLOW_DEFAULT_ZOOM_STEP);
+            });
         }
         
         if (zoomResetBtn) {
-            zoomResetBtn.addEventListener('click', () => this.drawflow.zoom_reset());
+            zoomResetBtn.addEventListener('click', () => {
+                this.setZoomAtViewportCenter(1);
+            });
         }
+
+        if (focusFirstNodeBtn) {
+            focusFirstNodeBtn.addEventListener('click', () => {
+                this.focusViewportOnFirstNode();
+            });
+        }
+    }
+
+    private focusViewportOnFirstNode(): void {
+        const firstNodeId = this.getFirstNodeId();
+        if (!firstNodeId) {
+            this.fitWorkflowToViewport();
+            return;
+        }
+
+        this.centerNodeInViewport(firstNodeId);
+    }
+
+    private getFirstNodeId(): number | null {
+        const exportData = this.drawflow.export();
+        const activeModule = (this.drawflow as any).module || 'Home';
+        const workflowData = exportData.drawflow?.[activeModule]?.data || {};
+        const sortedNodeIds = Object.keys(workflowData)
+            .map((id) => Number.parseInt(id, 10))
+            .filter((id): id is number => Number.isFinite(id))
+            .sort((a, b) => a - b);
+
+        return sortedNodeIds.length ? sortedNodeIds[0] : null;
+    }
+
+    private adjustZoom(delta: number): void {
+        const currentZoom = Number((this.drawflow as any).zoom) || 1;
+        const nextZoom = Math.min(
+            WORKFLOW_MAX_ZOOM,
+            Math.max(WORKFLOW_MIN_ZOOM, currentZoom + delta),
+        );
+        this.setZoomAtViewportCenter(nextZoom);
+    }
+
+    private setZoomAtViewportCenter(nextZoom: number): void {
+        const container = this.element.querySelector<HTMLElement>('#drawflow');
+        const precanvas = (this.drawflow as any).precanvas as HTMLElement | null;
+        if (!container || !precanvas) return;
+
+        const currentZoom = Number((this.drawflow as any).zoom) || 1;
+        const canvasX = Number((this.drawflow as any).canvas_x) || 0;
+        const canvasY = Number((this.drawflow as any).canvas_y) || 0;
+        const viewportCenterX = container.clientWidth / 2;
+        const viewportCenterY = container.clientHeight / 2;
+
+        // Keep the same graph point under the viewport center while zooming.
+        const graphCenterX = (viewportCenterX - canvasX) / currentZoom;
+        const graphCenterY = (viewportCenterY - canvasY) / currentZoom;
+        const nextCanvasX = Math.round(viewportCenterX - (graphCenterX * nextZoom));
+        const nextCanvasY = Math.round(viewportCenterY - (graphCenterY * nextZoom));
+
+        (this.drawflow as any).zoom = nextZoom;
+        (this.drawflow as any).zoom_last_value = nextZoom;
+        (this.drawflow as any).canvas_x = nextCanvasX;
+        (this.drawflow as any).canvas_y = nextCanvasY;
+        precanvas.style.transform = `translate(${nextCanvasX}px, ${nextCanvasY}px) scale(${nextZoom})`;
     }
     
     private clearAll(): void {
@@ -1078,7 +1202,7 @@ export default class Workflow extends BaseComponent {
      * @param nodeSubType the id of the node subtype
      */
     private addNode(nodeType: string, nodeSubType: string) {
-        const coordinates = createRandomCoordinates() 
+        const coordinates = this.getViewportCenterCoordinates();
         let numberOfInputs = 1;
         const definition = this.getNodeDefinition(nodeType, nodeSubType);
         const config = {
@@ -1109,6 +1233,29 @@ export default class Workflow extends BaseComponent {
         );
                 
         this.nodeId++;
+    }
+
+    private getViewportCenterCoordinates(): Coordinates {
+        const container = this.element.querySelector<HTMLElement>('#drawflow');
+        if (!container) {
+            return {
+                x: WORKFLOW_CANVAS_OFFSET_X + 120,
+                y: WORKFLOW_CANVAS_OFFSET_Y + 120,
+            };
+        }
+
+        const zoom = Number((this.drawflow as any).zoom) || 1;
+        const canvasX = Number((this.drawflow as any).canvas_x) || 0;
+        const canvasY = Number((this.drawflow as any).canvas_y) || 0;
+        const nodeWidth = 240;
+        const nodeHeight = 120;
+        const centerCanvasX = ((container.clientWidth / 2) - canvasX) / zoom;
+        const centerCanvasY = ((container.clientHeight / 2) - canvasY) / zoom;
+
+        return {
+            x: Math.round(centerCanvasX - (nodeWidth / 2)),
+            y: Math.round(centerCanvasY - (nodeHeight / 2)),
+        };
     }
 
     private getNodeDrawer(): Drawer | null {
@@ -1447,10 +1594,25 @@ export default class Workflow extends BaseComponent {
 
         const formData = new FormData(form);
         const parameters: Record<string, any> = {};
+        const multiValueFieldNames = new Set(
+            Array.from(form.querySelectorAll<HTMLElement>(
+                'select[multiple][name], [bloomerp-component="foreign-field-widget"][data-is-m2m="true"][data-field-name]',
+            )).map((field) => field.getAttribute('name') || field.dataset.fieldName || ''),
+        );
 
         formData.forEach((value, key) => {
             if (key === 'csrfmiddlewaretoken') return;
-            parameters[key] = this.parseFormValue(String(value));
+            const parsedValue = this.parseFormValue(String(value));
+
+            if (!(key in parameters)) {
+                parameters[key] = multiValueFieldNames.has(key) ? [parsedValue] : parsedValue;
+                return;
+            }
+
+            const currentValue = parameters[key];
+            parameters[key] = Array.isArray(currentValue)
+                ? [...currentValue, parsedValue]
+                : [currentValue, parsedValue];
         });
 
         return parameters;
@@ -1475,28 +1637,4 @@ export default class Workflow extends BaseComponent {
 
         return value;
     }
-
-
-    /**
-     * Opens a node editor/configuration panel
-     * This is a placeholder that should be replaced with your actual implementation
-     */
-    private openNodeEditor(nodeId: number, nodeType: string, nodeSubType: string, data: any): void {
-        // TODO: Implement the actual node editor
-        // This could be a modal, a sidebar panel, or navigate to a different page
-        
-        console.log('Opening node editor for:', { nodeId, nodeType, nodeSubType, data });
-        
-        // Placeholder: show an alert for now
-        alert(`Node Editor\n\nNode ID: ${nodeId}\nType: ${nodeType}\nSubtype: ${nodeSubType}\n\nDouble-click handler working!`);
-        
-        // Example: You might want to:
-        // 1. Open a modal with a form for this node type
-        // 2. Make an HTMX request to load a configuration panel
-        // 3. Dispatch a custom event that another component can listen to
-        // 4. Update the node's data property with new configuration
-    }
-
-
-
 }

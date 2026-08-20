@@ -1,0 +1,48 @@
+{% load i18n %}
+
+{% if error_message %}
+<div class="border-b border-danger-light bg-danger-light/20 px-5 py-4 text-left">
+    <c-ui.text.text>
+        {{ error_message }}
+    </c-ui.text.text>
+</div>
+{% endif %}
+
+{% for item in items %}
+<c-features.communication.inbox_item :item="item"/>
+
+{% empty %}
+{% if not page_obj or page_obj.number == 1 %}
+<div>
+    <button class="w-full border-b border-gray-200 px-5 py-4 text-left hover:bg-gray-50">
+        <div class="flex flex-col items-start gap-3">
+            <c-ui.text.text>
+                {% blocktrans trimmed %}
+                    No items found in this folder.
+                {% endblocktrans %}
+            </c-ui.text.text>
+            <c-ui.text.muted>
+                Perform a <a 
+                    class="text-primary"
+                    id="deep-search-btn"
+                    >deep search</a>
+            </c-ui.text.muted>
+        </div>
+    </button>
+</div>
+{% endif %}
+
+{% endfor %}
+
+{% if page_obj and page_obj.has_next %}
+<div
+    class="border-b border-gray-200 py-4 text-center text-sm text-gray-500"
+    data-inbox-page-loader
+    hx-get="{{ request.path }}{% if pagination_querystring %}?{{ pagination_querystring }}&amp;{% else %}?{% endif %}page={{ page_obj.next_page_number }}"
+    hx-trigger="intersect once root:#inbox-items"
+    hx-target="this"
+    hx-swap="outerHTML"
+>
+    {% blocktrans %}Loading more…{% endblocktrans %}
+</div>
+{% endif %}

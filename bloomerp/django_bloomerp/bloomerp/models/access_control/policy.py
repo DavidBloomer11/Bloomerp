@@ -1,11 +1,13 @@
 from django.db import models
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _, gettext_noop
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth import get_user_model
 from django.conf import settings
 
 from bloomerp.models.access_control import RowPolicy
 from bloomerp.models.access_control.field_policy import FieldPolicy
+from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
+from bloomerp.models.definition import BloomerpModelConfig
 from bloomerp.models.mixins import TimestampModelMixin
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import QuerySet
@@ -28,53 +30,98 @@ class Policy(
         verbose_name = _("Access Control Policy")
         verbose_name_plural = _("Access Control Policies")
     
+    bloomerp_config = BloomerpModelConfig(
+        layout=FieldLayout(
+            rows=[
+                LayoutRow(
+                    title=gettext_noop("Policy Details"),
+                    columns=4,
+                    items=[
+                        LayoutItem(id="name", colspan=2),
+                        LayoutItem(id="users", colspan=1),
+                        LayoutItem(id="groups", colspan=1),
+                        LayoutItem(id="description", colspan=4),
+                    ],
+                ),
+                LayoutRow(
+                    title=gettext_noop("Policy Scope"),
+                    columns=4,
+                    items=[
+                        LayoutItem(id="row_policy", colspan=2),
+                        LayoutItem(id="field_policy", colspan=2),
+                    ],
+                ),
+                LayoutRow(
+                    title=gettext_noop("Statistics"),
+                    columns=4,
+                    items=[
+                        LayoutItem(id="number_of_users", colspan=2),
+                    ],
+                ),
+            ]
+        )
+    )
+
+
     name = models.CharField(
             max_length=255,
-            help_text=_("The name of the access control policy.")
+            help_text=_("The name of the access control policy."),
+        verbose_name=_("Name"),
         )
-    
+
     description = models.TextField(
         blank=True,
-        help_text=_("A description of the access control policy.")
+        help_text=_("A description of the access control policy."),
+        verbose_name=_("Description"),
     )
     
     row_policy = models.ForeignKey(
         to=RowPolicy,
         on_delete=models.CASCADE,
         related_name='policies',
-        help_text=_("The row-level policy associated with this access control policy.")
+        help_text=_("The row-level policy associated with this access control policy."),
+        verbose_name=_("Row Policy"),
     )
     
     field_policy = models.ForeignKey(
         to=FieldPolicy,
         on_delete=models.CASCADE,
         related_name='policies',
-        help_text=_("The field-level policy associated with this access control policy.")
+        help_text=_("The field-level policy associated with this access control policy."),
+        verbose_name=_("Field Policy"),
     )
 
     users = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name='access_control_policies',
         blank=True,
-        help_text=_("Users assigned to this access control policy.")
+        help_text=_("Users assigned to this access control policy."),
+        verbose_name=_("Users"),
     )
 
     groups = models.ManyToManyField(
         Group,
         related_name='access_control_policies',
         blank=True,
-        help_text=_("Groups assigned to this access control policy.")
+        help_text=_("Groups assigned to this access control policy."),
+        verbose_name=_("Groups"),
     )
 
     global_permissions = models.ManyToManyField(
         Permission,
         related_name='access_control_policies',
         blank=True,
-        help_text=_("Global permissions applied by this policy.")
+        help_text=_("Global permissions applied by this policy."),
+        verbose_name=_("Global Permissions"),
     )
     
     def __str__(self):
-        return f"{self.name}"    
+        return f"{self.name}"
+
+    @property
+    def number_of_users(self) -> int:
+        """Returns the total number of users assigned to this policy, including those in groups."""
+        return self.get_users().count()
     
     @staticmethod
     def get_policies_for_model(model: models.Model):
@@ -158,8 +205,15 @@ class Policy(
         if self.row_policy_id:
             for rule in self.row_policy.rules.all():
                 try:
+                    content = RowPolicyRuleContent.model_validate(rule.rule)
                     row_permissions.append(
-                        RowPolicyRuleContent.model_validate(rule.rule)
+                        content.model_copy(
+                            update={
+                                "permissions": list(
+                                    rule.permissions.values_list("codename", flat=True)
+                                )
+                            }
+                        )
                     )
                 except Exception:
                     continue

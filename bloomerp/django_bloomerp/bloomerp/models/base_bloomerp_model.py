@@ -1,10 +1,12 @@
+from django.utils.translation import gettext_lazy as _
+import json
 from enum import Enum
 
 from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
-from pydantic import BaseModel, Field
 from typing import Optional
 
+from bloomerp.models.definition import BaseLayout, FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.mixins.absolute_url_model_mixin import AbsoluteUrlModelMixin
 from bloomerp.models.mixins.avatar_model_mixin import AvatarModelMixin
 from bloomerp.models.mixins.string_search_model_mixin import StringSearchModelMixin
@@ -12,22 +14,6 @@ from bloomerp.models.mixins.timestamp_model_mixin import TimestampModelMixin
 from bloomerp.models.mixins.user_stamp_model_mixin import UserStampModelMixin
 from bloomerp.models.mixins.uuid_model_mixin import UuidModelMixin
 from bloomerp.permissions.definition import BloomerpPermission
-
-
-class LayoutItem(BaseModel):
-    id: int | str
-    colspan: int = 1
-    config: dict = Field(default_factory=dict)
-
-
-class LayoutRow(BaseModel):
-    columns: int
-    items: list[LayoutItem] = Field(default_factory=list)
-    title: Optional[str] = None
-
-
-class FieldLayout(BaseModel):
-    rows: list[LayoutRow] = Field(default_factory=list)
 
 class BloomerpModel(
     UuidModelMixin,
@@ -39,6 +25,8 @@ class BloomerpModel(
     models.Model,
 ):
     class Meta:
+        verbose_name = _("Bloomerp Model")
+        verbose_name_plural = _("Bloomerp Models")
         abstract = True
         default_permissions = BloomerpPermission.to_tuple()
     

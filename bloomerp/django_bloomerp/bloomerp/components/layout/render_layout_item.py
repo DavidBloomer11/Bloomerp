@@ -3,25 +3,28 @@
 import json
 
 from django.http import HttpRequest, HttpResponse
+from django.template.loader import render_to_string
 from django.urls import reverse
 from bloomerp.models.application_field import ApplicationField
+from bloomerp.models.base_bloomerp_model import LayoutItem
 from bloomerp.models.forms.form import Form
-from bloomerp.models.users.user_create_view_preference import UserCreateViewPreference
-from bloomerp.models.users.user_detail_view_preference import UserDetailViewPreference
+from bloomerp.models.users.user_object_layout_preference import UserObjectLayoutPreference
 from bloomerp.models.workspaces.tile import Tile
 from bloomerp.models.workspaces.workspace import Workspace
 from bloomerp.router import router
 
 from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import get_object_or_404, render
-from bloomerp.forms.model_form import bloomerp_modelform_factory
-from bloomerp.services.create_view_services import get_addable_fields
-from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
+from bloomerp.forms.model_form import (
+    bloomerp_modelform_factory,
+    get_model_form_application_fields,
+)
+from bloomerp.permissions.manager import UserPolicyManager, create_permission_str
 from bloomerp.services.sectioned_layout_services import (
     build_crud_layout_field_context,
     get_object_field_value,
 )
-from bloomerp.services.workspace_services import render_tile_to_string
+from bloomerp.services.workspace_services import build_workspace_layout_item
 
 # TODO: Permission checks and caching required
 def _tile(request: HttpRequest, content_type: ContentType) -> HttpResponse:
@@ -29,44 +32,34 @@ def _tile(request: HttpRequest, content_type: ContentType) -> HttpResponse:
     if not tile_id:
         return HttpResponse(status=404)
 
-    tile = Tile.objects.get(id=tile_id)
+    tile = get_object_or_404(Tile, id=tile_id)
     try:
         colspan = max(1, int(request.GET.get("colspan", 1)))
     except (TypeError, ValueError):
         colspan = 1
-    try:
-        max_cols = max(1, int(request.GET.get("max_cols", 4)))
-    except (TypeError, ValueError):
-        max_cols = 4
-
-    error = False
-    try:
-        content = render_tile_to_string(tile, request)
-    except Exception as e:
-        content = e
-        error = True
-
-    context = {
-        "icon": tile.icon,
-        "title": tile.name,
-        "description": tile.description,
-        "content": content,
-        "tile_id": tile.id,
-        "colspan": colspan,
-        "max_cols": max_cols,
-        "tile_type": tile.type.lower(),
-        "tile_search_keywords": tile.get_type_display(),
-        "update_url" : reverse(
-            "tiles_detail_update_tile",
-            kwargs={
-                "pk" : tile_id
-            }
-        )
-    }
-    return render(request, "components/workspaces/render_workspace_tile.html", context=context)
+    item = build_workspace_layout_item(
+        tile=tile,
+        request=request,
+        colspan=colspan,
+    )
+    return render(
+        request,
+        "cotton/features/layout/item.html",
+        context={"item": item},
+    )
 
 
-def _get_request_layout_config(request: HttpRequest) -> dict:
+def _get_request_layout_config(request: HttpRequest, content_type: ContentType) -> dict:
+    layout_object_id = request.GET.get("layout_object_id")
+    field_id = request.GET.get("field_id")
+    layout_model = content_type.model_class()
+    if layout_object_id and field_id and layout_model in {Form, UserObjectLayoutPreference}:
+        layout_object = get_object_or_404(layout_model, pk=layout_object_id)
+        for row in layout_object.layout_obj.rows:
+            for item in row.items:
+                if str(item.id) == field_id:
+                    return item.config if isinstance(item.config, dict) else {}
+
     try:
         config = json.loads(request.GET.get("config", "{}"))
     except json.JSONDecodeError:
@@ -74,10 +67,30 @@ def _get_request_layout_config(request: HttpRequest) -> dict:
     return config if isinstance(config, dict) else {}
 
 
+def _get_layout_item(request: HttpRequest, content_type: ContentType, field_id: str) -> LayoutItem | None:
+    layout_object_id = request.GET.get("layout_object_id")
+    layout_model = content_type.model_class()
+    if not layout_object_id or layout_model not in {Form, UserObjectLayoutPreference}:
+        return None
+
+    layout_object = get_object_or_404(layout_model, pk=layout_object_id)
+    return next(
+        (
+            item
+            for row in layout_object.layout_obj.rows
+            for item in row.items
+            if str(item.id) == field_id
+        ),
+        None,
+    )
+
+
 def _render_application_field(request: HttpRequest, content_type: ContentType) -> HttpResponse:
-    model_content_type_id = request.GET.get("content_type_id")
+    model_content_type_id = request.GET.get(
+        "target_content_type_id"
+    ) or request.GET.get("content_type_id")
     if not model_content_type_id:
-        return HttpResponse("Missing content_type_id", status=400)
+        return HttpResponse("Missing target_content_type_id", status=400)
 
     model_content_type = get_object_or_404(ContentType, id=model_content_type_id)
     model = model_content_type.model_class()
@@ -94,6 +107,7 @@ def _render_application_field(request: HttpRequest, content_type: ContentType) -
     if object_id:
         context = _build_detail_render_context(
             request=request,
+            content_type=content_type,
             model=model,
             application_field=application_field,
             object_id=object_id,
@@ -109,37 +123,55 @@ def _render_application_field(request: HttpRequest, content_type: ContentType) -
     if isinstance(context, HttpResponse):
         return context
 
-    context["colspan"] = request.GET.get("colspan", 1)
+    layout_item = _get_layout_item(request, content_type, field_id)
+    config = layout_item.config if layout_item is not None else context["config"]
+    item = LayoutItem(
+        id=application_field.pk,
+        colspan=layout_item.colspan if layout_item is not None else request.GET.get("colspan", 1),
+        config=config,
+        label=context["display_label"],
+        content=render_to_string("inclusion_tags/layout_field_content.html", context, request=request),
+        component_name="detail-view-value",
+        edit_url=(
+            reverse(
+                "components_field_display_options",
+                kwargs={"application_field_id": application_field.pk},
+            )
+            + f"?layout_object_content_type_id={content_type.pk}&layout_object_id={request.GET.get('layout_object_id')}"
+            if layout_item is not None and application_field.get_field_type_enum().value.field_display_options
+            else None
+        ),
+    )
     if "non_required_fields_visible" in request.GET:
-        context["non_required_fields_visible"] = request.GET.get("non_required_fields_visible")
-    return render(request, "inclusion_tags/layout_field.html", context)
+        item.is_visible = request.GET.get("non_required_fields_visible") == "true" or context["is_required"] or bool(context["errors"])
+    return render(
+        request,
+        "cotton/features/layout/item.html",
+        {"item": item, "layout_edit_mode": True},
+    )
 
 
 def _build_create_render_context(*, request: HttpRequest, content_type: ContentType, model, application_field: ApplicationField):
-    manager = UserPermissionManager(request.user)
+    manager = UserPolicyManager(request.user)
     if not manager.has_global_permission(
         model,
         create_permission_str(model, "add"),
     ):
         return HttpResponse("Permission denied", status=403)
 
-    field_type = application_field.get_field_type_enum().value
-    addable_fields = list(get_addable_fields(content_type=content_type, user=request.user))
-    allowed_field_names = [field.field for field in addable_fields]
-    if field_type.allow_in_model and application_field.field not in allowed_field_names:
+    accessible_fields = manager.get_accessible_fields(
+        content_type,
+        create_permission_str(model, "add"),
+    )
+    form_application_fields = get_model_form_application_fields(
+        model,
+        accessible_fields,
+    )
+    allowed_field_names = list(
+        form_application_fields.values_list("field", flat=True)
+    )
+    if application_field.field not in allowed_field_names:
         return HttpResponse("Permission denied", status=403)
-
-    if not field_type.allow_in_model:
-        if not field_type.editable_without_form_field:
-            return HttpResponse("Permission denied", status=403)
-        if not manager.has_field_permission(application_field, create_permission_str(model, "add")):
-            return HttpResponse("Permission denied", status=403)
-        return build_crud_layout_field_context(
-            application_field=application_field,
-            value=None,
-            can_edit=True,
-            layout_config=_get_request_layout_config(request),
-        )
 
     form_class = bloomerp_modelform_factory(model_cls=model, fields=allowed_field_names)
     form = form_class()
@@ -149,28 +181,45 @@ def _build_create_render_context(*, request: HttpRequest, content_type: ContentT
     return build_crud_layout_field_context(
         application_field=application_field,
         bound_field=form[application_field.field],
-        layout_config=_get_request_layout_config(request),
+        layout_config=_get_request_layout_config(request, content_type),
     )
 
 
-def _build_detail_render_context(*, request: HttpRequest, model, application_field: ApplicationField, object_id: str):
-    permission_manager = UserPermissionManager(request.user)
+def _build_detail_render_context(
+    *,
+    request: HttpRequest,
+    content_type: ContentType,
+    model,
+    application_field: ApplicationField,
+    object_id: str,
+):
+    permission_manager = UserPolicyManager(request.user)
     view_permission = create_permission_str(model, "view")
     allowed_queryset = permission_manager.get_queryset(model, view_permission)
     obj = get_object_or_404(allowed_queryset, pk=object_id)
+    viewable_fields = permission_manager.get_accessible_fields_for_object(
+        obj,
+        view_permission,
+    )
+    if not viewable_fields.filter(pk=application_field.pk).exists():
+        return HttpResponse("Permission denied", status=403)
+
+    changeable_fields = permission_manager.get_accessible_fields_for_object(
+        obj,
+        create_permission_str(model, "change"),
+    )
     return build_crud_layout_field_context(
         application_field=application_field,
         value=get_object_field_value(obj=obj, application_field=application_field),
-        can_edit=permission_manager.has_field_permission(application_field, create_permission_str(model, "change")),
-        layout_config=_get_request_layout_config(request),
+        can_edit=changeable_fields.filter(pk=application_field.pk).exists(),
+        layout_config=_get_request_layout_config(request, content_type),
     )
 
 
 items = {
     Workspace: _tile,
     Form: _render_application_field,
-    UserDetailViewPreference: _render_application_field,
-    UserCreateViewPreference: _render_application_field,
+    UserObjectLayoutPreference: _render_application_field,
 }
 
 

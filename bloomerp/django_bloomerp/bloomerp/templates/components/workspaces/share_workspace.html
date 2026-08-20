@@ -1,3 +1,4 @@
+{% load i18n %}
 {% load crispy_forms_tags %}
 
 <div class="space-y-3">
@@ -11,10 +12,10 @@
 
         <div>
             <div class="mb-1 text-sm font-medium text-slate-700">
-                <c-i18n.blocktrans>Share workspace</c-i18n.blocktrans>
+                {% blocktrans %}Share workspace{% endblocktrans %}
             </div>
             <c-ui.text.muted class="text-xs">
-                <c-i18n.blocktrans>Only you can manage who has access to this workspace.</c-i18n.blocktrans>
+                {% blocktrans %}Only you can manage who has access to this workspace.{% endblocktrans %}
             </c-ui.text.muted>
         </div>
 
@@ -32,13 +33,13 @@
 
         {% if success %}
             <div class="text-sm text-emerald-600">
-                <c-i18n.blocktrans>Workspace sharing updated.</c-i18n.blocktrans>
+                {% blocktrans %}Workspace sharing updated.{% endblocktrans %}
             </div>
         {% endif %}
 
         <div class="flex justify-end">
             <button type="submit" class="btn btn-sm btn-primary">
-                <c-i18n.blocktrans>Save</c-i18n.blocktrans>
+                {% blocktrans %}Save{% endblocktrans %}
             </button>
         </div>
     </form>
