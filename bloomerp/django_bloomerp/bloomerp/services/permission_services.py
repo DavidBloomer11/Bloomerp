@@ -26,8 +26,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import Permission
 from typing import Literal, Type
 from django.db.models import Q
-from bloomerp.field_types.lookups import Lookup, resolve_address_component_lookup
-from bloomerp.model_fields.address_field import resolve_address_component_path
+from bloomerp.field_types.lookups import Lookup
+from bloomerp.field_types.types import FieldType
 from django.core.exceptions import FieldDoesNotExist
 from pydantic import ValidationError as PydanticValidationError
 
@@ -223,21 +223,24 @@ class UserPermissionManager:
         if isinstance(field_path, str) and "__" in field_path:
             field_name = field_path
 
-        address_path = resolve_address_component_path(
+        structured_path = FieldType.resolve_structured_path(
             application_field.content_type.model_class(),
             field_name,
         )
-        if address_path:
-            base_path, component = address_path
-            address_lookup = resolve_address_component_lookup(component, operator_str)
-            if not address_lookup:
+        if structured_path:
+            base_path, component, structured_field_type = structured_path
+            structured_lookup = structured_field_type.resolve_structured_lookup(
+                component,
+                operator_str,
+            )
+            if not structured_lookup:
                 return None
 
-            django_lookup = address_lookup.value.django_representation
-            exclude = address_lookup in {Lookup.NOT_EQUALS, Lookup.NOT_IN}
-            if address_lookup == Lookup.NOT_EQUALS:
+            django_lookup = structured_lookup.value.django_representation
+            exclude = structured_lookup in {Lookup.NOT_EQUALS, Lookup.NOT_IN}
+            if structured_lookup == Lookup.NOT_EQUALS:
                 django_lookup = "exact"
-            elif address_lookup == Lookup.NOT_IN:
+            elif structured_lookup == Lookup.NOT_IN:
                 django_lookup = "in"
 
             normalized_value = self._normalize_lookup_value(

@@ -1135,15 +1135,3 @@ ADDRESS_COUNTRY_LOOKUPS = [
 def get_address_component_lookups(component: str) -> list[Lookup]:
     """Return the supported lookups for a structured address component."""
     return ADDRESS_COUNTRY_LOOKUPS if component == "country" else TEXT_LOOKUPS
-
-
-def resolve_address_component_lookup(component: str, operator: str) -> Lookup | None:
-    """Resolve an address lookup by id, Django representation, or alias."""
-    for lookup in get_address_component_lookups(component):
-        if operator == lookup.value.id:
-            return lookup
-        if operator == lookup.value.django_representation:
-            return lookup
-        if operator in (lookup.value.aliases or []):
-            return lookup
-    return None

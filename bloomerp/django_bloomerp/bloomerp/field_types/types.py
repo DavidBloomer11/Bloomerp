@@ -2,7 +2,7 @@ from dataclasses import dataclass, field as dataclass_field
 
 from bloomerp.field_types.dataview_value_functions import render_foreign_key_dataview_value, render_generic_relation_value, render_m2m_dataview_value
 from bloomerp.field_types.display_options import LABEL_OPTION, FieldDisplayOption
-from bloomerp.field_types.lookups import BOOLEAN_LOOKUPS, DATE_LOOKUPS, NUMERIC_LOOKUPS, ONE_TO_MANY_LOOKUPS, TEXT_LOOKUPS, TIME_LOOKUPS, WEEK_LOOKUPS, Lookup
+from bloomerp.field_types.lookups import ADDRESS_COUNTRY_LOOKUPS, BOOLEAN_LOOKUPS, DATE_LOOKUPS, NUMERIC_LOOKUPS, ONE_TO_MANY_LOOKUPS, TEXT_LOOKUPS, TIME_LOOKUPS, WEEK_LOOKUPS, Lookup
 from bloomerp.field_types.options import AUTO_NOW_ADD_FIELD_OPTION, AUTO_NOW_FIELD_OPTION, BLANK_FIELD_OPTION, COMMON_CHOICE_FIELD_OPTIONS, COMMON_FIELD_OPTIONS, COMMON_RELATION_FIELD_OPTIONS, COMMON_TEXT_FIELD_OPTIONS, DB_INDEX_FIELD_OPTION, DECIMAL_PLACES_FIELD_OPTION, DEFAULT_FIELD_OPTION, HELP_TEXT_FIELD_OPTION, MAX_DIGITS_FIELD_OPTION, NULL_FIELD_OPTION, ON_DELETE_FIELD_OPTION, PROPERTY_EXPRESSION, RELATED_NAME_FIELD_OPTION, TO_FIELD_OPTION, UNIQUE_FIELD_OPTION, UPLOAD_TO_FIELD_OPTION, VERBOSE_NAME_FIELD_OPTION, FieldOption
 from bloomerp.form_fields.address_field import AddressFormField
 from bloomerp.form_fields.behavior_field import BehaviorField
@@ -19,7 +19,7 @@ from bloomerp.model_fields.one_to_one_user_field import OneToOneUserField
 from bloomerp.model_fields.phone_number_field import PhoneNumberField
 from bloomerp.model_fields.user_field import UserField
 from bloomerp.model_fields.week_field import WeekField
-from bloomerp.widgets.address_widget import AddressWidget
+from bloomerp.widgets.address_widget import ADDRESS_COMPONENTS, AddressWidget
 from bloomerp.widgets.behavior_builder_widget import BehaviorBuilderWidget
 from bloomerp.widgets.code_editor_widget import CodeEditorWidget
 from bloomerp.widgets.foreign_field_widget import ForeignFieldWidget
@@ -196,6 +196,7 @@ class FieldTypeDefinition:
     editable_without_form_field: bool = False
 
     lookups: list[Lookup] = dataclass_field(default_factory=list)
+    structured_lookups: dict[str, list[Lookup]] = dataclass_field(default_factory=dict)
     allow_in_model: bool = True
 
     # Field options
@@ -416,6 +417,10 @@ class FieldType(Enum):
         form_field_cls=AddressFormField,
         widget_cls=AddressWidget,
         lookups=[Lookup.ADDRESS_ADVANCED],
+        structured_lookups={
+            component: ADDRESS_COUNTRY_LOOKUPS if component == "country" else TEXT_LOOKUPS
+            for component, _label, _autocomplete in ADDRESS_COMPONENTS
+        },
         field_options=[
             NULL_FIELD_OPTION,
             BLANK_FIELD_OPTION,
@@ -1081,6 +1086,52 @@ class FieldType(Enum):
         for lookup in self.lookups:
             if lookup.value.id == lookup_id:
                 return lookup
+        return None
+
+    def resolve_structured_lookup(self, component: str, operator: str) -> Optional[Lookup]:
+        """Resolve a nested structured-field lookup by id, representation, or alias."""
+        for lookup in self.value.structured_lookups.get(component, []):
+            if operator == lookup.value.id:
+                return lookup
+            if operator == lookup.value.django_representation:
+                return lookup
+            if operator in (lookup.value.aliases or []):
+                return lookup
+        return None
+
+    @classmethod
+    def resolve_structured_path(
+        cls,
+        model_cls: type[models.Model] | None,
+        path: str,
+    ) -> tuple[str, str, "FieldType"] | None:
+        """Resolve a model path ending in a declared structured-field component."""
+        if model_cls is None or not path:
+            return None
+
+        parts = [part for part in path.split("__") if part]
+        if len(parts) < 2:
+            return None
+
+        current_model = model_cls
+        for index, part in enumerate(parts[:-1]):
+            try:
+                model_field = current_model._meta.get_field(part)
+            except Exception:
+                return None
+
+            if index == len(parts) - 2:
+                field_type = cls.from_model_field_cls(model_field.__class__)
+                if field_type and parts[-1] in field_type.value.structured_lookups:
+                    return "__".join(parts[:-1]), parts[-1], field_type
+                return None
+
+            if not getattr(model_field, "is_relation", False):
+                return None
+            current_model = getattr(model_field, "related_model", None)
+            if current_model is None:
+                return None
+
         return None
 
     def get_widget_cls(self) -> Optional[Type[Widget]]:
