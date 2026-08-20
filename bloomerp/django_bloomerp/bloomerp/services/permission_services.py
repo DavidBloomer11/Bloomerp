@@ -10,9 +10,7 @@ Functions:
 """Services regarding permissions"""
 from django.apps import apps
 from django.db import models
-from django.db.models import Model, TextField
-from django.db.models.fields.json import KeyTextTransform
-from django.db.models.functions import Cast
+from django.db.models import Model
 from bloomerp.models.base_bloomerp_model import BloomerpModel
 from bloomerp.models.users.user import AbstractBloomerpUser
 from django.db.models.query import QuerySet
@@ -27,7 +25,6 @@ from django.contrib.auth.models import Permission
 from typing import Literal, Type
 from django.db.models import Q
 from bloomerp.field_types.lookups import Lookup
-from bloomerp.field_types.types import FieldType
 from django.core.exceptions import FieldDoesNotExist
 from pydantic import ValidationError as PydanticValidationError
 
@@ -158,41 +155,6 @@ class UserPermissionManager:
             .distinct()
         )
 
-    def _resolve_lookup(self, application_field: ApplicationField, operator_str: str) -> Lookup | None:
-        if not application_field or not operator_str:
-            return None
-
-        field_type = application_field.get_field_type_enum()
-        lookup_enum = field_type.get_lookup_by_id(operator_str)
-        if lookup_enum:
-            return lookup_enum
-
-        for lookup in field_type.lookups:
-            if lookup.value.django_representation == operator_str:
-                return lookup
-            if operator_str in (lookup.value.aliases or []):
-                return lookup
-
-        return None
-
-    def _normalize_lookup_value(self, lookup: str, value, application_field: ApplicationField | None = None):
-        normalized_lookup = str(lookup or "").strip().lower()
-
-        if normalized_lookup == "in" and isinstance(value, str):
-            return [item.strip() for item in value.split(",") if item.strip()]
-
-        if application_field and application_field.field_type in {"BooleanField", "NullBooleanField"}:
-            if isinstance(value, str):
-                return value.lower() in {"true", "1", "yes", "on"}
-            return bool(value)
-
-        if normalized_lookup == "isnull":
-            if isinstance(value, str):
-                return value.lower() in {"true", "1", "yes"}
-            return bool(value)
-
-        return value
-
     def _normalize_row_policy_rule_content(self, rule: dict) -> dict:
         try:
             return RowPolicyRuleContent.model_validate(rule).model_dump(exclude_none=True)
@@ -223,57 +185,30 @@ class UserPermissionManager:
         if isinstance(field_path, str) and "__" in field_path:
             field_name = field_path
 
-        structured_path = FieldType.resolve_structured_path(
-            application_field.content_type.model_class(),
-            field_name,
-        )
-        if structured_path:
-            base_path, component, structured_field_type = structured_path
-            structured_lookup = structured_field_type.resolve_structured_lookup(
-                component,
-                operator_str,
-            )
-            if not structured_lookup:
-                return None
-
-            django_lookup = structured_lookup.value.django_representation
-            exclude = structured_lookup in {Lookup.NOT_EQUALS, Lookup.NOT_IN}
-            if structured_lookup == Lookup.NOT_EQUALS:
-                django_lookup = "exact"
-            elif structured_lookup == Lookup.NOT_IN:
-                django_lookup = "in"
-
-            normalized_value = self._normalize_lookup_value(
-                django_lookup,
-                value,
-                application_field,
-            )
-            expression = Cast(
-                KeyTextTransform(component, base_path),
-                output_field=TextField(),
-            )
-            lookup_cls = expression.get_lookup(django_lookup)
-            if lookup_cls is None:
-                return None
-            condition = Q(lookup_cls(expression, normalized_value))
-            return ~condition if exclude else condition
-
-        if operator_str.startswith("__"):
-            filter_key = operator_str.lstrip("_")
-            advanced_lookup = filter_key.rsplit("__", 1)[-1] if "__" in filter_key else ""
-            return Q(**{filter_key: self._normalize_lookup_value(advanced_lookup, value, application_field)})
-
-        lookup_enum = self._resolve_lookup(application_field, operator_str)
-        django_lookup = (lookup_enum.value.django_representation or "").strip() if lookup_enum else operator_str
-
+        field_type = application_field.get_field_type_enum()
+        lookup_enum = field_type.get_lookup_by_id(operator_str)
         if lookup_enum == Lookup.EQUALS_USER or str(value) == "$user":
             return Q(**{field_name: self.user})
 
-        if lookup_enum == Lookup.NOT_EQUALS:
-            return ~Q(**{field_name: value})
+        from bloomerp.utils.filters import dynamic_filterset_factory, resolve_filter_key
 
-        filter_key = f"{field_name}__{django_lookup}" if django_lookup else field_name
-        return Q(**{filter_key: self._normalize_lookup_value(django_lookup, value, application_field)})
+        model = application_field.content_type.model_class()
+        filter_key = resolve_filter_key(
+            model,
+            application_field,
+            field_name,
+            operator_str,
+        )
+        if filter_key is None:
+            return None
+
+        filterset = dynamic_filterset_factory(model, {filter_key: value})(
+            data={filter_key: value},
+            queryset=model.objects.all(),
+        )
+        if not filterset.is_valid():
+            return None
+        return Q(pk__in=filterset.qs.values("pk"))
 
     def build_q_for_rule_dict(self, rule_dict: dict) -> Q | None:
         if not isinstance(rule_dict, dict):

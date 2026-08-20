@@ -14,6 +14,7 @@ from bloomerp.models.definition import (
 )
 from bloomerp.services.permission_services import UserPermissionManager
 from bloomerp.services.permission_services import ensure_model_permissions
+from bloomerp.permissions.compilers import DjangoQPermissionCompiler, PythonPermissionCompiler
 from bloomerp.utils.api import generate_model_viewset_class, generate_serializer
 from bloomerp.api.base import BloomerpModelViewSet
 from bloomerp.views.api.docs.schema import filter_openapi_schema_for_request
@@ -91,6 +92,31 @@ class TestAddressRowPolicy(BaseBloomerpModelTestCase):
             [belgian_record],
             transform=lambda value: value,
             ordered=False,
+        )
+
+        # 4. Verify the production queryset compiler uses the same generated filter.
+        application_fields = {str(address_field.id): address_field}
+        compiled_q = DjangoQPermissionCompiler(
+            [],
+            user=self.normal_user,
+        ).compile_condition(rule["conditions"][0], application_fields)
+        self.assertIsNotNone(compiled_q)
+        self.assertQuerySetEqual(
+            self.AddressPolicyModel.objects.filter(compiled_q),
+            [belgian_record],
+            transform=lambda value: value,
+            ordered=False,
+        )
+
+        # 5. Verify unsaved-candidate checks can traverse the address dictionary.
+        condition = RowPolicyRuleCondition.model_validate(rule["conditions"][0])
+        candidate = self.AddressPolicyModel(
+            name="New Belgian customer",
+            address={"city": "Ghent", "country": "BE"},
+        )
+        evaluator = PythonPermissionCompiler([], user=self.normal_user)
+        self.assertTrue(
+            evaluator._evaluate_condition(condition, candidate, application_fields)
         )
 
 class TestUserPermissionManager(BaseBloomerpModelTestCase):
