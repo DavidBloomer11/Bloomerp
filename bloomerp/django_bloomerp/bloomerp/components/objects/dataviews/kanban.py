@@ -1,6 +1,7 @@
 from bloomerp.models import ApplicationField
 from bloomerp.router import router
 from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
+from bloomerp.services.related_value_services import get_allowed_related_object
 
 
 from django.contrib.contenttypes.models import ContentType
@@ -60,8 +61,11 @@ def kanban_move_card(request: HttpRequest, content_type_id: int) -> HttpResponse
     else:
         try:
             if model_field.many_to_one or model_field.one_to_one:
-                related_model = model_field.remote_field.model
-                related_obj = related_model.objects.get(pk=normalized_value)
+                related_obj = get_allowed_related_object(
+                    application_field,
+                    request.user,
+                    normalized_value,
+                )
                 setattr(obj, application_field.field, related_obj)
             else:
                 typed_value = model_field.to_python(normalized_value)

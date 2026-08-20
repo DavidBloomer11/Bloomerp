@@ -5,7 +5,7 @@ from typing import Any, Type
 
 from django import forms
 from django.core.exceptions import ValidationError
-from django.db import transaction
+from django.db import models, transaction
 from django.db.models import Model, QuerySet
 from django.utils.datastructures import MultiValueDict
 
@@ -85,9 +85,36 @@ class BloomerpModelForm(forms.ModelForm):
     bloomerp_read_only_field_names: frozenset[str] = frozenset()
 
     def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user", None)
         self._structured_values_saved = False
         self._deserialized_data: dict[str, Any] | None = None
         super().__init__(*args, **kwargs)
+        if self.user is not None:
+            from bloomerp.services.related_value_services import (
+                get_allowed_related_queryset,
+            )
+
+            application_fields = {
+                field.field: field
+                for field in ApplicationField.get_for_model(self._meta.model).filter(
+                    field__in=[
+                        model_field.name
+                        for model_field in self._meta.model._meta.fields
+                        if isinstance(
+                            model_field,
+                            (models.ForeignKey, models.OneToOneField),
+                        )
+                        and model_field.name in self.fields
+                    ],
+                )
+            }
+            for field_name, application_field in application_fields.items():
+                form_field = self.fields.get(field_name)
+                if hasattr(form_field, "queryset"):
+                    form_field.queryset = get_allowed_related_queryset(
+                        application_field,
+                        self.user,
+                    )
 
     @classmethod
     def prepare_initial_data(

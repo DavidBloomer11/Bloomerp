@@ -192,6 +192,7 @@ class LayoutModelFormMixin(ApplicationFieldLayoutFormMixin, ABC):
             files=self.request.FILES if is_post else None,
             instance=instance,
             initial=initial,
+            user=self.get_user(),
         )
 
         if self.apply_permissions:
