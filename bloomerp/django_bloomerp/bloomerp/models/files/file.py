@@ -1,27 +1,45 @@
-from django.core.files.uploadedfile import UploadedFile
-from django.utils.translation import gettext_lazy as _
-from typing import Iterable
-
-from django.db import models
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes.fields import GenericForeignKey
 import os
 import uuid
+from typing import Iterable
+
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+from django.core.files.uploadedfile import UploadedFile
+from django.db import models
+from django.http import HttpRequest, HttpResponse
+from django.urls import reverse
+from django.utils.translation import gettext_lazy as _, gettext_noop
+
 from bloomerp.models.base_bloomerp_model import BloomerpModel
+from bloomerp.models.definition import BloomerpModelConfig, ObjectAction, ObjectModalAction
 from bloomerp.models.mixins.string_search_model_mixin import StringSearchModelMixin
 from bloomerp.models.mixins.timestamp_model_mixin import TimestampModelMixin
 from bloomerp.models.mixins.user_stamp_model_mixin import UserStampModelMixin
 from bloomerp.services.file_services import ensure_folder_hierarchy_for_object
-from bloomerp.models.definition import BloomerpModelConfig, ObjectHTML
 
 
-def _can_manage_file(request, file: "File") -> bool:
+def _can_view_file(request: HttpRequest, file: "File") -> bool:
+    from bloomerp.services.file_permission_services import user_can_view_file
+
+    return file.persisted and bool(file.file) and user_can_view_file(request, file)
+
+
+def _view_file(request: HttpRequest, file: "File") -> HttpResponse:
+    """Redirect an HTMX object action to the stored file URL."""
+    if not _can_view_file(request, file):
+        return HttpResponse(status=403)
+    response = HttpResponse(status=204)
+    response["HX-Redirect"] = file.url
+    return response
+
+
+def _can_manage_file(request: HttpRequest, file: "File") -> bool:
     from bloomerp.services.file_permission_services import user_can_mutate_file
 
     return file.persisted and user_can_mutate_file(request, file, ("change", "add"))
 
 
-def _can_delete_file(request, file: "File") -> bool:
+def _can_delete_file(request: HttpRequest, file: "File") -> bool:
     from bloomerp.services.file_permission_services import user_can_mutate_file
 
     return file.persisted and user_can_mutate_file(request, file, ("delete",))
@@ -42,14 +60,41 @@ class File(
     bloomerp_config = BloomerpModelConfig(
         string_search_fields=["name"],
         object_actions=[
-            ObjectHTML(template_name="models/files/view_download_actions.html"),
-            ObjectHTML(
-                template_name="models/files/manage_actions.html",
-                should_render_func=_can_manage_file,
+            ObjectAction(
+                id="view_file",
+                label=gettext_noop("View"),
+                execution_func=_view_file,
+                should_render_func=_can_view_file,
             ),
-            ObjectHTML(
-                template_name="models/files/delete_action.html",
+            ObjectModalAction(
+                id="rename_file",
+                label=gettext_noop("Rename"),
+                endpoint=lambda file: reverse(
+                    "components_files_rename",
+                    kwargs={"file_id": file.pk},
+                ),
+                should_render_func=_can_manage_file,
+                modal_title=gettext_noop("Rename file"),
+            ),
+            ObjectModalAction(
+                id="move_file",
+                label=gettext_noop("Move"),
+                endpoint=lambda file: reverse(
+                    "components_files_move",
+                    kwargs={"file_id": file.pk},
+                ),
+                should_render_func=_can_manage_file,
+                modal_title=gettext_noop("Move file"),
+            ),
+            ObjectModalAction(
+                id="delete_file",
+                label=gettext_noop("Delete"),
+                endpoint=lambda file: reverse(
+                    "components_files_delete",
+                    kwargs={"file_id": file.pk},
+                ),
                 should_render_func=_can_delete_file,
+                modal_title=gettext_noop("Delete file"),
             ),
         ],
     )
@@ -105,7 +150,7 @@ class File(
         "content_type",
         "object_id",
     )
-    folder : "FileFolder" = models.ForeignKey(
+    folder: "FileFolder" = models.ForeignKey(
         "bloomerp.FileFolder",
         on_delete=models.SET_NULL,
         null=True,

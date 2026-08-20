@@ -104,11 +104,122 @@ class TestFilesComponent(BaseBloomerpModelTestCase):
         self.client.force_login(self.admin_user)
         response = self.client.get(self.get_url())
 
-        # 2. Assert the model-defined actions are rendered.
-        self.assertContains(response, f'data-file-view="{file.pk}"', html=False)
-        self.assertContains(response, f'data-rename-file="{file.pk}"', html=False)
-        self.assertContains(response, f'data-move-file="{file.pk}"', html=False)
-        self.assertContains(response, f'data-delete-file="{file.pk}"', html=False)
+        # 2. Assert view uses a normal action and mutations load modal endpoints.
+        file_content_type = ContentType.objects.get_for_model(File)
+        view_url = reverse(
+            "components_objects_actions",
+            kwargs={
+                "content_type_id": file_content_type.pk,
+                "object_id": file.pk,
+                "action_id": "view_file",
+            },
+        )
+        self.assertContains(response, f'hx-post="{view_url}"', html=False)
+        for action in ("rename", "move", "delete"):
+            action_url = reverse(
+                f"components_files_{action}",
+                kwargs={"file_id": file.pk},
+            )
+            self.assertContains(response, f'hx-get="{action_url}"', html=False)
+        self.assertNotContains(response, f'data-rename-file="{file.pk}"', html=False)
+
+    def test_file_object_action_redirects_to_file_url(self):
+        """
+        Use case: Execute the normal View object action for a file.
+        Expected result: HTMX is redirected to the stored file URL.
+        """
+        # 1. Create a persisted file and execute its View action.
+        file = self.create_file(user=self.admin_user, file_name="contract.txt")
+        file.persisted = True
+        file.save(update_fields=["persisted"])
+        self.client.force_login(self.admin_user)
+        response = self.client.post(
+            reverse(
+                "components_objects_actions",
+                kwargs={
+                    "content_type_id": ContentType.objects.get_for_model(File).pk,
+                    "object_id": file.pk,
+                    "action_id": "view_file",
+                },
+            )
+        )
+
+        # 2. Assert the action returns an HTMX redirect.
+        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.headers["HX-Redirect"], file.url)
+
+    def test_file_modal_actions_support_get_and_post(self):
+        """
+        Use case: Rename, move, and delete a file through modal object actions.
+        Expected result: GET renders each form and POST applies each mutation.
+        """
+        # 1. Create a persisted file and an available destination folder.
+        file = self.create_file(user=self.admin_user, file_name="contract.txt")
+        file.persisted = True
+        file.save(update_fields=["persisted"])
+        destination = FileFolder.objects.create(
+            name="Archive",
+            created_by=self.admin_user,
+            updated_by=self.admin_user,
+        )
+        self.client.force_login(self.admin_user)
+
+        # 2. Load and submit the rename modal.
+        rename_url = reverse("components_files_rename", kwargs={"file_id": file.pk})
+        rename_response = self.client.get(rename_url)
+        self.assertContains(rename_response, "contract.txt")
+        self.client.post(rename_url, {"name": "renamed.txt"})
+        file.refresh_from_db()
+        self.assertEqual(file.name, "renamed.txt")
+
+        # 3. Load and submit the move modal.
+        move_url = reverse("components_files_move", kwargs={"file_id": file.pk})
+        move_response = self.client.get(move_url)
+        self.assertContains(move_response, "Archive")
+        self.client.post(move_url, {"target_folder": destination.pk})
+        file.refresh_from_db()
+        self.assertEqual(file.folder, destination)
+
+        # 4. Load and submit the delete modal.
+        delete_url = reverse("components_files_delete", kwargs={"file_id": file.pk})
+        delete_response = self.client.get(delete_url)
+        self.assertContains(delete_response, "renamed.txt")
+        self.client.post(delete_url)
+        self.assertFalse(File.objects.filter(pk=file.pk).exists())
+
+    def test_file_actions_deny_a_user_without_file_permissions(self):
+        """
+        Use case: A user without file permissions calls file action endpoints directly.
+        Expected result: View and every mutation endpoint return HTTP 403.
+        """
+        # 1. Create a persisted unlinked file and log in without file permissions.
+        file = self.create_file(user=self.admin_user, file_name="private.txt")
+        file.persisted = True
+        file.save(update_fields=["persisted"])
+        self.client.force_login(self.normal_user)
+
+        # 2. Assert the normal View action is denied.
+        view_response = self.client.post(
+            reverse(
+                "components_objects_actions",
+                kwargs={
+                    "content_type_id": ContentType.objects.get_for_model(File).pk,
+                    "object_id": file.pk,
+                    "action_id": "view_file",
+                },
+            )
+        )
+        self.assertEqual(view_response.status_code, 403)
+
+        # 3. Assert every modal mutation endpoint is denied on GET.
+        for action in ("rename", "move", "delete"):
+            response = self.client.get(
+                reverse(
+                    f"components_files_{action}",
+                    kwargs={"file_id": file.pk},
+                )
+            )
+            self.assertEqual(response.status_code, 403)
     
     def test_creating_file_with_object_creates_model_level_folder_under_module_folder(self):
         """

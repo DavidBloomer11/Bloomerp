@@ -1,13 +1,11 @@
-import json
 from urllib.parse import parse_qs
 from dataclasses import dataclass
 from pathlib import Path
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ValidationError
 from django.db.models import QuerySet
-from django.http import HttpRequest, HttpResponse, JsonResponse, QueryDict
+from django.http import HttpRequest, HttpResponse, QueryDict
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 
@@ -148,26 +146,6 @@ def _get_folder_display_name(folder: FileFolder) -> str:
             return module.localized_name
 
     return folder.name
-
-
-def _normalize_folder_label(folder: FileFolder, current_folder: FileFolder | None) -> str:
-    if current_folder and folder.parent_id == current_folder.id:
-        return _get_folder_display_name(folder)
-    return _folder_path(folder)
-
-
-def _get_folder_choices(
-    *,
-    folders: QuerySet[FileFolder],
-    current_folder: FileFolder | None,
-) -> list[dict[str, str]]:
-    return [
-        {
-            "id": str(folder.id),
-            "label": _normalize_folder_label(folder, current_folder),
-        }
-        for folder in folders.order_by("name").distinct()
-    ]
 
 
 def _get_object_scope(content_type_id: str | None, object_id: str | None):
@@ -370,73 +348,6 @@ def _build_visible_files_queryset(
     )
 
     return queryset.order_by("name")
-
-
-def _serialize_file_row(request: HttpRequest, file: File, current_folder: FileFolder | None) -> dict:
-    folder_label = (
-        _get_folder_display_name(current_folder)
-        if current_folder
-        else (_get_folder_display_name(file.folder) if file.folder_id else "Root")
-    )
-    linked_object = _get_file_linked_object(file)
-
-    return {
-        "id": str(file.id),
-        "name": file.name or str(file),
-        "kind": "file",
-        "folder_label": folder_label,
-        "size": file.size_str,
-        "datetime_updated": file.datetime_updated,
-        "content_object_label": str(linked_object) if linked_object else "Unlinked",
-        "content_object_url": getattr(linked_object, "get_absolute_url", None) if linked_object else None,
-        "content_type_label": file.content_type.name if file.content_type_id else "Unlinked",
-        "view_url": file.url if file.file else None,
-        "download_url": file.url if file.file else None,
-        "rename_allowed": file.persisted and _user_can_mutate_file(request, file, ("change", "add")),
-        "move_allowed": file.persisted and _user_can_mutate_file(request, file, ("change", "add")),
-        "delete_allowed": file.persisted and _user_can_mutate_file(request, file, ("delete",)),
-        "file": file,
-    }
-
-
-def _prepare_file_rows(
-    request: HttpRequest,
-    queryset: QuerySet[File],
-    current_folder: FileFolder | None,
-) -> list[dict]:
-    return [_serialize_file_row(request, file, current_folder) for file in queryset]
-
-
-def _prepare_file_cards(
-    request: HttpRequest,
-    queryset: QuerySet[File],
-    current_folder: FileFolder | None,
-) -> list[dict]:
-    cards: list[dict] = []
-    for file in queryset:
-        linked_object = _get_file_linked_object(file)
-        cards.append(
-            {
-                "id": str(file.id),
-                "name": file.name or str(file),
-                "size": file.size_str,
-                "updated_at": file.datetime_updated,
-                "object_label": str(linked_object) if linked_object else "Unlinked",
-                "object_url": getattr(linked_object, "get_absolute_url", None) if linked_object else None,
-                "folder_label": (
-                    _get_folder_display_name(current_folder)
-                    if current_folder
-                    else (_get_folder_display_name(file.folder) if file.folder_id else "Root")
-                ),
-                "view_url": file.url if file.file else None,
-                "download_url": file.url if file.file else None,
-                "rename_allowed": file.persisted and _user_can_mutate_file(request, file, ("change", "add")),
-                "move_allowed": file.persisted and _user_can_mutate_file(request, file, ("change", "add")),
-                "delete_allowed": file.persisted and _user_can_mutate_file(request, file, ("delete",)),
-                "file": file,
-            }
-        )
-    return cards
 
 
 def _get_model_scope_folder(content_type: ContentType | None) -> FileFolder | None:
@@ -711,28 +622,6 @@ def _render_file_browser(
     )
     navigation_items = _build_navigation_items(request=request, scope=scope, query=query)
 
-    available_move_folders = FileFolder.objects.all()
-    if linked_content_type:
-        available_move_folders = available_move_folders.filter(content_type=linked_content_type)
-    else:
-        available_move_folders = available_move_folders.filter(content_type__isnull=True)
-    if linked_object:
-        available_move_folders = available_move_folders.filter(object_id=str(linked_object.pk))
-    else:
-        available_move_folders = available_move_folders.filter(object_id__isnull=True)
-    if query or hide_ancestor_folders:
-        folder_choices = []
-    else:
-        available_move_folder_ids = [
-            folder.id
-            for folder in available_move_folders.distinct()
-            if _user_can_view_folder(request, folder)
-        ]
-        folder_choices = _get_folder_choices(
-            folders=FileFolder.objects.filter(id__in=available_move_folder_ids),
-            current_folder=current_folder,
-        )
-
     scoped_content_type_id = (
         str(linked_content_type.id)
         if linked_content_type
@@ -747,7 +636,6 @@ def _render_file_browser(
         "current_folder": current_folder,
         "scoped_content_type_id": scoped_content_type_id,
         "scoped_object_id": scoped_object_id,
-        "folder_options_json": json.dumps(folder_choices),
         "breadcrumbs": _build_scope_breadcrumbs(request, scope, hide_ancestor_folders=hide_ancestor_folders),
         "navigation_items": navigation_items,
         "can_create_folder": (
@@ -774,13 +662,11 @@ def _render_file_browser(
         "scope-content-type-id": scoped_content_type_id or "",
         "scope-object-id": scoped_object_id or "",
         "folder-id": str(current_folder.id) if current_folder else "",
-        "folder-options": json.dumps(folder_choices),
         "upload-url": reverse("components_files_upload"),
         "create-folder-url": reverse("components_files_create_folder"),
-        "move-url": reverse("components_files_move"),
-        "rename-url": reverse("components_files_rename"),
-        "delete-preview-url": reverse("components_files_delete_preview"),
-        "delete-url": reverse("components_files_delete"),
+        "move-url": reverse("components_files_move_browser_item"),
+        "rename-url": reverse("components_files_rename_folder"),
+        "delete-url": reverse("components_files_delete_folder"),
         "hide-filters": ",".join(sorted(FILE_BROWSER_RESERVED_QUERY_KEYS)),
     }
 
@@ -791,7 +677,7 @@ def _render_file_browser(
         additional_reserved_query_keys=FILE_BROWSER_RESERVED_QUERY_KEYS,
         component_id="file-dataview-container",
         component_args=component_args,
-        data_view_base_url=request.path,
+        dataview_base_url=request.path,
         before_data_view=folders_html,
     )
 
@@ -832,264 +718,3 @@ def _get_folder_descendants(folder: FileFolder) -> tuple[list[FileFolder], list[
         stack.extend(children)
 
     return folders, list(files.values())
-
-
-def _folder_accepts_file(folder: FileFolder | None, file: File) -> bool:
-    if folder is None:
-        return True
-
-    return (
-        folder.content_type_id == file.content_type_id
-        and (folder.object_id or None) == (file.object_id or None)
-    )
-
-
-@router.register(path="components/files/upload/", name="components_files_upload")
-@login_required
-def upload_files(request: HttpRequest) -> HttpResponse:
-    if request.method != "POST":
-        return HttpResponse("Method not allowed", status=405)
-
-    content_type_id = _coerce_query_value(request.POST.get("content_type_id"))
-    object_id = _coerce_query_value(request.POST.get("object_id"))
-    folder_id = _coerce_query_value(request.POST.get("folder_id"))
-
-    linked_content_type, linked_object = _get_object_scope(content_type_id, object_id)
-    files_field = _get_linked_object_files_field(linked_object) if linked_object else None
-    requested_object_id = str(linked_object.pk) if linked_object else None
-
-    if linked_object:
-        if not _check_linked_file_permission(
-            request=request,
-            linked_object=linked_object,
-            files_field=files_field,
-            operation="add",
-        ):
-            return HttpResponse(status=403)
-    elif not request.user.has_perm("bloomerp.add_file"):
-        return HttpResponse(status=403)
-
-    target_folder = _get_target_folder(folder_id)
-    if target_folder and (
-        target_folder.content_type_id != (linked_content_type.id if linked_content_type else None)
-        or (target_folder.object_id or None) != requested_object_id
-    ):
-        return HttpResponse("Selected folder has a different scope", status=400)
-
-    uploaded_files = request.FILES.getlist("files")
-    for uploaded in uploaded_files:
-        file = File.objects.create(
-            file=uploaded,
-            name=uploaded.name,
-            persisted=True,
-            content_type=linked_content_type,
-            object_id=requested_object_id,
-            folder=target_folder,
-            created_by=request.user,
-            updated_by=request.user,
-        )
-
-    return JsonResponse({"ok": True, "count": len(uploaded_files)})
-
-
-@router.register(path="components/files/folders/create/", name="components_files_create_folder")
-@login_required
-def create_file_folder(request: HttpRequest) -> HttpResponse:
-    if request.method != "POST":
-        return HttpResponse("Method not allowed", status=405)
-
-    content_type_id = _coerce_query_value(request.POST.get("content_type_id"))
-    object_id = _coerce_query_value(request.POST.get("object_id"))
-    parent_folder = _get_target_folder(_coerce_query_value(request.POST.get("parent_folder_id")))
-
-    linked_content_type, linked_object = _get_object_scope(content_type_id, object_id)
-    files_field = _get_linked_object_files_field(linked_object) if linked_object else None
-
-    if linked_object:
-        if not _check_linked_file_permission(
-            request=request,
-            linked_object=linked_object,
-            files_field=files_field,
-            operation="add",
-        ):
-            return HttpResponse(status=403)
-    elif not request.user.has_perm("bloomerp.add_filefolder"):
-        return HttpResponse(status=403)
-
-    name = (request.POST.get("name") or "").strip()
-    if not name:
-        return HttpResponse("Folder name is required", status=400)
-
-    folder_content_type = linked_content_type or (parent_folder.content_type if parent_folder else None)
-    folder_object_id = (
-        str(linked_object.pk)
-        if linked_object
-        else (parent_folder.object_id if parent_folder else None)
-    )
-
-    folder = FileFolder(
-        name=name,
-        parent=parent_folder,
-        content_type=folder_content_type,
-        object_id=folder_object_id,
-        created_by=request.user,
-        updated_by=request.user,
-    )
-    try:
-        folder.save()
-    except ValidationError as exc:
-        return HttpResponse(exc.messages[0], status=400)
-    return JsonResponse({"ok": True, "folder_id": folder.id, "name": folder.name})
-
-
-@router.register(path="components/files/move/", name="components_files_move")
-@login_required
-def move_file_browser_item(request: HttpRequest) -> HttpResponse:
-    if request.method != "POST":
-        return HttpResponse("Method not allowed", status=405)
-
-    item_type = request.POST.get("item_type")
-    target_folder = _get_target_folder(_coerce_query_value(request.POST.get("target_folder_id")))
-
-    if item_type == "file":
-        file = _get_file_for_mutation(request)
-        if not _folder_accepts_file(target_folder, file):
-            return HttpResponse("File cannot be moved into a folder with a different scope", status=400)
-        file.folder = target_folder
-        file.updated_by = request.user
-        file.save(update_fields=["folder", "updated_by"])
-        return JsonResponse({"ok": True})
-
-    if item_type == "folder":
-        folder = get_object_or_404(FileFolder, id=request.POST.get("folder_id"))
-        if not request.user.has_perm("bloomerp.change_filefolder"):
-            return HttpResponse(status=403)
-
-        if target_folder and target_folder.id == folder.id:
-            return HttpResponse("Cannot move a folder into itself", status=400)
-
-        ancestor = target_folder
-        while ancestor is not None:
-            if ancestor.id == folder.id:
-                return HttpResponse("Cannot move a folder into its own descendant", status=400)
-            ancestor = ancestor.parent
-
-        if target_folder:
-            folder.content_type = target_folder.content_type
-            folder.object_id = target_folder.object_id
-
-        folder.parent = target_folder
-        folder.updated_by = request.user
-        try:
-            folder.save()
-        except ValidationError as exc:
-            return HttpResponse(exc.messages[0], status=400)
-        return JsonResponse({"ok": True})
-
-    return HttpResponse("Unsupported item type", status=400)
-
-
-@router.register(path="components/files/rename/", name="components_files_rename")
-@login_required
-def rename_file_browser_item(request: HttpRequest) -> HttpResponse:
-    if request.method != "POST":
-        return HttpResponse("Method not allowed", status=405)
-
-    item_type = request.POST.get("item_type")
-    name = (request.POST.get("name") or "").strip()
-    if not name:
-        return HttpResponse("Name is required", status=400)
-
-    if item_type == "file":
-        try:
-            file = _get_file_for_mutation(request)
-        except PermissionError:
-            return HttpResponse(status=403)
-
-        file.name = name
-        file.updated_by = request.user
-        file.save(update_fields=["name", "updated_by"])
-        return JsonResponse({"ok": True, "name": file.name})
-
-    if item_type == "folder":
-        folder = get_object_or_404(FileFolder, id=request.POST.get("folder_id"))
-        if not request.user.has_perm("bloomerp.change_filefolder"):
-            return HttpResponse(status=403)
-
-        folder.name = name
-        folder.updated_by = request.user
-        folder.save(update_fields=["name", "updated_by"])
-        return JsonResponse({"ok": True, "name": folder.name})
-
-    return HttpResponse("Unsupported item type", status=400)
-
-
-@router.register(path="components/files/delete-preview/", name="components_files_delete_preview")
-@login_required
-def delete_file_browser_item_preview(request: HttpRequest) -> HttpResponse:
-    item_type = request.GET.get("item_type")
-
-    if item_type == "file":
-        file = get_object_or_404(File, id=request.GET.get("file_id"))
-        if not _user_can_mutate_file(request, file, ("delete",)):
-            return HttpResponse(status=403)
-        return JsonResponse({"ok": True, "files": 1, "folders": 0})
-
-    if item_type == "folder":
-        folder = get_object_or_404(FileFolder, id=request.GET.get("folder_id"))
-        descendant_folders, descendant_files = _get_folder_descendants(folder)
-        can_delete_files = all(
-            _user_can_mutate_file(request, file, ("delete",))
-            for file in descendant_files
-        )
-        can_delete_folder = request.user.has_perm("bloomerp.delete_filefolder")
-        if not (can_delete_files and can_delete_folder):
-            return HttpResponse(status=403)
-
-        return JsonResponse(
-            {
-                "ok": True,
-                "files": len(descendant_files),
-                "folders": len(descendant_folders),
-            }
-        )
-
-    return HttpResponse("Unsupported item type", status=400)
-
-
-@router.register(path="components/files/delete/", name="components_files_delete")
-@login_required
-def delete_file_browser_item(request: HttpRequest) -> HttpResponse:
-    if request.method != "POST":
-        return HttpResponse("Method not allowed", status=405)
-
-    item_type = request.POST.get("item_type")
-
-    if item_type == "file":
-        file = get_object_or_404(File, id=request.POST.get("file_id"))
-        if not _user_can_mutate_file(request, file, ("delete",)):
-            return HttpResponse(status=403)
-        file.delete()
-        return JsonResponse({"ok": True})
-
-    if item_type == "folder":
-        folder = get_object_or_404(FileFolder, id=request.POST.get("folder_id"))
-        descendant_folders, descendant_files = _get_folder_descendants(folder)
-        can_delete_files = all(
-            _user_can_mutate_file(request, file, ("delete",))
-            for file in descendant_files
-        )
-        can_delete_folder = request.user.has_perm("bloomerp.delete_filefolder")
-        if not (can_delete_files and can_delete_folder):
-            return HttpResponse(status=403)
-
-        folder.delete()
-        return JsonResponse(
-            {
-                "ok": True,
-                "files_deleted": len(descendant_files),
-                "folders_deleted": len(descendant_folders),
-            }
-        )
-
-    return HttpResponse("Unsupported item type", status=400)

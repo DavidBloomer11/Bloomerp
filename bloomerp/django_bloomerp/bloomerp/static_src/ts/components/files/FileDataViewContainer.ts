@@ -1,19 +1,12 @@
-import { BaseDataViewCell } from "../data_view_components/BaseDataViewCell";
 import { DataViewContainer } from "../data_view_components/DataViewContainer";
 import { getCsrfToken } from "@/utils/cookies";
 import { MessageType } from "../UiMessage";
 import showMessage from "@/utils/messages";
 
-type FolderOption = {
-    id: string;
-    label: string;
-};
-
 export default class FileDataViewContainer extends DataViewContainer {
     private scopeContentTypeId: string | null = null;
     private scopeObjectId: string | null = null;
     private currentFolderId: string | null = null;
-    private folderOptions: FolderOption[] = [];
     private clickHandler: ((event: MouseEvent) => void) | null = null;
 
     public override initialize(): void {
@@ -47,25 +40,11 @@ export default class FileDataViewContainer extends DataViewContainer {
         return true;
     }
 
-    protected override onCellClick(cell: BaseDataViewCell): boolean {
-        const viewLink = this.element?.querySelector<HTMLAnchorElement>(
-            `[data-file-view="${CSS.escape(cell.objectId)}"]`,
-        );
-        viewLink?.click();
-        return true;
-    }
-
     private refreshFolderState(): void {
         const folderSection = this.element?.querySelector<HTMLElement>("[data-file-browser-folders]");
         this.scopeContentTypeId = folderSection?.dataset.scopeContentTypeId || null;
         this.scopeObjectId = folderSection?.dataset.scopeObjectId || null;
         this.currentFolderId = folderSection?.dataset.currentFolderId || null;
-
-        try {
-            this.folderOptions = JSON.parse(folderSection?.dataset.folderOptions || "[]");
-        } catch {
-            this.folderOptions = [];
-        }
     }
 
     private handleClick(event: MouseEvent): void {
@@ -82,33 +61,15 @@ export default class FileDataViewContainer extends DataViewContainer {
             return;
         }
 
-        const renameFile = target.closest<HTMLElement>("[data-rename-file]");
-        if (renameFile) {
-            void this.renameItem("file", renameFile.dataset.renameFile || "", renameFile.dataset.currentName || "");
-            return;
-        }
-
         const renameFolder = target.closest<HTMLElement>("[data-rename-folder]");
         if (renameFolder) {
-            void this.renameItem("folder", renameFolder.dataset.renameFolder || "", renameFolder.dataset.currentName || "");
-            return;
-        }
-
-        const moveFile = target.closest<HTMLElement>("[data-move-file]");
-        if (moveFile) {
-            void this.promptMoveFile(moveFile.dataset.moveFile || "");
-            return;
-        }
-
-        const deleteFile = target.closest<HTMLElement>("[data-delete-file]");
-        if (deleteFile) {
-            void this.deleteItem("file", deleteFile.dataset.deleteFile || "");
+            void this.renameFolder(renameFolder.dataset.renameFolder || "", renameFolder.dataset.currentName || "");
             return;
         }
 
         const deleteFolder = target.closest<HTMLElement>("[data-delete-folder]");
         if (deleteFolder) {
-            void this.deleteItem("folder", deleteFolder.dataset.deleteFolder || "");
+            void this.deleteFolder(deleteFolder.dataset.deleteFolder || "");
         }
     }
 
@@ -198,23 +159,14 @@ export default class FileDataViewContainer extends DataViewContainer {
         await this.submitAction(this.element?.dataset.createFolderUrl, formData, "Folder created");
     }
 
-    private async renameItem(itemType: "file" | "folder", id: string, currentName: string): Promise<void> {
+    private async renameFolder(id: string, currentName: string): Promise<void> {
         const name = window.prompt("Name", currentName)?.trim();
         if (!id || !name) return;
 
         const formData = new FormData();
-        formData.set("item_type", itemType);
-        formData.set(`${itemType}_id`, id);
+        formData.set("folder_id", id);
         formData.set("name", name);
         await this.submitAction(this.element?.dataset.renameUrl, formData, "Name updated");
-    }
-
-    private async promptMoveFile(fileId: string): Promise<void> {
-        if (!fileId || !this.folderOptions.length) return;
-        const choices = this.folderOptions.map((folder) => `${folder.id}: ${folder.label}`).join("\n");
-        const targetFolderId = window.prompt(`Destination folder id:\n${choices}`)?.trim();
-        if (!targetFolderId || !this.folderOptions.some((folder) => folder.id === targetFolderId)) return;
-        await this.moveItem("file", fileId, targetFolderId);
     }
 
     private async moveItem(itemType: "file" | "folder", id: string, targetFolderId: string): Promise<void> {
@@ -225,11 +177,10 @@ export default class FileDataViewContainer extends DataViewContainer {
         await this.submitAction(this.element?.dataset.moveUrl, formData, "Item moved");
     }
 
-    private async deleteItem(itemType: "file" | "folder", id: string): Promise<void> {
-        if (!id || !window.confirm(`Delete this ${itemType}?`)) return;
+    private async deleteFolder(id: string): Promise<void> {
+        if (!id || !window.confirm("Delete this folder?")) return;
         const formData = new FormData();
-        formData.set("item_type", itemType);
-        formData.set(`${itemType}_id`, id);
+        formData.set("folder_id", id);
         await this.submitAction(this.element?.dataset.deleteUrl, formData, "Item deleted");
     }
 

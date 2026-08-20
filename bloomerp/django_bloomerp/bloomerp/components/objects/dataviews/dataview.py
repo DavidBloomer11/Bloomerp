@@ -368,7 +368,7 @@ def dataview(
     additional_reserved_query_keys: set[str] | None = None,
     component_id: str | None = None,
     component_args: dict[str, str] | None = None,
-    data_view_base_url: str | None = None,
+    dataview_base_url: str | None = None,
     before_data_view: str = "",
 ) -> HttpResponse:
     """
@@ -418,15 +418,15 @@ def dataview(
     sync_url = request.headers.get("X-Bloomerp-Sync-Url", "false").lower() == "true"
     component_id = component_id or request.GET.get('_component_id')
 
-    data_view_base_url = data_view_base_url or reverse(
+    dataview_base_url = dataview_base_url or reverse(
         "components_dataview",
         kwargs={"content_type_id": content_type_id},
     )
     data_view_querystring = request.GET.urlencode()
     data_view_url = (
-        f"{data_view_base_url}?{data_view_querystring}"
+        f"{dataview_base_url}?{data_view_querystring}"
         if data_view_querystring
-        else data_view_base_url
+        else dataview_base_url
     )
 
     context = {
@@ -456,7 +456,7 @@ def dataview(
             _get_accessible_application_fields(state.dataview_fields),
             request,
         ),
-        'data_view_base_url': data_view_base_url,
+        'dataview_base_url': dataview_base_url,
         'data_view_url': data_view_url,
         'default_filters_json': json.dumps(
             _normalize_default_filters(state.preference.default_filters or {})
