@@ -9,8 +9,6 @@ class ContentLayoutModelMixin(models.Model):
     Shared behavior for models that store a sectioned content layout.
     """
     class Meta:
-        verbose_name = _("Content Layout Model Mixin")
-        verbose_name_plural = _("Content Layout Model Mixins")
         abstract = True
 
     layout = models.JSONField(default=dict, blank=True, verbose_name=_("Layout"))
