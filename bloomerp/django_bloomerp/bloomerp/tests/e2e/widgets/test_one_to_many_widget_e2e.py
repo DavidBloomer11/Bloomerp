@@ -185,6 +185,76 @@ class TestOneToManyWidgetE2E(TestCrudE2EMixin, BaseE2ETestCase):
         # 4. Verify cloning preserves the explicit value and does not replace it with the default.
         self.assertEqual(self.get_column_values("age"), ["30", "42", "30"])
 
+    def test_query_prefill_keeps_hidden_columns_without_duplicate_visible_values(self):
+        """
+        Use case: Submit one-to-many query-prefilled data when one column is not rendered.
+        Expected result: Visible values submit once and hidden values remain as prefill inputs.
+        """
+        # 1. Hide the description column while keeping the numeric age column visible.
+        preference = PreferenceManager(self.admin_user).get_or_create_selected(
+            UserObjectLayoutPreference,
+            scope={
+                "content_type_id": ContentType.objects.get_for_model(
+                    self.CountryModel
+                ).pk
+            },
+        )
+        planet_field = ApplicationField.get_for_model(self.CountryModel).get(
+            field="planet"
+        )
+        layout = preference.layout
+        layout["rows"][0]["items"][0]["config"]["inline_fields"] = [
+            "first_name",
+            "last_name",
+            "age",
+        ]
+        layout["rows"][0]["items"].append(
+            LayoutItem(id=planet_field.pk, colspan=1).model_dump()
+        )
+        preference.layout = layout
+        preference.save(update_fields=["layout"])
+        planet = self.PlanetModel.objects.first()
+
+        # 2. Open the full create form with both visible and hidden row values.
+        self.goto(
+            self.get_url_with_rows(
+                [{
+                    "first_name": "Ada",
+                    "last_name": "Lovelace",
+                    "age": 30,
+                    "description": "Preserved description",
+                }]
+            )
+            + f"&planet={planet.pk}"
+        )
+        self.assertEqual(self.get_column_values("age"), ["30"])
+        expect(
+            self.get_widget().locator('[data-one-to-many-cell="description"]')
+        ).to_have_count(0)
+
+        # 3. Confirm only the hidden description is carried as a hidden input.
+        form = self.page.locator("form").filter(
+            has=self.page.locator('input[name="customers__0__age"]')
+        )
+        expect(
+            form.locator('input[type="hidden"][name="customers__0__age"]')
+        ).to_have_count(0)
+        expect(
+            form.locator('input[type="hidden"][name="customers__0__description"]')
+        ).to_have_count(1)
+
+        # 4. Submit the form and verify the visible row value was persisted.
+        self.page.locator("#id_name").fill("Query Prefilled Country")
+        create_path = reverse(get_create_view_url(model=self.CountryModel))
+        save_button = self.page.get_by_role("button", name="Save", exact=True)
+        with self.expect_response_for(create_path, method="POST") as response_info:
+            save_button.click()
+        self.assertEqual(response_info.value.status, 302)
+
+        country = self.CountryModel.objects.get(name="Query Prefilled Country")
+        customer = country.customers.get(first_name="Ada")
+        self.assertEqual(customer.age, 30)
+
     def test_text_editors_update_their_own_one_to_many_rows(self):
         """
         Use case: Edit text-editor fields in two server-rendered one-to-many rows.

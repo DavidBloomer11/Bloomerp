@@ -8,8 +8,6 @@ class AbsoluteUrlModelMixin(models.Model):
     A mixin for models that need to have an absolute URL.
     """
     class Meta:
-        verbose_name = _("Absolute URL Model Mixin")
-        verbose_name_plural = _("Absolute URL Model Mixins")
         abstract = True
 
     def get_absolute_url(self):

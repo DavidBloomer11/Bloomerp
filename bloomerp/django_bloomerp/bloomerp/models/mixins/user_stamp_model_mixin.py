@@ -9,6 +9,9 @@ class UserStampModelMixin(models.Model):
     """
     A mixin for models that need to be stamped with the user that created or updated them.
     """
+    class Meta:
+        abstract = True
+            
     created_by = UserField(
         on_delete=models.SET_NULL,
         related_name='%(class)s_created',
@@ -24,7 +27,4 @@ class UserStampModelMixin(models.Model):
         verbose_name=_("Updated By"),
         )
 
-    class Meta:
-        verbose_name = _("User Stamp Model Mixin")
-        verbose_name_plural = _("User Stamp Model Mixins")
-        abstract = True
+    

@@ -10,6 +10,4 @@ class TimestampModelMixin(models.Model):
     datetime_updated = models.DateTimeField(auto_now=True, verbose_name=_("Datetime Updated"))
 
     class Meta:
-        verbose_name = _("Timestamp Model Mixin")
-        verbose_name_plural = _("Timestamp Model Mixins")
         abstract = True

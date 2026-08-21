@@ -76,8 +76,6 @@ class AbstractBloomerpUser(
     AvatarModelMixin
     ):
     class Meta:
-        verbose_name = _("Bloomerp User")
-        verbose_name_plural = _("Bloomerp Users")
         abstract = True
 
     allow_string_search = True
@@ -148,8 +146,6 @@ class AbstractBloomerpEmailUser(AbstractBloomerpUser):
     email = models.EmailField(unique=True, verbose_name=_("Email"))
 
     class Meta:
-        verbose_name = _("Bloomerp Email User")
-        verbose_name_plural = _("Bloomerp Email Users")
         abstract = True
 
 class User(AbstractBloomerpUser):
