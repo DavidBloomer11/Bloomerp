@@ -5,16 +5,15 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from typing import TYPE_CHECKING
 
+from bloomerp.permissions.definition import BloomerpPermission
+from bloomerp.permissions.manager import UserPolicyManager
+
 if TYPE_CHECKING:
     from bloomerp.models import ApplicationField
     from bloomerp.models.users.user import AbstractBloomerpUser
     from bloomerp.models.users.user_list_view_preference import UserListViewPreference
 
 from .base import BaseDataviewRenderer
-from bloomerp.services.permission_services import (
-    UserPermissionManager,
-    create_permission_str,
-)
 
 
 KANBAN_EMPTY_COLUMN_VALUE = "__none__"
@@ -82,9 +81,9 @@ class KanbanDataviewRenderer(BaseDataviewRenderer):
             raise ValueError("Kanban related lanes require a foreign-key field.")
 
         related_model = model_field.remote_field.model
-        queryset = UserPermissionManager(user).get_queryset(
+        queryset = UserPolicyManager(user).get_queryset(
             related_model,
-            create_permission_str(related_model, "view"),
+            BloomerpPermission.VIEW,
         )
         limit_choices_to = model_field.get_limit_choices_to()
         if limit_choices_to:

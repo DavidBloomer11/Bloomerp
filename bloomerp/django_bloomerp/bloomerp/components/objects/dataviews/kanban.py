@@ -2,7 +2,6 @@ from bloomerp.models import ApplicationField
 from bloomerp.permissions.definition import BloomerpPermission
 from bloomerp.permissions.manager import UserPolicyManager
 from bloomerp.router import router
-from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
 
 
 from django.contrib.contenttypes.models import ContentType
