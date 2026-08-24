@@ -1,6 +1,8 @@
 import json
 import inspect
+import re
 from typing import Any, Callable, Literal, Optional, Type
+from urllib.parse import urlsplit
 
 from django.http import HttpRequest, HttpResponse
 from bloomerp.config.definition import BloomerpConfig
@@ -65,6 +67,112 @@ class WorkspaceLayout(BaseLayout):
     pass
 
 
+# ----------------------------------
+# DETAIL TABS CONFIGURATION
+# ----------------------------------
+DETAIL_TAB_TEMPLATE_ARGUMENT = re.compile(r"{{\s*([^{}]+?)\s*}}")
+
+
+def validate_detail_tab_url(url: str) -> str:
+    """Validate and normalize a declarative detail-tab URL template."""
+    normalized = url.strip()
+    if not normalized:
+        raise ValueError("URL is required.")
+
+    arguments = {
+        argument.strip()
+        for argument in DETAIL_TAB_TEMPLATE_ARGUMENT.findall(normalized)
+    }
+    if arguments - {"pk"}:
+        raise ValueError("Only the {{pk}} placeholder is supported.")
+
+    parsed = urlsplit(normalized)
+    is_internal = (
+        not parsed.scheme
+        and not parsed.netloc
+        and normalized.startswith("/")
+    )
+    is_external = parsed.scheme in {"http", "https"} and bool(parsed.netloc)
+    if not is_internal and not is_external:
+        raise ValueError(
+            "Enter an internal URL beginning with / or a complete http(s) URL."
+        )
+    return normalized
+
+
+class DetailTab(BaseModel):
+    """A declarative tab shown on a model's detail view."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(min_length=1, max_length=255)
+    url: str | None = Field(default=None, min_length=1, max_length=2048)
+    url_name: str | None = Field(default=None, min_length=1, max_length=255)
+
+    @field_validator("name")
+    @classmethod
+    def normalize_name(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Name is required.")
+        return normalized
+
+    @field_validator("url")
+    @classmethod
+    def validate_url(cls, value: str | None) -> str | None:
+        return validate_detail_tab_url(value) if value is not None else None
+
+    @field_validator("url_name")
+    @classmethod
+    def normalize_url_name(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("URL name is required.")
+        return normalized
+
+    @model_validator(mode="after")
+    def validate_url_source(self) -> "DetailTab":
+        if (self.url is None) == (self.url_name is None):
+            raise ValueError("Provide exactly one of url or url_name.")
+        return self
+
+
+class DetailTabFolder(BaseModel):
+    """A top-level folder containing declarative detail tabs."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(min_length=1, max_length=255)
+    tabs: list[DetailTab] = Field(default_factory=list)
+
+    @field_validator("name")
+    @classmethod
+    def normalize_name(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Name is required.")
+        return normalized
+
+
+class DetailTabsConfiguration(BaseModel):
+    """A collection of declarative tabs shown on a model's detail view."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(default="Default", min_length=1, max_length=255)
+    tabs: list[DetailTab | DetailTabFolder] = Field(default_factory=list)
+
+    @field_validator("name")
+    @classmethod
+    def normalize_name(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Name is required.")
+        return normalized
+
+
 def validate_declarative_tile_configs(
     tiles: list[BaseTileConfig],
     *,
@@ -93,6 +201,7 @@ class ApiFilterRule(BaseModel):
             if operator_value == lookup.value.id:
                 return lookup.value.django_representation or operator_value
         return operator_value
+
 
 class PublicAccessRule(BaseModel):
     """A public access rule defines in which cases objects can be accessed via the
@@ -176,6 +285,7 @@ class PublicAccessRule(BaseModel):
             ):
                 allowed_fields.add(field_name)
         return allowed_fields
+
 
 class UserAccessRule(BaseModel):
     """A user access rule defines in which cases users can access an object via the api. The through field serves as the entry point for the user access definition. Note that user access rules only apply to the auto generated API's.
@@ -341,8 +451,10 @@ class ObjectModalAction(BaseModel):
     modal_size:Literal["sm", "md", "lg", "xl", "full"] = "md"
 
 class DetailViewSettings(BaseModel):
-    """
-    Settings regarding detail views for certain models
+    """Settings regarding detail views for a model.
+
+    An empty ``tab_configurations`` list retains router-derived defaults. Each
+    configured layout becomes a named preference, with the first one selected.
     """
     skip_views : Optional[list[str]] = None
 
@@ -489,6 +601,9 @@ class ModelViewSettings(BaseModel):
                 "Exactly one configured data view must have is_default=True."
             )
         return self
+
+    skip_views: Optional[list[str]] = None
+    tab_configurations: list[DetailTabsConfiguration] = Field(default_factory=list)
 
 
 class BloomerpModelConfig(BaseModel):

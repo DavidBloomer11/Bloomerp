@@ -9,8 +9,6 @@ class StringSearchModelMixin(models.Model):
     allow_string_search: bool = None
 
     class Meta:
-        verbose_name = _("String Search Model Mixin")
-        verbose_name_plural = _("String Search Model Mixins")
         abstract = True
 
     @classmethod

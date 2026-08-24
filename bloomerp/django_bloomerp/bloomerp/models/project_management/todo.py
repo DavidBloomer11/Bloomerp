@@ -18,6 +18,11 @@ from bloomerp.models.definition import (
     ObjectAction,
     ObjectHTML,
     TableDataView,
+    DetailTab,
+    DetailTabsConfiguration,
+    DetailViewSettings,
+    ObjectAction,
+    ObjectHTML,
 )
 from bloomerp.utils.models import get_list_view_url
 from bloomerp.workspaces.analytics_tile.model import AnalyticsTileFilter, FieldConfig
@@ -46,6 +51,7 @@ class TodoEffort(models.IntegerChoices):
 # TODO: Use status field for this one -> status field can be used later on in table views 
 class TodoStatus(models.TextChoices):
     BACKLOG = ('backlog', _('Backlog'))
+    SCOPED = ('scoped', _('Scoped'))
     IN_PROGRESS = ('in_progress', _('In Progress'))
     IN_REVIEW = ('in_review', _('In Review'))
     COMPLETED = ('completed', _('Completed'))
@@ -168,6 +174,19 @@ class Todo(BloomerpModel):
                 execution_func=_mark_as_completed
             )
         ],
+        detail_view_settings=DetailViewSettings(
+            tab_configurations=[
+                DetailTabsConfiguration(
+                    name="Default",
+                    tabs=[
+                        DetailTab(
+                            name="Overview",
+                            url_name="todos_detail_overview",
+                        )
+                    ],
+                )
+            ]
+        ),
         tiles=[
             AnalyticsTileConfig(
                 type=AnalyticsTileType.KPI.value.key,
