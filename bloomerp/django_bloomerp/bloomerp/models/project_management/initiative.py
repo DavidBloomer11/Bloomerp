@@ -19,6 +19,7 @@ from bloomerp.workspaces.analytics_tile.model import (
 
 class InitiativeStatus(models.TextChoices):
     BACKLOG = ("backlog", _("Backlog"))
+    SCOPED = ("scoped", _("Scoped"))
     IN_PROGRESS = ("in_progress", _("In Progress"))
     ON_HOLD = ("on_hold", _("On Hold"))
     COMPLETED = ("completed", _("Completed"))

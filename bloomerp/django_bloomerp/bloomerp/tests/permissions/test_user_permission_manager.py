@@ -3,6 +3,7 @@ from bloomerp.models.application_field import ApplicationField
 from bloomerp.permissions.definition import BloomerpPermission, RowPolicyRuleCondition, RowPolicyRuleContent
 from bloomerp.permissions.manager import PolicyManager, UserPolicyManager
 from bloomerp.tests.base import BaseBloomerpModelTestCase
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
 from bloomerp.tests.utils.names import FIRST_NAMES
@@ -114,6 +115,49 @@ class TestUserPermissionManager(BaseBloomerpModelTestCase):
         self._validate_queryset_results(
             manager.get_accessible_queryset(self.CustomerModel, PERM),
             self.CustomerModel.objects.none()
+        )
+
+    def test_accessible_content_types_require_global_permission_with_row_grant(self):
+        """A row grant alone must not make a model available to data-view configuration."""
+        policy = PolicyManager.create_policy(
+            model_or_content_type=self.CustomerModel,
+            field_permissions={},
+            row_permissions=[
+                RowPolicyRuleContent(
+                    connector="AND",
+                    permissions=[BloomerpPermission.VIEW],
+                    conditions=[
+                        RowPolicyRuleCondition(
+                            field="first_name",
+                            operator=Lookup.EQUALS.value.id,
+                            value=FIRST_NAMES[0],
+                        )
+                    ],
+                )
+            ],
+            global_permissions=[BloomerpPermission.VIEW],
+        )
+        policy.global_permissions.clear()
+        PolicyManager.assign(policy, self.normal_user)
+
+        content_type = ContentType.objects.get_for_model(self.CustomerModel)
+        manager = UserPolicyManager(self.normal_user)
+
+        self.assertFalse(
+            manager.get_accessible_content_types(BloomerpPermission.VIEW)
+            .filter(pk=content_type.pk)
+            .exists()
+        )
+
+        policy.global_permissions.add(
+            *policy.row_policy.content_type.permission_set.filter(codename="view_customer")
+        )
+        manager = UserPolicyManager(self.normal_user)
+
+        self.assertTrue(
+            manager.get_accessible_content_types(BloomerpPermission.VIEW)
+            .filter(pk=content_type.pk)
+            .exists()
         )
         
     # --------------------------------
