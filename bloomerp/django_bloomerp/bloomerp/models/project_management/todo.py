@@ -39,6 +39,7 @@ class TodoEffort(models.IntegerChoices):
 # TODO: Use status field for this one -> status field can be used later on in table views 
 class TodoStatus(models.TextChoices):
     BACKLOG = ('backlog', _('Backlog'))
+    SCOPED = ('scoped', _('Scoped'))
     IN_PROGRESS = ('in_progress', _('In Progress'))
     IN_REVIEW = ('in_review', _('In Review'))
     COMPLETED = ('completed', _('Completed'))
