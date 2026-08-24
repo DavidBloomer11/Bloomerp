@@ -1,6 +1,9 @@
 from dataclasses import dataclass
 from enum import Enum
 from django.views import View
+from django.apps import apps
+from django.utils.encoding import force_str
+from django.utils.translation import gettext, pgettext
 from typing import Union
 import logging
 from typing import Optional
@@ -11,6 +14,7 @@ from functools import wraps
 from typing import Callable, List, Literal
 
 from bloomerp.models.definition import get_model_config
+from bloomerp.i18n.models import model_verbose_name_in_source_language
 from bloomerp.modules.definition import BloomerpModule, ModuleConfig, module_registry
 logger = logging.getLogger(__name__)
 
@@ -19,6 +23,7 @@ def _generate_description(
     model: Optional[Model] = None,
     view: Optional[Callable | View] = None,
     module: Optional[ModuleConfig] = None,
+    message_format_values: Optional[dict[str, object]] = None,
 ) -> str:
     """Auto-generate a descriptive name including model information"""
     if not name and not model and not view and not module:
@@ -31,6 +36,7 @@ def _generate_description(
             format_values["model"] = model._meta.verbose_name
         if module:
             format_values["module"] = module.name if getattr(module, "name", None) else module.id
+        format_values.update(message_format_values or {})
 
         if "{" in name and format_values:
             try:
@@ -78,6 +84,7 @@ def _generate_name(
     model: Optional[Model] = None,
     view: Optional[Callable | View] = None,
     module: Optional[ModuleConfig] = None,
+    message_format_values: Optional[dict[str, object]] = None,
 ) -> str:
     """Auto-generate a descriptive name including model information"""
     if not name and not model and not view and not module:
@@ -90,6 +97,7 @@ def _generate_name(
             format_values["model"] = model._meta.verbose_name
         if module:
             format_values["module"] = module.name if getattr(module, "name", None) else module.id
+        format_values.update(message_format_values or {})
 
         if "{" in name and format_values:
             try:
@@ -161,6 +169,65 @@ class BloomerpRoute:
     description: str = None
     override: bool = False
     args : Optional[dict] = None
+    name_message: Optional[str] = None
+    description_message: Optional[str] = None
+    owner_app_label: Optional[str] = None
+    translatable: bool = True
+    searchable: bool = True
+    message_format_values: Optional[dict[str, object]] = None
+
+    def _translation_context(self, field: str) -> str:
+        owner = self.owner_app_label or "bloomerp"
+        return f"{owner}:route:{field}"
+
+    def _localized_message(self, message: Optional[str], field: str) -> str:
+        if not message:
+            return ""
+        translated = message
+        if self.translatable:
+            translated = pgettext(self._translation_context(field), message)
+            if translated == message:
+                # Reuse existing context-free catalogs while route-specific
+                # contextual entries are introduced and translated.
+                translated = gettext(message)
+        values = {}
+        if self.model is not None:
+            values["model"] = force_str(self.model._meta.verbose_name)
+        if self.module is not None:
+            values["module"] = force_str(
+                self.module.localized_name
+                if getattr(self.module, "name", None)
+                else self.module.id
+            )
+        values.update(
+            {
+                key: force_str(value)
+                for key, value in (self.message_format_values or {}).items()
+            }
+        )
+        if values and "{" in translated:
+            try:
+                return translated.format(**values)
+            except (KeyError, ValueError):
+                pass
+        return translated
+
+    @property
+    def localized_name(self) -> str:
+        message = self.name if self.name_message is None else self.name_message
+        return self._localized_message(message, "name")
+
+    @property
+    def localized_description(self) -> str:
+        message = (
+            self.description
+            if self.description_message is None
+            else self.description_message
+        )
+        return self._localized_message(
+            message,
+            "description",
+        )
 
     
     def nr_of_args(self) -> int:
@@ -224,7 +291,7 @@ def _is_api_route(route_type: RouteType) -> bool:
 
 
 def _get_api_model_path(model: Model) -> str:
-    return model._meta.verbose_name_plural.replace(" ", "_").lower()
+    return model_verbose_name_in_source_language(model, plural=True).replace(" ", "_").lower()
 
 
 def _with_api_prefix(path: Optional[str], default_path: str = "") -> str:
@@ -262,7 +329,7 @@ def _generate_path(path: str, route_type: RouteType, model: Optional[Model] = No
     
     elif route_type == RouteType.MODEL:
         # Get model plural name and convert to URL-friendly format
-        model_plural = model._meta.verbose_name_plural.lower().replace(' ', '-')
+        model_plural = model_verbose_name_in_source_language(model, plural=True).lower().replace(' ', '-')
         module_path = (module.route_path or module.id.lower()).strip("/")
         if path:
             return f"/{module_path}/{model_plural}{path}"
@@ -270,7 +337,7 @@ def _generate_path(path: str, route_type: RouteType, model: Optional[Model] = No
 
     elif route_type == RouteType.DETAIL:
         # Get model plural name and convert to URL-friendly format
-        model_name = model._meta.verbose_name_plural.lower().replace(' ', '-')
+        model_name = model_verbose_name_in_source_language(model, plural=True).lower().replace(' ', '-')
         module_path = (module.route_path or module.id.lower()).strip("/")
         if path:
             return f"/{module_path}/{model_name}/<int_or_uuid:pk>{path}"
@@ -317,9 +384,11 @@ def _auto_generate_url_name(name: Optional[str], route_type: RouteType, model: O
             model_path = _get_api_model_path(model)
             return f"{model_path}-detail" if name is None else _transform_str(name)
         case RouteType.DETAIL:
-            return _transform_str(model._meta.verbose_name_plural) + "_" + route_type.value + "_" + _transform_str(name)
+            model_name = model_verbose_name_in_source_language(model, plural=True)
+            return _transform_str(model_name) + "_" + route_type.value + "_" + _transform_str(name)
         case RouteType.MODEL:
-            return _transform_str(model._meta.verbose_name_plural) + "_" + _transform_str(name)
+            model_name = model_verbose_name_in_source_language(model, plural=True)
+            return _transform_str(model_name) + "_" + _transform_str(name)
         case RouteType.MODULE:
             return _transform_str(module.id) + "_" + route_type.value + "_" + _transform_str(name)
         case _:
@@ -466,6 +535,9 @@ class BloomerpRouteRegistry:
         description: Optional[str] = None,
         url_name: Optional[str] = None,
         override: bool = False,
+        translatable: Optional[bool] = None,
+        searchable: Optional[bool] = None,
+        message_format_values: Optional[dict[str, object]] = None,
     ):
         """
         Decorator for registering routes with the registry.
@@ -487,6 +559,38 @@ class BloomerpRouteRegistry:
             _url_name = url_name
             _route_type = route_type if isinstance(route_type, RouteType) else RouteType(str(route_type).lower())
             _modules = modules
+
+            owner_app = apps.get_containing_app_config(getattr(view, "__module__", ""))
+
+            def _route_metadata(
+                actual_path: str,
+                actual_url_name: str,
+                actual_name: str,
+                actual_description: str,
+            ) -> dict:
+                is_component = (
+                    actual_path.lstrip("/").startswith("components/")
+                    or actual_url_name.startswith("components_")
+                )
+                is_api = _is_api_route(_route_type)
+                should_translate = (
+                    translatable
+                    if translatable is not None
+                    else not is_component and not is_api
+                )
+                should_search = (
+                    searchable
+                    if searchable is not None
+                    else not is_component and not is_api
+                )
+                return {
+                    "name_message": _name or actual_name,
+                    "description_message": _description,
+                    "owner_app_label": owner_app.label if owner_app else None,
+                    "translatable": should_translate,
+                    "searchable": should_search,
+                    "message_format_values": message_format_values,
+                }
             
             # Determine view type and handle accordingly
             view_type = ViewType.FUNCTION
@@ -525,22 +629,41 @@ class BloomerpRouteRegistry:
                     if _modules or models or exclude_models:
                         raise ValueError("Modules and models parameters are not applicable for 'app' route type")
 
-                    actual_name = _generate_name(_name, None, registered_view, None)
+                    actual_name = _generate_name(
+                        _name,
+                        None,
+                        registered_view,
+                        None,
+                        message_format_values,
+                    )
                     actual_description = _auto_description(actual_name)
                     actual_path = _auto_path()
                     actual_url_name = _url_name if _url_name else actual_name
+                    generated_url_name = _auto_generate_url_name(actual_url_name, _route_type)
 
                     self._add_route(
                         BloomerpRoute(
                             path=_generate_path(actual_path, _route_type),
                             route_type=_route_type,
                             name=actual_name,
-                            url_name=_auto_generate_url_name(actual_url_name, _route_type),
+                            url_name=generated_url_name,
                             view=registered_view,
                             view_type=view_type,
                             module=None,
-                            description=_generate_description(actual_description, None, registered_view, None),
+                            description=_generate_description(
+                                actual_description,
+                                None,
+                                registered_view,
+                                None,
+                                message_format_values,
+                            ),
                             override=override,
+                            **_route_metadata(
+                                actual_path,
+                                generated_url_name,
+                                actual_name,
+                                actual_description,
+                            ),
                         )
                     )
 
@@ -563,22 +686,46 @@ class BloomerpRouteRegistry:
                         if not module:
                             raise ValueError("Module not found in registry")
 
-                        actual_name = _generate_name(_name, None, registered_view, module)
+                        actual_name = _generate_name(
+                            _name,
+                            None,
+                            registered_view,
+                            module,
+                            message_format_values,
+                        )
                         actual_description = _auto_description(actual_name)
                         actual_path = _auto_path()
                         actual_url_name = _url_name if _url_name else actual_name
+                        generated_url_name = _auto_generate_url_name(
+                            actual_url_name,
+                            _route_type,
+                            None,
+                            module,
+                        )
 
                         self._add_route(
                             BloomerpRoute(
                                 path=_generate_path(actual_path, _route_type, None, module),
                                 route_type=_route_type,
                                 name=actual_name,
-                                url_name=_auto_generate_url_name(actual_url_name, _route_type, None, module),
+                                url_name=generated_url_name,
                                 view=registered_view,
                                 view_type=view_type,
                                 module=module,
-                                description=_generate_description(actual_description, None, registered_view, module),
+                                description=_generate_description(
+                                    actual_description,
+                                    None,
+                                    registered_view,
+                                    module,
+                                    message_format_values,
+                                ),
                                 override=override,
+                                **_route_metadata(
+                                    actual_path,
+                                    generated_url_name,
+                                    actual_name,
+                                    actual_description,
+                                ),
                             )
                         )
 
@@ -591,6 +738,9 @@ class BloomerpRouteRegistry:
                         'description': _description,
                         'url_name': _url_name,
                         'override': override,
+                        'translatable': translatable,
+                        'searchable': searchable,
+                        'message_format_values': message_format_values,
                         'models': models,
                         'exclude_models': exclude_models,
                         'view': view,
@@ -619,22 +769,47 @@ class BloomerpRouteRegistry:
                         if _is_module_model_route(_route_type) and not module:
                             continue
 
-                        actual_name = _generate_name(_name, model, registered_view, module)
+                        actual_name = _generate_name(
+                            _name,
+                            model,
+                            registered_view,
+                            module,
+                            message_format_values,
+                        )
                         actual_description = _auto_description(actual_name)
                         actual_url_name = _url_name if _url_name else (
                             _name if _is_api_route(_route_type) else actual_name
                         )
+                        generated_path = _generate_path(actual_path, _route_type, model, module)
+                        generated_url_name = _auto_generate_url_name(
+                            actual_url_name,
+                            _route_type,
+                            model,
+                            module,
+                        )
                         route = BloomerpRoute(
-                            path=_generate_path(actual_path, _route_type, model, module),
+                            path=generated_path,
                             model=model,
                             module=module,
                             route_type=_route_type,
                             name=actual_name,
-                            url_name=_auto_generate_url_name(actual_url_name, _route_type, model, module),
+                            url_name=generated_url_name,
                             view=registered_view,
                             view_type=view_type,
-                            description=_generate_description(actual_description, model, registered_view, module),
+                            description=_generate_description(
+                                actual_description,
+                                model,
+                                registered_view,
+                                module,
+                                message_format_values,
+                            ),
                             override=override,
+                            **_route_metadata(
+                                generated_path,
+                                generated_url_name,
+                                actual_name,
+                                actual_description,
+                            ),
                         )
 
                         self._add_route(route)
@@ -643,22 +818,41 @@ class BloomerpRouteRegistry:
                     if _modules or models or exclude_models:
                         raise ValueError("Modules and models parameters are not applicable for 'api' route type")
 
-                    actual_name = _generate_name(_name, None, registered_view, None)
+                    actual_name = _generate_name(
+                        _name,
+                        None,
+                        registered_view,
+                        None,
+                        message_format_values,
+                    )
                     actual_description = _auto_description(actual_name)
                     actual_path = _auto_path()
                     actual_url_name = _url_name if _url_name else actual_name
+                    generated_url_name = _auto_generate_url_name(actual_url_name, _route_type)
 
                     self._add_route(
                         BloomerpRoute(
                             path=_generate_path(actual_path, _route_type),
                             route_type=_route_type,
                             name=actual_name,
-                            url_name=_auto_generate_url_name(actual_url_name, _route_type),
+                            url_name=generated_url_name,
                             view=registered_view,
                             view_type=view_type,
                             module=None,
-                            description=_generate_description(actual_description, None, registered_view, None),
+                            description=_generate_description(
+                                actual_description,
+                                None,
+                                registered_view,
+                                None,
+                                message_format_values,
+                            ),
                             override=override,
+                            **_route_metadata(
+                                actual_path,
+                                generated_url_name,
+                                actual_name,
+                                actual_description,
+                            ),
                         )
                     )
 
@@ -688,7 +882,13 @@ class BloomerpRouteRegistry:
                 continue
 
             actual_path = template['path']
-            actual_name = _generate_name(template['name'], model, template['view'], module)
+            actual_name = _generate_name(
+                template['name'],
+                model,
+                template['view'],
+                module,
+                template.get('message_format_values'),
+            )
 
             def _auto_desc(name: str, tmpl: dict = template) -> str:
                 if tmpl['description']:
@@ -703,9 +903,20 @@ class BloomerpRouteRegistry:
                 template['name'] if _is_api_route(route_type) else actual_name
             )
             url_name = _auto_generate_url_name(actual_url_name_raw, route_type, model, module)
+            generated_path = _generate_path(actual_path, route_type, model, module)
+            owner_app = apps.get_containing_app_config(
+                getattr(template['view'], "__module__", "")
+            )
+            is_component = (
+                generated_path.lstrip("/").startswith("components/")
+                or url_name.startswith("components_")
+            )
+            is_api = _is_api_route(route_type)
+            translatable = template['translatable']
+            searchable = template['searchable']
 
             route = BloomerpRoute(
-                path=_generate_path(actual_path, route_type, model, module),
+                path=generated_path,
                 model=model,
                 module=module,
                 route_type=route_type,
@@ -713,8 +924,28 @@ class BloomerpRouteRegistry:
                 url_name=url_name,
                 view=template['registered_view'],
                 view_type=template['view_type'],
-                description=_generate_description(actual_description, model, template['view'], module),
+                description=_generate_description(
+                    actual_description,
+                    model,
+                    template['view'],
+                    module,
+                    template.get('message_format_values'),
+                ),
                 override=template['override'],
+                name_message=template['name'] or actual_name,
+                description_message=template['description'],
+                owner_app_label=owner_app.label if owner_app else None,
+                translatable=(
+                    translatable
+                    if translatable is not None
+                    else not is_component and not is_api
+                ),
+                searchable=(
+                    searchable
+                    if searchable is not None
+                    else not is_component and not is_api
+                ),
+                message_format_values=template.get('message_format_values'),
             )
             self._add_route(route)
 
@@ -898,13 +1129,15 @@ class BloomerpRouteRegistry:
                 continue
 
             if name_query:
-                route_name = route.name or ""
-                if name_query not in route_name.lower():
+                route_names = f"{route.name or ''} {route.localized_name}"
+                if name_query not in route_names.lower():
                     continue
 
             if description_query:
-                route_description = route.description or ""
-                if description_query not in route_description.lower():
+                route_descriptions = (
+                    f"{route.description or ''} {route.localized_description}"
+                )
+                if description_query not in route_descriptions.lower():
                     continue
 
             results.append(route)

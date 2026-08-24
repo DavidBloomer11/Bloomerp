@@ -2,29 +2,26 @@ from copy import copy
 from dataclasses import dataclass
 from typing import Any, Optional, Type
 
+from django.db import transaction
 from django.http import HttpRequest
 from django.urls import reverse
 from django.utils.html import format_html
+from django.utils.translation import gettext
 
 from bloomerp.models.base_bloomerp_model import LayoutItem
 from bloomerp.models.workspaces.workspace import Workspace
 from bloomerp.models.workspaces.tile import Tile
-from bloomerp.modules.definition import module_registry
-from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
-from bloomerp.utils.models import get_list_view_url
-from bloomerp.workspaces.analytics_tile.model import AnalyticsTileConfig, AnalyticsTileType
+from bloomerp.modules.definition import ModuleRegistry, module_registry
+from bloomerp.workspaces.analytics_tile.model import AnalyticsTileConfig
 from bloomerp.workspaces.analytics_tile.utils import TileFieldType
-from bloomerp.workspaces.base import TileTypeDefinition
-from bloomerp.workspaces.dataview_tile.model import DataViewTileConfig
+from bloomerp.workspaces.base import BaseTileConfig
 from bloomerp.workspaces.links_tile.model import Link, LinkTileConfig
 from bloomerp.workspaces.tiles import TileType
 from bloomerp.models.users import User
 from bloomerp.services.sectioned_layout_services import AvailableLayoutItem
 from django.db.models import Q
 from django.forms import Form
-from django import forms
 from bloomerp.field_types.types import FieldType
-from django.contrib.contenttypes.models import ContentType
 
 PRIMITIVE_FIELD_TYPE_MAP = {
     TileFieldType.TEXT.value.key: FieldType.CHAR_FIELD,
@@ -43,62 +40,101 @@ def select_workspace(workspace: Workspace, user: User) -> Workspace:
     return PreferenceManager(user).select(workspace)
 
 
-def ensure_default_workspace_tiles_for_module(user, module_id: str) -> None:
-    module = module_registry.get(module_id)
-    if not module:
-        return
+def resolve_tile_type_from_config(config: BaseTileConfig) -> str:
+    """Resolves the tile type from the config by checking which class it's using.
 
-    child_modules = module_registry.get_children(module.full_id or module.id)
-    if child_modules:
-        for child_module in child_modules:
-            links = [
-                Link(url=f"/{child_module.route_path}/", name=child_module.name, is_internal=True)
-            ]
-            config = LinkTileConfig(links=links).model_dump()
-            description = f"Navigate to the '{child_module.name}' module."
+    Args:
+        config (BaseTileConfig): the config object
 
-            Tile.objects.get_or_create(
-                created_by=user,
-                updated_by=user,
-                name=child_module.name,
-                type=TileType.LINKS_TILE.name,
-                description=description,
-                schema=config,
-                auto_generated=True,
-            )
-        return
+    Returns:
+        str: the tile type
+    """
+    for tile_type in TileType:
+        config_model = tile_type.value.model
+        if config_model is not None and isinstance(config, config_model):
+            return tile_type.name
 
-    links = []
-    for model in module_registry.get_models_for_module(module_id):
-        links.append(
-            Link(
-                url=reverse(get_list_view_url(model)),
-                name=model._meta.verbose_name_plural,
-                is_internal=True,
-            )
-        )
-
-    if not links:
-        return
-
-    config = LinkTileConfig(links=links).model_dump()
-    description = f"Links to the different models of the '{module.name}' module."
-    Tile.objects.get_or_create(
-        created_by=user,
-        updated_by=user,
-        name=module.name,
-        type=TileType.LINKS_TILE.name,
-        description=description,
-        schema=config,
-        auto_generated=True,
+    raise ValueError(
+        f"No registered tile type accepts config '{type(config).__name__}'."
     )
 
 
-def create_default_sidebar(
-        user,
-):
-    modules = module_registry.get_enabled()
-    
+def _serialize_default_tile_config(tile_config: BaseTileConfig) -> dict[str, Any]:
+    schema = tile_config.model_dump(mode="json")
+    if not isinstance(tile_config, LinkTileConfig):
+        return schema
+
+    def resolve_links(links: list[dict[str, Any]]) -> None:
+        for link in links:
+            url_name = str(link.get("url_name") or "").strip()
+            if url_name:
+                link["url"] = reverse(url_name)
+            resolve_links(link.get("children") or [])
+
+    resolve_links(schema["links"])
+    return schema
+
+
+def create_or_update_default_tiles(
+    registry: ModuleRegistry | None = None,
+) -> dict[str, Tile]:
+    """Creates or updates the default tiles from models and modules
+
+    Returns:
+        dict[str, Tile]: dictionary of the native tile ID's together with their tile database objects.
+    """
+    registry = registry or module_registry
+
+    existing_tiles: dict[str, Tile] = {}
+    for tile in Tile.get_default_tiles():
+        tile_id = str(tile.schema.get("id") or "").strip()
+        if not tile_id:
+            continue
+        if tile_id in existing_tiles:
+            raise ValueError(
+                f"Multiple auto-generated tiles use native id '{tile_id}'."
+            )
+        existing_tiles[tile_id] = tile
+
+    tile_configs: dict[str, BaseTileConfig] = {}
+    for module_id in registry.get_all():
+        for tile_config in registry.get_tiles_for_module(module_id):
+            tile_id = str(tile_config.id or "").strip()
+            if not tile_id:
+                raise ValueError("Every declarative tile must have a native id.")
+            if tile_id in tile_configs:
+                raise ValueError(
+                    f"Duplicate declarative tile id '{tile_id}' found across modules."
+                )
+            tile_configs[tile_id] = tile_config
+
+    default_icon = Tile._meta.get_field("icon").get_default()
+    synchronized: dict[str, Tile] = {}
+
+    with transaction.atomic():
+        for tile_id, tile_config in tile_configs.items():
+            values = {
+                "name": tile_config.name or tile_id,
+                "description": tile_config.description,
+                "icon": tile_config.icon or default_icon,
+                "type": resolve_tile_type_from_config(tile_config),
+                "schema": _serialize_default_tile_config(tile_config),
+                "auto_generated": True,
+            }
+            existing_tile = existing_tiles.get(tile_id)
+
+            if existing_tile is None:
+                tile = Tile.objects.create(**values)
+            else:
+                tile = existing_tile
+                for field, value in values.items():
+                    setattr(tile, field, value)
+                tile.save(update_fields=[*values, "datetime_updated"])
+
+            synchronized[tile_id] = tile
+
+    return synchronized
+
 
 def render_tile_to_string(
     tile:Tile, 
@@ -121,10 +157,72 @@ def render_tile_to_string(
         **tile.schema
     )
 
+    if tile.auto_generated and isinstance(config, LinkTileConfig):
+        _localize_generated_module_links(config.links)
+
     # 3. Get the render class. Saved canvases receive their persistence context;
     # previews call the renderer directly without a Tile instance.
     render_kwargs = {"tile": tile} if tile_type == TileType.CANVAS_TILE else {}
     return tile_type.value.render_cls.render(config=config, request=request, **render_kwargs)
+
+
+def _module_for_generated_tile(tile: Tile):
+    if not tile.auto_generated:
+        return None
+    return next(
+        (
+            module
+            for module in module_registry.get_all().values()
+            if module.name == tile.name
+        ),
+        None,
+    )
+
+
+def _localize_generated_module_links(links: list[Link]) -> None:
+    modules_by_path = {
+        f"/{module.route_path}/": module
+        for module in module_registry.get_all().values()
+        if module.route_path
+    }
+    for link in links:
+        module = modules_by_path.get(link.url)
+        if module is not None and link.name == module.name:
+            link.name = module.localized_name
+        _localize_generated_module_links(link.children)
+
+
+def _tile_display_metadata(tile: Tile) -> tuple[str, str | None]:
+    module = _module_for_generated_tile(tile)
+    if module is None:
+        return tile.name, tile.description
+
+    name = module.localized_name
+    links = tile.schema.get("links", []) if isinstance(tile.schema, dict) else []
+    is_module_navigation = any(
+        link.get("url") == f"/{module.route_path}/"
+        for link in links
+        if isinstance(link, dict)
+    )
+    if is_module_navigation:
+        source_description = f"Navigate to the '{module.name}' module."
+        description = (
+            gettext("Navigate to the '{module}' module.").format(module=name)
+            if tile.description == source_description
+            else tile.description
+        )
+    else:
+        source_description = (
+            f"Links to the different models of the '{module.name}' module."
+        )
+        description = (
+            gettext("Links to the different models of the '{module}' module.").format(
+                module=name
+            )
+            if tile.description == source_description
+            else tile.description
+        )
+    return name, description
 
 
 def build_workspace_layout_item(
@@ -146,12 +244,14 @@ def build_workspace_layout_item(
     except Exception as exc:
         content = format_html('<div class="alert alert-danger">{}</div>', exc)
 
+    tile_name, _tile_description = _tile_display_metadata(tile)
+
     return LayoutItem(
         id=str(tile.pk),
         colspan=colspan,
         config=config or {},
         icon=tile.icon,
-        label=tile.name,
+        label=tile_name,
         content=content,
         component_name="workspace-tile",
         border=True,
@@ -189,7 +289,7 @@ class WorkspaceManager:
                     if not config.filters:
                         continue
                     
-                    for filter_config in config.filters.values():
+                    for filter_config in config.filters:
                         match filter_config.type:
                             case "text":
                                 field_type = FieldType.CHAR_FIELD
@@ -219,7 +319,7 @@ class WorkspaceManager:
                     if not config.filters:
                         continue
                     
-                    for filter_config in config.filters.values():
+                    for filter_config in config.filters:
                         result[filter_config.field] = WorkspaceFilter(
                             field=filter_config.field,
                             type=PRIMITIVE_FIELD_TYPE_MAP[filter_config.type].value.id,
@@ -261,15 +361,18 @@ class UserWorkspaceService:
         tiles = Tile.objects.filter(
             Q(created_by=self.user) | Q(auto_generated=True)
         )
-        return [
-            AvailableLayoutItem(
-                id=tile.id,
-                title=tile.name,
-                description=tile.description,
-                icon=tile.icon,
-                search_keywords=tile.get_type_display(),
+        available_tiles = []
+        for tile in tiles:
+            title, description = _tile_display_metadata(tile)
+            available_tiles.append(
+                AvailableLayoutItem(
+                    id=tile.id,
+                    title=title,
+                    description=description,
+                    icon=tile.icon,
+                    search_keywords=tile.get_type_display(),
+                )
             )
-            for tile in tiles
-        ]
+        return available_tiles
 
         

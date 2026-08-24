@@ -1,6 +1,7 @@
 
 
 from ast import mod
+from unittest.mock import patch
 
 from django.urls import reverse
 from urllib.parse import urlencode
@@ -13,6 +14,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from bloomerp.modules.misc import MiscModule
+from bloomerp.components.files import _get_folder_display_name
 
 class TestFilesComponent(BaseBloomerpModelTestCase):
     auto_create_customers = False
@@ -87,6 +89,22 @@ class TestFilesComponent(BaseBloomerpModelTestCase):
         # 5. Check that the response contains the model name as a folder in it's markup
         response = self.client.get(url)
         self.assertContains(response.content, model_name)
+
+    def test_generated_module_folder_name_is_localized_at_display_time(self):
+        obj = self.get_object()
+        self.create_file(obj=obj, user=self.admin_user)
+        module_folder = FileFolder.objects.filter(
+            name=MiscModule.name,
+            parent__isnull=True,
+        ).get()
+
+        with patch(
+            "bloomerp.modules.definition.pgettext",
+            side_effect=lambda _context, message: (
+                "Diversos" if message == "Miscellaneous" else message
+            ),
+        ):
+            self.assertEqual(_get_folder_display_name(module_folder), "Diversos")
 
     def test_searching_for_file_returns_files_and_folders_from_all_levels_of_hierarchy_if_from_root(self):
         """

@@ -1,5 +1,6 @@
 import json
 
+from bs4 import BeautifulSoup
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -15,6 +16,7 @@ from bloomerp.models import (
     File,
 )
 from bloomerp.models.project_management import Initiative, Todo
+from bloomerp.models.users.user import DetailSidebarViewPreference
 from bloomerp.models.workspaces.sidebar import Sidebar
 from bloomerp.tests.views.crud_test_mixin import CrudViewTestMixin
 
@@ -239,6 +241,59 @@ class TestOverviewView(CrudViewTestMixin):
         # 3. Verify the create-todo action is still rendered.
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "/components/todo/create-todo-for-object/", html=False)
+
+    def test_customer_detail_uses_persisted_sidebar_preference(self):
+        """
+        Use case: A user previously selected Comments in a detail view sidebar.
+        Expected result: The detail view loads Comments before Activity.
+        """
+        # 1. Persist the user's preferred sidebar panel.
+        self.admin_user.detail_sidebar_view_preference = (
+            DetailSidebarViewPreference.COMMENTS
+        )
+        self.admin_user.save(update_fields=["detail_sidebar_view_preference"])
+        self.client.force_login(self.admin_user)
+
+        # 2. Render the customer detail page.
+        response = self.client.get(self.get_url())
+
+        # 3. Verify the initial sidebar request targets Comments.
+        comments_url = reverse(
+            "components_comments",
+            kwargs={
+                "content_type_id": self.content_type.pk,
+                "object_id": self.customer.pk,
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        sidebar_loader = BeautifulSoup(response.content, "html.parser").select_one(
+            "[data-detail-sidebar-loader]"
+        )
+        self.assertIsNotNone(sidebar_loader)
+        self.assertEqual(sidebar_loader.get("hx-get"), comments_url)
+
+    def test_customer_detail_defaults_to_activity_sidebar(self):
+        """
+        Use case: A user has not selected a detail sidebar panel.
+        Expected result: The detail view initially loads Activity.
+        """
+        # 1. Authenticate as a user with the default sidebar preference.
+        self.client.force_login(self.admin_user)
+
+        # 2. Render the customer detail page.
+        response = self.client.get(self.get_url())
+
+        # 3. Verify the load-on-render container targets Activity specifically.
+        activity_url = (
+            f'{reverse("components_activity_log")}'
+            f"?content_type_id={self.content_type.pk}&object_id={self.customer.pk}"
+        )
+        sidebar_loader = BeautifulSoup(response.content, "html.parser").select_one(
+            "[data-detail-sidebar-loader]"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNotNone(sidebar_loader)
+        self.assertEqual(sidebar_loader.get("hx-get"), activity_url)
 
     def test_todo_detail_hides_create_todo_button(self):
         """

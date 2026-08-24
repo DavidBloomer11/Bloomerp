@@ -72,10 +72,10 @@ class ActivityLogManager:
         if user is None:
             return
 
-        if hasattr(self.instance, "created_by") and not (user.is_anonymous):
+        if self.is_create and hasattr(self.instance, "created_by") and not user.is_anonymous:
             setattr(self.instance, "created_by", user)
             
-        if hasattr(self.instance, "updated_by") and not (user.is_anonymous):
+        if hasattr(self.instance, "updated_by") and not user.is_anonymous:
             setattr(self.instance, "updated_by", user)
         
     def set_delete(self) -> None:

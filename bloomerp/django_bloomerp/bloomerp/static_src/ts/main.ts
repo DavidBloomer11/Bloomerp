@@ -46,6 +46,7 @@ import SqlQueryEditor from './components/inputs/SqlQueryEditor';
 import Canvas from './components/workspaces/tiles/Canvas';
 import FileBrowser from './components/files/FileBrowser';
 import DocumentTemplateDataViewContainer from './components/data_view_components/DocumentTemplateDataViewContainer';
+import ForeignFieldDataViewContainer from './components/data_view_components/ForeignFieldDataViewContainer';
 import { SidebarItem } from './components/sidebar/SidebarItem';
 import FocusIn from './components/inputs/FocusIn';
 import ShortcutTooltip from './components/ShortcutTooltip';
@@ -72,6 +73,7 @@ import { EmailEditor } from './components/inbox/EmailEditor';
 import { SelectPreference } from './components/SelectPreference';
 import BaseSectionedLayoutContainer from './components/layouts/BaseSectionedLayoutContainer';
 import ThemeProvider from './components/theme/ThemeProvider';
+import { loadTranslations } from './utils/i18n';
 
 Object.assign(window, { showMessage });
 
@@ -86,6 +88,7 @@ registerComponent('theme-provider', ThemeProvider);
 // Dataview component
 registerComponent('dataview-container', DataViewContainer);
 registerComponent('document-templates-dataview', DocumentTemplateDataViewContainer);
+registerComponent('foreign-field-dataview', ForeignFieldDataViewContainer);
 registerComponent('dataview-display-options', DataViewDisplayOptions);
 registerComponent('pivot-table', PivotTable);
 registerComponent('calendar', Calendar);
@@ -178,13 +181,11 @@ registerComponent('inbox-item', InboxItem)
 
 registerComponent('email-editor', EmailEditor)
 
-// Auto init comonents
-setupComponentAutoInit();
-
-
-// Realtime messages
-initMessagesWebsocket();
-
-
-// Setup animation listener
-SetupAnimationListener()
+loadTranslations()
+    .catch((error) => console.warn('Could not load the translation catalog', error))
+    .finally(() => {
+        // Components may synchronously render translated frontend labels.
+        setupComponentAutoInit();
+        initMessagesWebsocket();
+        SetupAnimationListener();
+    });

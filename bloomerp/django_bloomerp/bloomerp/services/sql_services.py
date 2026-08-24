@@ -4,14 +4,14 @@ from typing import Any
 
 import pandas as pd
 
-from bloomerp.models import ApplicationField
 from bloomerp.models.users.user import AbstractBloomerpUser
 from bloomerp.permissions.definition import BloomerpPermission
 from bloomerp.permissions.manager import UserPolicyManager
-from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
 from bloomerp.utils.sql import SqlQueryExecutor
 from bloomerp.workspaces.analytics_tile.utils import TileFieldType, get_primitive_field_icon, to_primitive_field_type
 from pydantic import BaseModel
+
+from bloomerp.workspaces.utils import UserParameterResolver
 
 class Field(BaseModel):
     """Represents one selectable SQL output field or accessible database field."""
@@ -72,7 +72,7 @@ class SqlExecutor:
 
     def __init__(self, user: AbstractBloomerpUser | None = None):
         self.user = user
-        self.permission_manager = UserPermissionManager(user) if user is not None else None
+        self.policy_manager = UserPolicyManager(user) if user else None
 
     def get_accessible_tables_and_fields(self) -> list[DatabaseTable]:
         """Returns the accessible tables and fields for 
@@ -81,8 +81,9 @@ class SqlExecutor:
         Returns:
             list[DatabaseTable]: list of database tables with fields
         """
-        policy_manager = UserPolicyManager(self.user)
-        models_and_fields = policy_manager.get_accessible_models_and_fields(self.REQUIRED_PERMISSION)
+        models_and_fields = self.policy_manager.get_accessible_models_and_fields(
+            self.REQUIRED_PERMISSION
+        )
 
         tables: list[DatabaseTable] = []
         for model, fields in models_and_fields.items():
@@ -113,7 +114,9 @@ class SqlExecutor:
             query (str): the sql query
         """
         normalized_query = query.strip()
-
+        resolver = UserParameterResolver(self.user, self.policy_manager)
+        normalized_query = resolver.resolve(normalized_query) # TODO: This might interfere with queries made in a workspace
+        
         if not normalized_query:
             raise ValueError("No SQL query provided")
 
@@ -122,12 +125,9 @@ class SqlExecutor:
 
         query_params: tuple[Any, ...] = ()
         if self.user is not None:
-            policy_manager = UserPolicyManager(self.user)
-            compiled_query = policy_manager.get_accessible_sql_query(normalized_query)
+            compiled_query = self.policy_manager.get_accessible_sql_query(normalized_query)
             normalized_query = compiled_query.query
             query_params = compiled_query.params
-
-            print(normalized_query)
         
         executor = SqlQueryExecutor()
         query_without_semicolon = normalized_query.rstrip(";")
@@ -167,6 +167,7 @@ class SqlExecutor:
             total_row_count = 0
             execution_query = query_without_semicolon
 
+        
         result = executor.execute_to_dict(
             execution_query,
             params=query_params,

@@ -6,6 +6,7 @@ from django.core.files.base import ContentFile
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from bloomerp.modules.misc import MiscModule
+from bloomerp.services.file_services import ensure_folder_hierarchy_for_object
 
 class TestFileModels(BaseBloomerpModelTestCase):
     auto_create_customers = True
@@ -93,6 +94,24 @@ class TestFileModels(BaseBloomerpModelTestCase):
         # 7. Check that all of those folders are protected, since they're automatically created for files
         for folder in [object_folder, model_folder, module_folder]:
             self.assertTrue(folder.protected)
+
+    def test_generated_model_folder_identity_does_not_depend_on_display_name(self):
+        customer = self.get_customer()
+        content_type = ContentType.objects.get_for_model(customer)
+        existing_folder = FileFolder.objects.create(
+            name="Previously translated customers",
+            content_type=content_type,
+            protected=True,
+        )
+
+        ensure_folder_hierarchy_for_object(customer)
+
+        model_folders = FileFolder.objects.filter(
+            content_type=content_type,
+            object_id__isnull=True,
+        )
+        self.assertEqual(model_folders.count(), 1)
+        self.assertEqual(model_folders.get(), existing_folder)
 
     def test_folder_cannot_have_object_id_without_content_type(self):
         """

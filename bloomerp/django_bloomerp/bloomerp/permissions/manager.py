@@ -322,6 +322,52 @@ class UserPolicyManager:
             match,
         ).filter(pk=field.pk).exists()
 
+    def get_accessible_content_types(
+        self,
+        permissions: list[str] | list[BloomerpPermission] | str | BloomerpPermission,
+        match: PermissionMatch = PermissionMatch.ANY,
+    ) -> QuerySet[ContentType]:
+        """Returns a queryset of content types for which the user has access.
+
+        Args:
+            permissions (list[str] | list[BloomerpPermission] | str | BloomerpPermission): the permissions
+            match (PermissionMatch, optional): Whether to resolve for all or any permission. Defaults to PermissionMatch.ANY.
+        Returns:
+            QuerySet[ContentType]: queryset of content types
+        """
+        if getattr(self.user, "is_superuser", False):
+            return ContentType.objects.all()
+        if self.is_anonymous:
+            return ContentType.objects.none()
+
+        candidate_models: dict[int, Type[models.Model]] = {}
+        for policy in self.get_user_policies():
+            if not policy.row_policy_id:
+                continue
+            model = policy.row_policy.content_type.model_class()
+            if model is None:
+                continue
+            granted = {
+                permission.codename
+                for rule in policy.row_policy.rules.all()
+                for permission in rule.permissions.all()
+            }
+            requested = PolicyManager._qualify_permission_codenames(
+                model,
+                permissions,
+            )
+            if not self._permission_matches(granted, requested, match):
+                continue
+            candidate_models[policy.row_policy.content_type_id] = model
+
+        content_type_ids = {
+            content_type_id
+            for content_type_id, model in candidate_models.items()
+            if self.has_global_permission(model, permissions, match)
+        }
+
+        return ContentType.objects.filter(pk__in=content_type_ids)
+    
     def get_accessible_queryset(
         self,
         model_or_content_type: Type[models.Model] | ContentType,
@@ -453,12 +499,13 @@ class UserPolicyManager:
             return False
 
         requested = PolicyManager._qualify_permission_codenames(model, permissions)
-        policy_grants = set(
-            self.get_user_policies().filter(
-                global_permissions__content_type=content_type,
-                global_permissions__codename__in=requested,
-            ).values_list("global_permissions__codename", flat=True)
-        )
+        policy_grants = {
+            permission.codename
+            for policy in self.get_user_policies()
+            for permission in policy.global_permissions.all()
+            if permission.content_type_id == content_type.pk
+            and permission.codename in requested
+        }
         checks = [
             self.user.has_perm(f"{content_type.app_label}.{codename}")
             or codename in policy_grants
@@ -566,6 +613,30 @@ class UserPolicyManager:
             tables_and_fields[model] = accessible_fields
 
         return tables_and_fields
+    
+    def get_accessible_models(self, permissions: list[str] | list[BloomerpPermission] | str | BloomerpPermission, match: PermissionMatch = PermissionMatch.ANY) -> list[Type[models.Model]]:
+        """Returns a list of models for which the user has access based on the provided permissions.
+
+        Args:
+            permissions (list[str] | list[BloomerpPermission] | str | BloomerpPermission): The permissions to check.
+            match (PermissionMatch, optional): Whether all or any requested permissions must match. Defaults to PermissionMatch.ANY.
+        """
+        if getattr(self.user, "is_superuser", False):
+            return list(apps.get_models())
+        
+        accessible_models: list[Type[models.Model]] = []
+        row_policies = self.get_row_policies().select_related("content_type")
+        for row_policy in row_policies:
+            content_type = row_policy.content_type
+            model: Type[models.Model] | None = content_type.model_class()
+            if model is None:
+                continue
+            
+            if self.has_global_permission(model, permissions=permissions, match=match):
+                accessible_models.append(model)
+                
+        return accessible_models
+        
         
     def get_accessible_sql_query(
         self,

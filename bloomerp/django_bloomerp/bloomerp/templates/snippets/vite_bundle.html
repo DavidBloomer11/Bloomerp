@@ -16,6 +16,10 @@ The built Vite entry also emits a sibling CSS asset (`main.css`) for package
 styles imported from TypeScript, including Drawflow's base interaction styles.
 {% endcomment %}
 
+<script>
+        window.BLOOMERP_I18N_CATALOG_URL = "{% url 'bloomerp_javascript_catalog' %}";
+</script>
+
 {% if DEBUG and BLOOMERP_VITE_DEV_SERVER_URL %}
         <script type="module" src="{{ BLOOMERP_VITE_DEV_SERVER_URL }}/ts/main.ts"></script>
 {% else %}

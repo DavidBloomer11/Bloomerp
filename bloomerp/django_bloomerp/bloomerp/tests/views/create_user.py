@@ -81,6 +81,25 @@ class TestCreateUserView(BaseBloomerpModelTestCase):
         )
         self.assertEqual(authenticated_user, created_user)
 
+    def test_create_user_form_renders(self):
+        """
+        Use case: An administrator opens the create-user view.
+        Expected result: The password-aware user creation form is rendered.
+        """
+        # 1. Log in as the administrator and open the create-user view.
+        self.client.force_login(self.admin_user)
+        response = self.client.get(self.get_url())
+
+        # 2. Confirm the view renders the fields needed to create a user.
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "views/users/create.html")
+        self.assertContains(response, 'name="username"')
+        self.assertContains(response, 'name="password1"')
+        self.assertContains(response, 'name="password2"')
+        self.assertContains(response, 'enctype="multipart/form-data"')
+        self.assertContains(response, 'hx-encoding="multipart/form-data"')
+        self.assertContains(response, 'hx-push-url="true"')
+
     def test_create_route_is_bound_to_the_active_user_model(self):
         match = resolve(self.get_url())
 

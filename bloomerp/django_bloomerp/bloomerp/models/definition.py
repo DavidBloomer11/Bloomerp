@@ -1,13 +1,194 @@
+import json
 import inspect
+import re
 from typing import Any, Callable, Literal, Optional, Type
+from urllib.parse import urlsplit
 
 from django.http import HttpRequest, HttpResponse
 from bloomerp.config.definition import BloomerpConfig
-from bloomerp.models.base_bloomerp_model import FieldLayout
-from bloomerp.field_types import Lookup
-from pydantic import BaseModel, Field, field_validator
+from bloomerp.field_types.lookups import Lookup
+from bloomerp.workspaces.base import BaseTileConfig
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    SerializeAsAny,
+    field_validator,
+    model_validator,
+)
 from django.conf import settings
 from django.db.models import Model
+
+class LayoutItem(BaseModel):
+    id: int | str
+    colspan: int = 1
+    config: dict = Field(default_factory=dict)
+
+    icon: str | None = None
+    label: Optional[str] = None
+    is_visible: bool = True
+    content: Optional[str] = None
+    component_name: Optional[str] = None
+    border: bool = False
+    edit_url: Optional[str] = None
+    search_keywords: Optional[str] = None
+    extra_attrs: Optional[dict] = Field(default_factory=dict)
+
+    @property
+    def config_json(self) -> str:
+        return json.dumps(self.config)
+
+    def set_content(self, content: str):
+        self.content = content
+
+
+class LayoutRow(BaseModel):
+    columns: int
+    items: list[LayoutItem] = Field(default_factory=list)
+    title: Optional[str] = None
+
+
+class BaseLayout(BaseModel):
+    """Base layout class for defining layouts in Bloomerp.
+
+    This class serves as a base for other layout classes, providing common
+    attributes and methods that can be extended or overridden by subclasses.
+    """
+
+    name: str = "Default"
+    is_default: bool = True
+    rows: list[LayoutRow] = Field(default_factory=list)
+
+
+class FieldLayout(BaseLayout):
+    pass
+
+class WorkspaceLayout(BaseLayout):
+    pass
+
+
+# ----------------------------------
+# DETAIL TABS CONFIGURATION
+# ----------------------------------
+DETAIL_TAB_TEMPLATE_ARGUMENT = re.compile(r"{{\s*([^{}]+?)\s*}}")
+
+
+def validate_detail_tab_url(url: str) -> str:
+    """Validate and normalize a declarative detail-tab URL template."""
+    normalized = url.strip()
+    if not normalized:
+        raise ValueError("URL is required.")
+
+    arguments = {
+        argument.strip()
+        for argument in DETAIL_TAB_TEMPLATE_ARGUMENT.findall(normalized)
+    }
+    if arguments - {"pk"}:
+        raise ValueError("Only the {{pk}} placeholder is supported.")
+
+    parsed = urlsplit(normalized)
+    is_internal = (
+        not parsed.scheme
+        and not parsed.netloc
+        and normalized.startswith("/")
+    )
+    is_external = parsed.scheme in {"http", "https"} and bool(parsed.netloc)
+    if not is_internal and not is_external:
+        raise ValueError(
+            "Enter an internal URL beginning with / or a complete http(s) URL."
+        )
+    return normalized
+
+
+class DetailTab(BaseModel):
+    """A declarative tab shown on a model's detail view."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(min_length=1, max_length=255)
+    url: str | None = Field(default=None, min_length=1, max_length=2048)
+    url_name: str | None = Field(default=None, min_length=1, max_length=255)
+
+    @field_validator("name")
+    @classmethod
+    def normalize_name(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Name is required.")
+        return normalized
+
+    @field_validator("url")
+    @classmethod
+    def validate_url(cls, value: str | None) -> str | None:
+        return validate_detail_tab_url(value) if value is not None else None
+
+    @field_validator("url_name")
+    @classmethod
+    def normalize_url_name(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("URL name is required.")
+        return normalized
+
+    @model_validator(mode="after")
+    def validate_url_source(self) -> "DetailTab":
+        if (self.url is None) == (self.url_name is None):
+            raise ValueError("Provide exactly one of url or url_name.")
+        return self
+
+
+class DetailTabFolder(BaseModel):
+    """A top-level folder containing declarative detail tabs."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(min_length=1, max_length=255)
+    tabs: list[DetailTab] = Field(default_factory=list)
+
+    @field_validator("name")
+    @classmethod
+    def normalize_name(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Name is required.")
+        return normalized
+
+
+class DetailTabsConfiguration(BaseModel):
+    """A collection of declarative tabs shown on a model's detail view."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(default="Default", min_length=1, max_length=255)
+    tabs: list[DetailTab | DetailTabFolder] = Field(default_factory=list)
+
+    @field_validator("name")
+    @classmethod
+    def normalize_name(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Name is required.")
+        return normalized
+
+
+def validate_declarative_tile_configs(
+    tiles: list[BaseTileConfig],
+    *,
+    owner: str,
+) -> list[BaseTileConfig]:
+    """Require stable, unique IDs for tiles declared in configuration."""
+    seen_ids: set[str] = set()
+    for tile in tiles:
+        tile_id = (tile.id or "").strip()
+        if not tile_id:
+            raise ValueError(f"Every tile declared on {owner} must have an id.")
+        if tile_id in seen_ids:
+            raise ValueError(f"Duplicate tile id '{tile_id}' declared on {owner}.")
+        tile.id = tile_id
+        seen_ids.add(tile_id)
+    return tiles
 
 class ApiFilterRule(BaseModel):
     field: str
@@ -105,6 +286,7 @@ class PublicAccessRule(BaseModel):
                 allowed_fields.add(field_name)
         return allowed_fields
 
+
 class UserAccessRule(BaseModel):
     """A user access rule defines in which cases users can access an object via the api. The through field serves as the entry point for the user access definition. Note that user access rules only apply to the auto generated API's.
 
@@ -162,7 +344,6 @@ class UserAccessRule(BaseModel):
     row_actions:list[Literal["view", "change", "add", "delete"]]
     filters:list[ApiFilterRule] = Field(default_factory=list)
 
-
 class ApiNesting(BaseModel):
     for_field: str
     fields: list[str | Literal["__all__"]] = Field(default_factory=lambda: ["__all__"])
@@ -184,7 +365,6 @@ class ApiNesting(BaseModel):
             for field_name in self.fields
             if field_name != "__all__"
         }
-
 
 class ApiSettings(BaseModel):
     """
@@ -233,12 +413,10 @@ class ApiSettings(BaseModel):
             if normalized_action in rule.on_action
         ]
 
-
 class ObjectHTML(BaseModel):
     template_name:str
     
     should_render_func:Callable[[HttpRequest, Model], bool] = lambda req, obj : True
-
 
 class ObjectAction(BaseModel):
     id:str
@@ -269,23 +447,25 @@ class ObjectModalAction(BaseModel):
     should_render_func:Callable[[HttpRequest, Model], bool] = lambda req, obj : True
     
     modal_title:Optional[str] = ""
-    
-    
 
-    
+    modal_size:Literal["sm", "md", "lg", "xl", "full"] = "md"
+
 class ModelViewSettings(BaseModel):
     """
     Optional settings for on the model level
     """
     skip_views : Optional[list[str]] = None
 
-
 class DetailViewSettings(BaseModel):
+    """Settings regarding detail views for a model.
+
+    An empty ``tab_configurations`` list retains router-derived defaults. Each
+    configured layout becomes a named preference, with the first one selected.
     """
-    Settings regarding detail views for certain models
-    """
-    skip_views : Optional[list[str]] = None
-    
+
+    skip_views: Optional[list[str]] = None
+    tab_configurations: list[DetailTabsConfiguration] = Field(default_factory=list)
+
 
 class BloomerpModelConfig(BaseModel):
     """
@@ -294,6 +474,7 @@ class BloomerpModelConfig(BaseModel):
     Settings are:
         - module: the canonical module to which this model belongs.
         - layout: a layout object defining how the default CRUD layout for users is.
+        - tiles: reusable tile configurations associated with this model.
         - string_search_fields: optional field paths used by the shared string search service.
 
     Usage
@@ -310,6 +491,8 @@ class BloomerpModelConfig(BaseModel):
     module: str | type | None = None
 
     layout: Optional[FieldLayout] = None
+
+    tiles: list[SerializeAsAny[BaseTileConfig]] = Field(default_factory=list)
 
     allow_string_search: bool = True
 
@@ -328,6 +511,19 @@ class BloomerpModelConfig(BaseModel):
     model_view_settings : Optional[ModelViewSettings] = None 
     
     object_actions : Optional[list[ObjectAction | ObjectHTML | ObjectModalAction]] = None
+
+    @field_validator("tiles")
+    @classmethod
+    def validate_tiles(
+        cls,
+        value: list[BaseTileConfig],
+    ) -> list[BaseTileConfig]:
+        return validate_declarative_tile_configs(
+            value,
+            owner=cls.__name__,
+        )
+    
+    
     
     @field_validator("module", mode="before")
     @classmethod

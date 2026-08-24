@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from django.db import models
 
 from bloomerp.models.base_bloomerp_model import FieldLayout
@@ -10,7 +11,7 @@ class ContentLayoutModelMixin(models.Model):
     class Meta:
         abstract = True
 
-    layout = models.JSONField(default=dict, blank=True)
+    layout = models.JSONField(default=dict, blank=True, verbose_name=_("Layout"))
 
     @property
     def layout_obj(self) -> FieldLayout:

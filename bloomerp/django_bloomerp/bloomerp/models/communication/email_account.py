@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _, gettext_noop
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
@@ -18,19 +19,19 @@ class EmailAccount(BloomerpModel):
     )
 
     class SecurityMode(models.TextChoices):
-        SSL_TLS = "ssl_tls", "SSL/TLS"
-        STARTTLS = "starttls", "STARTTLS"
-        NONE = "none", "None"
+        SSL_TLS = "ssl_tls", _("SSL/TLS")
+        STARTTLS = "starttls", _("STARTTLS")
+        NONE = "none", _("None")
 
     class Status(models.TextChoices):
-        DRAFT = "draft", "Draft"
-        ACTIVE = "active", "Active"
-        ERROR = "error", "Error"
+        DRAFT = "draft", _("Draft")
+        ACTIVE = "active", _("Active")
+        ERROR = "error", _("Error")
 
     class Meta:
         db_table = "bloomerp_email_account"
-        verbose_name = "Email Account"
-        verbose_name_plural = "Email Accounts"
+        verbose_name = _("Email Account")
+        verbose_name_plural = _("Email Accounts")
         indexes = [
             models.Index(fields=["provider", "status"], name="email_acc_provider_status_idx"),
             models.Index(fields=["email_address"], name="email_acc_address_idx"),
@@ -44,7 +45,7 @@ class EmailAccount(BloomerpModel):
             rows=[
                 LayoutRow(
                     columns=2,
-                    title="Account",
+                    title=gettext_noop("Account"),
                     items=[
                         LayoutItem(id="name"),
                         LayoutItem(id="email_address"),
@@ -54,7 +55,7 @@ class EmailAccount(BloomerpModel):
                 ),
                 LayoutRow(
                     columns=2,
-                    title="Incoming mail",
+                    title=gettext_noop("Incoming mail"),
                     items=[
                         LayoutItem(id="imap_host"),
                         LayoutItem(id="imap_port"),
@@ -64,7 +65,7 @@ class EmailAccount(BloomerpModel):
                 ),
                 LayoutRow(
                     columns=2,
-                    title="Outgoing mail",
+                    title=gettext_noop("Outgoing mail"),
                     items=[
                         LayoutItem(id="smtp_host"),
                         LayoutItem(id="smtp_port"),
@@ -74,7 +75,7 @@ class EmailAccount(BloomerpModel):
                 ),
                 LayoutRow(
                     columns=2,
-                    title="Synchronization",
+                    title=gettext_noop("Synchronization"),
                     items=[
                         LayoutItem(id="sync_enabled"),
                         LayoutItem(id="sync_mode"),
@@ -95,146 +96,178 @@ class EmailAccount(BloomerpModel):
     name = models.CharField(
         max_length=255,
         blank=True,
+        verbose_name=_("Name"),
     )
     email_address = models.EmailField(
         max_length=255,
         unique=True,
+        verbose_name=_("Email Address"),
     )
     provider = models.CharField(
         max_length=32,
         choices=EmailProvider.choices(),
         default=EmailProvider.IMAP.value.key,
+        verbose_name=_("Provider"),
     )
     status = models.CharField(
         max_length=32,
         choices=Status.choices,
         default=Status.DRAFT,
+        verbose_name=_("Status"),
     )
     username = models.CharField(
         max_length=255,
         blank=True,
+        verbose_name=_("Username"),
     )
     password = models.TextField(
         blank=True,
         help_text="Encrypted password or app password used for providers that support direct SMTP/IMAP authentication.",
+        verbose_name=_("Password"),
     )
     imap_host = models.CharField(
         max_length=255,
         blank=True,
+        verbose_name=_("IMAP Host"),
     )
     imap_port = models.PositiveIntegerField(
         null=True,
         blank=True,
+        verbose_name=_("IMAP Port"),
     )
     imap_security = models.CharField(
         max_length=32,
         choices=SecurityMode.choices,
         default=SecurityMode.SSL_TLS,
+        verbose_name=_("IMAP Security"),
     )
     smtp_host = models.CharField(
         max_length=255,
         blank=True,
+        verbose_name=_("SMTP Host"),
     )
     smtp_port = models.PositiveIntegerField(
         null=True,
         blank=True,
+        verbose_name=_("SMTP Port"),
     )
     smtp_security = models.CharField(
         max_length=32,
         choices=SecurityMode.choices,
         default=SecurityMode.STARTTLS,
+        verbose_name=_("SMTP Security"),
     )
     oauth_client_id = models.CharField(
         max_length=255,
         blank=True,
+        verbose_name=_("OAuth Client ID"),
     )
     oauth_client_secret = models.TextField(
         blank=True,
         help_text="Encrypted OAuth client secret.",
+        verbose_name=_("OAuth Client Secret"),
     )
     oauth_tenant_id = models.CharField(
         max_length=255,
         blank=True,
         help_text="Provider tenant, directory, or workspace identifier when applicable.",
+        verbose_name=_("OAuth Tenant ID"),
     )
     oauth_scopes = models.TextField(
         blank=True,
         help_text="Space-separated OAuth scopes requested for this account.",
+        verbose_name=_("OAuth Scopes"),
     )
     access_token = models.TextField(
         blank=True,
         help_text="Encrypted OAuth access token.",
+        verbose_name=_("Access Token"),
     )
     refresh_token = models.TextField(
         blank=True,
         help_text="Encrypted OAuth refresh token.",
+        verbose_name=_("Refresh Token"),
     )
     token_expires_at = models.DateTimeField(
         null=True,
         blank=True,
+        verbose_name=_("Token Expires At"),
     )
     extra_settings = models.JSONField(
         default=dict,
         blank=True,
         help_text="Provider-specific settings that do not have dedicated fields yet.",
+        verbose_name=_("Extra Settings"),
     )
     # Synchronization fields
     sync_enabled = models.BooleanField(
         default=True,
         help_text="Whether this account should be synchronized automatically.",
+        verbose_name=_("Sync Enabled"),
     )
     sync_mode = models.CharField(
         max_length=32,
         choices=[(mode.value, mode.label) for mode in EmailSyncMode],
         blank=True,
         help_text="Synchronization mode for this account. Defaults to the provider's preferred mode.",
+        verbose_name=_("Sync Mode"),
     )
     sync_interval_minutes = models.PositiveIntegerField(
         default=5,
         help_text="Polling interval used by providers that synchronize on a schedule.",
+        verbose_name=_("Sync Interval Minutes"),
     )
     sync_cursor = models.JSONField(
         default=dict,
         blank=True,
         help_text="Provider-specific cursor/state for incremental synchronization.",
+        verbose_name=_("Sync Cursor"),
     )
     next_sync_at = models.DateTimeField(
         null=True,
         blank=True,
         editable=False,
+        verbose_name=_("Next Sync At"),
     )
     last_sync_started_at = models.DateTimeField(
         null=True,
         blank=True,
         editable=False,
+        verbose_name=_("Last Sync Started At"),
     )
     last_sync_finished_at = models.DateTimeField(
         null=True,
         blank=True,
         editable=False,
+        verbose_name=_("Last Sync Finished At"),
     )
     sync_locked_until = models.DateTimeField(
         null=True,
         blank=True,
         editable=False,
+        verbose_name=_("Sync Locked Until"),
     )
     last_sync_error = models.TextField(
         blank=True,
         editable=False,
+        verbose_name=_("Last Sync Error"),
     )
     last_validated_at = models.DateTimeField(
         null=True,
         blank=True,
         editable=False,
+        verbose_name=_("Last Validated At"),
     )
     validation_error = models.TextField(
         blank=True,
         editable=False,
+        verbose_name=_("Validation Error"),
     )
     mailboxes = models.JSONField(
         default=list,
         blank=True,
         help_text="Cached list of folders/mailboxes for this account.",
+        verbose_name=_("Mailboxes"),
     )
     
     

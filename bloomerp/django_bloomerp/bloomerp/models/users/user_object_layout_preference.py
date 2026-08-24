@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from django.contrib.contenttypes.models import ContentType
 from bloomerp.models.definition import get_model_config
 from bloomerp.models.mixins.content_layout_model_mixin import ContentLayoutModelMixin
@@ -8,8 +9,8 @@ class UserObjectLayoutPreference(ContentLayoutModelMixin, BaseViewPreference):
     """Model to store user preferences for object layouts."""
 
     class Meta:
-        verbose_name = "User Object Layout Preference"
-        verbose_name_plural = "User Object Layout Preferences"
+        verbose_name = _("User Object Layout Preference")
+        verbose_name_plural = _("User Object Layout Preferences")
 
     @classmethod
     def create_default_for_user(cls, user, **scope) -> "UserObjectLayoutPreference":

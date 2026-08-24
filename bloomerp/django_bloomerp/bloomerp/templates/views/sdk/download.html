@@ -1,3 +1,4 @@
+{% load i18n %}
 <c-ui.container>
     <c-ui.text.text>
         
@@ -35,7 +36,7 @@
                     name="action"
                     value="create_default"
                 >
-                    <c-i18n.blocktrans>Download</c-i18n.blocktrans>
+                    {% blocktrans %}Download{% endblocktrans %}
                 </button>
             </form>
         </div>

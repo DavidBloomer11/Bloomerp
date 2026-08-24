@@ -1,5 +1,6 @@
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, HTML, Field
+from django.utils.translation import gettext
 from bloomerp.models.base_bloomerp_model import LayoutRow
 
 class BloomerpModelformHelper(FormHelper):
@@ -18,7 +19,7 @@ class BloomerpModelformHelper(FormHelper):
             
             if row.title:
                 rows.append(
-                    Div(HTML(f"<h1 class='block text-primary-900 font-bold mb-2'>{row.title}</h1>"))
+                    Div(HTML(f"<h1 class='block text-primary-900 font-bold mb-2'>{gettext(row.title)}</h1>"))
                 )
             
             rows.append(Div(

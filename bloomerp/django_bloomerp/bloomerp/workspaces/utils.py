@@ -1,14 +1,14 @@
 import ast
 import re
+from typing import Optional
 
 from django.db import models
 from django.db.models import QuerySet
 
 from bloomerp.models.users.user import AbstractBloomerpUser
-from bloomerp.services.permission_services import (
-    UserPermissionManager,
-    create_permission_str,
-)
+from bloomerp.permissions.definition import BloomerpPermission
+from bloomerp.permissions.manager import UserPolicyManager
+
 
 # TODO: opportunity to generalise resolvers in the future
 class UserParameterResolver:
@@ -30,9 +30,9 @@ class UserParameterResolver:
         "password",
     }
 
-    def __init__(self, user: AbstractBloomerpUser):
+    def __init__(self, user: AbstractBloomerpUser, policy_manager: Optional[UserPolicyManager] = None):
         self.user = user
-        self.permission_manager = UserPermissionManager(user)
+        self.policy_manager = policy_manager or UserPolicyManager(user)
 
     def resolve(self, query: str):
         if not isinstance(query, str):
@@ -185,14 +185,12 @@ class UserParameterResolver:
             return value
 
         if isinstance(value, QuerySet):
-            permission_str = create_permission_str(value.model, "view")
-            allowed_queryset = self.permission_manager.get_queryset(value.model, permission_str)
+            allowed_queryset = self.policy_manager.get_queryset(value.model, BloomerpPermission.VIEW)
             return value.filter(pk__in=allowed_queryset.values_list("pk", flat=True))
 
         if isinstance(value, models.Model):
-            permission_str = create_permission_str(value, "view")
             if (
-                self.permission_manager.get_queryset(value._meta.model, permission_str)
+                self.policy_manager.get_queryset(value._meta.model, BloomerpPermission.VIEW)
                 .filter(pk=value.pk)
                 .exists()
             ):

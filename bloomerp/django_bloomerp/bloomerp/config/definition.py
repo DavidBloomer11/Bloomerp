@@ -82,6 +82,40 @@ class BloomerpAuthSettings(BaseModel):
     def is_strategy_enabled(self, strategy_type: str) -> bool:
         return strategy_type in self.enabled_strategy_types()
 
+
+class BloomerpI18nLLMSettings(BaseModel):
+    """Provider-agnostic machine translation settings.
+
+    The implementation uses LangChain's ``init_chat_model`` entry point, so the
+    configured provider integration can be installed by the consuming project.
+    """
+
+    model: str = "gpt-4.1-mini"
+    provider: str | None = "openai"
+    temperature: float = 0
+    batch_size: int = Field(default=30, ge=1, le=100)
+
+
+class BloomerpAppI18nSettings(BaseModel):
+    """Internationalization metadata owned by an installed Django app."""
+
+    source_language: str
+
+
+class BloomerpI18nSettings(BaseModel):
+    """Extraction, translation and compilation settings for installed apps."""
+
+    source_language: str = "en"
+    languages: list[str] = Field(default_factory=list)
+    app_source_languages: dict[str, str] = Field(default_factory=dict)
+    apps: Literal["auto"] | list[str] = "auto"
+    exclude_apps: list[str] = Field(default_factory=list)
+    frontend_globs: list[str] = Field(
+        default_factory=lambda: ["static_src/ts/**/*.ts", "static_src/ts/**/*.tsx"]
+    )
+    mark_machine_translations_fuzzy: bool = True
+    llm: BloomerpI18nLLMSettings = Field(default_factory=BloomerpI18nLLMSettings)
+
 class BloomerpConfig(BaseModel):
     """
     Configuration class to be set on the settings. This contains all the necessary configurable settings for bloomerp.
@@ -107,6 +141,8 @@ class BloomerpConfig(BaseModel):
     vite_dev_server_url : Optional[str] = 'http://localhost:5173'
 
     auth: BloomerpAuthSettings = Field(default_factory=BloomerpAuthSettings)
+
+    i18n: BloomerpI18nSettings = Field(default_factory=BloomerpI18nSettings)
 
     email_secret_key: Optional[str] = None
 

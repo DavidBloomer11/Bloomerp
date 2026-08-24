@@ -1,3 +1,4 @@
+{% load i18n %}
 <c-features.layout.container 
     :component_name="ts_container_component"
     :layout="layout"
@@ -39,7 +40,7 @@
                                     hx-swap="innerHTML"
                                 >
                                     <div class="px-3 py-2 text-sm text-slate-500">
-                                        <c-i18n.blocktrans>Loading filters...</c-i18n.blocktrans>
+                                        {% blocktrans %}Loading filters...{% endblocktrans %}
                                     </div>
                                 </div>
                             </div>
@@ -65,7 +66,7 @@
                 hx-swap="innerHTML"
             >
                 <i class="fa fa-puzzle-piece"></i>
-                <c-i18n.blocktrans>Select module</c-i18n.blocktrans>
+                {% blocktrans %}Select module{% endblocktrans %}
             </button>
         {% endif %}
 
@@ -84,7 +85,7 @@
             data-create-tile-btn
             >
             <i class="fa fa-add"></i>
-            <c-i18n.blocktrans>Create tile</c-i18n.blocktrans>
+            {% blocktrans %}Create tile{% endblocktrans %}
         </button>
     </c-slot>
 </c-features.layout.container>
