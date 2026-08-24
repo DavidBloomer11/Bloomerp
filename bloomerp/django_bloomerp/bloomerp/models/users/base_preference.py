@@ -40,8 +40,6 @@ class BasePreference(
     This model is intended to be inherited by other models that represent specific user preferences.
     """
     class Meta:
-        verbose_name = _("Base Preference")
-        verbose_name_plural = _("Base Preferences")
         abstract = True
 
     # Subclasses declare the fields that partition a user's selections, for

@@ -12,8 +12,6 @@ class BaseViewPreference(BasePreference):
     preference_scope_fields = ("content_type",)
 
     class Meta:
-        verbose_name = _("Base View Preference")
-        verbose_name_plural = _("Base View Preferences")
         abstract = True
 
     bloomerp_config = BloomerpModelConfig(
