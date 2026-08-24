@@ -38,6 +38,8 @@ export default class ForeignFieldWidget extends BaseWidget {
     private createSuccessHandler: ((event: Event) => void) | null = null;
     private advancedSelectionHandler: ((event: Event) => void) | null = null;
     private advancedSelectionTarget: HTMLElement | null = null;
+    private advancedModalClosedHandler: (() => void) | null = null;
+    private advancedModalClosedTarget: HTMLElement | null = null;
 
     private createControlEl: HTMLElement | null = null;
     private advancedControlEl: HTMLElement | null = null;
@@ -591,6 +593,7 @@ export default class ForeignFieldWidget extends BaseWidget {
     private setupAdvancedSelectionListener(modal: Modal): void {
         this.teardownAdvancedSelectionListener();
         this.advancedSelectionTarget = modal.getBodyElement();
+        this.advancedModalClosedTarget = modal.element;
         this.advancedSelectionHandler = (event: Event) => {
             const selection = (event as CustomEvent<ForeignFieldSelection>).detail;
             if (!selection?.objectId) return;
@@ -605,9 +608,17 @@ export default class ForeignFieldWidget extends BaseWidget {
                 this.teardownAdvancedSelectionListener();
             }
         };
+        this.advancedModalClosedHandler = () => {
+            this.teardownAdvancedSelectionListener();
+        };
         this.advancedSelectionTarget.addEventListener(
             this.advancedSelectionEventName,
             this.advancedSelectionHandler,
+        );
+        this.advancedModalClosedTarget?.addEventListener(
+            'bloomerp:modal-closed',
+            this.advancedModalClosedHandler,
+            { once: true },
         );
     }
 
@@ -618,8 +629,16 @@ export default class ForeignFieldWidget extends BaseWidget {
                 this.advancedSelectionHandler,
             );
         }
+        if (this.advancedModalClosedTarget && this.advancedModalClosedHandler) {
+            this.advancedModalClosedTarget.removeEventListener(
+                'bloomerp:modal-closed',
+                this.advancedModalClosedHandler,
+            );
+        }
         this.advancedSelectionTarget = null;
         this.advancedSelectionHandler = null;
+        this.advancedModalClosedTarget = null;
+        this.advancedModalClosedHandler = null;
     }
 
     private attachPreview(element: HTMLElement, objectId: string): void {
