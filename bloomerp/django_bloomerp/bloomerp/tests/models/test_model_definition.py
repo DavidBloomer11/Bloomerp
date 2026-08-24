@@ -5,6 +5,7 @@ from bloomerp.models.definition import (
     BloomerpModelConfig,
     DetailTab,
     DetailTabFolder,
+    DetailTabsConfiguration,
     DetailViewSettings,
 )
 from bloomerp.workspaces.text_tile.model import TextTileConfig
@@ -72,38 +73,49 @@ class BloomerpModelConfigTileTests(SimpleTestCase):
 
 
 class DetailViewSettingsTests(SimpleTestCase):
-    def test_detail_view_settings_accept_declarative_default_tabs(self):
+    def test_detail_view_settings_accept_named_tab_configurations(self):
         """
-        Use case: A model declares an ordered default detail-tab layout.
-        Expected result: Tabs and folders retain their concrete types and payloads.
+        Use case: A model declares multiple named detail-tab configurations.
+        Expected result: Names, URL targets, folders, and ordering retain their payloads.
         """
-        # 1. Define a default layout with a top-level tab and folder.
+        # 1. Define named layouts using literal URLs and a route name.
         settings = DetailViewSettings(
-            default_tabs=[
-                DetailTab(name=" Overview ", url=" /todos/{{pk}}/ "),
-                DetailTabFolder(
-                    name="Related",
+            tab_configurations=[
+                DetailTabsConfiguration(
+                    name=" Primary ",
                     tabs=[
                         DetailTab(
-                            name="Initiative",
-                            url="/todos/{{pk}}/initiative/",
-                        )
+                            name=" Overview ",
+                            url_name=" todos_detail_overview ",
+                        ),
+                        DetailTabFolder(
+                            name="Related",
+                            tabs=[
+                                DetailTab(
+                                    name="Initiative",
+                                    url="/todos/{{pk}}/initiative/",
+                                )
+                            ],
+                        ),
                     ],
                 ),
+                DetailTabsConfiguration(name="Empty", tabs=[]),
             ]
         )
 
         # 2. Confirm normalization and the easy-to-consume concrete models.
-        self.assertEqual(settings.default_tabs[0].name, "Overview")
-        self.assertEqual(settings.default_tabs[0].url, "/todos/{{pk}}/")
-        self.assertIsInstance(settings.default_tabs[1], DetailTabFolder)
-        self.assertEqual(settings.default_tabs[1].tabs[0].name, "Initiative")
+        primary = settings.tab_configurations[0]
+        self.assertEqual(primary.name, "Primary")
+        self.assertEqual(primary.tabs[0].name, "Overview")
+        self.assertEqual(primary.tabs[0].url_name, "todos_detail_overview")
+        self.assertIsInstance(primary.tabs[1], DetailTabFolder)
+        self.assertEqual(primary.tabs[1].tabs[0].name, "Initiative")
 
-        # 3. Confirm absent and explicitly empty overrides remain distinguishable.
-        self.assertIsNone(DetailViewSettings().default_tabs)
-        self.assertEqual(DetailViewSettings(default_tabs=[]).default_tabs, [])
+        # 3. Confirm the API accepts several configurations and an empty default.
+        self.assertEqual(settings.tab_configurations[1].name, "Empty")
+        self.assertEqual(DetailViewSettings().tab_configurations, [])
 
-    def test_detail_view_settings_reject_invalid_default_tabs(self):
+    def test_detail_view_settings_reject_invalid_tab_configurations(self):
         """
         Use case: A model declares malformed default tabs or nested folders.
         Expected result: Configuration validation fails during application startup.
@@ -111,23 +123,35 @@ class DetailViewSettingsTests(SimpleTestCase):
         # 1. Reject unsupported URL templates.
         with self.assertRaisesRegex(ValidationError, "Only the.*pk.*placeholder"):
             DetailViewSettings(
-                default_tabs=[
-                    DetailTab(name="Invalid", url="/todos/{{user_id}}/")
+                tab_configurations=[
+                    DetailTabsConfiguration(
+                        tabs=[DetailTab(name="Invalid", url="/todos/{{user_id}}/")]
+                    )
                 ]
             )
 
-        # 2. Reject folders inside folders through the concrete child type.
+        # 2. Require exactly one literal URL or URL name for each tab.
+        with self.assertRaisesRegex(ValidationError, "exactly one of url or url_name"):
+            DetailTab(name="Missing target")
+        with self.assertRaisesRegex(ValidationError, "exactly one of url or url_name"):
+            DetailTab(name="Ambiguous", url="/todos/{{pk}}/", url_name="todos")
+
+        # 3. Reject folders inside folders through the concrete child type.
         with self.assertRaises(ValidationError):
             DetailViewSettings(
-                default_tabs=[
-                    {
-                        "name": "Parent",
-                        "tabs": [
+                tab_configurations=[
+                    DetailTabsConfiguration(
+                        tabs=[
                             {
-                                "name": "Nested",
-                                "tabs": [],
+                                "name": "Parent",
+                                "tabs": [
+                                    {
+                                        "name": "Nested",
+                                        "tabs": [],
+                                    }
+                                ],
                             }
-                        ],
-                    }
+                        ]
+                    )
                 ]
             )

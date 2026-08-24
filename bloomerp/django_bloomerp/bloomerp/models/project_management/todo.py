@@ -11,7 +11,14 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.core.exceptions import ValidationError
 
 from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
-from bloomerp.models.definition import BloomerpModelConfig, ObjectAction, ObjectHTML
+from bloomerp.models.definition import (
+    BloomerpModelConfig,
+    DetailTab,
+    DetailTabsConfiguration,
+    DetailViewSettings,
+    ObjectAction,
+    ObjectHTML,
+)
 from bloomerp.utils.models import get_list_view_url
 from bloomerp.workspaces.analytics_tile.model import AnalyticsTileFilter, FieldConfig
 from bloomerp.permissions.definition import BloomerpPermission
@@ -132,6 +139,19 @@ class Todo(BloomerpModel):
                 execution_func=_mark_as_completed
             )
         ],
+        detail_view_settings=DetailViewSettings(
+            tab_configurations=[
+                DetailTabsConfiguration(
+                    name="Default",
+                    tabs=[
+                        DetailTab(
+                            name="Overview",
+                            url_name="todos_detail_overview",
+                        )
+                    ],
+                )
+            ]
+        ),
         tiles=[
             AnalyticsTileConfig(
                 type=AnalyticsTileType.KPI.value.key,
