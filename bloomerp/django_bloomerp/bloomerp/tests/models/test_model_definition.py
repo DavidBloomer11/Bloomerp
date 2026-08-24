@@ -1,7 +1,13 @@
 from django.test import SimpleTestCase
 from pydantic import ValidationError
 
-from bloomerp.models.definition import BloomerpModelConfig
+from bloomerp.models.definition import (
+    BloomerpModelConfig,
+    DetailTab,
+    DetailTabFolder,
+    DetailTabsConfiguration,
+    DetailViewSettings,
+)
 from bloomerp.workspaces.text_tile.model import TextTileConfig
 
 
@@ -62,5 +68,90 @@ class BloomerpModelConfigTileTests(SimpleTestCase):
                 tiles=[
                     TextTileConfig(id="summary", markdown="First"),
                     TextTileConfig(id="summary", markdown="Second"),
+                ]
+            )
+
+
+class DetailViewSettingsTests(SimpleTestCase):
+    def test_detail_view_settings_accept_named_tab_configurations(self):
+        """
+        Use case: A model declares multiple named detail-tab configurations.
+        Expected result: Names, URL targets, folders, and ordering retain their payloads.
+        """
+        # 1. Define named layouts using literal URLs and a route name.
+        settings = DetailViewSettings(
+            tab_configurations=[
+                DetailTabsConfiguration(
+                    name=" Primary ",
+                    tabs=[
+                        DetailTab(
+                            name=" Overview ",
+                            url_name=" todos_detail_overview ",
+                        ),
+                        DetailTabFolder(
+                            name="Related",
+                            tabs=[
+                                DetailTab(
+                                    name="Initiative",
+                                    url="/todos/{{pk}}/initiative/",
+                                )
+                            ],
+                        ),
+                    ],
+                ),
+                DetailTabsConfiguration(name="Empty", tabs=[]),
+            ]
+        )
+
+        # 2. Confirm normalization and the easy-to-consume concrete models.
+        primary = settings.tab_configurations[0]
+        self.assertEqual(primary.name, "Primary")
+        self.assertEqual(primary.tabs[0].name, "Overview")
+        self.assertEqual(primary.tabs[0].url_name, "todos_detail_overview")
+        self.assertIsInstance(primary.tabs[1], DetailTabFolder)
+        self.assertEqual(primary.tabs[1].tabs[0].name, "Initiative")
+
+        # 3. Confirm the API accepts several configurations and an empty default.
+        self.assertEqual(settings.tab_configurations[1].name, "Empty")
+        self.assertEqual(DetailViewSettings().tab_configurations, [])
+
+    def test_detail_view_settings_reject_invalid_tab_configurations(self):
+        """
+        Use case: A model declares malformed default tabs or nested folders.
+        Expected result: Configuration validation fails during application startup.
+        """
+        # 1. Reject unsupported URL templates.
+        with self.assertRaisesRegex(ValidationError, "Only the.*pk.*placeholder"):
+            DetailViewSettings(
+                tab_configurations=[
+                    DetailTabsConfiguration(
+                        tabs=[DetailTab(name="Invalid", url="/todos/{{user_id}}/")]
+                    )
+                ]
+            )
+
+        # 2. Require exactly one literal URL or URL name for each tab.
+        with self.assertRaisesRegex(ValidationError, "exactly one of url or url_name"):
+            DetailTab(name="Missing target")
+        with self.assertRaisesRegex(ValidationError, "exactly one of url or url_name"):
+            DetailTab(name="Ambiguous", url="/todos/{{pk}}/", url_name="todos")
+
+        # 3. Reject folders inside folders through the concrete child type.
+        with self.assertRaises(ValidationError):
+            DetailViewSettings(
+                tab_configurations=[
+                    DetailTabsConfiguration(
+                        tabs=[
+                            {
+                                "name": "Parent",
+                                "tabs": [
+                                    {
+                                        "name": "Nested",
+                                        "tabs": [],
+                                    }
+                                ],
+                            }
+                        ]
+                    )
                 ]
             )

@@ -15,14 +15,18 @@ from django.db.models import Q
 from bloomerp.models.definition import (
     ApiSettings,
     BloomerpModelConfig,
+    DetailTab,
+    DetailTabFolder,
+    DetailTabsConfiguration,
     UserAccessRule,
+    get_model_config,
+    validate_detail_tab_url,
 )
 from bloomerp.models.users.base_preference import BasePreference
 from bloomerp.router import router
 
 
 PK_ROUTE_ARGUMENT = re.compile(r"<(?:[^:>]+:)?pk>")
-TEMPLATE_ARGUMENT = re.compile(r"{{\s*([^{}]+?)\s*}}")
 MAX_TAB_ITEMS = 250
 RELATIONSHIPS_FOLDER_NAME = "Relationships"
 
@@ -80,12 +84,33 @@ class UserDetailViewTabsPreference(BasePreference):
         **scope,
     ) -> "UserDetailViewTabsPreference":
         """Create and populate the default detail-tab layout for a model."""
+        content_type = ContentType.objects.get_for_id(scope["content_type_id"])
+        model = content_type.model_class()
+        model_config = get_model_config(model) if model is not None else None
+        detail_view_settings = (
+            model_config.detail_view_settings if model_config is not None else None
+        )
+        tab_configurations = (
+            detail_view_settings.tab_configurations
+            if detail_view_settings is not None
+            else []
+        )
+
+        if tab_configurations:
+            return cls.create_configured_defaults(
+                user=user,
+                content_type=content_type,
+                model=model,
+                configurations=tab_configurations,
+            )
+
         with transaction.atomic():
             preference = cls.objects.create(
                 user=user,
-                content_type_id=scope["content_type_id"],
+                content_type=content_type,
+                selected=True,
             )
-            preference.create_default_items()
+            preference.create_router_default_items(model)
         return preference
 
     @classmethod
@@ -150,38 +175,19 @@ class UserDetailViewTabsPreference(BasePreference):
     @staticmethod
     def validate_tab_url(url: str) -> str:
         """Validate a root-relative or HTTP(S) URL using only ``{{pk}}``."""
-        normalized = url.strip()
-        if not normalized:
-            raise ValidationError("URL is required.")
-
-        arguments = {
-            argument.strip()
-            for argument in TEMPLATE_ARGUMENT.findall(normalized)
-        }
-        if arguments - {"pk"}:
-            raise ValidationError("Only the {{pk}} placeholder is supported.")
-
-        parsed = urlsplit(normalized)
-        is_internal = (
-            not parsed.scheme
-            and not parsed.netloc
-            and normalized.startswith("/")
-        )
-        is_external = parsed.scheme in {"http", "https"} and bool(parsed.netloc)
-        if not is_internal and not is_external:
-            raise ValidationError(
-                "Enter an internal URL beginning with / or a complete http(s) URL."
-            )
-        return normalized
+        try:
+            return validate_detail_tab_url(url)
+        except ValueError as exc:
+            raise ValidationError(str(exc)) from exc
 
     @staticmethod
     def resolve_tab_url(url: str, object_pk: Any) -> str:
         """Resolve the supported object placeholder in a stored tab URL."""
         return url.replace("{{pk}}", str(object_pk))
 
-    def create_default_items(self) -> None:
+    def create_router_default_items(self, model: type[models.Model] | None) -> None:
         """Populate default routes and group relationship routes in one folder."""
-        options = self.get_detail_route_options(self.content_type.model_class())
+        options = self.get_detail_route_options(model)
         relationship_options = [
             option for option in options if option["is_relationship"]
         ]
@@ -223,6 +229,96 @@ class UserDetailViewTabsPreference(BasePreference):
                     preference=self,
                     name=option["name"],
                     url=option["url"],
+                    position=position,
+                )
+
+    @classmethod
+    def create_configured_defaults(
+        cls,
+        *,
+        user: Any,
+        content_type: ContentType,
+        model: type[models.Model] | None,
+        configurations: list[DetailTabsConfiguration],
+    ) -> "UserDetailViewTabsPreference":
+        """Materialize every named model configuration for a new user."""
+        selected_preference: UserDetailViewTabsPreference | None = None
+        with transaction.atomic():
+            for position, configuration in enumerate(configurations):
+                preference = cls.objects.create(
+                    user=user,
+                    content_type=content_type,
+                    name=configuration.name,
+                    selected=position == 0,
+                )
+                preference.create_configured_default_items(
+                    configuration.tabs,
+                    model=model,
+                )
+                if position == 0:
+                    selected_preference = preference
+
+        if selected_preference is None:
+            raise ValueError("At least one tab configuration is required.")
+        return selected_preference
+
+    @staticmethod
+    def get_configured_tab_url(
+        tab: DetailTab,
+        model: type[models.Model] | None,
+    ) -> str:
+        """Return a URL template from a literal URL or a model detail route name."""
+        if tab.url is not None:
+            return tab.url
+        if model is None:
+            raise ValueError(f"Cannot resolve detail tab URL name '{tab.url_name}'.")
+
+        for route in router.filter(model=model, route_type="detail"):
+            if route.url_name != tab.url_name:
+                continue
+            if route.nr_of_args() != 1 or not PK_ROUTE_ARGUMENT.search(route.path):
+                break
+            return PK_ROUTE_ARGUMENT.sub("{{pk}}", route.path)
+
+        raise ValueError(
+            f"Detail tab URL name '{tab.url_name}' must identify a one-PK "
+            f"detail route for {model.__name__}."
+        )
+
+    def create_configured_default_items(
+        self,
+        tabs: list[DetailTab | DetailTabFolder],
+        *,
+        model: type[models.Model] | None,
+    ) -> None:
+        """Materialize the model's declarative default tab layout."""
+        with transaction.atomic():
+            for position, item in enumerate(tabs):
+                if isinstance(item, DetailTabFolder):
+                    folder = UserDetailViewTabItem.objects.create(
+                        preference=self,
+                        name=item.name,
+                        url=None,
+                        position=position,
+                    )
+                    UserDetailViewTabItem.objects.bulk_create(
+                        [
+                            UserDetailViewTabItem(
+                                preference=self,
+                                parent=folder,
+                                name=tab.name,
+                                url=self.get_configured_tab_url(tab, model),
+                                position=child_position,
+                            )
+                            for child_position, tab in enumerate(item.tabs)
+                        ]
+                    )
+                    continue
+
+                UserDetailViewTabItem.objects.create(
+                    preference=self,
+                    name=item.name,
+                    url=self.get_configured_tab_url(item, model),
                     position=position,
                 )
 

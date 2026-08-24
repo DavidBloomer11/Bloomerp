@@ -1,5 +1,6 @@
 import json
 import uuid
+from unittest.mock import patch
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
@@ -7,6 +8,12 @@ from django.test import TestCase
 from django.urls import reverse
 
 from bloomerp.models import Todo, User
+from bloomerp.models.definition import (
+    DetailTab,
+    DetailTabFolder,
+    DetailTabsConfiguration,
+    DetailViewSettings,
+)
 from bloomerp.models.users.user_detail_view_tabs_preference import (
     UserDetailViewTabItem,
     UserDetailViewTabsPreference,
@@ -31,11 +38,16 @@ class UserDetailViewTabsPreferenceTests(TestCase):
         Use case: A user opens a model detail page without a tabs preference.
         Expected result: The default preference contains every one-PK detail route using {{pk}} URLs.
         """
-        # 1. Create the default preference through the required BasePreference factory.
-        preference = UserDetailViewTabsPreference.create_default_for_user(
-            self.owner,
-            content_type_id=self.content_type.pk,
-        )
+        # 1. Create the router-derived preference through the required factory.
+        with patch.object(
+            Todo.bloomerp_config,
+            "detail_view_settings",
+            DetailViewSettings(),
+        ):
+            preference = UserDetailViewTabsPreference.create_default_for_user(
+                self.owner,
+                content_type_id=self.content_type.pk,
+            )
 
         # 2. Compare the relational tab items with the route catalog.
         options = UserDetailViewTabsPreference.get_detail_route_options(Todo)
@@ -57,6 +69,126 @@ class UserDetailViewTabsPreferenceTests(TestCase):
                 list(folder.children.values_list("url", flat=True)),
                 [option["url"] for option in relationship_options],
             )
+
+    def test_model_config_creates_all_named_tab_configurations(self):
+        """
+        Use case: A model declares multiple named detail-tab configurations.
+        Expected result: Every named preference is materialized and the first is selected.
+        """
+        # 1. Configure two layouts, including a tab identified by route name.
+        detail_view_settings = DetailViewSettings(
+            tab_configurations=[
+                DetailTabsConfiguration(
+                    name="Daily work",
+                    tabs=[
+                        DetailTab(name="Summary", url_name="todos_detail_overview"),
+                        DetailTabFolder(
+                            name="Related work",
+                            tabs=[
+                                DetailTab(
+                                    name="Initiative",
+                                    url="/todos/{{pk}}/initiative/",
+                                ),
+                                DetailTab(
+                                    name="Dependencies",
+                                    url="/todos/{{pk}}/dependencies/",
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+                DetailTabsConfiguration(
+                    name="Reference",
+                    tabs=[
+                        DetailTab(
+                            name="Documentation",
+                            url="https://docs.example.com/",
+                        )
+                    ],
+                ),
+            ]
+        )
+
+        # 2. Create the default preference while that model configuration is active.
+        with patch.object(
+            Todo.bloomerp_config,
+            "detail_view_settings",
+            detail_view_settings,
+        ):
+            preference = UserDetailViewTabsPreference.create_default_for_user(
+                self.owner,
+                content_type_id=self.content_type.pk,
+            )
+
+        # 3. Confirm both names, selection, route resolution, and trees were materialized.
+        preferences = list(
+            UserDetailViewTabsPreference.objects.filter(
+                user=self.owner,
+                content_type=self.content_type,
+            ).order_by("pk")
+        )
+        self.assertEqual(
+            [(item.name, item.selected) for item in preferences],
+            [("Daily work", True), ("Reference", False)],
+        )
+        self.assertEqual(preference, preferences[0])
+
+        top_level = list(
+            preference.items.filter(parent=None).order_by("position", "id")
+        )
+        overview_url = UserDetailViewTabsPreference.get_configured_tab_url(
+            DetailTab(name="Summary", url_name="todos_detail_overview"),
+            Todo,
+        )
+        self.assertEqual(
+            [(item.name, item.url, item.position) for item in top_level],
+            [
+                ("Summary", overview_url, 0),
+                ("Related work", None, 1),
+            ],
+        )
+        self.assertEqual(
+            list(
+                top_level[1].children.order_by("position", "id").values_list(
+                    "name",
+                    "url",
+                    "position",
+                )
+            ),
+            [
+                ("Initiative", "/todos/{{pk}}/initiative/", 0),
+                ("Dependencies", "/todos/{{pk}}/dependencies/", 1),
+            ],
+        )
+        self.assertEqual(preference.items.count(), 4)
+        self.assertEqual(
+            list(preferences[1].items.values_list("name", "url")),
+            [("Documentation", "https://docs.example.com/")],
+        )
+
+    def test_empty_named_tab_configuration_creates_no_items(self):
+        """
+        Use case: A model explicitly declares an empty default tab layout.
+        Expected result: Router-derived tabs are suppressed and no items are created.
+        """
+        # 1. Configure an explicit empty override and create the preference.
+        with patch.object(
+            Todo.bloomerp_config,
+            "detail_view_settings",
+            DetailViewSettings(
+                tab_configurations=[
+                    DetailTabsConfiguration(name="Minimal", tabs=[])
+                ]
+            ),
+        ):
+            preference = UserDetailViewTabsPreference.create_default_for_user(
+                self.owner,
+                content_type_id=self.content_type.pk,
+            )
+
+        # 2. Confirm the empty override did not fall back to router defaults.
+        self.assertEqual(preference.name, "Minimal")
+        self.assertFalse(preference.items.exists())
 
     def test_preference_api_is_owner_scoped_and_items_are_not_exposed(self):
         """
