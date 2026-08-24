@@ -340,9 +340,12 @@ class UserPolicyManager:
         if self.is_anonymous:
             return ContentType.objects.none()
 
-        content_type_ids: set[int] = set()
+        candidate_models: dict[int, Type[models.Model]] = {}
         for policy in self.get_user_policies():
             if not policy.row_policy_id:
+                continue
+            model = policy.row_policy.content_type.model_class()
+            if model is None:
                 continue
             granted = {
                 permission.codename
@@ -350,12 +353,18 @@ class UserPolicyManager:
                 for permission in rule.permissions.all()
             }
             requested = PolicyManager._qualify_permission_codenames(
-                policy.row_policy.content_type.model_class(),
+                model,
                 permissions,
             )
             if not self._permission_matches(granted, requested, match):
                 continue
-            content_type_ids.add(policy.row_policy.content_type_id)
+            candidate_models[policy.row_policy.content_type_id] = model
+
+        content_type_ids = {
+            content_type_id
+            for content_type_id, model in candidate_models.items()
+            if self.has_global_permission(model, permissions, match)
+        }
 
         return ContentType.objects.filter(pk__in=content_type_ids)
     
@@ -490,12 +499,13 @@ class UserPolicyManager:
             return False
 
         requested = PolicyManager._qualify_permission_codenames(model, permissions)
-        policy_grants = set(
-            self.get_user_policies().filter(
-                global_permissions__content_type=content_type,
-                global_permissions__codename__in=requested,
-            ).values_list("global_permissions__codename", flat=True)
-        )
+        policy_grants = {
+            permission.codename
+            for policy in self.get_user_policies()
+            for permission in policy.global_permissions.all()
+            if permission.content_type_id == content_type.pk
+            and permission.codename in requested
+        }
         checks = [
             self.user.has_perm(f"{content_type.app_label}.{codename}")
             or codename in policy_grants
