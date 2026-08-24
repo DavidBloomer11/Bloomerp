@@ -71,6 +71,13 @@ fields:
     options:
       null: true
       blank: true
+  - id: country
+    name: Country
+    type: CountryField
+    options:
+      null: true
+      blank: true
+
 field_layout:
   rows:
     - title: "Contact Info"
