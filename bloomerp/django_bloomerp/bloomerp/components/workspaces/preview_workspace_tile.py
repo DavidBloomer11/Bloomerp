@@ -320,13 +320,6 @@ class PreviewWorkspaceTile(TemplateView):
                 extra_context["add_link_icon_picker"] = _render_link_icon_picker("add_link_icon")
                 extra_context["add_folder_icon_picker"] = _render_link_icon_picker("add_folder_icon")
             
-            # case TileType.DATAVIEW_TILE:
-            #     manager = UserPermissionManager(self.request.user)
-                
-            #     return {
-            #         "content_types" : manager.get_accessible_content_types("view")
-            #     }
-            
             case _:
                 return {}
         

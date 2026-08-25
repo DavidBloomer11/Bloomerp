@@ -12,7 +12,7 @@ from django.http import HttpRequest
 
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.permissions.definition import BloomerpPermission
-from bloomerp.permissions.manager import UserPermissionManager, create_permission_str
+from bloomerp.permissions.manager import UserPolicyManager, create_permission_str
 from bloomerp.utils.labels import safe_object_label
 
 from ..base import BaseDataviewRenderer, DataviewPagination
@@ -520,6 +520,6 @@ class PivotTableDataviewRenderer(BaseDataviewRenderer):
         except (TypeError, ValueError, ApplicationField.DoesNotExist, FieldDoesNotExist):
             return None
 
-        if not UserPermissionManager(request.user).has_field_permission(application_field, BloomerpPermission.VIEW):
+        if not UserPolicyManager(request.user).has_field_permission(application_field, BloomerpPermission.VIEW):
             return None
         return application_field

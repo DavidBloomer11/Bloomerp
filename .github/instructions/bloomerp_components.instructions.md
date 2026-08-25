@@ -513,7 +513,8 @@ def dataview(request: HttpRequest, content_type_id: int) -> HttpResponse:
 ### CRUD Component Example
 
 ```python
-from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
+from bloomerp.permissions.manager import UserPolicyManager
+from bloomerp.permissions.defintion import BloomerpPermission
 
 @router.register(
     path="components/create-object/<int:content_type_id>/",
@@ -531,12 +532,12 @@ def create_object(request: HttpRequest, content_type_id: int) -> HttpResponse:
     """
     content_type = get_object_or_404(ContentType, id=content_type_id)
     model_class = content_type.model_class()
-    manager = UserPermissionManager(request.user)
+    manager = UserPolicyManager(request.user)
 
     # Check permissions
     if not manager.has_global_permission(
         model_class,
-        create_permission_str(model_class, "add"),
+        BloomerpPermission.ADD,
     ):
         return HttpResponse("Permission denied", status=403)
     

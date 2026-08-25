@@ -9,7 +9,7 @@ from django_htmx.http import HttpResponseClientRedirect
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
 
-from bloomerp.field_types import FieldType
+from bloomerp.field_types.types import FieldType
 from bloomerp.models.access_control.row_policy_rule import RowPolicyRuleContent
 from bloomerp.models.access_control.policy import Policy
 from bloomerp.models.application_field import ApplicationField

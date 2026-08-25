@@ -35,24 +35,37 @@ class DjangoQPermissionCompiler(BasePermissionCompiler[CompiledDjangoAccess]):
             return None
         if condition.field == "__all__" or condition.application_field_id == "__all__":
             return Q(pk__isnull=False)
-        if not condition.application_field_id or not condition.operator:
+        if not condition.operator:
             return None
 
-        application_field = application_fields.get(str(condition.application_field_id))
-        if application_field is None:
-            return None
+        field_path = str(condition.field or "").replace(".", "__")
+        field_root = field_path.split("__", 1)[0]
+        application_field = application_fields.get(
+            str(condition.application_field_id)
+        ) or application_fields.get(field_root)
         operator = str(condition.operator)
-        field_name = application_field.field
-        if isinstance(condition.field, str) and "__" in condition.field:
-            field_name = condition.field
+        field_name = field_path or application_field.field
+
+        model_field = None
+        if self.model is not None and field_root:
+            try:
+                model_field = self.model._meta.get_field(field_root)
+            except Exception:
+                pass
+        if application_field is None and model_field is None:
+            return None
 
         if operator.startswith("__"):
             filter_key = operator.lstrip("_")
             lookup_name = filter_key.rsplit("__", 1)[-1]
-            value = self.normalize_lookup_value(
-                application_field,
-                lookup_name,
-                condition.value,
+            value = (
+                self.normalize_lookup_value(
+                    application_field,
+                    lookup_name,
+                    condition.value,
+                )
+                if application_field is not None
+                else condition.value
             )
             return Q(**{filter_key: value})
 
@@ -62,13 +75,27 @@ class DjangoQPermissionCompiler(BasePermissionCompiler[CompiledDjangoAccess]):
         ):
             if self.user is None or getattr(self.user, "is_anonymous", False):
                 return None
-            return Q(**{field_name: self.user})
+            resolved_field = model_field or application_field._get_model_field()
+            user_value = (
+                self.user
+                if getattr(resolved_field, "is_relation", False)
+                else self.user.pk
+            )
+            return Q(**{field_name: user_value})
 
-        lookup = self.resolve_lookup(application_field, operator)
+        lookup = (
+            self.resolve_lookup(application_field, operator)
+            if application_field is not None
+            else self.resolve_lookup_globally(operator)
+        )
         if lookup is None:
             return None
 
-        value = self.normalize_lookup_value(application_field, lookup, condition.value)
+        value = (
+            self.normalize_lookup_value(application_field, lookup, condition.value)
+            if application_field is not None
+            else condition.value
+        )
         if lookup == Lookup.NOT_EQUALS:
             return ~Q(**{field_name: value})
         django_lookup = (lookup.value.django_representation or "").strip()
@@ -109,7 +136,7 @@ class DjangoQPermissionCompiler(BasePermissionCompiler[CompiledDjangoAccess]):
     ) -> CompiledDjangoAccess:
         rules = self.normalize_access_rules(self.rules)
         requested = self.normalize_permissions(permissions)
-        application_fields = self.get_application_fields(rules)
+        application_fields = self.get_application_fields(rules, self.model)
         row_filters: list[Q] = []
         field_filters: dict[Q, list[ApplicationField]] = {}
 
@@ -138,6 +165,10 @@ class DjangoQPermissionCompiler(BasePermissionCompiler[CompiledDjangoAccess]):
                 if not self.matches_requested_permissions(granted, requested, match):
                     continue
                 if field_id == "__all__":
+                    for field in application_fields.values():
+                        if field.pk not in seen_ids:
+                            accessible_fields.append(field)
+                            seen_ids.add(field.pk)
                     continue
                 field = application_fields.get(str(field_id))
                 if field is not None and field.pk not in seen_ids:

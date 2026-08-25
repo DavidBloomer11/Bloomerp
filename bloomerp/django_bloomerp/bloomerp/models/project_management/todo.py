@@ -83,8 +83,8 @@ def _mark_as_completed(request:HttpRequest, object:"Todo") -> HttpResponse:
     """
     Marks the todo as completed and sets the datetime_completed field to the current time.
     """
-    from bloomerp.permissions.manager import UserPermissionManager
-    manager = UserPermissionManager(request.user)
+    from bloomerp.permissions.manager import UserPolicyManager
+    manager = UserPolicyManager(request.user)
 
     if not manager.has_access_to_object(object, BloomerpPermission.CHANGE):
         message = _("You do not have permission to mark this todo as completed.")

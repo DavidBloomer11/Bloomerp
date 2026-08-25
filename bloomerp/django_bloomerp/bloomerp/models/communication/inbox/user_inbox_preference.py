@@ -12,7 +12,7 @@ class UserInboxPreference(BloomerpModel):
         verbose_name_plural = _("User Inbox Preferences")
 
     bloomerp_config = BloomerpModelConfig(
-        activity_log_settings=ActivityLogSettings(enabled=False)
+        activity_log_settings=ActivityLogSettings(enabled=False),
         is_internal=True,
     )
 

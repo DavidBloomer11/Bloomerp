@@ -11,6 +11,8 @@ from django.db import models
 from bloomerp.config.definition import BloomerpConfig
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.models.definition import BloomerpModelConfig
+from bloomerp.permissions.compilers.base import BasePermissionCompiler
+from bloomerp.permissions.definition import PermissionMatch
 from bloomerp.utils.models import model_name_plural_underline
 
 
@@ -39,6 +41,7 @@ class SdkFieldDefinition:
 
 @dataclass(frozen=True)
 class SdkModelDefinition:
+    model_class: type[models.Model]
     class_name: str
     variable_name: str
     endpoint_name: str
@@ -134,6 +137,7 @@ class BaseSdkGenerator(ABC):
         config = getattr(model, "bloomerp_config", None)
         public_access = self.build_public_access_metadata(config)
         return SdkModelDefinition(
+            model_class=model,
             class_name=model.__name__,
             variable_name=self.to_camel_case(model_name_plural_underline(model)),
             endpoint_name=model_name_plural_underline(model),
@@ -324,16 +328,40 @@ class BaseSdkGenerator(ABC):
     def build_public_access_metadata(self, config: BloomerpModelConfig | None) -> dict:
         list_fields = self.get_public_accessible_fields(config, "list")
         read_fields = self.get_public_accessible_fields(config, "read")
+        anonymous_view_allowed = bool(self._get_anonymous_view_rules(config))
         return {
-            "listAllowed": bool(config and config.get_public_access_rules("list")),
-            "readAllowed": bool(config and config.get_public_access_rules("read")),
+            "listAllowed": anonymous_view_allowed,
+            "readAllowed": anonymous_view_allowed,
             "listFields": list_fields,
             "readFields": read_fields,
             "nesting": self.get_nesting_metadata(config),
             "authenticatedFallbackEnabled": bool(
-                getattr(getattr(config, "api_settings", None), "public_access_for_authenticated_fallback", True)
+                getattr(
+                    getattr(getattr(config, "api_settings", None), "access", None),
+                    "inherit_anonymous_for_authenticated",
+                    True,
+                )
             ),
         }
+
+    def _get_anonymous_view_rules(
+        self,
+        config: BloomerpModelConfig | None,
+    ) -> list:
+        if config is None or config.api_settings is None:
+            return []
+        return [
+            rule
+            for rule in config.api_settings.access.anonymous
+            if any(
+                BasePermissionCompiler.matches_requested_permissions(
+                    row_rule.permissions,
+                    ["view"],
+                    PermissionMatch.ANY,
+                )
+                for row_rule in rule.row_permissions
+            )
+        ]
 
     def get_nesting_metadata(self, config: BloomerpModelConfig | None) -> list[dict]:
         if config is None:
@@ -358,16 +386,29 @@ class BaseSdkGenerator(ABC):
         if config is None:
             return []
 
-        rules = config.get_public_access_rules(action)
+        rules = self._get_anonymous_view_rules(config)
         if not rules:
             return []
 
         allowed_fields: set[str] = set()
         for rule in rules:
-            rule_fields = rule.get_accessible_fields(action)
-            if rule_fields is None:
+            wildcard_permissions = rule.field_permissions.get("__all__", [])
+            if BasePermissionCompiler.matches_requested_permissions(
+                wildcard_permissions,
+                ["view"],
+                PermissionMatch.ANY,
+            ):
                 return None
-            allowed_fields.update(rule_fields)
+            allowed_fields.update(
+                field_name
+                for field_name, permissions in rule.field_permissions.items()
+                if field_name != "__all__"
+                and BasePermissionCompiler.matches_requested_permissions(
+                    permissions,
+                    ["view"],
+                    PermissionMatch.ANY,
+                )
+            )
 
         return sorted(allowed_fields)
 

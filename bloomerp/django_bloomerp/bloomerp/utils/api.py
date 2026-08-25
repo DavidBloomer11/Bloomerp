@@ -6,16 +6,18 @@ import logging
 
 import django_filters
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import FieldDoesNotExist
-from django.db.models import Model, Q, QuerySet
+from django.db.models import Model, QuerySet
 from rest_framework import serializers
 from rest_framework import viewsets
 
 from bloomerp.models.definition import BloomerpModelConfig
-from bloomerp.services.permission_services import (
-    UserPermissionManager,
-    create_permission_str,
+from bloomerp.permissions.compilers.base import BasePermissionCompiler
+from bloomerp.permissions.compilers.django_q_permission_compiler import (
+    DjangoQPermissionCompiler,
 )
+from bloomerp.permissions.compilers.python_permission_compiler import PythonPermissionCompiler
+from bloomerp.permissions.definition import PermissionMatch
+from bloomerp.permissions.manager import UserPolicyManager, create_permission_str
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.utils.filters import dynamic_filterset_factory
 
@@ -91,11 +93,12 @@ class ApiAccessResolver:
         "update": "change",
         "partial_update": "change",
         "destroy": "delete",
+        "bulk_create": "bulk_add",
     }
 
     def __init__(self, request):
         self.request = request
-        self.permission_manager = UserPermissionManager(request.user)
+        self.permission_manager = UserPolicyManager(request.user)
 
     def _get_bloomerp_config(self, model: type[Model]) -> BloomerpModelConfig | None:
         config = getattr(model, "bloomerp_config", None)
@@ -103,32 +106,72 @@ class ApiAccessResolver:
             return config
         return None
 
-    def get_public_action_name(self, action: str | None = None) -> str:
-        action_name = str(action or "list").strip().lower()
-        if action_name == "retrieve":
-            return "read"
-        if action_name not in {"list", "read"}:
-            return "read"
-        return action_name
-
     def get_permission_action_name(self, action: str | None = None) -> str:
         action_name = str(action or "retrieve").strip().lower()
         return self.action_permission_map.get(action_name, "view")
 
+    def get_public_action_name(self, action: str | None = None) -> str:
+        """Return the legacy nesting action while access uses model permissions."""
+        action_name = str(action or "retrieve").strip().lower()
+        return "list" if action_name == "list" else "read"
+
     def get_permission_str(self, model: type[Model], action: str | None = None) -> str:
         return create_permission_str(model, self.get_permission_action_name(action))
 
-    def get_public_access_rules(self, model: type[Model], action: str | None = None):
+    def get_config_access_rules(
+        self,
+        model: type[Model],
+        *,
+        authenticated: bool,
+    ):
         config = self._get_bloomerp_config(model)
         if config is None:
             return []
-        return config.get_public_access_rules(self.get_public_action_name(action))
+        return config.get_api_access_rules(authenticated=authenticated)
 
-    def get_user_access_rules(self, model: type[Model], action: str | None = None):
+    def get_anonymous_access_rules(self, model: type[Model]):
         config = self._get_bloomerp_config(model)
-        if config is None:
+        if config is None or config.api_settings is None:
             return []
-        return config.get_user_access_rules(self.get_permission_action_name(action))
+        return list(config.api_settings.access.anonymous)
+
+    def _rule_grants_permission(self, rule, permission: str) -> bool:
+        return any(
+            BasePermissionCompiler.matches_requested_permissions(
+                row_rule.permissions,
+                [permission],
+                match=PermissionMatch.ANY,
+            )
+            for row_rule in rule.row_permissions
+        )
+
+    def _filter_rules_for_action(self, rules, action: str | None = None):
+        permission = self.get_permission_action_name(action)
+        return [
+            rule
+            for rule in rules
+            if self._rule_grants_permission(rule, permission)
+        ]
+
+    def get_applicable_access_rules(
+        self,
+        model: type[Model],
+        action: str | None = None,
+    ):
+        authenticated = not self.permission_manager.is_anonymous
+        rules = self.get_config_access_rules(
+            model,
+            authenticated=authenticated,
+        )
+        if authenticated:
+            rules = [
+                *self.permission_manager.get_access_rules(
+                    model,
+                    self.get_permission_action_name(action),
+                ),
+                *rules,
+            ]
+        return self._filter_rules_for_action(rules, action)
 
     def has_internal_access(self, model: type[Model], action: str | None = None) -> bool:
         if getattr(self.permission_manager.user, "is_superuser", False):
@@ -140,198 +183,143 @@ class ApiAccessResolver:
             model, permission_str
         ) or self.permission_manager.has_row_level_access(model, permission_str)
 
-    def should_use_public_access(self, model: type[Model], action: str | None = None) -> bool:
-        if not self.get_public_access_rules(model, action):
-            return False
-
-        config = self._get_bloomerp_config(model)
-        if config is not None and not getattr(
-            getattr(config, "api_settings", None),
-            "public_access_for_authenticated_fallback",
-            True,
-        ):
-            return bool(
-                getattr(self.request, "user", None)
-                and self.request.user.is_anonymous
-            )
-
-        return not self.has_internal_access(model, action)
-
-    def should_use_user_access(self, model: type[Model], action: str | None = None) -> bool:
-        if self.permission_manager.is_anonymous:
-            return False
-        if not self.get_user_access_rules(model, action):
-            return False
-        return not self.has_internal_access(model, action)
-
-    def _build_public_rule_q(self, model: type[Model], rule) -> Q | None:
-        rule_q = Q()
-        for filter_rule in rule.filters:
-            field_name = str(filter_rule.field or "").strip()
-            if not field_name:
-                return None
-
-            try:
-                model._meta.get_field(field_name)
-            except FieldDoesNotExist:
-                return None
-
-            operator = str(filter_rule.get_lookup_operator() or "").strip().lower()
-            if operator == "ne":
-                rule_q &= ~Q(**{field_name: filter_rule.value})
-                continue
-
-            filter_key = field_name if operator in {"", "exact"} else f"{field_name}__{operator}"
-            rule_q &= Q(**{filter_key: filter_rule.value})
-
-        return rule_q
-
-    def _normalize_user_access_path(self, field_path: str | None) -> str:
-        return str(field_path or "").replace(".", "__").strip("_")
-
-    def _is_self_user_access_path(self, field_path: str | None) -> bool:
-        return str(field_path or "").strip().lower() == "self"
-
-    def _build_user_rule_q(self, rule) -> Q | None:
-        raw_through_field = getattr(rule, "through_field", "")
-        through_field = self._normalize_user_access_path(raw_through_field)
-
-        if self._is_self_user_access_path(raw_through_field):
-            rule_q = Q(pk=self.request.user.pk)
-        else:
-            if not through_field:
-                return None
-            rule_q = Q(**{through_field: self.request.user})
-
-        for filter_rule in getattr(rule, "filters", []):
-            field_name = self._normalize_user_access_path(filter_rule.field)
-            if not field_name:
-                return None
-
-            operator = str(filter_rule.get_lookup_operator() or "").strip().lower()
-            if operator == "ne":
-                rule_q &= ~Q(**{field_name: filter_rule.value})
-                continue
-
-            filter_key = field_name if operator in {"", "exact"} else f"{field_name}__{operator}"
-            rule_q &= Q(**{filter_key: filter_rule.value})
-
-        return rule_q
-
     def get_queryset(self, model: type[Model], action: str | None = None) -> QuerySet:
         queryset = model.objects.all()
-
-        if self.should_use_user_access(model, action):
-            object_ids: set = set()
-            for rule in self.get_user_access_rules(model, action):
-                rule_q = self._build_user_rule_q(rule)
-                if rule_q is None:
-                    continue
-                object_ids.update(queryset.filter(rule_q).values_list("pk", flat=True))
-            if not object_ids:
-                return queryset.none()
-            return queryset.filter(pk__in=object_ids)
-
-        if self.should_use_public_access(model, action):
-            object_ids: set = set()
-            unrestricted = False
-            for rule in self.get_public_access_rules(model, action):
-                rule_q = self._build_public_rule_q(model, rule)
-                if rule.filters and rule_q is None:
-                    continue
-                if not rule.filters:
-                    unrestricted = True
-                    break
-                object_ids.update(queryset.filter(rule_q).values_list("pk", flat=True))
-            if unrestricted:
-                return queryset
-            if not object_ids:
-                return queryset.none()
-            return queryset.filter(pk__in=object_ids)
-
         if getattr(self.permission_manager.user, "is_superuser", False):
             return queryset
+        permission = self.get_permission_action_name(action)
+        if not self.permission_manager.is_anonymous and self.permission_manager.has_global_permission(
+            model,
+            permission,
+        ):
+            return queryset
 
-        permission_str = self.get_permission_str(model, action)
-        return self.permission_manager.get_queryset(model, permission_str)
-
-    def _get_public_accessible_field_names(
-        self, model: type[Model], action: str | None = None
-    ) -> set[str] | None:
-        rules = self.get_public_access_rules(model, action)
-        if not rules:
-            return None
-
-        public_action = self.get_public_action_name(action)
-        allowed_fields: set[str] = set()
-        for rule in rules:
-            rule_fields = rule.get_accessible_fields(public_action)
-            if rule_fields is None:
-                return None
-            allowed_fields.update(rule_fields)
-        return allowed_fields
-
-    def _get_user_accessible_field_names(
-        self, model: type[Model], action: str | None = None
-    ) -> set[str] | None:
-        rules = self.get_user_access_rules(model, action)
-        if not rules:
-            return set()
-
-        permission_action = self.get_permission_action_name(action)
-        allowed_fields: set[str] = set()
-
-        for rule in rules:
-            field_actions = getattr(rule, "field_actions", {}) or {}
-            if not isinstance(field_actions, dict):
-                continue
-
-            wildcard_actions = field_actions.get("__all__")
-            if wildcard_actions == "__all__" or (
-                isinstance(wildcard_actions, list)
-                and permission_action in wildcard_actions
-            ):
-                return None
-
-            for field_name, actions in field_actions.items():
-                if field_name == "__all__":
-                    continue
-                if actions == "__all__" or (
-                    isinstance(actions, list) and permission_action in actions
-                ):
-                    allowed_fields.add(field_name)
-
-        return allowed_fields
+        rules = self.get_applicable_access_rules(model, action)
+        compilation = DjangoQPermissionCompiler(
+            rules,
+            user=self.request.user,
+            model=model,
+        ).compile(permission)
+        return queryset.filter(compilation.row_filter).distinct()
 
     def get_accessible_field_names(
         self, model: type[Model], action: str | None = None
     ) -> set[str] | None:
-        if self.should_use_user_access(model, action):
-            return self._get_user_accessible_field_names(model, action)
-
-        if self.should_use_public_access(model, action):
-            return self._get_public_accessible_field_names(model, action)
-
         if getattr(self.permission_manager.user, "is_superuser", False):
             return None
 
-        permission_str = self.get_permission_str(model, action)
-        content_type = ContentType.objects.get_for_model(model)
-        accessible_fields = self.permission_manager.get_accessible_fields(
-            content_type, permission_str
+        permission = self.get_permission_action_name(action)
+        allowed_fields: set[str] = set()
+        config_rules = self._filter_rules_for_action(
+            self.get_config_access_rules(
+                model,
+                authenticated=not self.permission_manager.is_anonymous,
+            ),
+            action,
         )
-        return set(accessible_fields.values_list("field", flat=True))
+        for rule in config_rules:
+            wildcard_permissions = rule.field_permissions.get("__all__", [])
+            if BasePermissionCompiler.matches_requested_permissions(
+                wildcard_permissions,
+                [permission],
+                PermissionMatch.ANY,
+            ):
+                return None
+            allowed_fields.update(
+                field_name
+                for field_name, permissions in rule.field_permissions.items()
+                if field_name != "__all__"
+                and BasePermissionCompiler.matches_requested_permissions(
+                    permissions,
+                    [permission],
+                    PermissionMatch.ANY,
+                )
+            )
+        if not self.permission_manager.is_anonymous and self.permission_manager.has_global_permission(
+            model,
+            permission,
+        ):
+            allowed_fields.update(
+                self.permission_manager.get_accessible_fields(
+                    model,
+                    permission,
+                ).values_list("field", flat=True)
+            )
+        rules = self.get_applicable_access_rules(model, action)
+        compilation = DjangoQPermissionCompiler(
+            rules,
+            user=self.request.user,
+            model=model,
+        ).compile(permission)
+        allowed_fields.update({
+            application_field.field
+            for application_fields in compilation.field_filters.values()
+            for application_field in application_fields
+        })
+        return allowed_fields
 
-    def has_read_contract(self, model: type[Model], action: str | None = None) -> bool:
+    def candidate_matches(
+        self,
+        candidate: Model,
+        action: str | None = None,
+    ) -> bool:
+        if getattr(self.permission_manager.user, "is_superuser", False):
+            return True
+        permission = self.get_permission_action_name(action)
+        if not self.permission_manager.is_anonymous and self.permission_manager.has_global_permission(
+            type(candidate),
+            permission,
+        ):
+            return True
+        rules = self.get_applicable_access_rules(type(candidate), action)
+        evaluator = PythonPermissionCompiler(
+            rules,
+            user=self.request.user,
+            model=type(candidate),
+        ).compile(permission)
+        return evaluator.matches(candidate)
+
+    def model_allows_anonymous(
+        self,
+        model: type[Model],
+        action: str | None = None,
+    ) -> bool:
+        return bool(
+            self._filter_rules_for_action(
+                self.get_anonymous_access_rules(model),
+                action,
+            )
+        )
+
+    def has_config_access(
+        self,
+        model: type[Model],
+        action: str | None = None,
+    ) -> bool:
+        authenticated = not self.permission_manager.is_anonymous
+        return bool(
+            self._filter_rules_for_action(
+                self.get_config_access_rules(
+                    model,
+                    authenticated=authenticated,
+                ),
+                action,
+            )
+        )
+
+    def has_action_access(
+        self,
+        model: type[Model],
+        action: str | None = None,
+    ) -> bool:
         if getattr(self.permission_manager.user, "is_superuser", False):
             return True
         if self.has_internal_access(model, action):
             return True
-        if self.should_use_user_access(model, action):
-            return True
-        if self.should_use_public_access(model, action):
-            return True
-        return False
+        return bool(self.get_applicable_access_rules(model, action))
+
+    def has_read_contract(self, model: type[Model], action: str | None = None) -> bool:
+        return self.has_action_access(model, action)
 
 
 def build_nesting_tree(model: type[Model], rules: list) -> dict[str, NestingNode]:

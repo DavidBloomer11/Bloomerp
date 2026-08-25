@@ -7,7 +7,14 @@ from django.conf import settings
 from django.db import models, transaction
 from django.db.models.base import ModelBase
 
-from bloomerp.models.definition import ApiSettings, BloomerpModelConfig, UserAccessRule
+from bloomerp.field_types.lookups import Lookup
+from bloomerp.models.definition import ApiAccessSettings, ApiSettings, BloomerpModelConfig
+from bloomerp.permissions.definition import (
+    AccessRule,
+    BloomerpPermission,
+    RowPolicyRuleCondition,
+    RowPolicyRuleContent,
+)
 from bloomerp.models.mixins.absolute_url_model_mixin import AbsoluteUrlModelMixin
 from bloomerp.models.users.user import AbstractBloomerpUser
 
@@ -56,16 +63,34 @@ class BasePreference(
     bloomerp_config = BloomerpModelConfig(
         api_settings=ApiSettings(
             enable_auto_generation=True,
-            user_access=[
-                UserAccessRule(
-                    through_field="user",
-                    field_actions={
-                        "id": ["view"],
-                        "name": ["view", "change"],
-                    },
-                    row_actions=["view", "change"],
-                ),
-            ],
+            access=ApiAccessSettings(
+                authenticated=[
+                    AccessRule(
+                        row_permissions=[
+                            RowPolicyRuleContent(
+                                permissions=[
+                                    BloomerpPermission.VIEW,
+                                    BloomerpPermission.CHANGE,
+                                ],
+                                conditions=[
+                                    RowPolicyRuleCondition(
+                                        field="user",
+                                        operator=Lookup.EQUALS_USER.value.id,
+                                        value="$user",
+                                    )
+                                ],
+                            )
+                        ],
+                        field_permissions={
+                            "id": [BloomerpPermission.VIEW],
+                            "name": [
+                                BloomerpPermission.VIEW,
+                                BloomerpPermission.CHANGE,
+                            ],
+                        },
+                    )
+                ]
+            ),
         ),
     )
 

@@ -21,7 +21,7 @@ import uuid
 from bloomerp.models import Bookmark, AbstractBloomerpUser, ApplicationField
 import uuid
 from django.template.loader import render_to_string
-from bloomerp.field_types import FieldType
+from bloomerp.field_types.types import FieldType
 from bloomerp.config.settings import BLOOMERP_LANGUAGES
 from bloomerp.services.sectioned_layout_services import (
     build_crud_layout_field_context,

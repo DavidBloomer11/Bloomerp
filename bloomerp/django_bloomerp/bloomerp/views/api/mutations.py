@@ -249,8 +249,7 @@ class AssistantMutationCatalogView(BaseBloomerpApiView):
         if getattr(resolver.permission_manager.user, "is_superuser", False):
             return True
         return (
-            resolver.has_internal_access(model, action)
-            or resolver.should_use_user_access(model, action)
+            resolver.has_action_access(model, action)
         )
 
     def _get_writable_fields(self, request, resolver: ApiAccessResolver, model, action: str) -> list[dict]:

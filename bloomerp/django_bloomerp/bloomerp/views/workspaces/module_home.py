@@ -19,10 +19,14 @@ from bloomerp.modules.definition import module_registry
 )
 class BloomerpModuleHomeView(BaseWorkspaceView, TemplateView):
     def has_permission(self):
+        if self.request.user.is_superuser:
+            return True
+        
         manager = UserPolicyManager(self.request.user)
         accessible_models = manager.get_accessible_models(BloomerpPermission.VIEW)
         models = module_registry.get_models_for_module(self.module.id, include_descendants=True)
         return any(model in accessible_models for model in models)
+        
         
     
     def get_visible_workspaces(self):

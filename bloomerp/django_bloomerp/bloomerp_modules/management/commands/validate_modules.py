@@ -9,7 +9,7 @@ from typing import Any
 import yaml
 from django.core.management.base import BaseCommand
 
-from bloomerp.field_types import FieldType
+from bloomerp.field_types.types import FieldType
 
 
 @dataclass

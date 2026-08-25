@@ -8,10 +8,8 @@ Functions:
 """
 
 """Services regarding permissions"""
-from django.apps import apps
 from django.db import models
 from django.db.models import Model
-from bloomerp.models.base_bloomerp_model import BloomerpModel
 from bloomerp.models.users.user import AbstractBloomerpUser
 from django.db.models.query import QuerySet
 from bloomerp.models import ApplicationField
@@ -28,7 +26,6 @@ from bloomerp.field_types.lookups import Lookup
 from django.core.exceptions import FieldDoesNotExist
 from pydantic import ValidationError as PydanticValidationError
 
-from bloomerp.permissions.definition import BloomerpPermission
 
     
 # --------------------------
@@ -42,65 +39,6 @@ def create_permission_str(obj_or_model: Model, permission: str) -> str:
         permission (str) : the permission
     """
     return f"{permission}_{obj_or_model._meta.model_name}"
-
-
-def get_bloomerp_model_default_permissions(model: type[models.Model]) -> tuple[str, ...]:
-    """Returns the default permissions for a model
-
-    Args:
-        model (type[models.Model]): the model
-
-    Returns:
-        tuple[str, ...]: the default permissions for the model
-    """
-    default_permissions = tuple(getattr(model._meta, "default_permissions", ()))
-    if issubclass(model, BloomerpModel):
-        return tuple(dict.fromkeys((*default_permissions, *BloomerpPermission.to_tuple())))
-    return default_permissions
-
-
-def ensure_model_permissions(model: type[models.Model]) -> int:
-    """Ensures permissions the default permissions are created for models
-
-    Args:
-        model (type[models.Model]): the model
-
-    Returns:
-        int: the number of permissions created
-    """
-    if model._meta.abstract or model._meta.proxy:
-        return 0
-
-    default_permissions = get_bloomerp_model_default_permissions(model)
-    if not default_permissions:
-        return 0
-
-    content_type = ContentType.objects.get_for_model(model)
-    created_count = 0
-
-    for permission in default_permissions:
-        _, created = Permission.objects.get_or_create(
-            codename=f"{permission}_{model._meta.model_name}",
-            content_type=content_type,
-            defaults={"name": f"Can {permission} {model._meta.verbose_name}"},
-        )
-        if created:
-            created_count += 1
-
-    return created_count
-
-
-def ensure_bloomerp_model_permissions(**kwargs) -> int:
-    """Ensures permissions for all Bloomerp models.
-
-    Returns:
-        int: the number of permissions created
-    """
-    created_count = 0
-    for model in apps.get_models():
-        created_count += ensure_model_permissions(model)
-    return created_count
-
 
 
 # --------------------------

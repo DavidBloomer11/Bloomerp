@@ -8,11 +8,12 @@ from django.urls import NoReverseMatch
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from bloomerp.config.definition import BloomerpConfig
+from bloomerp.permissions.definition import BloomerpPermission
+from bloomerp.permissions.manager import UserPolicyManager
 from bloomerp.serializers.model_serializers import set_serializer_cls
 from django.db.models import Model
 from bloomerp.utils.models import (model_name_plural_underline)
 from bloomerp.models.definition import BloomerpModelConfig
-from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
 from bloomerp.utils.urls import IntOrUUIDConverter
 from rest_framework.routers import DefaultRouter
 from bloomerp.router import router
@@ -33,18 +34,17 @@ class PublicApiRootRouter(DefaultRouter):
             return bool(getattr(request, "user", None) and request.user.is_authenticated)
 
         config = getattr(model, "bloomerp_config", None)
-        if isinstance(config, BloomerpModelConfig) and config.has_public_access():
+        if isinstance(config, BloomerpModelConfig) and config.has_anonymous_api_access():
             return True
 
         user = getattr(request, "user", None)
         if not user or not user.is_authenticated:
             return False
 
-        permission_manager = UserPermissionManager(user)
-        permission_str = create_permission_str(model, "view")
+        permission_manager = UserPolicyManager(user)
         return (
-            permission_manager.has_global_permission(model, permission_str)
-            or permission_manager.has_row_level_access(model, permission_str)
+            permission_manager.has_global_permission(model, BloomerpPermission.VIEW)
+            or permission_manager.has_row_level_access(model, BloomerpPermission.VIEW)
         )
 
     def get_api_root_view(self, api_urls=None):

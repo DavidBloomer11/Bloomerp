@@ -3,7 +3,7 @@ from bloomerp.models import ApplicationField
 from django.db.models import Model
 from bloomerp.models import AbstractBloomerpUser
 from django.contrib.contenttypes.models import ContentType
-from bloomerp.field_types import FieldType
+from bloomerp.field_types.types import FieldType
 from django.utils.translation import gettext_lazy as _
 from bloomerp.router import router
 from bloomerp.services.sectioned_layout_services import create_default_layout

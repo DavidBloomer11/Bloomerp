@@ -1,4 +1,5 @@
-from bloomerp.services.permission_services import UserPermissionManager
+from bloomerp.permissions.definition import BloomerpPermission, RowPolicyRuleCondition, RowPolicyRuleContent
+from bloomerp.permissions.manager import PolicyManager, UserPolicyManager
 from bloomerp.services.sql_services import SqlExecutor
 from bloomerp.tests.base import BaseBloomerpModelTestCase
 from bloomerp.utils.sql import SqlQueryExecutor
@@ -226,15 +227,26 @@ class TestSQLServices(BaseBloomerpModelTestCase):
         self.create_customer(first_name="John", last_name="Doe", age=30, created_by=self.normal_user)
             
         #1. Assign permissions
-        manager = UserPermissionManager(self.normal_user)
-        manager.assign_creator_permission(
-            self.CustomerModel,
-            field_policy={
-                "first_name" : SqlExecutor.REQUIRED_PERMISSION,
-                "last_name" : SqlExecutor.REQUIRED_PERMISSION,
+        policy = PolicyManager.create_policy(
+            model_or_content_type=self.CustomerModel,
+            field_permissions={
+                "first_name": BloomerpPermission.VIEW,
+                "last_name": BloomerpPermission.VIEW,
             },
-            row_permissions="__all__"
+            row_permissions=[
+                RowPolicyRuleContent(
+                    conditions=[
+                        RowPolicyRuleCondition(
+                            field="first_name",
+                            operator="equals",
+                            value="John"
+                        )
+                    ]
+                )
+            ]
         )
+        policy.assign_user(self.normal_user)
+        
         
         #2. Construct query to access fields of a table
         query = f"SELECT first_name, last_name, age, created_by FROM {self.CUSTOMER_TABLE}"

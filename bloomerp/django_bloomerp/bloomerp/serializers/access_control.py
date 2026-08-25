@@ -5,7 +5,7 @@ from bloomerp.models.access_control.row_policy_rule import RowPolicyRule, RowPol
 from bloomerp.models.access_control.row_policy import RowPolicy
 from bloomerp.models.access_control.field_policy import FieldPolicy
 from bloomerp.models.application_field import ApplicationField
-from bloomerp.field_types import FieldType
+from bloomerp.field_types.types import FieldType
 from django.db import transaction
 from django.contrib.contenttypes.models import ContentType
 from drf_spectacular.types import OpenApiTypes

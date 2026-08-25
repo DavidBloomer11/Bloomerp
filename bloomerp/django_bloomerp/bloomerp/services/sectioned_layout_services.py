@@ -11,10 +11,8 @@ from bloomerp.field_types.types import FieldType
 from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.permissions.manager import UserPolicyManager
-from bloomerp.services.permission_services import UserPermissionManager
 from django.db.models import QuerySet
 from django.utils.translation import gettext
-from bloomerp.models.users import User
 
 MAX_LAYOUT_COLUMNS = 12
 
@@ -197,7 +195,7 @@ def resolve_detail_layout_rows(
     content_type: ContentType,
     user,
 ) -> list[dict[str, Any]]:
-    manager = UserPermissionManager(user)
+    manager = UserPolicyManager(user)
     model = content_type.model_class()
     permission_str = f"view_{model._meta.model_name}"
     change_permission_str = f"change_{model._meta.model_name}"

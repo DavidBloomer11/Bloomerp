@@ -324,25 +324,7 @@ class WorkspaceManager:
                             field=filter_config.field,
                             type=PRIMITIVE_FIELD_TYPE_MAP[filter_config.type].value.id,
                             label=filter_config.field.replace("_", " ").title()
-                        )
-                # case TileType.DATAVIEW_TILE:
-                #     config = DataViewTileConfig(**tile.schema)
-                #     manager = UserPermissionManager(user)
-                #     content_type = ContentType.objects.get(id=config.content_type_id)
-                #     fields = manager.get_accessible_fields(
-                #         content_type,
-                #         create_permission_str(
-                #             content_type.model_class(),
-                #             "view"
-                #         )
-                #     )
-                #     for field in fields:
-                #         result[field.field] = WorkspaceFilter(
-                #             field=field.field,
-                #             type=field.field_type,
-                #             label=field.title
-                #         )
-                           
+                        )  
         return result
 
 

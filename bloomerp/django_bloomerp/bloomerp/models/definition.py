@@ -8,7 +8,7 @@ from urllib.parse import urlsplit
 from django.http import HttpRequest, HttpResponse
 from bloomerp.config.definition import BloomerpConfig
 from bloomerp.dataviews.base import BaseDataView
-from bloomerp.field_types.lookups import Lookup
+from bloomerp.permissions.definition import AccessRule
 from bloomerp.workspaces.base import BaseTileConfig
 from pydantic import (
     BaseModel,
@@ -43,12 +43,10 @@ class LayoutItem(BaseModel):
     def set_content(self, content: str):
         self.content = content
 
-
 class LayoutRow(BaseModel):
     columns: int
     items: list[LayoutItem] = Field(default_factory=list)
     title: Optional[str] = None
-
 
 class BaseLayout(BaseModel):
     """Base layout class for defining layouts in Bloomerp.
@@ -61,19 +59,16 @@ class BaseLayout(BaseModel):
     is_default: bool = True
     rows: list[LayoutRow] = Field(default_factory=list)
 
-
 class FieldLayout(BaseLayout):
     pass
 
 class WorkspaceLayout(BaseLayout):
     pass
 
-
 # ----------------------------------
 # DETAIL TABS CONFIGURATION
 # ----------------------------------
 DETAIL_TAB_TEMPLATE_ARGUMENT = re.compile(r"{{\s*([^{}]+?)\s*}}")
-
 
 def validate_detail_tab_url(url: str) -> str:
     """Validate and normalize a declarative detail-tab URL template."""
@@ -100,7 +95,6 @@ def validate_detail_tab_url(url: str) -> str:
             "Enter an internal URL beginning with / or a complete http(s) URL."
         )
     return normalized
-
 
 class DetailTab(BaseModel):
     """A declarative tab shown on a model's detail view."""
@@ -140,7 +134,6 @@ class DetailTab(BaseModel):
             raise ValueError("Provide exactly one of url or url_name.")
         return self
 
-
 class DetailTabFolder(BaseModel):
     """A top-level folder containing declarative detail tabs."""
 
@@ -156,7 +149,6 @@ class DetailTabFolder(BaseModel):
         if not normalized:
             raise ValueError("Name is required.")
         return normalized
-
 
 class DetailTabsConfiguration(BaseModel):
     """A collection of declarative tabs shown on a model's detail view."""
@@ -174,7 +166,6 @@ class DetailTabsConfiguration(BaseModel):
             raise ValueError("Name is required.")
         return normalized
 
-
 def validate_declarative_tile_configs(
     tiles: list[BaseTileConfig],
     *,
@@ -191,158 +182,6 @@ def validate_declarative_tile_configs(
         tile.id = tile_id
         seen_ids.add(tile_id)
     return tiles
-
-class ApiFilterRule(BaseModel):
-    field: str
-    operator: str = Lookup.EQUALS.value.id
-    value: str | int | float | bool | None = None
-
-    def get_lookup_operator(self) -> str:
-        operator_value = str(self.operator or "").strip()
-        for lookup in Lookup:
-            if operator_value == lookup.value.id:
-                return lookup.value.django_representation or operator_value
-        return operator_value
-
-class PublicAccessRule(BaseModel):
-    """A public access rule defines in which cases objects can be accessed via the
-    auto generated API without authentication.
-
-    For example, we might want to expose a `BlogPost` model publicly so that
-    anonymous users can list and read published posts, while drafts remain
-    private. That would look something like this:
-    ```python
-    rule = PublicAccessRule(
-        field_actions={
-            "title": ["list", "read"],
-            "slug": ["list", "read"],
-            "summary": ["list", "read"],
-            "content": ["read"],
-        },
-        row_actions=["list", "read"],
-        filters=[
-            ApiFilterRule(
-                field="status",
-                operator="equals",
-                value="published",
-            )
-        ],
-    )
-    ```
-    In the above case, anonymous users are able to list and read blog posts
-    whose `status == "published"`, while only the configured fields are exposed
-    for each action.
-
-    In the case that we want to expose a narrower public listing than the public
-    detail view, that would look something like this:
-    ```python
-    rule = PublicAccessRule(
-        field_actions={
-            "title": ["list", "read"],
-            "slug": ["list", "read"],
-            "summary": ["list"],
-            "content": ["read"],
-        },
-        row_actions=["list", "read"],
-        filters=[
-            ApiFilterRule(
-                field="is_archived",
-                operator="not_equals",
-                value=True,
-            )
-        ],
-    )
-    ```
-    In the above case, anonymous users can still list and read the object, but
-    the list response is limited to `title`, `slug`, and `summary`, while the
-    read response can additionally include `content`. The filter ensures that
-    archived objects stay out of the public API.
-    """
-    row_actions: list[Literal["list", "read"]] = Field(
-        default_factory=lambda: ["list", "read"]
-    )
-    field_actions: dict[str | Literal["__all__"], list[Literal["list", "read"]] | Literal["__all__"]] = Field(
-        default_factory=lambda: {"__all__": "__all__"}
-    )
-    filters: list[ApiFilterRule] = Field(default_factory=list)
-
-    def get_row_actions(self) -> list[str]:
-        return list(self.row_actions)
-
-    def get_accessible_fields(self, action: str) -> set[str] | None:
-        normalized_action = str(action or "").strip().lower()
-        wildcard_actions = self.field_actions.get("__all__")
-        if wildcard_actions == "__all__" or (
-            isinstance(wildcard_actions, list) and normalized_action in wildcard_actions
-        ):
-            return None
-
-        allowed_fields: set[str] = set()
-        for field_name, actions in self.field_actions.items():
-            if field_name == "__all__":
-                continue
-            if actions == "__all__" or (
-                isinstance(actions, list) and normalized_action in actions
-            ):
-                allowed_fields.add(field_name)
-        return allowed_fields
-
-class UserAccessRule(BaseModel):
-    """A user access rule defines in which cases users can access an object via the api. The through field serves as the entry point for the user access definition. Note that user access rules only apply to the auto generated API's.
-
-    The special value `Self` can be used as a wildcard when the object being
-    accessed is the authenticated user itself. In that case, the rule matches
-    when `object.pk == request.user.pk`.
-
-    For example, we might want to give API access to a `Project` model so that users can create particular and manage particular projects of their own, whilst the integrity of other people's projects stay the same. That would look something like this:
-    ```python
-    rule = UserAccessRule(
-        through_field="owner",
-        field_actions={
-            "name" : ["view", "change", "add"],
-            "type: ["view", "change", "add"],
-            "datetime_created" : ["view"],
-            "datetime_updated" : ["view"],
-        },
-        row_actions=["view", "add", "change", "delete"]
-    )
-    ```
-    In above case, the user is able to create, add, change, delete, and view objects (as defined in the row actions) with the condition that project.owner == user
-
-    In the case that we want to give user access to objects with a deeper link to a user, that would look something like this (assume the model `ProjectTask`). 
-    ```python
-    rule = UserAccessRule(
-        through_field="project.owner",
-        field_actions={
-            "name" : ["view", "change", "add"],
-            "content: ["view", "change", "add"],
-            "datetime_created" : ["view"],
-            "datetime_updated" : ["view"],
-        },
-        row_actions=["view", "add", "change", "delete"]
-    )
-    ```
-    In the below case, the user is only able to create, view, add, and change objects (as defined in the row actions) with the condition of project_task.project.owner == user
-
-    For the `User` model itself, that would look like:
-    ```python
-    rule = UserAccessRule(
-        through_field="Self",
-        field_actions={
-            "avatar": ["view", "change"],
-            "has_seen_tutorial": ["view", "change"],
-        },
-        row_actions=["view", "change", "delete"],
-    )
-    ```
-    In that case, the authenticated user can only access their own user record
-    via the generated API.
-
-    """
-    through_field: str
-    field_actions:dict[str|Literal['__all__'], list[Literal["view", "change", "add", "delete"]] | Literal['__all__']]
-    row_actions:list[Literal["view", "change", "add", "delete"]]
-    filters:list[ApiFilterRule] = Field(default_factory=list)
 
 class ApiNesting(BaseModel):
     for_field: str
@@ -366,44 +205,40 @@ class ApiNesting(BaseModel):
             if field_name != "__all__"
         }
 
+class ApiAccessSettings(BaseModel):
+    """Declarative access granted outside a user's assigned policies."""
+
+    anonymous: list[AccessRule] = Field(default_factory=list)
+    authenticated: list[AccessRule] = Field(default_factory=list)
+    inherit_anonymous_for_authenticated: bool = True
+
 class ApiSettings(BaseModel):
     """
     Configures how Bloomerp API's are set up.
 
     Settings are:
         - enable_auto_generation: defines whether API endpoints are autogenerated for this model. Defaults to False
-        - public_access: defines read/list exceptions for public API access
-        - user_access: defines exceptions for public API access
-        - public_access_for_authenticated_fallback: whether there should be a fallback to potential public access if the user can't/fails to authenticate
+        - access: declarative anonymous and authenticated access rules
     """
 
     enable_auto_generation: bool = False
-    public_access: list[PublicAccessRule] = Field(default_factory=list)
-    user_access:list[UserAccessRule] = Field(default_factory=list)
+    access: ApiAccessSettings = Field(default_factory=ApiAccessSettings)
     nesting: list[ApiNesting] = Field(default_factory=list)
-    public_access_for_authenticated_fallback: bool = True
 
-    def get_public_access_rules(self, action: str) -> list[PublicAccessRule]:
-        normalized_action = str(action or "").strip().lower()
-        return [
-            rule
-            for rule in self.public_access
-            if normalized_action in rule.get_row_actions()
-        ]
+    def get_access_rules(self, *, authenticated: bool) -> list[AccessRule]:
+        if not authenticated:
+            return list(self.access.anonymous)
 
-    def get_user_access_rules(self, action: str) -> list[UserAccessRule]:
-        normalized_action = str(action or "").strip().lower()
-        return [
-            rule
-            for rule in self.user_access
-            if normalized_action in rule.row_actions
-        ]
+        rules = list(self.access.authenticated)
+        if self.access.inherit_anonymous_for_authenticated:
+            rules.extend(self.access.anonymous)
+        return rules
 
-    def has_public_access(self) -> bool:
-        return len(self.public_access) > 0
+    def has_anonymous_access(self) -> bool:
+        return bool(self.access.anonymous)
 
-    def has_user_access(self) -> bool:
-        return len(self.user_access) > 0
+    def has_authenticated_access(self) -> bool:
+        return bool(self.access.authenticated)
 
     def get_nesting_rules(self, action: str) -> list[ApiNesting]:
         normalized_action = str(action or "").strip().lower()
@@ -415,14 +250,14 @@ class ApiSettings(BaseModel):
 
 class ObjectHTML(BaseModel):
     template_name:str
-    
+
     should_render_func:Callable[[HttpRequest, Model], bool] = lambda req, obj : True
 
 class ObjectAction(BaseModel):
     id:str
-    
+
     label:str
-    
+
     execution_func:Callable[[HttpRequest, Model], HttpResponse]
     
     should_render_func:Callable[[HttpRequest, Model], bool] = lambda req, obj : True
@@ -456,8 +291,16 @@ class DetailViewSettings(BaseModel):
     An empty ``tab_configurations`` list retains router-derived defaults. Each
     configured layout becomes a named preference, with the first one selected.
     """
-    skip_views: Optional[list[str]] = None
-    
+    skip_views: Optional[list[str]] = Field(
+        default=None,
+        description="Optional list of view names to skip when generating the detail view router.",
+    )
+
+    layout : Optional[list[FieldLayout]] = Field(
+        default=None,
+        description="Optional layout configuration for the detail view."
+    )
+
     tab_configurations: list[DetailTabsConfiguration] = Field(default_factory=list)
 
 class ModelViewSettings(BaseModel):
@@ -495,12 +338,10 @@ class StringSearchSettings(BaseModel):
 
     string_search_fields: list[str] | None = None
 
-
 class ActivityLogSettings(BaseModel):
     """Optional settings for a model's audit functionality."""
 
     enabled : bool = True
-
 
 class BloomerpModelConfig(BaseModel):
     """
@@ -526,7 +367,10 @@ class BloomerpModelConfig(BaseModel):
     
     layout: Optional[FieldLayout] = None
 
-    tiles: list[SerializeAsAny[BaseTileConfig]] = Field(default_factory=list)
+    tiles: list[SerializeAsAny[BaseTileConfig]] = Field(
+        default_factory=list,
+        description="Optional list of reusable tile configurations associated with this model."
+    )
 
     is_internal: bool = False
 
@@ -554,7 +398,6 @@ class BloomerpModelConfig(BaseModel):
             value,
             owner=cls.__name__,
         )
-    
     
     @field_validator("module", mode="before")
     @classmethod
@@ -584,25 +427,20 @@ class BloomerpModelConfig(BaseModel):
 
         return value
 
-    def get_public_access_rules(self, action: str) -> list[PublicAccessRule]:
+    def get_api_access_rules(self, *, authenticated: bool) -> list[AccessRule]:
         if self.api_settings is None:
             return []
-        return self.api_settings.get_public_access_rules(action)
+        return self.api_settings.get_access_rules(authenticated=authenticated)
 
-    def has_public_access(self) -> bool:
+    def has_anonymous_api_access(self) -> bool:
         if self.api_settings is None:
             return False
-        return self.api_settings.has_public_access()
+        return self.api_settings.has_anonymous_access()
 
-    def get_user_access_rules(self, action: str) -> list[UserAccessRule]:
-        if self.api_settings is None:
-            return []
-        return self.api_settings.get_user_access_rules(action)
-
-    def has_user_access(self) -> bool:
+    def has_authenticated_api_access(self) -> bool:
         if self.api_settings is None:
             return False
-        return self.api_settings.has_user_access()
+        return self.api_settings.has_authenticated_access()
 
     def get_nesting_rules(self, action: str):
         if self.api_settings is None:
@@ -617,7 +455,6 @@ class BloomerpModelConfig(BaseModel):
             return bloomerp_config.auto_generate_api_endpoints
         
         return self.api_settings.enable_auto_generation
-
 
 def get_model_config(model_or_object:Type[Model]|Model) -> BloomerpModelConfig | None:
     """Returns the bloomerp model config for a model or object (if it exists)

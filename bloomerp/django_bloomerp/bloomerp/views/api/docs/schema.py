@@ -156,7 +156,7 @@ def _has_schema_action_access(request, model: type[Model], action: str) -> bool:
     if getattr(resolver.permission_manager.user, "is_superuser", False):
         return True
 
-    if resolver.should_use_user_access(model, action):
+    if resolver.has_action_access(model, action):
         return True
 
     permission_str = resolver.get_permission_str(model, action)
