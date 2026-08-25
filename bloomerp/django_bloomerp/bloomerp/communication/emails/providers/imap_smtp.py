@@ -366,10 +366,13 @@ class ImapSmtpAdapter(BaseEmailAdapter):
             mailbox=mailbox,
             subject=self._decode_header_value(message.get("subject", "")),
             sender=self._decode_header_value(message.get("from", "")),
+            reply_to=self._parse_address_header(message, "reply-to"),
             to=self._parse_address_header(message, "to"),
             cc=self._parse_address_header(message, "cc"),
             date=self._parse_date(message.get("date")),
             message_id=message.get("message-id"),
+            in_reply_to=message.get("in-reply-to"),
+            references=self._parse_message_ids(message.get("references", "")),
             is_read=self._has_seen_flag(flags),
             flags=flags,
             raw={
@@ -377,6 +380,11 @@ class ImapSmtpAdapter(BaseEmailAdapter):
             },
             attachments=self._extract_attachment_metadata(message),
         )
+
+    @staticmethod
+    def _parse_message_ids(value: str) -> list[str]:
+        """Return RFC message IDs from a References-style header."""
+        return re.findall(r"<[^<>]+>", value or "")
 
     def _parse_uid(self, response_meta: bytes) -> str | None:
         match = UID_PATTERN.search(response_meta)

@@ -18,7 +18,7 @@
                     <span class="{% if not item.is_read %} font-bold {% endif %}">{{ item.actor }}</span>
                     <div class="flex items-center justify-between gap-4">
                         <span class="truncate text-sm {% if not item.is_read %}font-bold{% endif %}">{% translate item.title %}</span>
-                        <span class="text-sm text-gray-600">{% translate item.datetime_received %}</span>
+                        <span class="text-sm text-gray-600">{{ item.datetime_received|date:request.user.datetime_view_preference }}</span>
                     </div>
                 </span>
                 {% if item.snippet %}
