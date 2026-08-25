@@ -7,15 +7,12 @@ export default class FileDataViewContainer extends DataViewContainer {
     private scopeContentTypeId: string | null = null;
     private scopeObjectId: string | null = null;
     private currentFolderId: string | null = null;
-    private clickHandler: ((event: MouseEvent) => void) | null = null;
 
     public override initialize(): void {
         super.initialize();
         if (!this.element) return;
 
         this.refreshFolderState();
-        this.clickHandler = (event: MouseEvent) => this.handleClick(event);
-        this.element.addEventListener("click", this.clickHandler);
         this.bindFileInput();
         this.bindDragAndDrop();
     }
@@ -25,14 +22,6 @@ export default class FileDataViewContainer extends DataViewContainer {
         this.refreshFolderState();
         this.bindFileInput();
         this.bindDragAndDrop();
-    }
-
-    public override destroy(): void {
-        if (this.clickHandler) {
-            this.element?.removeEventListener("click", this.clickHandler);
-            this.clickHandler = null;
-        }
-        super.destroy();
     }
 
     protected override onAdd(): boolean {
@@ -45,32 +34,6 @@ export default class FileDataViewContainer extends DataViewContainer {
         this.scopeContentTypeId = folderSection?.dataset.scopeContentTypeId || null;
         this.scopeObjectId = folderSection?.dataset.scopeObjectId || null;
         this.currentFolderId = folderSection?.dataset.currentFolderId || null;
-    }
-
-    private handleClick(event: MouseEvent): void {
-        const target = event.target as HTMLElement | null;
-        if (!target) return;
-
-        if (target.closest("[data-trigger-upload]")) {
-            this.element?.querySelector<HTMLInputElement>("[data-upload-input]")?.click();
-            return;
-        }
-
-        if (target.closest("[data-create-folder]")) {
-            void this.createFolder();
-            return;
-        }
-
-        const renameFolder = target.closest<HTMLElement>("[data-rename-folder]");
-        if (renameFolder) {
-            void this.renameFolder(renameFolder.dataset.renameFolder || "", renameFolder.dataset.currentName || "");
-            return;
-        }
-
-        const deleteFolder = target.closest<HTMLElement>("[data-delete-folder]");
-        if (deleteFolder) {
-            void this.deleteFolder(deleteFolder.dataset.deleteFolder || "");
-        }
     }
 
     private bindFileInput(): void {
@@ -147,41 +110,12 @@ export default class FileDataViewContainer extends DataViewContainer {
         });
     }
 
-    private async createFolder(): Promise<void> {
-        const name = window.prompt("Folder name")?.trim();
-        if (!name) return;
-
-        const formData = new FormData();
-        formData.set("name", name);
-        if (this.currentFolderId) formData.set("parent_folder_id", this.currentFolderId);
-        if (this.scopeContentTypeId) formData.set("content_type_id", this.scopeContentTypeId);
-        if (this.scopeObjectId) formData.set("object_id", this.scopeObjectId);
-        await this.submitAction(this.element?.dataset.createFolderUrl, formData, "Folder created");
-    }
-
-    private async renameFolder(id: string, currentName: string): Promise<void> {
-        const name = window.prompt("Name", currentName)?.trim();
-        if (!id || !name) return;
-
-        const formData = new FormData();
-        formData.set("folder_id", id);
-        formData.set("name", name);
-        await this.submitAction(this.element?.dataset.renameUrl, formData, "Name updated");
-    }
-
     private async moveItem(itemType: "file" | "folder", id: string, targetFolderId: string): Promise<void> {
         const formData = new FormData();
         formData.set("item_type", itemType);
         formData.set(`${itemType}_id`, id);
         formData.set("target_folder_id", targetFolderId);
         await this.submitAction(this.element?.dataset.moveUrl, formData, "Item moved");
-    }
-
-    private async deleteFolder(id: string): Promise<void> {
-        if (!id || !window.confirm("Delete this folder?")) return;
-        const formData = new FormData();
-        formData.set("folder_id", id);
-        await this.submitAction(this.element?.dataset.deleteUrl, formData, "Item deleted");
     }
 
     private async uploadFiles(files: FileList, folderId: string | null): Promise<void> {

@@ -872,6 +872,8 @@ export class DataViewContainer extends BaseComponent {
     }
 
     public onAfterSwap(): void {
+        this.setDataviewTarget();
+        this.setupAddButton();
         this.bindDisplayOptionsCallback();
         this.renderDefaultFilters();
     }

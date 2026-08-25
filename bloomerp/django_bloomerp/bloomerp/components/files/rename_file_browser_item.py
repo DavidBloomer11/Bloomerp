@@ -6,6 +6,7 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
 from bloomerp.models import File, FileFolder
+from bloomerp.models.files.file_folder import user_can_change_folder
 from bloomerp.router import router
 from bloomerp.services.file_permission_services import user_can_mutate_file
 from bloomerp.utils.requests import render_blank_form, render_page_refresh_with_message
@@ -52,24 +53,39 @@ def rename_file(request: HttpRequest, file_id: str) -> HttpResponse:
 
 
 @router.register(
-    path="components/files/folders/rename/",
+    path="components/files/folders/<int:folder_id>/rename/",
     name="components_files_rename_folder",
 )
 @login_required
-def rename_folder(request: HttpRequest) -> HttpResponse:
-    """Rename a folder from the file-browser folder controls."""
-    if request.method != "POST":
-        return HttpResponse("Method not allowed", status=405)
-
-    folder = get_object_or_404(FileFolder, id=request.POST.get("folder_id"))
-    if not request.user.has_perm("bloomerp.change_filefolder"):
+def rename_folder(request: HttpRequest, folder_id: int) -> HttpResponse:
+    """Render and process the canonical rename-folder modal."""
+    folder = get_object_or_404(FileFolder, id=folder_id)
+    if not user_can_change_folder(request, folder):
         return HttpResponse(status=403)
 
-    name = (request.POST.get("name") or "").strip()
-    if not name:
-        return HttpResponse("Name is required", status=400)
+    if request.method == "POST":
+        form = RenameFileForm(request.POST)
+        if form.is_valid():
+            folder.name = form.cleaned_data["name"]
+            folder.updated_by = request.user
+            folder.save(update_fields=["name", "updated_by"])
+            return render_page_refresh_with_message(
+                request,
+                message=_("Folder renamed successfully."),
+                type="success",
+            )
+    elif request.method == "GET":
+        form = RenameFileForm(initial={"name": folder.name})
+    else:
+        return HttpResponse("Method not allowed", status=405)
 
-    folder.name = name
-    folder.updated_by = request.user
-    folder.save(update_fields=["name", "updated_by"])
-    return HttpResponse(status=204)
+    return render_blank_form(
+        request,
+        form=form,
+        url=reverse(
+            "components_files_rename_folder",
+            kwargs={"folder_id": folder.pk},
+        ),
+        submit_label=_("Rename"),
+        button_attrs={"bloomerp-close-modal": "bloomerp-general-use-modal"},
+    )

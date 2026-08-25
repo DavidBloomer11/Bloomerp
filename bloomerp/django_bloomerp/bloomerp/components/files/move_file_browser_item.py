@@ -14,6 +14,7 @@ from bloomerp.components.files import (
     _user_can_view_folder,
 )
 from bloomerp.models import File, FileFolder
+from bloomerp.models.files.file_folder import user_can_change_folder
 from bloomerp.router import router
 from bloomerp.services.file_permission_services import user_can_mutate_file
 from bloomerp.utils.requests import render_blank_form, render_page_refresh_with_message
@@ -122,7 +123,7 @@ def move_file_browser_item(request: HttpRequest) -> HttpResponse:
 
     if item_type == "folder":
         folder = get_object_or_404(FileFolder, id=request.POST.get("folder_id"))
-        if not request.user.has_perm("bloomerp.change_filefolder"):
+        if not user_can_change_folder(request, folder):
             return HttpResponse(status=403)
 
         if target_folder and target_folder.id == folder.id:

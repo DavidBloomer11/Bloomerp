@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 
 from bloomerp.components.files import _get_folder_descendants, _user_can_mutate_file
 from bloomerp.models import File, FileFolder
+from bloomerp.models.files.file_folder import user_can_delete_folder
 from bloomerp.router import router
 from bloomerp.services.file_permission_services import user_can_mutate_file
 from bloomerp.utils.requests import render_blank_form, render_page_refresh_with_message
@@ -50,23 +51,45 @@ def delete_file(request: HttpRequest, file_id: str) -> HttpResponse:
 
 
 @router.register(
-    path="components/files/folders/delete/",
+    path="components/files/folders/<int:folder_id>/delete/",
     name="components_files_delete_folder",
 )
 @login_required
-def delete_folder(request: HttpRequest) -> HttpResponse:
-    """Delete a folder from the file-browser folder controls."""
-    if request.method != "POST":
-        return HttpResponse("Method not allowed", status=405)
-
-    folder = get_object_or_404(FileFolder, id=request.POST.get("folder_id"))
+def delete_folder(request: HttpRequest, folder_id: int) -> HttpResponse:
+    """Render and process the canonical delete-folder modal."""
+    folder = get_object_or_404(FileFolder, id=folder_id)
     _descendant_folders, descendant_files = _get_folder_descendants(folder)
     can_delete_files = all(
         _user_can_mutate_file(request, file, ("delete",))
         for file in descendant_files
     )
-    if not (can_delete_files and request.user.has_perm("bloomerp.delete_filefolder")):
+    if not (can_delete_files and user_can_delete_folder(request, folder)):
         return HttpResponse(status=403)
 
+    if request.method == "GET":
+        return render_blank_form(
+            request,
+            form=None,
+            url=reverse(
+                "components_files_delete_folder",
+                kwargs={"folder_id": folder.pk},
+            ),
+            submit_label=_("Delete"),
+            button_attrs={"bloomerp-close-modal": "bloomerp-general-use-modal"},
+            text=format_html(
+                'Are you sure you want to delete <strong>"{}"</strong>? '
+                "This also deletes its nested folders and files.",
+                folder.name,
+            ),
+        )
+
+    if request.method != "POST":
+        return HttpResponse("Method not allowed", status=405)
+
+    folder_name = folder.name
     folder.delete()
-    return HttpResponse(status=204)
+    return render_page_refresh_with_message(
+        request,
+        message=_("Folder deleted successfully: %(name)s") % {"name": folder_name},
+        type="success",
+    )

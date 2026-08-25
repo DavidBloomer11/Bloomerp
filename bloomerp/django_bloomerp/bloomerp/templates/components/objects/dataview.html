@@ -1,7 +1,7 @@
 {% load bloomerp %}
 {% load crispy_forms_tags %}
 
-{% if not request.htmx.target == 'data-view-data-section' %}
+{% if not is_data_section_request %}
 <div 
     id="data-view-{{ content_type_id }}"
     data-view-type="{{ preference.view_type }}"
@@ -63,7 +63,9 @@
 {% endif %}
 
     <!--Table section-->
+{% if not is_data_section_request %}
     <div id="data-view-data-section" class="h-full">
+{% endif %}
         {{ before_data_view|safe }}
         {% if preference.split_view_enabled %}
         <div class="flex h-[calc(100vh-200px)] w-full min-w-0 overflow-hidden rounded-xl" data-split-view-container>
@@ -158,9 +160,11 @@
             </nav>
         </div>
         {% endif %}
+{% if not is_data_section_request %}
     </div>
+{% endif %}
 
-{% if not request.htmx.target == 'data-view-data-section' %}
+{% if not is_data_section_request %}
     <!-- Context Menu Dropdown -->
     <div id="data-table-{{ content_type_id }}-context-menu" class="hidden fixed bg-white shadow-lg rounded-xl border border-gray-200 z-50 min-w-[160px]">
         <ul class="py-1">

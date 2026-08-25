@@ -54,6 +54,17 @@ def _can_delete_file(request: HttpRequest, file: "File") -> bool:
     return file.persisted and user_can_mutate_file(request, file, ("delete",))
 
 
+def _create_folder_endpoint(context) -> str:
+    endpoint = reverse("components_create_folder")
+    return f"{endpoint}?{context.querystring}" if context.querystring else endpoint
+
+
+def _can_create_folder(context) -> bool:
+    from bloomerp.components.files.create_folder import can_create_folder
+
+    return can_create_folder(context.request)
+
+
 
 class File(
     TimestampModelMixin,
@@ -75,7 +86,8 @@ class File(
                 DataviewModalAction(
                     id="create_folder",
                     label="Create Folder",
-                    endpoint=lambda x: reverse("components_create_folder"),
+                    endpoint=_create_folder_endpoint,
+                    should_render_func=_can_create_folder,
                     modal_title="Create folder",
                     icon="fa fa-folder-plus"
                 ),
@@ -86,6 +98,7 @@ class File(
                     display_fields=[
                         "name",
                         "file",
+                        "size_str"
                         
                     ]
                 )

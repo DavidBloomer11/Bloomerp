@@ -322,7 +322,7 @@ class TestFilesComponent(BaseBloomerpModelTestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response.content, 'id="data-view-data-section"', html=False)
+        self.assertNotContains(response.content, 'id="data-view-data-section"', html=False)
         self.assertContains(response.content, "unique_file_name.txt")
         self.assertNotContains(response.content, 'bloomerp-component="file-dataview-container"', html=False)
         self.assertNotContains(response.content, 'id="data-view-search-input-', html=False)
@@ -531,6 +531,70 @@ class TestFilesComponent(BaseBloomerpModelTestCase):
         self.assertContains(response.content, str(obj), count=1)
         self.assert_current_breadcrumb(response, "Payslips")
         self.assertNotContains(response.content, "Root")
+
+    def test_object_scoped_folder_links_preserve_the_object_breadcrumb_root(self):
+        obj = self.get_object()
+        file = self.create_file(
+            obj=obj,
+            user=self.admin_user,
+        )
+        custom_folder = FileFolder.objects.create(
+            name="Payslips",
+            parent=file.folder,
+            content_type=file.folder.content_type,
+            object_id=file.folder.object_id,
+            created_by=self.admin_user,
+            updated_by=self.admin_user,
+        )
+
+        self.client.force_login(self.admin_user)
+        root_response = self.client.get(
+            self.get_url(folder=file.folder.id, hide_ancestor_folders="true")
+        )
+
+        self.assertContains(
+            root_response,
+            f"hide_ancestor_folders=true&amp;folder_id={custom_folder.id}",
+            html=False,
+        )
+
+        child_response = self.client.get(
+            self.get_url(folder=custom_folder.id, hide_ancestor_folders="true"),
+            HTTP_HX_REQUEST="true",
+            HTTP_HX_TARGET="data-view-data-section",
+        )
+
+        self.assertContains(child_response, str(obj), count=1)
+        self.assert_current_breadcrumb(child_response, "Payslips")
+        self.assertNotContains(child_response, "Root")
+        self.assertNotContains(
+            child_response,
+            'bloomerp-component="file-dataview-container"',
+            html=False,
+        )
+
+    def test_object_root_breadcrumb_partial_does_not_duplicate_the_dataview_shell(self):
+        obj = self.get_object()
+        file = self.create_file(
+            obj=obj,
+            user=self.admin_user,
+        )
+
+        self.client.force_login(self.admin_user)
+        response = self.client.get(
+            self.get_url(folder=file.folder.id, hide_ancestor_folders="true"),
+            HTTP_HX_REQUEST="true",
+            HTTP_HX_TARGET="#data-view-data-section",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assert_current_breadcrumb(response, str(obj))
+        self.assertNotContains(response, 'id="data-view-data-section"', html=False)
+        self.assertNotContains(
+            response,
+            'bloomerp-component="file-dataview-container"',
+            html=False,
+        )
 
     def test_object_breadcrumb_is_not_duplicated_when_current_folder_matches_object(self):
         obj = self.get_object()

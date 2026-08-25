@@ -1,12 +1,9 @@
-from django.shortcuts import render
 from django.views.generic import TemplateView
-from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
-from bloomerp.models.application_field import ApplicationField
 from bloomerp.models.files import File
+from bloomerp.permissions.definition import BloomerpPermission
+from bloomerp.permissions.manager import UserPolicyManager
 from bloomerp.views.base import BaseBloomerpView
-from bloomerp.views.mixins.htmx_mixin import HtmxMixin
 from bloomerp.router import router
 
 
@@ -31,4 +28,8 @@ class BloomerpFileListView(BaseBloomerpView, TemplateView):
         return context
     
     def has_permission(self):
-        return True
+        manager = UserPolicyManager(self.request.user)
+        return manager.has_global_permission(
+            model_or_content_type=File,
+            permissions=BloomerpPermission.VIEW
+        )

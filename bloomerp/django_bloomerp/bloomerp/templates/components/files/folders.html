@@ -1,4 +1,4 @@
-{% load i18n %}
+{% load bloomerp i18n %}
 
 <div
     class="mb-4 flex flex-col gap-3"
@@ -43,27 +43,18 @@
                     <button
                         type="button"
                         class="flex min-w-0 flex-1 items-center gap-3 text-left"
-                        hx-get="{% url 'components_files' %}?folder={{ item.id }}"
+                        hx-get="{{ item.url }}"
                         hx-target="#data-view-data-section"
                         hx-swap="innerHTML"
                     >
                         <i class="{{ item.icon_class }} shrink-0"></i>
                         <span class="truncate font-medium text-gray-800">{{ item.name }}</span>
                     </button>
-                    {% if item.rename_allowed or item.delete_allowed %}
-                        <c-ui.dropdown.body trigger_icon_class="fa fa-ellipsis-vertical" trigger_button_class="btn-ghost" size="xs">
-                            {% if item.rename_allowed and perms.bloomerp.change_filefolder %}
-                                <button type="button" class="btn btn-ghost btn-xs w-full justify-start" data-rename-folder="{{ item.id }}" data-current-name="{{ item.name }}">
-                                    {% trans "Rename" %}
-                                </button>
-                            {% endif %}
-                            {% if item.delete_allowed and perms.bloomerp.delete_filefolder %}
-                                <button type="button" class="btn btn-ghost btn-xs w-full justify-start text-danger-dark" data-delete-folder="{{ item.id }}">
-                                    {% trans "Delete" %}
-                                </button>
-                            {% endif %}
-                        </c-ui.dropdown.body>
-                    {% endif %}
+                    <div class="flex shrink-0 items-center gap-1">
+                        {% for action in file_folder_actions %}
+                            {% render_object_action action=action object=item.folder request=request content_type_id=file_folder_content_type_id %}
+                        {% endfor %}
+                    </div>
                 </div>
             {% endfor %}
         </div>

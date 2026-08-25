@@ -10,9 +10,15 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 
 from bloomerp.components.objects.dataviews.dataview import dataview
-from bloomerp.models import ApplicationField, File, FileFolder
+from bloomerp.models import File, FileFolder
 from bloomerp.router import router
 from bloomerp.services.file_services import ensure_folder_hierarchy_for_object
+from bloomerp.services.file_permission_services import (
+    get_linked_object_files_field as _get_linked_object_files_field,
+    has_linked_file_permission,
+    user_can_mutate_file as _user_can_mutate_file,
+    user_can_view_file as _user_can_view_file,
+)
 from bloomerp.permissions.manager import UserPolicyManager
 from bloomerp.permissions.manager import create_permission_str
 
@@ -32,13 +38,6 @@ FILE_BROWSER_RESERVED_QUERY_KEYS = {
     "hide_ancestor_folders",
     "view_type",
 }
-
-
-@dataclass
-class FilePermissionContext:
-    file: File
-    linked_object: object | None
-    files_field: ApplicationField | None
 
 
 @dataclass
@@ -71,13 +70,6 @@ def _get_folder_linked_object(folder: FileFolder):
     return _resolve_linked_object(
         content_type=folder.content_type,
         object_id=folder.object_id,
-    )
-
-
-def _get_file_linked_object(file: File):
-    return _resolve_linked_object(
-        content_type=file.content_type,
-        object_id=file.object_id,
     )
 
 
@@ -160,83 +152,16 @@ def _get_object_scope(content_type_id: str | None, object_id: str | None):
     return content_type, get_object_or_404(model, pk=object_id)
 
 
-def _get_linked_object_files_field(linked_object) -> ApplicationField | None:
-    if linked_object is None:
-        return None
-
-    return ApplicationField.get_by_field(linked_object.__class__, "files")
-
-
 def _check_linked_file_permission(
     *,
     request: HttpRequest,
     linked_object,
-    files_field: ApplicationField | None,
+    files_field,
     operation: str,
 ) -> bool:
-    if linked_object is None:
-        return False
-
-    permission_manager = UserPolicyManager(request.user)
-    if not permission_manager.has_access_to_object(
-        linked_object,
-        create_permission_str(linked_object, "view"),
-    ):
-        return False
-
     if files_field is None:
         return False
-
-    return permission_manager.has_field_permission(
-        files_field,
-        create_permission_str(linked_object, operation),
-    )
-
-
-def _resolve_file_permission_context(file: File) -> FilePermissionContext:
-    linked_object = _get_file_linked_object(file)
-    files_field = _get_linked_object_files_field(linked_object) if linked_object else None
-    return FilePermissionContext(file=file, linked_object=linked_object, files_field=files_field)
-
-
-def _user_can_view_file(request: HttpRequest, file: File) -> bool:
-    if request.user.is_superuser:
-        return True
-
-    context = _resolve_file_permission_context(file)
-    if context.linked_object is not None:
-        return _check_linked_file_permission(
-            request=request,
-            linked_object=context.linked_object,
-            files_field=context.files_field,
-            operation="view",
-        )
-
-    permission_manager = UserPolicyManager(request.user)
-    return permission_manager.has_global_permission(File, create_permission_str(File, "view"))
-
-
-def _user_can_mutate_file(request: HttpRequest, file: File, operations: tuple[str, ...]) -> bool:
-    if request.user.is_superuser:
-        return True
-
-    context = _resolve_file_permission_context(file)
-    if context.linked_object is not None:
-        return any(
-            _check_linked_file_permission(
-                request=request,
-                linked_object=context.linked_object,
-                files_field=context.files_field,
-                operation=operation,
-            )
-            for operation in operations
-        )
-
-    permission_manager = UserPolicyManager(request.user)
-    return any(
-        permission_manager.has_global_permission(File, create_permission_str(File, operation))
-        for operation in operations
-    )
+    return has_linked_file_permission(request, linked_object, operation)
 
 
 def _user_can_view_folder(request: HttpRequest, folder: FileFolder) -> bool:
@@ -367,6 +292,7 @@ def _get_model_scope_folder(content_type: ContentType | None) -> FileFolder | No
 def _serialize_folder_item(
     folder: FileFolder,
     *,
+    request: HttpRequest,
     query: str | None = None,
     current_folder: FileFolder | None = None,
 ) -> dict:
@@ -379,10 +305,9 @@ def _serialize_folder_item(
             if query and not current_folder
             else (_get_folder_display_name(folder.parent) if folder.parent_id else "Root")
         ),
-        "icon_class": "fa fa-folder text-amber-500",
+        "icon_class": "fa fa-folder text-primary",
         "open_folder_id": str(folder.id),
-        "rename_allowed": not folder.protected,
-        "delete_allowed": not folder.protected,
+        "url": _build_file_browser_url(request, folder_id=str(folder.id)),
         "is_dropzone": True,
         "folder": folder,
     }
@@ -403,7 +328,12 @@ def _build_navigation_items(
             query=query,
         )
         return [
-            _serialize_folder_item(folder, query=query, current_folder=scope.current_folder)
+            _serialize_folder_item(
+                folder,
+                request=request,
+                query=query,
+                current_folder=scope.current_folder,
+            )
             for folder in folders.order_by("name")
         ]
 
@@ -415,7 +345,10 @@ def _build_navigation_items(
             current_folder=None,
             query=query,
         )
-        return [_serialize_folder_item(folder, query=query) for folder in folders.order_by("name")]
+        return [
+            _serialize_folder_item(folder, request=request, query=query)
+            for folder in folders.order_by("name")
+        ]
 
     root_folders = _build_visible_folders_queryset(
         request=request,
@@ -425,7 +358,8 @@ def _build_navigation_items(
         query=query,
     )
     return [
-        _serialize_folder_item(folder, query=query) for folder in root_folders.order_by("name")
+        _serialize_folder_item(folder, request=request, query=query)
+        for folder in root_folders.order_by("name")
     ]
 
 
@@ -638,19 +572,10 @@ def _render_file_browser(
         "scoped_object_id": scoped_object_id,
         "breadcrumbs": _build_scope_breadcrumbs(request, scope, hide_ancestor_folders=hide_ancestor_folders),
         "navigation_items": navigation_items,
-        "can_create_folder": (
-            request.user.is_superuser
-            or (
-                linked_object is not None
-                and _check_linked_file_permission(
-                    request=request,
-                    linked_object=linked_object,
-                    files_field=_get_linked_object_files_field(linked_object),
-                    operation="add",
-                )
-            )
-            or (linked_object is None and request.user.has_perm("bloomerp.add_filefolder"))
-        ),
+        "file_folder_actions": FileFolder.bloomerp_config.object_actions,
+        "file_folder_content_type_id": ContentType.objects.get_for_model(
+            FileFolder
+        ).pk,
     }
     folders_html = render(
         request,
@@ -663,10 +588,7 @@ def _render_file_browser(
         "scope-object-id": scoped_object_id or "",
         "folder-id": str(current_folder.id) if current_folder else "",
         "upload-url": reverse("components_files_upload"),
-        "create-folder-url": reverse("components_files_create_folder"),
         "move-url": reverse("components_files_move_browser_item"),
-        "rename-url": reverse("components_files_rename_folder"),
-        "delete-url": reverse("components_files_delete_folder"),
         "hide-filters": ",".join(sorted(FILE_BROWSER_RESERVED_QUERY_KEYS)),
     }
 

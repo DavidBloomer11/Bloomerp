@@ -517,6 +517,11 @@ def dataview(
         if data_view_querystring
         else dataview_base_url
     )
+    htmx_target = (
+        getattr(getattr(request, "htmx", None), "target", None)
+        or request.headers.get("HX-Target", "")
+    )
+    is_data_section_request = str(htmx_target).lstrip("#") == "data-view-data-section"
 
     context = {
         'content_type_id': content_type_id,
@@ -552,6 +557,7 @@ def dataview(
         ),
         'count' : state.count,
         'before_data_view': before_data_view,
+        'is_data_section_request': is_data_section_request,
     }
     context.update(state.renderer_context)
     context["rendered_dataview_actions"] = _render_dataview_actions(
