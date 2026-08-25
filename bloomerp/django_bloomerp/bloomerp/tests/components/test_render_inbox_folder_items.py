@@ -1,7 +1,9 @@
 from unittest.mock import Mock, patch
 
 from django.http import HttpResponse
+from django.template.loader import render_to_string
 from django.test import RequestFactory, SimpleTestCase
+from django.utils import timezone
 
 from bloomerp.components.communication.render_inbox_folder_items import (
     INBOX_PAGE_SIZE,
@@ -79,3 +81,31 @@ class RenderInboxFolderItemsTests(SimpleTestCase):
             context["pagination_querystring"],
             "q=invoice&status=unread",
         )
+
+    def test_inbox_item_renders_received_datetime_with_user_preference(self):
+        request = self.request_factory.get("/inbox-items/")
+        request.user = Mock(datetime_view_preference="Y-m-d H:i")
+        item = Mock(
+            id="item-id",
+            icon="",
+            is_read=True,
+            actor="Sender",
+            title="Subject",
+            datetime_received=timezone.datetime(
+                2026,
+                8,
+                25,
+                14,
+                30,
+                tzinfo=timezone.get_current_timezone(),
+            ),
+            snippet="Preview",
+        )
+
+        html = render_to_string(
+            "cotton/features/communication/inbox_item.html",
+            {"item": item},
+            request=request,
+        )
+
+        self.assertIn("2026-08-25 14:30", html)

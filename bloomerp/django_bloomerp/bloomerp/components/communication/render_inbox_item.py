@@ -36,7 +36,8 @@ def render_inbox_item(request: HttpRequest, item_id: str) -> HttpResponse:
     if inbox_item_type.on_render:
         try:
             content = inbox_item_type.on_render(inbox_item, request)
-            inbox_item_type.on_mark_as_read(inbox_item, request)
+            if not inbox_item.is_read and inbox_item_type.on_mark_as_read:
+                inbox_item_type.on_mark_as_read(inbox_item, request)
             
         except ValidationError as exc:
             error_message = "; ".join(exc.messages)
