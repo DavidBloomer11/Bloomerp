@@ -143,29 +143,17 @@ class Todo(BloomerpModel):
         model_view_settings=ModelViewSettings(
             default_dataviews=[
                 KanbanDataView(
-                    name="Todo workflow",
+                    name="Board",
                     display_fields=[
                         "title",
                         "priority",
                         "effort",
                         "assigned_to",
                         "required_by",
+                        "labels",
                     ],
                     group_by_field="status",
                     sort_field="priority",
-                ),
-                TableDataView(
-                    name="All todos",
-                    is_default=False,
-                    display_fields=[
-                        "title",
-                        "status",
-                        "priority",
-                        "assigned_to",
-                        "initiative",
-                        "required_by",
-                    ],
-                    sort_field="required_by",
                 ),
             ]
         ),
