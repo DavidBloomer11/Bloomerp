@@ -120,6 +120,82 @@ class TestOneToManyWidgetE2E(TestCrudE2EMixin, BaseE2ETestCase):
         expect(self.get_rows()).to_have_count(0)
         expect(self.get_widget().get_by_text("No related objects found.")).to_be_visible()
 
+    def test_saved_row_update_after_htmx_response_does_not_create_duplicate(self):
+        """
+        Use case: Update the same persisted one-to-many row across consecutive HTMX saves.
+        Expected result: The existing child is updated and no duplicate child is created.
+        """
+        # 1. Open a persisted parent that has no related rows.
+        country = self.CountryModel.objects.get(name="Belgium")
+        country.customers.all().update(country=None)
+        self.goto(country.get_absolute_url())
+        expect(self.get_rows()).to_have_count(0)
+
+        # 2. Add a child and persist it through the first HTMX save.
+        self.get_widget().get_by_role("button", name="Add row").click()
+        row = self.get_rows().first
+        row.locator('[data-one-to-many-cell="first_name"] input').fill(
+            "HTMX Customer"
+        )
+        row.locator('[data-one-to-many-cell="age"] input').fill("21")
+        with self.expect_response_for(
+            country.get_absolute_url(), method="POST"
+        ) as response_info:
+            self.page.get_by_role("button", name="Save", exact=True).click()
+        self.assertEqual(response_info.value.status, 200)
+        expect(self.get_rows()).to_have_count(1)
+        customer = country.customers.get(first_name="HTMX Customer")
+        expect(
+            self.get_rows().first.locator('input[name$="__id"]')
+        ).to_have_value(str(customer.pk))
+
+        # 3. Update the server-rendered row again and save through HTMX.
+        self.get_rows().first.locator(
+            '[data-one-to-many-cell="age"] input'
+        ).fill("22")
+        with self.expect_response_for(
+            country.get_absolute_url(), method="POST"
+        ) as response_info:
+            self.page.get_by_role("button", name="Save", exact=True).click()
+        self.assertEqual(response_info.value.status, 200)
+
+        # 4. Verify the same child was updated instead of creating a duplicate.
+        expect(self.get_rows()).to_have_count(1)
+        self.assertEqual(country.customers.count(), 1)
+        customer.refresh_from_db()
+        self.assertEqual(customer.age, 22)
+
+    def test_deleted_rows_disappear_from_htmx_save_response(self):
+        """
+        Use case: Delete persisted one-to-many rows and save through HTMX.
+        Expected result: The returned detail form immediately renders the empty state.
+        """
+        # 1. Attach two persisted customers to a country and open its detail form.
+        country = self.CountryModel.objects.get(name="Belgium")
+        customers = list(self.CustomerModel.objects.all()[:2])
+        for customer in customers:
+            customer.country = country
+            customer.save(update_fields=["country"])
+        self.goto(country.get_absolute_url())
+        expect(self.get_rows()).to_have_count(2)
+
+        # 2. Remove both rows and save through HTMX.
+        for _ in customers:
+            self.get_rows().first.get_by_role("button", name="Remove row").click()
+        expect(self.get_rows()).to_have_count(0)
+        with self.expect_response_for(
+            country.get_absolute_url(), method="POST"
+        ) as response_info:
+            self.page.get_by_role("button", name="Save", exact=True).click()
+        self.assertEqual(response_info.value.status, 200)
+
+        # 3. Verify the HTMX response and database both contain no related rows.
+        expect(self.get_rows()).to_have_count(0)
+        expect(
+            self.get_widget().get_by_text("No related objects found.")
+        ).to_be_visible()
+        self.assertEqual(country.customers.count(), 0)
+
     def test_clone_icon_clones_row(self):
         """
         Use case: Clone an individual row using its clone action.
