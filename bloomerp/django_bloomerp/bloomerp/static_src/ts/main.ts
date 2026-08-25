@@ -44,7 +44,7 @@ import WorkspaceContainer from './components/workspaces/WorkspaceContainer';
 import WorkspaceTile from './components/workspaces/WorkspaceTile';
 import SqlQueryEditor from './components/inputs/SqlQueryEditor';
 import Canvas from './components/workspaces/tiles/Canvas';
-import FileBrowser from './components/files/FileBrowser';
+import FileDataViewContainer from './components/files/FileDataViewContainer';
 import DocumentTemplateDataViewContainer from './components/data_view_components/DocumentTemplateDataViewContainer';
 import ForeignFieldDataViewContainer from './components/data_view_components/ForeignFieldDataViewContainer';
 import { SidebarItem } from './components/sidebar/SidebarItem';
@@ -157,7 +157,7 @@ registerComponent('global-search-modal', GlobalSearch);
 registerComponent('search-section', SearchSection);
 
 // File browser
-registerComponent('file-browser', FileBrowser);
+registerComponent('file-dataview-container', FileDataViewContainer);
 
 // Workspace components
 registerComponent('workspace-container', WorkspaceContainer);

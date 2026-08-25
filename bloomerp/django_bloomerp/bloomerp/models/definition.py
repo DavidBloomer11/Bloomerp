@@ -1,7 +1,7 @@
 import json
 import inspect
 import re
-from tokenize import String
+from dataclasses import dataclass
 from typing import Any, Callable, Literal, Optional, Type
 from urllib.parse import urlsplit
 
@@ -19,7 +19,7 @@ from pydantic import (
     model_validator,
 )
 from django.conf import settings
-from django.db.models import Model
+from django.db.models import Model, QuerySet
 
 class LayoutItem(BaseModel):
     id: int | str
@@ -248,10 +248,14 @@ class ApiSettings(BaseModel):
             if normalized_action in rule.on_action
         ]
 
-class ObjectHTML(BaseModel):
+class ObjectHTMLAction(BaseModel):
     template_name:str
 
     should_render_func:Callable[[HttpRequest, Model], bool] = lambda req, obj : True
+
+
+# Preserve the public name used by existing models and client instances.
+ObjectHTML = ObjectHTMLAction
 
 class ObjectAction(BaseModel):
     id:str
@@ -285,6 +289,81 @@ class ObjectModalAction(BaseModel):
 
     modal_size:Literal["sm", "md", "lg", "xl", "full"] = "md"
 
+@dataclass(frozen=True)
+class DataviewActionContext:
+    request: HttpRequest
+    model: type[Model]
+    content_type: Any
+    preference: Any
+    queryset: QuerySet
+    querystring: str = ""
+
+
+class DataviewHTMLAction(BaseModel):
+    id: str
+    template_name: str
+    shortcut: str | None = None
+    should_render_func: Callable[[DataviewActionContext], bool] = lambda context: True
+
+
+class DataviewAction(BaseModel):
+    id: str
+    label: str
+    execution_func: Callable[[DataviewActionContext], HttpResponse]
+    shortcut: str | None = None
+    should_render_func: Callable[[DataviewActionContext], bool] = lambda context: True
+    icon: str | None = None
+    style: Literal["primary", "secondary"] = "secondary"
+
+
+class DataviewModalAction(BaseModel):
+    id: str
+    label: str
+    endpoint: Callable[[DataviewActionContext], str]
+    shortcut: str | None = None
+    should_render_func: Callable[[DataviewActionContext], bool] = lambda context: True
+    icon: str | None = None
+    style: Literal["primary", "secondary"] = "secondary"
+    modal_title: str = ""
+    modal_size: Literal["sm", "md", "lg", "xl", "full"] = "md"
+
+
+def get_default_dataview_actions() -> list[DataviewHTMLAction]:
+    """Return a new copy of the standard Dataview toolbar configuration."""
+    template_root = "components/objects/dataview_actions"
+    return [
+        DataviewHTMLAction(
+            id="filter",
+            template_name=f"{template_root}/filter.html",
+            shortcut="mod+1",
+        ),
+        DataviewHTMLAction(
+            id="add",
+            template_name=f"{template_root}/add.html",
+            shortcut="mod+2",
+        ),
+        DataviewHTMLAction(
+            id="bulk-actions",
+            template_name=f"{template_root}/bulk_actions.html",
+            shortcut="mod+3",
+        ),
+        DataviewHTMLAction(
+            id="export",
+            template_name=f"{template_root}/export.html",
+            shortcut="mod+4",
+        ),
+        DataviewHTMLAction(
+            id="display-options",
+            template_name=f"{template_root}/display_options.html",
+            shortcut="mod+5",
+        ),
+        DataviewHTMLAction(
+            id="select-preference",
+            template_name=f"{template_root}/select_preference.html",
+            shortcut="mod+6",
+        ),
+    ]
+
 class DetailViewSettings(BaseModel):
     """Settings regarding detail views for a model.
 
@@ -311,6 +390,10 @@ class ModelViewSettings(BaseModel):
     default_dataviews: list[SerializeAsAny[BaseDataView]] = Field(
         default_factory=list
     )
+
+    dataview_actions: list[
+        DataviewAction | DataviewHTMLAction | DataviewModalAction
+    ] = Field(default_factory=get_default_dataview_actions)
 
     @model_validator(mode="after")
     def validate_default_dataviews(self):
@@ -382,7 +465,7 @@ class BloomerpModelConfig(BaseModel):
     
     model_view_settings : Optional[ModelViewSettings] = None 
     
-    object_actions : Optional[list[ObjectAction | ObjectHTML | ObjectModalAction]] = None
+    object_actions : Optional[list[ObjectAction | ObjectHTMLAction | ObjectModalAction]] = None
 
     string_search_settings : StringSearchSettings = StringSearchSettings(allow_global_search=True)
     

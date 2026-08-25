@@ -17,14 +17,12 @@ from bloomerp.dataviews.table.config import TableDataView
 from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.definition import (
     BloomerpModelConfig,
-    ModelViewSettings,
-    ObjectAction,
-    ObjectHTML,
     DetailTab,
     DetailTabsConfiguration,
     DetailViewSettings,
+    ModelViewSettings,
     ObjectAction,
-    ObjectHTML,
+    ObjectHTMLAction,
     StringSearchSettings,
 )
 from bloomerp.utils.models import get_list_view_url
@@ -163,7 +161,7 @@ class Todo(BloomerpModel):
             ]
         ),
         object_actions=[
-            ObjectHTML(
+            ObjectHTMLAction(
                 template_name="models/todo/copy_git_branch_name.html"
             ),
             ObjectAction(

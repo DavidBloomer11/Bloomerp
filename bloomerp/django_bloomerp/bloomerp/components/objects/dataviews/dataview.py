@@ -2,11 +2,20 @@ import json
 
 from django import forms
 from django.shortcuts import render
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.core.exceptions import FieldDoesNotExist
 from bloomerp.components.application_fields.filters import filters_init
 from bloomerp.dataviews.registry import DataviewType
-from bloomerp.models.definition import ObjectAction, get_model_config
+from bloomerp.models.definition import (
+    DataviewAction,
+    DataviewActionContext,
+    DataviewHTMLAction,
+    DataviewModalAction,
+    ObjectAction,
+    get_default_dataview_actions,
+    get_model_config,
+)
 from bloomerp.permissions.definition import BloomerpPermission
 from bloomerp.permissions.manager import UserPolicyManager
 from bloomerp.services.preference_services import PreferenceManager
@@ -76,6 +85,9 @@ def _build_data_view_query_state(
     request: HttpRequest,
     content_type_id: int,
     preference: UserListViewPreference | None = None,
+    *,
+    base_queryset: QuerySet | None = None,
+    additional_reserved_query_keys: set[str] | None = None,
 ) -> DataViewQueryState | HttpResponse:
     """Builds the dataview query state
 
@@ -93,9 +105,16 @@ def _build_data_view_query_state(
     # Get the model and content type
     Model, content_type = get_model_and_content_type_or_404(content_type_id)
 
-    # Get the permissions manager and initial queryset
-    policy_manager = UserPolicyManager(request.user)
-    queryset = policy_manager.get_queryset(Model, BloomerpPermission.VIEW)
+    # Use an explicitly scoped queryset when embedding a data view. Otherwise,
+    # apply the user's standard row-level view permissions.
+    queryset = (
+        base_queryset
+        if base_queryset is not None
+        else UserPolicyManager(request.user).get_queryset(
+            Model,
+            BloomerpPermission.VIEW,
+        )
+    )
     
     # Get preference and options
     if preference is None:
@@ -117,7 +136,11 @@ def _build_data_view_query_state(
     if definition is None:
         return HttpResponse("Invalid view type", status=400)
 
-    reserved_query_keys = SHELL_RESERVED_QUERY_KEYS | definition.renderer_cls.get_reserved_query_params()
+    reserved_query_keys = (
+        SHELL_RESERVED_QUERY_KEYS
+        | definition.renderer_cls.get_reserved_query_params()
+        | (additional_reserved_query_keys or set())
+    )
     filter_querydict = request.GET.copy()
     for key in reserved_query_keys:
         filter_querydict.pop(key, None)
@@ -342,6 +365,80 @@ def _render_dataview_body(
         extra_context=context,
     )
     return definition.renderer_cls(render_state).render(pagination)
+
+
+def _get_configured_dataview_actions(
+    model: type[Model],
+) -> list[DataviewAction | DataviewHTMLAction | DataviewModalAction]:
+    config = get_model_config(model)
+    if config and config.model_view_settings:
+        return config.model_view_settings.dataview_actions
+    return get_default_dataview_actions()
+
+
+def _build_dataview_action_context(
+    request: HttpRequest,
+    state: DataViewQueryState,
+) -> DataviewActionContext:
+    return DataviewActionContext(
+        request=request,
+        model=state.model,
+        content_type=state.content_type,
+        preference=state.preference,
+        queryset=state.queryset,
+        querystring=request.GET.urlencode(),
+    )
+
+
+def _render_dataview_actions(
+    request: HttpRequest,
+    state: DataViewQueryState,
+    context: dict,
+) -> list[str]:
+    action_context = _build_dataview_action_context(request, state)
+    rendered_actions: list[str] = []
+
+    for action in _get_configured_dataview_actions(state.model):
+        try:
+            should_render = action.should_render_func(action_context)
+        except Exception:
+            should_render = False
+        if not should_render:
+            continue
+
+        action_template_context = {
+            **context,
+            "action": action,
+            "action_context": action_context,
+            "model": state.model,
+        }
+        if isinstance(action, DataviewHTMLAction):
+            template_name = action.template_name
+        elif isinstance(action, DataviewModalAction):
+            template_name = "components/objects/dataview_actions/modal_action.html"
+            action_template_context["endpoint"] = action.endpoint(action_context)
+        else:
+            template_name = "components/objects/dataview_actions/action.html"
+            execution_url = reverse(
+                "components_dataview_configured_action",
+                kwargs={
+                    "content_type_id": state.content_type.pk,
+                    "action_id": action.id,
+                },
+            )
+            if action_context.querystring:
+                execution_url = f"{execution_url}?{action_context.querystring}"
+            action_template_context["execution_url"] = execution_url
+
+        rendered_actions.append(
+            render_to_string(
+                template_name,
+                action_template_context,
+                request=request,
+            )
+        )
+
+    return rendered_actions
     
 
 # -----------------------------------
@@ -355,6 +452,13 @@ def dataview(
     request: HttpRequest,
     content_type_id: int,
     preference: UserListViewPreference | None = None,
+    *,
+    base_queryset: QuerySet | None = None,
+    additional_reserved_query_keys: set[str] | None = None,
+    component_id: str | None = None,
+    component_args: dict[str, str] | None = None,
+    dataview_base_url: str | None = None,
+    before_data_view: str = "",
 ) -> HttpResponse:
     """
     Renders the data table component. A data table is a table that takes in a content type 
@@ -364,7 +468,13 @@ def dataview(
     - permissions management
     - string searching
     """
-    state = _build_data_view_query_state(request, content_type_id, preference)
+    state = _build_data_view_query_state(
+        request,
+        content_type_id,
+        preference,
+        base_queryset=base_queryset,
+        additional_reserved_query_keys=additional_reserved_query_keys,
+    )
     if isinstance(state, HttpResponse):
         return state
     
@@ -395,17 +505,17 @@ def dataview(
         create_querystring.pop(key, None)
         export_querystring.pop(key, None)
     sync_url = request.headers.get("X-Bloomerp-Sync-Url", "false").lower() == "true"
-    component_id = request.GET.get('_component_id')
+    component_id = component_id or request.GET.get('_component_id')
 
-    data_view_base_url = reverse(
+    dataview_base_url = dataview_base_url or reverse(
         "components_dataview",
         kwargs={"content_type_id": content_type_id},
     )
     data_view_querystring = request.GET.urlencode()
     data_view_url = (
-        f"{data_view_base_url}?{data_view_querystring}"
+        f"{dataview_base_url}?{data_view_querystring}"
         if data_view_querystring
-        else data_view_base_url
+        else dataview_base_url
     )
 
     context = {
@@ -427,7 +537,7 @@ def dataview(
         'pagination_pages': pagination.pagination_pages or [],
         'show_global_pagination': pagination.show_global_pagination,
         'component_id': component_id,
-        'component_args' : _get_component_args(request),
+        'component_args' : {**_get_component_args(request), **(component_args or {})},
         'object_actions' : _get_actions(state.queryset.model),
         'view_types' : [vt.value for vt in DataviewType],
         'dataview_options_form': _get_dataview_options_form(
@@ -435,17 +545,63 @@ def dataview(
             _get_accessible_application_fields(state.dataview_fields),
             request,
         ),
-        'data_view_base_url': data_view_base_url,
+        'dataview_base_url': dataview_base_url,
         'data_view_url': data_view_url,
         'default_filters_json': json.dumps(
             _normalize_default_filters(state.preference.default_filters or {})
         ),
         'count' : state.count,
+        'before_data_view': before_data_view,
     }
     context.update(state.renderer_context)
+    context["rendered_dataview_actions"] = _render_dataview_actions(
+        request,
+        state,
+        context,
+    )
     context["rendered_dataview"] = _render_dataview_body(request, state, pagination, context)
     
     return render(request, 'components/objects/dataview.html', context)
+
+
+@router.register(
+    path="components/dataview/<int:content_type_id>/configured-action/<str:action_id>/",
+    name="components_dataview_configured_action",
+)
+def configured_dataview_action(
+    request: HttpRequest,
+    content_type_id: int,
+    action_id: str,
+) -> HttpResponse:
+    """Execute a configured Dataview action against its permission-filtered context."""
+    if request.method != "POST":
+        return HttpResponse("Method not allowed", status=405)
+
+    state = _build_data_view_query_state(request, content_type_id)
+    if isinstance(state, HttpResponse):
+        return state
+
+    action = next(
+        (
+            configured_action
+            for configured_action in _get_configured_dataview_actions(state.model)
+            if isinstance(configured_action, DataviewAction)
+            and configured_action.id == action_id
+        ),
+        None,
+    )
+    if action is None:
+        return HttpResponse("Action not found", status=404)
+
+    action_context = _build_dataview_action_context(request, state)
+    try:
+        should_execute = action.should_render_func(action_context)
+    except Exception:
+        should_execute = False
+    if not should_execute:
+        return HttpResponse(status=403)
+
+    return action.execution_func(action_context)
 
 
 @router.register(
