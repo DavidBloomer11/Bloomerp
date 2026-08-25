@@ -1,7 +1,11 @@
 from django.db import models
 from django.urls import reverse
 
-from bloomerp.dataviews.pivot_table import PivotField, PivotTable, PivotValueField
+from bloomerp.dataviews.pivot_table.renderer import (
+    PivotField,
+    PivotTable,
+    PivotValueField,
+)
 from bloomerp.models import ApplicationField
 from bloomerp.models.users.user_list_view_preference import UserListViewPreference
 from bloomerp.services.preference_services import PreferenceManager

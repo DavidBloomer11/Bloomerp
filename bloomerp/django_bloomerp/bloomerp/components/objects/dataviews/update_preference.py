@@ -2,8 +2,9 @@ from django.middleware.csrf import get_token
 from pydantic import ValidationError as PydanticValidationError
 
 from bloomerp.components.objects.dataviews.dataview import _get_accessible_application_fields, _get_dataview_options_form, _get_dataview_type_definition, _normalize_default_filters
+from bloomerp.dataviews.registry import DataviewType
 from bloomerp.models import ApplicationField
-from bloomerp.models.users.user_list_view_preference import UserListViewPreference, DataviewType
+from bloomerp.models.users.user_list_view_preference import UserListViewPreference
 from bloomerp.router import router
 from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
 from bloomerp.services.preference_services import PreferenceManager

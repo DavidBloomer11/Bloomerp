@@ -2,12 +2,12 @@ from unittest.mock import patch
 
 from django.contrib.contenttypes.models import ContentType
 
+from bloomerp.dataviews.kanban.config import KanbanDataView
+from bloomerp.dataviews.table.config import TableDataView
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.models.definition import (
     BloomerpModelConfig,
-    KanbanDataView,
     ModelViewSettings,
-    TableDataView,
 )
 from bloomerp.models.project_management.todo import Todo
 from bloomerp.models.users.user_list_view_preference import UserListViewPreference

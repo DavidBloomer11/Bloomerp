@@ -14,8 +14,8 @@ from django.utils import timezone
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
 
-from .base import BaseDataviewRenderer, DataviewRenderState
-from .gant import GantDataviewRenderer
+from ..base import BaseDataviewRenderer, DataviewRenderState
+from ..gant.renderer import GantDataviewRenderer
 
 
 CALENDAR_PAGE_SIZE = 5

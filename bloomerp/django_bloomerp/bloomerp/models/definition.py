@@ -6,6 +6,7 @@ from urllib.parse import urlsplit
 
 from django.http import HttpRequest, HttpResponse
 from bloomerp.config.definition import BloomerpConfig
+from bloomerp.dataviews.base import BaseDataView
 from bloomerp.field_types.lookups import Lookup
 from bloomerp.workspaces.base import BaseTileConfig
 from pydantic import (
@@ -202,7 +203,6 @@ class ApiFilterRule(BaseModel):
                 return lookup.value.django_representation or operator_value
         return operator_value
 
-
 class PublicAccessRule(BaseModel):
     """A public access rule defines in which cases objects can be accessed via the
     auto generated API without authentication.
@@ -285,7 +285,6 @@ class PublicAccessRule(BaseModel):
             ):
                 allowed_fields.add(field_name)
         return allowed_fields
-
 
 class UserAccessRule(BaseModel):
     """A user access rule defines in which cases users can access an object via the api. The through field serves as the entry point for the user access definition. Note that user access rules only apply to the auto generated API's.
@@ -459,129 +458,14 @@ class DetailViewSettings(BaseModel):
     skip_views : Optional[list[str]] = None
 
 
-class BaseDataView(BaseModel):
-    """Shared declarative settings for a default model data view."""
-
-    model_config = ConfigDict(extra="forbid")
-
-    name: str = Field(default="Default", min_length=1, max_length=255)
-    is_default: bool = True
-    display_fields: list[str] = Field(default_factory=list)
-    default_filters: dict[str, str | list[str]] = Field(default_factory=dict)
-    split_view_enabled: bool = False
-
-    @field_validator("name")
-    @classmethod
-    def normalize_name(cls, value: str) -> str:
-        """Normalize the user-facing preference name."""
-        normalized = value.strip()
-        if not normalized:
-            raise ValueError("Name is required.")
-        return normalized
-
-    @field_validator("display_fields")
-    @classmethod
-    def normalize_display_fields(cls, value: list[str]) -> list[str]:
-        """Normalize field names and reject duplicates."""
-        normalized = [field_name.strip() for field_name in value]
-        if any(not field_name for field_name in normalized):
-            raise ValueError("Display field names cannot be empty.")
-        if len(normalized) != len(set(normalized)):
-            raise ValueError("Display field names must be unique.")
-        return normalized
-
-    @field_validator("default_filters")
-    @classmethod
-    def normalize_default_filters(
-        cls,
-        value: dict[str, str | list[str]],
-    ) -> dict[str, str | list[str]]:
-        """Normalize declarative filter query keys."""
-        normalized: dict[str, str | list[str]] = {}
-        for key, filter_value in value.items():
-            normalized_key = key.strip()
-            if not normalized_key:
-                raise ValueError("Default filter keys cannot be empty.")
-            normalized[normalized_key] = filter_value
-        return normalized
-
-
-class TableDataView(BaseDataView):
-    """A declarative table data view."""
-
-    view_type: Literal["table"] = "table"
-    page_size: Literal[10, 25, 50, 100] = 25
-    sort_field: str | None = None
-    sort_direction: Literal["asc", "desc"] = "asc"
-
-
-class KanbanDataView(BaseDataView):
-    """A declarative Kanban data view."""
-
-    view_type: Literal["kanban"] = "kanban"
-    group_by_field: str | None = None
-    page_size: Literal[10, 25, 50, 100] = 25
-    sort_field: str | None = None
-    sort_direction: Literal["asc", "desc"] = "asc"
-
-
-class CardDataView(BaseDataView):
-    """A declarative card data view."""
-
-    view_type: Literal["card"] = "card"
-    page_size: Literal[10, 25, 50, 100] = 25
-
-
-class CalendarDataView(BaseDataView):
-    """A declarative calendar data view."""
-
-    view_type: Literal["calendar"] = "calendar"
-    start_field: str | None = None
-    end_field: str | None = None
-    view_mode: Literal["day", "week", "month", "year", "list"] = "week"
-    color_grouping_field: str | None = None
-
-
-class GanttDataView(BaseDataView):
-    """A declarative Gantt data view."""
-
-    view_type: Literal["gant"] = "gant"
-    start_field: str
-    end_field: str
-    dependency_from_field: str | None = None
-    dependency_for_field: str | None = None
-    page_size: Literal[10, 25, 50, 100] = 25
-
-
-class PivotTableDataView(BaseDataView):
-    """A declarative pivot-table data view."""
-
-    view_type: Literal["pivot_table"] = "pivot_table"
-    row_fields: list[str] = Field(default_factory=list)
-    column_fields: list[str] = Field(default_factory=list)
-    value_fields: list[str] = Field(default_factory=list)
-    aggregation: Literal["count", "sum", "min", "max", "avg"] = "count"
-    show_row_totals: bool = True
-    show_column_totals: bool = True
-    totals_scope: Literal["page", "dataset"] = "page"
-    page_size: Literal[10, 25, 50, 100] = 25
-
-
-DefaultDataView = (
-    TableDataView
-    | KanbanDataView
-    | CardDataView
-    | CalendarDataView
-    | GanttDataView
-    | PivotTableDataView
-)
-
-
 class ModelViewSettings(BaseModel):
     """Optional settings for a model's collection views."""
 
     skip_views: Optional[list[str]] = None
-    default_dataviews: list[DefaultDataView] = Field(default_factory=list)
+
+    default_dataviews: list[SerializeAsAny[BaseDataView]] = Field(
+        default_factory=list
+    )
 
     @model_validator(mode="after")
     def validate_default_dataviews(self):

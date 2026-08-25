@@ -1,11 +1,11 @@
 from django.test import SimpleTestCase
 from pydantic import ValidationError
 
+from bloomerp.dataviews.kanban.config import KanbanDataView
+from bloomerp.dataviews.table.config import TableDataView
 from bloomerp.models.definition import (
     BloomerpModelConfig,
-    KanbanDataView,
     ModelViewSettings,
-    TableDataView,
 )
 from bloomerp.models.project_management.todo import Todo
 

@@ -7,9 +7,10 @@ from django.db import models
 from django.urls import reverse
 from playwright.sync_api import Locator, Page, expect
 
+from bloomerp.dataviews.registry import DataviewType
 from bloomerp.management.commands import save_application_fields
 from bloomerp.models import ApplicationField
-from bloomerp.models.users.user_list_view_preference import UserListViewPreference, DataviewType
+from bloomerp.models.users.user_list_view_preference import UserListViewPreference
 from bloomerp.models import ApplicationField, Sidebar, SidebarItem
 from bloomerp.tests.base import BaseBloomerpModelTestCase
 from bloomerp.tests.utils.dynamic_models import create_test_models

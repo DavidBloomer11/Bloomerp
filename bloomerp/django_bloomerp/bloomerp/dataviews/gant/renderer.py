@@ -14,7 +14,7 @@ from django.utils import timezone
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
 
-from .base import BaseDataviewRenderer, DataviewPagination, DataviewRenderState
+from ..base import BaseDataviewRenderer, DataviewPagination, DataviewRenderState
 
 
 class GantDataviewRenderer(BaseDataviewRenderer):
