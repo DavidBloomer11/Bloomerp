@@ -455,8 +455,9 @@ class DetailViewSettings(BaseModel):
     An empty ``tab_configurations`` list retains router-derived defaults. Each
     configured layout becomes a named preference, with the first one selected.
     """
-    skip_views : Optional[list[str]] = None
-
+    skip_views: Optional[list[str]] = None
+    
+    tab_configurations: list[DetailTabsConfiguration] = Field(default_factory=list)
 
 class ModelViewSettings(BaseModel):
     """Optional settings for a model's collection views."""
@@ -485,10 +486,6 @@ class ModelViewSettings(BaseModel):
                 "Exactly one configured data view must have is_default=True."
             )
         return self
-
-    skip_views: Optional[list[str]] = None
-    tab_configurations: list[DetailTabsConfiguration] = Field(default_factory=list)
-
 
 class BloomerpModelConfig(BaseModel):
     """
