@@ -15,7 +15,7 @@ from bloomerp.permissions.definition import BloomerpPermission
 from bloomerp.permissions.manager import UserPermissionManager, create_permission_str
 from bloomerp.utils.labels import safe_object_label
 
-from .base import BaseDataviewRenderer, DataviewPagination
+from ..base import BaseDataviewRenderer, DataviewPagination
 
 
 NUMERIC_FIELD_TYPES = (

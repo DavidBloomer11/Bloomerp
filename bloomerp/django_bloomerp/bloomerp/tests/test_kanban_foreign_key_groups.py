@@ -4,7 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.test import RequestFactory
 
 from bloomerp.dataviews.base import DataviewPagination, DataviewRenderState
-from bloomerp.dataviews.kanban import KanbanDataviewRenderer
+from bloomerp.dataviews.kanban.renderer import KanbanDataviewRenderer
 from bloomerp.field_types.lookups import Lookup
 from bloomerp.models import (
     ApplicationField,

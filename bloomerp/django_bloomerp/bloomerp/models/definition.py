@@ -6,6 +6,7 @@ from urllib.parse import urlsplit
 
 from django.http import HttpRequest, HttpResponse
 from bloomerp.config.definition import BloomerpConfig
+from bloomerp.dataviews.base import BaseDataView
 from bloomerp.field_types.lookups import Lookup
 from bloomerp.workspaces.base import BaseTileConfig
 from pydantic import (
@@ -202,7 +203,6 @@ class ApiFilterRule(BaseModel):
                 return lookup.value.django_representation or operator_value
         return operator_value
 
-
 class PublicAccessRule(BaseModel):
     """A public access rule defines in which cases objects can be accessed via the
     auto generated API without authentication.
@@ -285,7 +285,6 @@ class PublicAccessRule(BaseModel):
             ):
                 allowed_fields.add(field_name)
         return allowed_fields
-
 
 class UserAccessRule(BaseModel):
     """A user access rule defines in which cases users can access an object via the api. The through field serves as the entry point for the user access definition. Note that user access rules only apply to the auto generated API's.
@@ -450,18 +449,42 @@ class ObjectModalAction(BaseModel):
 
     modal_size:Literal["sm", "md", "lg", "xl", "full"] = "md"
 
-class ModelViewSettings(BaseModel):
-    """
-    Optional settings for on the model level
-    """
-    skip_views : Optional[list[str]] = None
-
 class DetailViewSettings(BaseModel):
     """Settings regarding detail views for a model.
 
     An empty ``tab_configurations`` list retains router-derived defaults. Each
     configured layout becomes a named preference, with the first one selected.
     """
+    skip_views : Optional[list[str]] = None
+
+
+class ModelViewSettings(BaseModel):
+    """Optional settings for a model's collection views."""
+
+    skip_views: Optional[list[str]] = None
+
+    default_dataviews: list[SerializeAsAny[BaseDataView]] = Field(
+        default_factory=list
+    )
+
+    @model_validator(mode="after")
+    def validate_default_dataviews(self):
+        """Require unique names and one selected setup when defaults exist."""
+        if not self.default_dataviews:
+            return self
+
+        names = [data_view.name for data_view in self.default_dataviews]
+        if len(names) != len(set(names)):
+            raise ValueError("Default data view names must be unique.")
+
+        default_count = sum(
+            data_view.is_default for data_view in self.default_dataviews
+        )
+        if default_count != 1:
+            raise ValueError(
+                "Exactly one configured data view must have is_default=True."
+            )
+        return self
 
     skip_views: Optional[list[str]] = None
     tab_configurations: list[DetailTabsConfiguration] = Field(default_factory=list)

@@ -10,9 +10,14 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.core.exceptions import ValidationError
 
+from bloomerp.dataviews.kanban.config import KanbanDataView
+from bloomerp.dataviews.table.config import TableDataView
 from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.definition import (
     BloomerpModelConfig,
+    ModelViewSettings,
+    ObjectAction,
+    ObjectHTML,
     DetailTab,
     DetailTabsConfiguration,
     DetailViewSettings,
@@ -33,7 +38,7 @@ class TodoPriority(models.TextChoices):
     HIGH = ('high', _('High'))
     MEDIUM = ('medium', _('Medium'))
     LOW = ('low', _('Low'))
-    
+
 # TODO: Create effort model based on t-shirt sizing (check linear for this)
 class TodoEffort(models.IntegerChoices):
     XS = (1, _('XS'))
@@ -77,7 +82,7 @@ def _mark_as_completed(request:HttpRequest, object:"Todo") -> HttpResponse:
     """
     from bloomerp.permissions.manager import UserPermissionManager
     manager = UserPermissionManager(request.user)
-    
+
     if not manager.has_access_to_object(object, BloomerpPermission.CHANGE):
         message = _("You do not have permission to mark this todo as completed.")
     else:
@@ -92,6 +97,12 @@ class Todo(BloomerpModel):
     """
     The todo model is for Bloomerp's internal project management module.
     """
+    class Meta(BloomerpModel.Meta):
+        verbose_name = _("Todo")
+        verbose_name_plural = _("Todos")
+        managed = True
+        db_table = 'bloomerp_todo'
+
     bloomerp_config = BloomerpModelConfig(
         module="todos_and_initiatives",
         layout=FieldLayout(
@@ -129,6 +140,23 @@ class Todo(BloomerpModel):
             ]
         ),
         string_search_fields=["title", "content"],
+        model_view_settings=ModelViewSettings(
+            default_dataviews=[
+                KanbanDataView(
+                    name="Board",
+                    display_fields=[
+                        "title",
+                        "priority",
+                        "effort",
+                        "assigned_to",
+                        "required_by",
+                        "labels",
+                    ],
+                    group_by_field="status",
+                    sort_field="priority",
+                ),
+            ]
+        ),
         object_actions=[
             ObjectHTML(
                 template_name="models/todo/copy_git_branch_name.html"
@@ -345,12 +373,6 @@ class Todo(BloomerpModel):
             ),
         ]
     )
-
-    class Meta(BloomerpModel.Meta):
-        verbose_name = _("Todo")
-        verbose_name_plural = _("Todos")
-        managed = True
-        db_table = 'bloomerp_todo'
 
     avatar = None
     allow_string_search = False # Do not allow string search for todos (we dont want to-do's to be searchable in the search bar)
