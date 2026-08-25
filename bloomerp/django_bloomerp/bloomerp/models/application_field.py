@@ -24,9 +24,8 @@ class ApplicationField(models.Model):
         verbose_name_plural = _("Application Fields")
         managed = True
         db_table = "bloomerp_application_field"
-    
-    allow_string_search = False
 
+    
     field = models.CharField(
         max_length=100,
         help_text=_("The name of the field."),

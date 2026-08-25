@@ -6,9 +6,6 @@ from django.contrib.auth.models import Permission
 from django.utils.translation import gettext_lazy as _, gettext_noop
 from bloomerp.models.base_bloomerp_model import BloomerpModel, FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.definition import BloomerpModelConfig
-from bloomerp.models.mixins import (
-    StringSearchModelMixin,
-)
 from bloomerp.models.mixins.absolute_url_model_mixin import AbsoluteUrlModelMixin
 from bloomerp.models.mixins.avatar_model_mixin import AvatarModelMixin
 
@@ -71,15 +68,12 @@ class DetailSidebarViewPreference(models.TextChoices):
 
 class AbstractBloomerpUser(
     AbstractUser, 
-    StringSearchModelMixin, 
     AbsoluteUrlModelMixin,
     AvatarModelMixin
     ):
     class Meta:
         abstract = True
-
-    allow_string_search = True
-
+    
     date_view_preference = models.CharField(
         max_length=20,
         default=DateViewPreference.DAY_MONTH_YEAR,

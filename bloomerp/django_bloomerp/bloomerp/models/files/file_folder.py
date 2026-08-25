@@ -4,9 +4,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
 from bloomerp.models.base_bloomerp_model import BloomerpModel
-from bloomerp.models.definition import BloomerpModelConfig
+from bloomerp.models.definition import BloomerpModelConfig, StringSearchSettings
 from bloomerp.models.mixins.absolute_url_model_mixin import AbsoluteUrlModelMixin
-from bloomerp.models.mixins.string_search_model_mixin import StringSearchModelMixin
 from bloomerp.models.mixins.timestamp_model_mixin import TimestampModelMixin
 from bloomerp.models.mixins.user_stamp_model_mixin import UserStampModelMixin
 
@@ -15,11 +14,13 @@ class FileFolder(
     TimestampModelMixin,
     UserStampModelMixin,
     AbsoluteUrlModelMixin,
-    StringSearchModelMixin,
     models.Model,
 ):
     bloomerp_config = BloomerpModelConfig(
-        string_search_fields=["name"],
+        string_search_settings=StringSearchSettings(
+            string_search_fields=["name"],
+            allow_global_search=False,
+        )
     )
 
     class Meta(BloomerpModel.Meta):
@@ -57,7 +58,6 @@ class FileFolder(
     def __str__(self):
         return self.name
 
-    allow_string_search = True
 
     def clean(self):
         super().clean()

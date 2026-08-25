@@ -1,6 +1,7 @@
 import json
 import inspect
 import re
+from tokenize import String
 from typing import Any, Callable, Literal, Optional, Type
 from urllib.parse import urlsplit
 
@@ -487,6 +488,20 @@ class ModelViewSettings(BaseModel):
             )
         return self
 
+class StringSearchSettings(BaseModel):
+    """Optional settings for a model's search functionality."""
+
+    allow_global_search: bool = True
+
+    string_search_fields: list[str] | None = None
+
+
+class AuditSettings(BaseModel):
+    """Optional settings for a model's audit functionality."""
+
+    enabled : bool = True
+
+
 class BloomerpModelConfig(BaseModel):
     """
     Used to define certain bloomerp related meta data on a model. 
@@ -507,16 +522,11 @@ class BloomerpModelConfig(BaseModel):
         )
     ``` 
     """
-
     module: str | type | None = None
-
+    
     layout: Optional[FieldLayout] = None
 
     tiles: list[SerializeAsAny[BaseTileConfig]] = Field(default_factory=list)
-
-    allow_string_search: bool = True
-
-    string_search_fields: list[str] | None = None
 
     is_internal: bool = False
 
@@ -532,6 +542,9 @@ class BloomerpModelConfig(BaseModel):
     
     object_actions : Optional[list[ObjectAction | ObjectHTML | ObjectModalAction]] = None
 
+    string_search_settings : StringSearchSettings = StringSearchSettings(allow_global_search=True)
+    
+    
     @field_validator("tiles")
     @classmethod
     def validate_tiles(
@@ -542,7 +555,6 @@ class BloomerpModelConfig(BaseModel):
             value,
             owner=cls.__name__,
         )
-    
     
     
     @field_validator("module", mode="before")

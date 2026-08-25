@@ -2,12 +2,14 @@ from django.utils.translation import gettext_lazy as _
 import uuid
 from django.conf import settings
 from bloomerp.models import BloomerpModel
-from bloomerp.models.definition import BloomerpModelConfig
+from bloomerp.models.definition import BloomerpModelConfig, StringSearchSettings
 from django.db import models
 
 class AIConversation(BloomerpModel):
     bloomerp_config = BloomerpModelConfig(
-        string_search_fields=["title"],
+        string_search_settings=StringSearchSettings(
+            allow_global_search=False,
+        )
     )
 
     class Meta:
@@ -34,7 +36,6 @@ class AIConversation(BloomerpModel):
     auto_named = models.BooleanField(default=False, help_text="Whether the conversation has been auto-named", verbose_name=_("Auto Named"))
     args = models.JSONField(null=True, blank=True, help_text="Extra arguments for the conversation", verbose_name=_("Args"))
 
-    allow_string_search = False
 
     @property
     def number_of_messages(self):

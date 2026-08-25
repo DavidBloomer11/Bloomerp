@@ -35,7 +35,6 @@ class Bookmark(models.Model):
         verbose_name=_("Datetime Created"),
         )
 
-    allow_string_search = False
 
     def __str__(self) -> str:
         try:

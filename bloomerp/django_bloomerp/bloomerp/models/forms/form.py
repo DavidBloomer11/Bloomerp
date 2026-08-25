@@ -18,7 +18,6 @@ class Form(BloomerpModel, ContentLayoutModelMixin, models.Model):
 
     bloomerp_config = BloomerpModelConfig(
         create_redirect_url_func=lambda x: reverse("forms_detail_form_builder", kwargs={"pk" : x.id}),
-        allow_string_search=True,
         layout=FieldLayout(
             rows=[
                 LayoutRow(

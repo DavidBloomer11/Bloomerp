@@ -1,3 +1,5 @@
+from tokenize import String
+
 from django.db import connection, models
 from django.http import HttpRequest, HttpResponse
 from slugify import slugify
@@ -23,6 +25,7 @@ from bloomerp.models.definition import (
     DetailViewSettings,
     ObjectAction,
     ObjectHTML,
+    StringSearchSettings,
 )
 from bloomerp.utils.models import get_list_view_url
 from bloomerp.workspaces.analytics_tile.model import AnalyticsTileFilter, FieldConfig
@@ -138,8 +141,10 @@ class Todo(BloomerpModel):
                     ],
                 ),
             ]
+        ),  
+        string_search_settings=StringSearchSettings(
+            string_search_fields=["title", "content"],
         ),
-        string_search_fields=["title", "content"],
         model_view_settings=ModelViewSettings(
             default_dataviews=[
                 KanbanDataView(
@@ -375,7 +380,7 @@ class Todo(BloomerpModel):
     )
 
     avatar = None
-    allow_string_search = False # Do not allow string search for todos (we dont want to-do's to be searchable in the search bar)
+    allow_global_search = False # Do not allow string search for todos (we dont want to-do's to be searchable in the search bar)
 
     assigned_to = UserField(
         on_delete=models.CASCADE, 

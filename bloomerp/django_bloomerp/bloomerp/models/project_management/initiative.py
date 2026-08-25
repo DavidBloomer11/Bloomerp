@@ -9,7 +9,7 @@ from django.utils.translation import gettext_lazy as _, gettext_noop
 
 from bloomerp.form_fields.behavior import BehaviorAction, BehaviorConfig, BehaviorRule
 from bloomerp.models.base_bloomerp_model import BloomerpModel, FieldLayout, LayoutItem, LayoutRow
-from bloomerp.models.definition import BloomerpModelConfig
+from bloomerp.models.definition import BloomerpModelConfig, StringSearchSettings
 from bloomerp.workspaces.analytics_tile.model import (
     AnalyticsTileConfig,
     AnalyticsTileType,
@@ -84,7 +84,9 @@ class Initiative(BloomerpModel):
                 ),
             ]
         ),
-        string_search_fields=["name", "description"],
+        string_search_settings=StringSearchSettings(
+            string_search_fields=["name", "description"],      
+        ),
         tiles=[
             AnalyticsTileConfig(
                 type=AnalyticsTileType.PIE_CHART.value.key,

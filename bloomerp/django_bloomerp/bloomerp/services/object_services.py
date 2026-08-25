@@ -7,13 +7,14 @@ from django.db.models import CharField, F, TextField, Value
 from django.db.models.functions import Concat
 
 from bloomerp.models import User
+from bloomerp.models.definition import get_model_config
 
 def string_search_on_queryset(queryset: QuerySet, query: str):
     """
     Search a queryset using the model's configured string search behavior.
 
     By default this searches all local CharField and TextField fields. Models
-    can set ``bloomerp_config.string_search_fields`` to control the fields that
+    can set ``bloomerp_config.string_search_settings.string_search_fields`` to control the fields that
     are searched, including relation paths and concatenated fields such as
     ``first_name+last_name``.
 
@@ -24,8 +25,8 @@ def string_search_on_queryset(queryset: QuerySet, query: str):
     ```
     """
     model = queryset.model
-    bloomerp_config = getattr(model, "bloomerp_config", None)
-    configured_string_fields = getattr(bloomerp_config, "string_search_fields", None)
+    model_config = get_model_config(model)
+    configured_string_fields = model_config.string_search_settings.string_search_fields if model_config else None
     if configured_string_fields is None:
         string_fields = [
             field.name
