@@ -27,6 +27,7 @@ class BloomerpEmail(BaseModel):
     mailbox: str = "INBOX"
     subject: str = ""
     sender: str = ""
+    reply_to: list[str] = Field(default_factory=list)
     to: list[str] = Field(default_factory=list)
     cc: list[str] = Field(default_factory=list)
     date: datetime | None = None
@@ -50,6 +51,7 @@ class BloomerpEmail(BaseModel):
                 "message_id",
                 "in_reply_to",
                 "references",
+                "reply_to",
                 "date",
                 "to",
                 "cc",

@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Q, QuerySet
 from django.http import Http404, HttpRequest
@@ -41,29 +42,54 @@ def _resolve_email_account_from_folder(folder: "InboxFolder") -> EmailAccount:
 def _resolve_email_access(
     inbox_item: "InboxItem",
 ) -> tuple["BaseEmailAdapter", str, str]:
+    provider_location = _resolve_provider_location(inbox_item)
+    if provider_location is None:
+        raise ValidationError(
+            "This email is not connected to a synchronized provider message."
+        )
+
+    metadata = inbox_item.raw_meta_data or {}
+    provider_message_id, mailbox = provider_location
+    email_account_id = metadata.get("email_account_id")
+    if not email_account_id:
+        email_account_id = inbox_item.folder.related_object_id
+    email_account = get_object_or_404(EmailAccount, id=email_account_id)
+
+    return (
+        _resolve_email_adapter_for_account(email_account),
+        provider_message_id,
+        mailbox,
+    )
+
+
+def _resolve_provider_location(inbox_item: "InboxItem") -> tuple[str, str] | None:
+    """Return a provider UID and mailbox without guessing from RFC Message-ID."""
     metadata = inbox_item.raw_meta_data or {}
     locations = metadata.get("locations") or {}
     location = locations.get(DEFAULT_MAILBOX)
     if location is None and locations:
         location = next(iter(locations.values()))
 
-    email_account_id = metadata.get("email_account_id")
-    if not email_account_id:
-        email_account_id = inbox_item.folder.related_object_id
-    email_account = get_object_or_404(EmailAccount, id=email_account_id)
-
     if location is not None:
-        return (
-            _resolve_email_adapter_for_account(email_account),
-            str(location["provider_message_id"]),
-            str(location["mailbox"]),
-        )
+        provider_message_id = location.get("provider_message_id")
+        if provider_message_id:
+            return (
+                str(provider_message_id),
+                str(location.get("mailbox") or DEFAULT_MAILBOX),
+            )
 
-    return (
-        _resolve_email_adapter_for_account(email_account),
-        str(metadata.get("provider_message_id") or inbox_item.related_item_id),
-        str(metadata.get("mailbox") or DEFAULT_MAILBOX),
-    )
+    provider_message_id = metadata.get("provider_message_id")
+    if provider_message_id:
+        return (
+            str(provider_message_id),
+            str(metadata.get("mailbox") or DEFAULT_MAILBOX),
+        )
+    return None
+
+
+def _is_locally_stored_outbound_email(inbox_item: "InboxItem") -> bool:
+    metadata = inbox_item.raw_meta_data or {}
+    return metadata.get("outbound_body_html") is not None
 
 
 def render_email(inbox_item:"InboxItem", request: HttpRequest) -> str:
@@ -162,18 +188,29 @@ def fetch_email_attachment(
 
 
 def mark_email_as_read(inbox_item:"InboxItem", request: HttpRequest):
-    adapter, provider_message_id, mailbox = _resolve_email_access(inbox_item)
-    try:
-        adapter.mark_as_read(email_id=provider_message_id, mailbox=mailbox)
-    finally:
-        close = getattr(adapter, "close", None)
-        if callable(close):
-            close()
+    if not (
+        _is_locally_stored_outbound_email(inbox_item)
+        and _resolve_provider_location(inbox_item) is None
+    ):
+        adapter, provider_message_id, mailbox = _resolve_email_access(inbox_item)
+        try:
+            adapter.mark_as_read(email_id=provider_message_id, mailbox=mailbox)
+        finally:
+            close = getattr(adapter, "close", None)
+            if callable(close):
+                close()
     inbox_item.is_read = True
     inbox_item.save(update_fields=["is_read"])
 
 
 def delete_email(inbox_item:"InboxItem", request: HttpRequest):
+    if (
+        _is_locally_stored_outbound_email(inbox_item)
+        and _resolve_provider_location(inbox_item) is None
+    ):
+        inbox_item.delete()
+        return
+
     adapter, provider_message_id, mailbox = _resolve_email_access(inbox_item)
     try:
         adapter.delete_email(email_id=provider_message_id, mailbox=mailbox)

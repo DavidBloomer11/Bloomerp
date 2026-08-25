@@ -223,7 +223,8 @@ MARK_INBOX_ITEM_AS_READ_ACTION = InboxActionDefinition(
     execution_func=lambda request, item: (
         item.get_inbox_item_type().on_mark_as_read(item, request),
         render_message(request, "Item marked as read", "success")
-    )[-1]
+    )[-1],
+    availability_func=lambda item: not item.is_read,
 )
 
 DELETE_INBOX_ITEM_ACTION = InboxActionDefinition(

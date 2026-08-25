@@ -9,6 +9,10 @@ from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from bloomerp.communication.emails.actions import (
+    _resolve_email_access,
+    delete_email,
+)
 from bloomerp.communication.emails.providers.imap_smtp import ImapSmtpAdapter
 from bloomerp.communication.inbox_folder_definition import InboxFolderType
 from bloomerp.components.communication.execute_inbox_action import _get_item_action
@@ -29,6 +33,7 @@ class ImapEmailThreadMetadataTests(SimpleTestCase):
         message["Message-ID"] = "<current@example.com>"
         message["In-Reply-To"] = "<parent@example.com>"
         message["References"] = "<root@example.com> <parent@example.com>"
+        message["Reply-To"] = "Support Team <replies@example.com>"
         message.set_content("Threaded email")
         adapter = ImapSmtpAdapter(SimpleNamespace(pk="account-id"))
         connection = Mock()
@@ -50,6 +55,11 @@ class ImapEmailThreadMetadataTests(SimpleTestCase):
         self.assertEqual(
             email.retrieval_metadata()["references"],
             ["<root@example.com>", "<parent@example.com>"],
+        )
+        self.assertEqual(email.reply_to, ["replies@example.com"])
+        self.assertEqual(
+            email.retrieval_metadata()["reply_to"],
+            ["replies@example.com"],
         )
 
 
@@ -135,6 +145,33 @@ class EmailReplyComponentTests(TestCase):
 
     @patch(
         "bloomerp.components.communication.emails.reply_to_email."
+        "fetch_email_content"
+    )
+    def test_reply_composer_prefers_reply_to_over_from(self, fetch_content):
+        fetch_content.return_value = "<p>Original body</p>"
+        self.item.raw_meta_data["reply_to"] = ["replies@example.com"]
+        self.item.save(update_fields=["raw_meta_data"])
+
+        response = self.client.get(self.reply_url, {"item_id": self.item.pk})
+
+        self.assertContains(response, 'value="replies@example.com"')
+        self.assertNotContains(response, 'value="alice@example.com"')
+
+    @patch(
+        "bloomerp.components.communication.emails.reply_to_email."
+        "fetch_email_content"
+    )
+    def test_invalid_reply_to_falls_back_to_from(self, fetch_content):
+        fetch_content.return_value = "<p>Original body</p>"
+        self.item.raw_meta_data["reply_to"] = ["not-an-email"]
+        self.item.save(update_fields=["raw_meta_data"])
+
+        response = self.client.get(self.reply_url, {"item_id": self.item.pk})
+
+        self.assertContains(response, 'value="alice@example.com"')
+
+    @patch(
+        "bloomerp.components.communication.emails.reply_to_email."
         "_resolve_email_adapter_for_account"
     )
     @patch(
@@ -207,7 +244,7 @@ class EmailReplyComponentTests(TestCase):
         )
         self.assertEqual(sent_item.raw_meta_data["outbound_body_html"], send_kwargs["body_html"])
 
-    def test_reply_action_is_unavailable_without_a_valid_sender(self):
+    def test_reply_action_is_unavailable_without_a_valid_recipient(self):
         """
         Use case: A synchronized email does not contain a valid sender address.
         Expected result: The Reply action cannot be resolved or executed for that item.
@@ -222,7 +259,48 @@ class EmailReplyComponentTests(TestCase):
 
         # 3. Verify a direct request also refuses to open a reply composer.
         response = self.client.get(self.reply_url, {"item_id": self.item.pk})
-        self.assertContains(response, "does not have a valid sender address")
+        self.assertContains(response, "does not have a valid reply recipient")
+
+    def test_local_sent_reply_targets_original_recipient_and_deletes_locally(self):
+        sent_item = InboxItem.objects.create(
+            folder=self.folder,
+            item_type=InboxFolderType.EMAIL.value.item_type.key,
+            related_item_id="<sent@example.com>",
+            actor=self.email_account.email_address,
+            is_read=True,
+            datetime_received=timezone.now(),
+            title="Re: Quarterly report",
+            raw_meta_data={
+                "provider": "smtp",
+                "message_id": "<sent@example.com>",
+                "email_account_id": str(self.email_account.pk),
+                "to": ["alice@example.com"],
+                "outbound_body_html": "<p>Sent body</p>",
+            },
+        )
+
+        response = self.client.get(self.reply_url, {"item_id": sent_item.pk})
+
+        self.assertContains(response, 'value="alice@example.com"')
+        self.assertNotContains(
+            response,
+            f'value="{self.email_account.email_address}"',
+        )
+        self.assertEqual(
+            _get_item_action(sent_item, "reply_to_email").key,
+            "reply_to_email",
+        )
+        with self.assertRaises(ValidationError):
+            _get_item_action(sent_item, "mark_as_read")
+        with self.assertRaisesMessage(
+            ValidationError,
+            "not connected to a synchronized provider message",
+        ):
+            _resolve_email_access(sent_item)
+
+        delete_email(sent_item, Mock())
+
+        self.assertFalse(InboxItem.objects.filter(pk=sent_item.pk).exists())
 
     @patch(
         "bloomerp.components.communication.emails.reply_to_email."

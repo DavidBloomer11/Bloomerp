@@ -366,6 +366,7 @@ class ImapSmtpAdapter(BaseEmailAdapter):
             mailbox=mailbox,
             subject=self._decode_header_value(message.get("subject", "")),
             sender=self._decode_header_value(message.get("from", "")),
+            reply_to=self._parse_address_header(message, "reply-to"),
             to=self._parse_address_header(message, "to"),
             cc=self._parse_address_header(message, "cc"),
             date=self._parse_date(message.get("date")),

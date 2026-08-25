@@ -140,20 +140,39 @@ def resolve_inbox_item(
     )
 
 
-def original_sender_email(inbox_item: "InboxItem") -> str | None:
-    """Return the first valid address from an inbox item's sender value."""
-    for _, email_address in getaddresses([inbox_item.actor or ""]):
-        try:
-            validate_email(email_address)
-        except ValidationError:
-            continue
-        return email_address
-    return None
+def reply_recipient_emails(inbox_item: "InboxItem") -> list[str]:
+    """Return valid reply recipients for inbound and locally sent messages."""
+    metadata = inbox_item.raw_meta_data or {}
+    if metadata.get("outbound_body_html") is not None:
+        candidate_groups = [metadata.get("to") or []]
+    else:
+        candidate_groups = [
+            metadata.get("reply_to") or [],
+            [inbox_item.actor or ""],
+        ]
+
+    for candidates in candidate_groups:
+        if isinstance(candidates, str):
+            candidates = [candidates]
+
+        recipients = []
+        for _, email_address in getaddresses([str(value) for value in candidates]):
+            try:
+                validate_email(email_address)
+            except ValidationError:
+                continue
+            if email_address not in recipients:
+                recipients.append(email_address)
+        if recipients:
+            return recipients
+    return []
 
 
 def email_reply_is_available(inbox_item: "InboxItem") -> bool:
-    """Return whether an email item has a valid sender to reply to."""
-    return inbox_item.item_type == "email" and original_sender_email(inbox_item) is not None
+    """Return whether an email item has at least one valid reply recipient."""
+    return inbox_item.item_type == "email" and bool(
+        reply_recipient_emails(inbox_item)
+    )
 
 
 def sanitize_quoted_email_html(content: str) -> str:
@@ -183,11 +202,11 @@ def reply_to_email(
     if inbox_item is None:
         return render_message(request, _("Select an email before replying."), "warning")
 
-    sender_email = original_sender_email(inbox_item)
-    if sender_email is None:
+    reply_recipients = reply_recipient_emails(inbox_item)
+    if not reply_recipients:
         return render_message(
             request,
-            _("This email does not have a valid sender address."),
+            _("This email does not have a valid reply recipient."),
             "warning",
         )
 
@@ -217,7 +236,7 @@ def reply_to_email(
         email_account=email_account,
         quoted_email=quoted_email,
         form_data={
-            "to": [sender_email],
+            "to": reply_recipients,
             "cc": [],
             "bcc": [],
             "subject": _reply_subject(inbox_item.title),
