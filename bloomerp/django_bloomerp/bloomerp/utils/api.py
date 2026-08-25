@@ -188,12 +188,6 @@ class ApiAccessResolver:
         if getattr(self.permission_manager.user, "is_superuser", False):
             return queryset
         permission = self.get_permission_action_name(action)
-        if not self.permission_manager.is_anonymous and self.permission_manager.has_global_permission(
-            model,
-            permission,
-        ):
-            return queryset
-
         rules = self.get_applicable_access_rules(model, action)
         compilation = DjangoQPermissionCompiler(
             rules,
