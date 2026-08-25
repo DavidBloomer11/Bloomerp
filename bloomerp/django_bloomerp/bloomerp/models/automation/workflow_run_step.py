@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from bloomerp.models.definition import BloomerpModelConfig
+from bloomerp.models.definition import ActivityLogSettings, BloomerpModelConfig
 from bloomerp.models.mixins.timestamp_model_mixin import TimestampModelMixin
 
 class WorkflowRunStepStatus(models.TextChoices):
@@ -18,7 +18,7 @@ class WorkflowRunStep(TimestampModelMixin, models.Model):
     
     bloomerp_config = BloomerpModelConfig(
         module="automation",
-        record_activity_log=False
+        activity_log_settings=ActivityLogSettings(enabled=False)
     )
     
     workflow_run = models.ForeignKey(

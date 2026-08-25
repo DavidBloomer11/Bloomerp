@@ -496,7 +496,7 @@ class StringSearchSettings(BaseModel):
     string_search_fields: list[str] | None = None
 
 
-class AuditSettings(BaseModel):
+class ActivityLogSettings(BaseModel):
     """Optional settings for a model's audit functionality."""
 
     enabled : bool = True
@@ -531,8 +531,6 @@ class BloomerpModelConfig(BaseModel):
     is_internal: bool = False
 
     api_settings: Optional[ApiSettings] = None
-
-    record_activity_log : bool = True
     
     create_redirect_url_func : Optional[Callable[[Model], str]] = None
     
@@ -544,6 +542,7 @@ class BloomerpModelConfig(BaseModel):
 
     string_search_settings : StringSearchSettings = StringSearchSettings(allow_global_search=True)
     
+    activity_log_settings : ActivityLogSettings = ActivityLogSettings(enabled=True)
     
     @field_validator("tiles")
     @classmethod

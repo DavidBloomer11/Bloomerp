@@ -6,7 +6,7 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 from pydantic import BaseModel
-from bloomerp.models.definition import BloomerpModelConfig, StringSearchSettings
+from bloomerp.models.definition import ActivityLogSettings, BloomerpModelConfig, StringSearchSettings
 from bloomerp.models.users.user import User
     
     
@@ -36,7 +36,7 @@ class ActivityLog(models.Model):
         string_search_settings=StringSearchSettings(
             allow_global_search=False,
         ),
-        record_activity_log=False,
+        activity_log_settings=ActivityLogSettings(enabled=False)
     )
 
     class Meta:
