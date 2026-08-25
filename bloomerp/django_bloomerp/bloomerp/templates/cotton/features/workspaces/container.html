@@ -1,3 +1,4 @@
+{% load i18n %}
 <c-features.layout.container 
     :component_name="ts_container_component"
     :layout="layout"
@@ -39,7 +40,7 @@
                                     hx-swap="innerHTML"
                                 >
                                     <div class="px-3 py-2 text-sm text-slate-500">
-                                        <c-i18n.blocktrans>Loading filters...</c-i18n.blocktrans>
+                                        {% blocktrans %}Loading filters...{% endblocktrans %}
                                     </div>
                                 </div>
                             </div>
@@ -55,6 +56,20 @@
     </c-slot>
     
     <c-slot name="buttons_right">
+        {% if show_module_selector %}
+            <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                hx-get="{% url 'bloomerp_home_view' %}?modules=1"
+                hx-target="#main-content"
+                hx-push-url="true"
+                hx-swap="innerHTML"
+            >
+                <i class="fa fa-puzzle-piece"></i>
+                {% blocktrans %}Select module{% endblocktrans %}
+            </button>
+        {% endif %}
+
         <c-ui.shortcut_tooltip position="bottom" shortcut="mod+6">
             <c-features.preferences.select_preference_button
                 model="Workspace"
@@ -70,7 +85,7 @@
             data-create-tile-btn
             >
             <i class="fa fa-add"></i>
-            <c-i18n.blocktrans>Create tile</c-i18n.blocktrans>
+            {% blocktrans %}Create tile{% endblocktrans %}
         </button>
     </c-slot>
 </c-features.layout.container>

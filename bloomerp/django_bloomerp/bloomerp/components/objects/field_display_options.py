@@ -9,18 +9,17 @@ from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 from django.urls import reverse
 
-from bloomerp.field_types import FieldTypeDefinition
-from bloomerp.forms.model_form import (
-    bloomerp_modelform_factory,
-)
+from bloomerp.field_types.types import FieldTypeDefinition
 from bloomerp.models import ApplicationField
 from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem
 from bloomerp.models.forms.form import Form
 from bloomerp.models.mixins.content_layout_model_mixin import ContentLayoutModelMixin
 from bloomerp.models.users.user_object_layout_preference import UserObjectLayoutPreference
+from bloomerp.permissions.definition import BloomerpPermission
+from bloomerp.permissions.manager import UserPolicyManager
 from bloomerp.router import router
-from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
 from bloomerp.utils.requests import render_blank_form
+from bloomerp.widgets.behavior_builder_widget import BehaviorBuilderWidget
 
 
 LAYOUT_OBJECT_MODELS = {
@@ -35,11 +34,48 @@ class LayoutConfigTarget:
     content_type: ContentType
 
 
-def create_form(field_type: FieldTypeDefinition, application_field: ApplicationField) -> type[DjangoForm]:
+def _layout_field_catalog(target: LayoutConfigTarget) -> list[dict[str, object]]:
+    from bloomerp.field_types.types import build_behavior_catalog_entry
+
+    ordered_items = [
+        item
+        for row in target.layout_object.layout_obj.rows
+        for item in row.items
+        if item.id not in (None, "")
+    ]
+    ordered_ids = [str(item.id) for item in ordered_items]
+    numeric_ids = [item_id for item_id in ordered_ids if item_id.isdigit()]
+    field_names = [item_id for item_id in ordered_ids if not item_id.isdigit()]
+    queryset = ApplicationField.objects.filter(content_type=target.content_type)
+    fields_by_id = {str(field.pk): field for field in queryset.filter(pk__in=numeric_ids)}
+    fields_by_name = {field.field: field for field in queryset.filter(field__in=field_names)}
+
+    catalog = []
+    seen = set()
+    for item in ordered_items:
+        item_id = str(item.id)
+        field = fields_by_id.get(item_id) or fields_by_name.get(item_id)
+        if field is None or field.pk in seen:
+            continue
+        seen.add(field.pk)
+        catalog.append(build_behavior_catalog_entry(field, item.config))
+    return catalog
+
+
+def create_form(
+    field_type: FieldTypeDefinition,
+    application_field: ApplicationField,
+    target: LayoutConfigTarget | None = None,
+) -> type[DjangoForm]:
     attrs = {
         option.id: option.build_form_field(application_field)
         for option in field_type.field_display_options
     }
+    if target is not None:
+        field_catalog = _layout_field_catalog(target)
+        for form_field in attrs.values():
+            if isinstance(form_field.widget, BehaviorBuilderWidget):
+                form_field.widget.field_catalog = field_catalog
     return type("FieldDisplayForm", (DjangoForm,), attrs)
 
 
@@ -129,19 +165,19 @@ def _user_can_configure_field(request: HttpRequest, target: LayoutConfigTarget, 
         return False
 
     if isinstance(layout_object, Form):
-        manager = UserPermissionManager(request.user)
-        if not manager.has_access_to_object(layout_object, create_permission_str(layout_object, "change")):
+        manager = UserPolicyManager(request.user)
+        if not manager.has_access_to_object(layout_object, BloomerpPermission.CHANGE):
             return False
         accessible_fields = manager.get_accessible_fields(
             target.content_type,
-            create_permission_str(model, "add"),
+            BloomerpPermission.ADD
         )
         return accessible_fields.filter(pk=application_field.pk).exists()
 
-    permission_manager = UserPermissionManager(request.user)
-    return permission_manager.has_field_permission(
+    manager = UserPolicyManager(request.user)
+    return manager.has_field_permission(
         application_field,
-        create_permission_str(model, "view"),
+        BloomerpPermission.VIEW
     )
 
 
@@ -161,7 +197,7 @@ def field_display_options(request: HttpRequest, application_field_id: int):
     if not field_type.field_display_options:
         return HttpResponse("This field does not have display options.")
 
-    form_class = create_form(field_type, application_field)
+    form_class = create_form(field_type, application_field, target=target)
     current_config = _get_item_config(target.layout_object, application_field)
     hidden_args = {
         "layout_object_content_type_id": ContentType.objects.get_for_model(target.layout_object.__class__).pk,
@@ -197,4 +233,5 @@ def field_display_options(request: HttpRequest, application_field_id: int):
         url,
         hidden_args=hidden_args,
         submit_label="Save display options",
+        text="Configure how this field is displayed and behaves on the form.",
     )

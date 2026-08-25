@@ -1,8 +1,9 @@
+{% load i18n %}
 {% load bloomerp %}
 
 {% if not gant_configured %}
 <div class="rounded-xl border border-gray-200 bg-base p-6 text-sm text-dark">
-    <c-i18n.blocktrans>Select a start field and an end field in the display options to configure the Gantt chart.</c-i18n.blocktrans>
+    {% blocktrans %}Select a start field and an end field in the display options to configure the Gantt chart.{% endblocktrans %}
 </div>
 {% else %}
 <div
@@ -18,23 +19,23 @@
 >
     <div class="sticky left-0 top-0 z-50 flex h-11 w-full items-center justify-end gap-1 border-b border-gray-200 bg-base px-2 shadow-xs">
         <button type="button" class="btn btn-sm" data-gant-today>
-            <c-i18n.blocktrans>Today</c-i18n.blocktrans>
+            {% blocktrans %}Today{% endblocktrans %}
         </button>
         <div class="flex items-center overflow-hidden rounded-xl border border-gray-200 bg-base">
             <button type="button" class="flex h-8 w-8 items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-dark" data-gant-zoom-out>
                 <i class="fa fa-minus" aria-hidden="true"></i>
-                <span class="sr-only"><c-i18n.blocktrans>Zoom out</c-i18n.blocktrans></span>
+                <span class="sr-only">{% blocktrans %}Zoom out{% endblocktrans %}</span>
             </button>
             <select class="h-8 min-w-24 border-x border-y-0 border-gray-200 bg-base px-2 text-xs font-medium text-dark focus:ring-0" data-gant-zoom>
-                <option value="0"><c-i18n.blocktrans>Year</c-i18n.blocktrans></option>
-                <option value="1"><c-i18n.blocktrans>Quarter</c-i18n.blocktrans></option>
-                <option value="2"><c-i18n.blocktrans>Month</c-i18n.blocktrans></option>
-                <option value="3"><c-i18n.blocktrans>Week</c-i18n.blocktrans></option>
-                <option value="4"><c-i18n.blocktrans>Hour</c-i18n.blocktrans></option>
+                <option value="0">{% blocktrans %}Year{% endblocktrans %}</option>
+                <option value="1">{% blocktrans %}Quarter{% endblocktrans %}</option>
+                <option value="2">{% blocktrans %}Month{% endblocktrans %}</option>
+                <option value="3">{% blocktrans %}Week{% endblocktrans %}</option>
+                <option value="4">{% blocktrans %}Hour{% endblocktrans %}</option>
             </select>
             <button type="button" class="flex h-8 w-8 items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-dark" data-gant-zoom-in>
                 <i class="fa fa-plus" aria-hidden="true"></i>
-                <span class="sr-only"><c-i18n.blocktrans>Zoom in</c-i18n.blocktrans></span>
+                <span class="sr-only">{% blocktrans %}Zoom in{% endblocktrans %}</span>
             </button>
         </div>
     </div>
@@ -48,7 +49,7 @@
         >
             <div class="flex h-full min-w-0 items-center overflow-hidden border-r border-gray-200 bg-base px-3" data-resizable-div-panel data-gant-sidebar>
                 <div class="min-w-0">
-                    <div class="text-sm font-medium text-dark"><c-i18n.blocktrans>Records</c-i18n.blocktrans></div>
+                    <div class="text-sm font-medium text-dark">{% blocktrans %}Records{% endblocktrans %}</div>
                     <div class="truncate text-xs text-gray-500" data-gant-visible-range></div>
                 </div>
             </div>
@@ -63,8 +64,8 @@
 
     <div class="sticky left-0 z-30 min-h-28 border-t border-gray-200 p-3" data-gant-unscheduled-tray>
         <div class="mb-2">
-            <div class="text-sm font-medium text-dark"><c-i18n.blocktrans>Unscheduled records</c-i18n.blocktrans></div>
-            <div class="text-xs text-gray-500"><c-i18n.blocktrans>Drag a record onto the timeline to schedule it.</c-i18n.blocktrans></div>
+            <div class="text-sm font-medium text-dark">{% blocktrans %}Unscheduled records{% endblocktrans %}</div>
+            <div class="text-xs text-gray-500">{% blocktrans %}Drag a record onto the timeline to schedule it.{% endblocktrans %}</div>
         </div>
         <div class="flex flex-wrap gap-2" data-gant-unscheduled-items>
             {% include "components/objects/dataview_gant_unscheduled.html" %}

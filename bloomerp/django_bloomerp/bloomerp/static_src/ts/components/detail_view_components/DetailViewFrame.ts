@@ -1,4 +1,5 @@
 import BaseComponent from "../BaseComponent";
+import { getCsrfToken } from "../../utils/cookies";
 
 const MAIN_SELECTOR = "#main";
 const DESKTOP_MEDIA_QUERY = "(min-width: 1280px)";
@@ -6,9 +7,13 @@ const DESKTOP_MEDIA_QUERY = "(min-width: 1280px)";
 export default class DetailViewFrame extends BaseComponent {
     private resizeHandler: (() => void) | null = null;
     private resizeObserver: ResizeObserver | null = null;
+    private sidebarPreferenceSaveQueue: Promise<void> = Promise.resolve();
+    private readonly sidebarClickHandler = (event: Event) => this.saveSidebarView(event);
 
     public initialize(): void {
         if (!this.element) return;
+
+        this.element.addEventListener("click", this.sidebarClickHandler);
 
         this.resizeHandler = () => this.fitToMainBottom();
         window.addEventListener("resize", this.resizeHandler);
@@ -19,6 +24,8 @@ export default class DetailViewFrame extends BaseComponent {
     }
 
     public destroy(): void {
+        this.element?.removeEventListener("click", this.sidebarClickHandler);
+
         if (this.resizeHandler) {
             window.removeEventListener("resize", this.resizeHandler);
             window.visualViewport?.removeEventListener("resize", this.resizeHandler);
@@ -28,6 +35,33 @@ export default class DetailViewFrame extends BaseComponent {
         this.resizeHandler = null;
         this.resizeObserver = null;
         super.destroy();
+    }
+
+    private saveSidebarView(event: Event): void {
+        const target = event.target as HTMLElement | null;
+        const button = target?.closest<HTMLElement>("[data-detail-sidebar-view]");
+        const saveUrl = this.element?.dataset.sidebarPreferenceUrl;
+        const view = button?.dataset.detailSidebarView;
+
+        if (!button || !saveUrl || !view) return;
+
+        this.sidebarPreferenceSaveQueue = this.sidebarPreferenceSaveQueue
+            .then(async () => {
+                const csrfToken = getCsrfToken();
+                const response = await fetch(saveUrl, {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: csrfToken ? { "X-CSRFToken": csrfToken } : {},
+                    body: new URLSearchParams({ view }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Preference request failed with status ${response.status}.`);
+                }
+            })
+            .catch((error: unknown) => {
+                console.error("Unable to save the detail sidebar preference.", error);
+            });
     }
 
     public onAfterSwap(): void {

@@ -1,3 +1,4 @@
+{% load i18n %}
 <div 
     class="grid md:grid-cols-3 grid-cols-1 gap-3"
     bloomerp-component="permission-checkboxes"
@@ -24,7 +25,7 @@
                 name="{{ name }}"
                 value="__all__"
                 {% if permissions and permissions|length > 0 and selected_permissions|length == permissions|length %}checked{% endif %}>
-            <span class="text-gray-800 font-medium text-sm"><c-i18n.blocktrans>All Permissions</c-i18n.blocktrans></span>
+            <span class="text-gray-800 font-medium text-sm">{% blocktrans %}All Permissions{% endblocktrans %}</span>
         </label>
     {% endif %}
 </div>

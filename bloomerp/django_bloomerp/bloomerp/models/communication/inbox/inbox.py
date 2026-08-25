@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import get_user_model
 from django.db import models, transaction
 from django.db.models import Count, IntegerField, OuterRef, QuerySet, Subquery, Value
@@ -15,7 +16,8 @@ class Inbox(BasePreference):
     and items remain attached to the owner's effective inbox.
     """
     class Meta:
-        verbose_name = "Inbox"
+        verbose_name_plural = _("Inboxes")
+        verbose_name = _("Inbox")
         constraints = [
             models.UniqueConstraint(
                 fields=["user"],

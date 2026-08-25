@@ -308,7 +308,10 @@ class TestOverviewViewE2E(TestCrudE2EMixin, BaseE2ETestCase):
         todo.refresh_from_db()
         self.assertEqual(todo.title, NEW_TODO_NAME)
         
-        
+    # ------------------------------
+    # Form behavior
+    # ------------------------------
+    
         
         
         

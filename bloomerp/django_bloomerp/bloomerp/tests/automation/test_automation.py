@@ -24,6 +24,7 @@ from bloomerp.services.workflow_services import (
     format_execution_trace,
     resume_workflow,
     run_workflow,
+    run_workflow_sync,
 )
 from bloomerp.signals.automation_signals import setup_automation_signals
 from bloomerp.tests.utils.dynamic_models import create_test_models, ensure_content_types_for_models
@@ -380,6 +381,37 @@ class TestAutomation(TransactionTestCase):
             self.end_node.id,
         )
 
+    def test_run_workflow_skips_a_workflow_deactivated_in_the_database(self):
+        """
+        Use case: A caller holds an active workflow instance after it is deactivated elsewhere.
+        Expected result: The workflow is not queued or executed from stale in-memory state.
+        """
+        # 1. Configure asynchronous execution and retain the active model instance.
+        self.workflow.run_asynchronously = True
+        self.workflow.save(update_fields=["run_asynchronously"])
+        Workflow.objects.filter(pk=self.workflow.pk).update(active=False)
+
+        # 2. Attempt dispatch with the stale instance and verify nothing is queued.
+        with patch("bloomerp.services.workflow_services.run_workflow_async.delay") as delay_mock:
+            result = run_workflow(self.workflow, {"first_name": "John"})
+
+        self.assertIsNone(result)
+        delay_mock.assert_not_called()
+
+    def test_run_workflow_sync_skips_a_workflow_deactivated_in_the_database(self):
+        """
+        Use case: A direct synchronous caller holds stale active workflow state.
+        Expected result: No workflow run is created after database deactivation.
+        """
+        # 1. Deactivate the workflow without updating the in-memory instance.
+        Workflow.objects.filter(pk=self.workflow.pk).update(active=False)
+
+        # 2. Attempt synchronous execution and verify no run is persisted.
+        result = run_workflow_sync(self.workflow, {"first_name": "John"})
+
+        self.assertIsNone(result)
+        self.assertFalse(WorkflowRun.objects.filter(workflow=self.workflow).exists())
+
     def test_run_workflow_async_hydrates_model_instances_before_running_sync(self):
         workflow = Workflow.objects.create(
             name="Async employee workflow",
@@ -435,6 +467,23 @@ class TestAutomation(TransactionTestCase):
             result = run_workflow_async(self.workflow.id, {"first_name": "John"})
 
         self.assertEqual(result, {"workflow_run_id": "123"})
+
+    def test_run_workflow_async_skips_a_workflow_deactivated_after_queueing(self):
+        """
+        Use case: An asynchronous workflow is deactivated after its task is queued.
+        Expected result: The worker drops the task before synchronous execution.
+        """
+        # 1. Simulate deactivation after a task has already captured the workflow id.
+        workflow_id = self.workflow.id
+        self.workflow.active = False
+        self.workflow.save(update_fields=["active"])
+
+        # 2. Run the queued task and verify it does not enter the workflow engine.
+        with patch("bloomerp.services.workflow_services.run_workflow_sync") as run_workflow_sync_mock:
+            result = run_workflow_async(workflow_id, {"first_name": "John"})
+
+        self.assertIsNone(result)
+        run_workflow_sync_mock.assert_not_called()
 
     # ----------------------------------------
     # Trigger: SCHEDULE
@@ -518,7 +567,7 @@ class TestAutomation(TransactionTestCase):
 
         setup_automation_signals(refresh=True)
 
-        with patch("bloomerp.signals.automations.run_workflow") as run_workflow_mock:
+        with patch("bloomerp.signals.automation_signals.run_workflow") as run_workflow_mock:
             self.CustomerModel.objects.create(
                 first_name="Jane",
                 last_name="Doe",
@@ -560,7 +609,7 @@ class TestAutomation(TransactionTestCase):
             updated_by=self.user,
         )
 
-        with patch("bloomerp.signals.automations.run_workflow") as run_workflow_mock:
+        with patch("bloomerp.signals.automation_signals.run_workflow") as run_workflow_mock:
             instance.delete()
             run_workflow_mock.assert_called_once()
         
@@ -595,12 +644,224 @@ class TestAutomation(TransactionTestCase):
             updated_by=self.user,
         )
 
-        with patch("bloomerp.signals.automations.run_workflow") as run_workflow_mock:
+        with patch("bloomerp.signals.automation_signals.run_workflow") as run_workflow_mock:
             instance.age = 23
             instance.updated_by = self.user
             instance.save()
 
             run_workflow_mock.assert_called_once()
+
+    def test_run_workflow_called_after_create_or_update(self):
+        """
+        Use case: A workflow has a combined object create-or-update trigger.
+        Expected result: The workflow runs once for both a create and an update.
+        """
+        # 1. Create a workflow with a combined post-save trigger.
+        content_type = ContentType.objects.get_for_model(self.CustomerModel)
+        workflow = Workflow.objects.create(
+            name="Create Or Update Trigger Workflow",
+            created_by=self.user,
+            updated_by=self.user,
+        )
+        WorkflowNode.objects.create(
+            workflow=workflow,
+            config={
+                "sub_type": "ON_OBJECT_CREATE_OR_UPDATE",
+                "parameters": {"content_type_id": content_type.id},
+            },
+            type=WorkflowNodeType.TRIGGER.value.id,
+            created_by=self.user,
+            updated_by=self.user,
+        )
+        setup_automation_signals(refresh=True)
+
+        # 2. Verify the combined trigger handles object creation.
+        with patch("bloomerp.signals.automation_signals.run_workflow") as run_workflow_mock:
+            instance = self.CustomerModel.objects.create(
+                first_name="Create",
+                last_name="Or Update",
+                age=30,
+                created_by=self.user,
+                updated_by=self.user,
+            )
+
+            run_workflow_mock.assert_called_once()
+            self.assertEqual(run_workflow_mock.call_args.args[1]["event"], "create")
+
+        # 3. Verify the same trigger handles object updates.
+        with patch("bloomerp.signals.automation_signals.run_workflow") as run_workflow_mock:
+            instance.age = 31
+            instance.updated_by = self.user
+            instance.save()
+
+            run_workflow_mock.assert_called_once()
+            self.assertEqual(run_workflow_mock.call_args.args[1]["event"], "update")
+
+    def test_deactivated_workflow_does_not_run_after_create(self):
+        """
+        Use case: An active object-create workflow is deactivated after signal registration.
+        Expected result: Creating the matching object does not run the deactivated workflow.
+        """
+        # 1. Register an active workflow with a matching object-create trigger.
+        content_type = ContentType.objects.get_for_model(self.CustomerModel)
+        workflow = Workflow.objects.create(
+            name="Deactivated Create Trigger Workflow",
+            created_by=self.user,
+            updated_by=self.user,
+        )
+        WorkflowNode.objects.create(
+            workflow=workflow,
+            config={
+                "sub_type": "ON_OBJECT_CREATE",
+                "parameters": {"content_type_id": content_type.id},
+            },
+            type=WorkflowNodeType.TRIGGER.value.id,
+            created_by=self.user,
+            updated_by=self.user,
+        )
+        setup_automation_signals(refresh=True)
+        workflow.active = False
+        workflow.save(update_fields=["active"])
+
+        # 2. Create the matching object and verify execution is skipped at runtime.
+        with patch("bloomerp.services.workflow_services.run_workflow_sync") as run_workflow_sync_mock:
+            self.CustomerModel.objects.create(
+                first_name="Deactivated",
+                last_name="Create",
+                age=30,
+                created_by=self.user,
+                updated_by=self.user,
+            )
+
+        run_workflow_sync_mock.assert_not_called()
+
+    def test_deactivated_workflow_does_not_run_after_update(self):
+        """
+        Use case: An active object-update workflow is deactivated after signal registration.
+        Expected result: Updating the matching object does not run the deactivated workflow.
+        """
+        # 1. Register an active workflow with a matching object-update trigger.
+        content_type = ContentType.objects.get_for_model(self.CustomerModel)
+        workflow = Workflow.objects.create(
+            name="Deactivated Update Trigger Workflow",
+            created_by=self.user,
+            updated_by=self.user,
+        )
+        WorkflowNode.objects.create(
+            workflow=workflow,
+            config={
+                "sub_type": "ON_OBJECT_UPDATE",
+                "parameters": {"content_type_id": content_type.id},
+            },
+            type=WorkflowNodeType.TRIGGER.value.id,
+            created_by=self.user,
+            updated_by=self.user,
+        )
+        setup_automation_signals(refresh=True)
+        instance = self.CustomerModel.objects.create(
+            first_name="Deactivated",
+            last_name="Update",
+            age=30,
+            created_by=self.user,
+            updated_by=self.user,
+        )
+        workflow.active = False
+        workflow.save(update_fields=["active"])
+
+        # 2. Update the matching object and verify execution is skipped at runtime.
+        with patch("bloomerp.services.workflow_services.run_workflow_sync") as run_workflow_sync_mock:
+            instance.age = 31
+            instance.updated_by = self.user
+            instance.save()
+
+        run_workflow_sync_mock.assert_not_called()
+
+    def test_deactivated_workflow_does_not_run_after_delete(self):
+        """
+        Use case: An active object-delete workflow is deactivated after signal registration.
+        Expected result: Deleting the matching object does not run the deactivated workflow.
+        """
+        # 1. Register an active workflow with a matching object-delete trigger.
+        content_type = ContentType.objects.get_for_model(self.CustomerModel)
+        workflow = Workflow.objects.create(
+            name="Deactivated Delete Trigger Workflow",
+            created_by=self.user,
+            updated_by=self.user,
+        )
+        WorkflowNode.objects.create(
+            workflow=workflow,
+            config={
+                "sub_type": "ON_OBJECT_DELETE",
+                "parameters": {"content_type_id": content_type.id},
+            },
+            type=WorkflowNodeType.TRIGGER.value.id,
+            created_by=self.user,
+            updated_by=self.user,
+        )
+        setup_automation_signals(refresh=True)
+        instance = self.CustomerModel.objects.create(
+            first_name="Deactivated",
+            last_name="Delete",
+            age=30,
+            created_by=self.user,
+            updated_by=self.user,
+        )
+        workflow.active = False
+        workflow.save(update_fields=["active"])
+
+        # 2. Delete the matching object and verify execution is skipped at runtime.
+        with patch("bloomerp.services.workflow_services.run_workflow_sync") as run_workflow_sync_mock:
+            instance.delete()
+
+        run_workflow_sync_mock.assert_not_called()
+
+    def test_reactivated_workflow_runs_without_signal_refresh(self):
+        """
+        Use case: An inactive object-create workflow is registered and later activated.
+        Expected result: It starts running without rebuilding process-local signal handlers.
+        """
+        # 1. Register an inactive workflow with a matching object-create trigger.
+        content_type = ContentType.objects.get_for_model(self.CustomerModel)
+        workflow = Workflow.objects.create(
+            name="Reactivated Create Trigger Workflow",
+            active=False,
+            created_by=self.user,
+            updated_by=self.user,
+        )
+        WorkflowNode.objects.create(
+            workflow=workflow,
+            config={
+                "sub_type": "ON_OBJECT_CREATE",
+                "parameters": {"content_type_id": content_type.id},
+            },
+            type=WorkflowNodeType.TRIGGER.value.id,
+            created_by=self.user,
+            updated_by=self.user,
+        )
+        setup_automation_signals(refresh=True)
+
+        # 2. Verify it is skipped while inactive, then activate it without refreshing signals.
+        with patch("bloomerp.services.workflow_services.run_workflow_sync") as run_workflow_sync_mock:
+            self.CustomerModel.objects.create(
+                first_name="Before",
+                last_name="Activation",
+                age=30,
+                created_by=self.user,
+                updated_by=self.user,
+            )
+            run_workflow_sync_mock.assert_not_called()
+
+            workflow.active = True
+            workflow.save(update_fields=["active"])
+            self.CustomerModel.objects.create(
+                first_name="After",
+                last_name="Activation",
+                age=31,
+                created_by=self.user,
+                updated_by=self.user,
+            )
+
+        run_workflow_sync_mock.assert_called_once()
     
     def test_exeucte_node(self):
         """Tests the execution of a basic node"""

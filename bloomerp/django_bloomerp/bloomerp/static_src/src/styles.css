@@ -18,6 +18,9 @@
 @source "../../templates";
 @source "../../templates/components/document_templates";
 
+/* Keep dark mode controlled by ThemeProvider instead of the media query. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /*
 * Custom theme configuration for Tailwind CSS v4
 */
@@ -105,6 +108,134 @@
     text-rendering: optimizeLegibility;
     font-optical-sizing: auto;
   }
+
+  html.dark {
+    color-scheme: dark;
+    --color-base: var(--color-zinc-800);
+    --color-light: var(--color-zinc-300);
+  }
+}
+
+/*
+* Dark-mode compatibility for existing neutral UI. New components should use
+* explicit dark: variants; these shared mappings keep legacy surfaces readable
+* without spreading theme state or one-off selectors throughout the app.
+*/
+@layer utilities {
+  .dark .bg-white { background-color: var(--color-zinc-800); }
+  .dark .bg-gray-50 { background-color: var(--color-zinc-900); }
+  .dark .bg-gray-100 { background-color: var(--color-zinc-800); }
+  .dark .bg-gray-200 { background-color: var(--color-zinc-700); }
+
+  .dark .bg-primary-50 { background-color: var(--color-primary-950); }
+  .dark .bg-primary-100 { background-color: var(--color-primary-900); }
+  .dark .bg-primary-200 { background-color: var(--color-primary-800); }
+  .dark .bg-primary-300 { background-color: var(--color-primary-700); }
+
+  .bg-yellow-200 { background-color: var(--color-yellow-600); }
+
+  .dark .hover\:bg-gray-50:hover { background-color: var(--color-zinc-800); }
+  .dark .hover\:bg-gray-100:hover { background-color: var(--color-zinc-800); }
+  .dark .hover\:bg-gray-200:hover { background-color: var(--color-zinc-700); }
+  .dark .text-gray-900 { color: var(--color-zinc-100); }
+  .dark .text-gray-800 { color: var(--color-zinc-200); }
+  .dark .text-gray-700 { color: var(--color-zinc-200); }
+  .dark .text-gray-600 { color: var(--color-zinc-300); }
+  .dark .text-gray-500 { color: var(--color-zinc-400); }
+  .dark .text-gray-400 { color: var(--color-zinc-500); }
+  .dark .border-gray-100 { border-color: var(--color-zinc-800); }
+  .dark .border-gray-200 { border-color: var(--color-zinc-700); }
+  .dark .border-gray-300 { border-color: var(--color-zinc-600); }
+  .dark .divide-gray-200 > :not(:last-child) { border-color: var(--color-zinc-700); }
+  .dark .ring-offset-white { --tw-ring-offset-color: var(--color-zinc-900); }
+
+  .dark .text-primary { color: var(--color-primary-400); }
+  .dark .text-primary-50 { color: var(--color-primary-950); }
+  .dark .text-primary-900 { color: var(--color-primary-100); }
+  .dark .text-primary-800 { color: var(--color-primary-200); }
+  .dark .text-primary-700 { color: var(--color-primary-300); }
+  .dark .text-primary-600 { color: var(--color-primary-400); }
+  .dark .text-primary-500 { color: var(--color-primary-500); }
+  .dark .text-primary-400 { color: var(--color-primary-600); }
+  .dark .text-primary-300 { color: var(--color-primary-700); }
+  .dark .text-primary-200 { color: var(--color-primary-800); }
+  .dark .text-primary-100 { color: var(--color-primary-900); }
+  .dark .text-primary-950 { color: var(--color-primary-50); }
+
+  .dark .text-slate-700 { color: var(--color-zinc-300); }
+
+  /* Components using @apply need dark selectors of their own because the
+   * generated declaration no longer carries the original utility class. */
+  .dark .table {
+    color: var(--color-zinc-300);
+  }
+
+  .dark .table thead th {
+    background-color: var(--color-zinc-800);
+    border-color: var(--color-zinc-700);
+    color: var(--color-zinc-100);
+  }
+
+  .dark .table tbody td {
+    border-color: var(--color-zinc-700);
+  }
+
+  .dark .table-striped tbody tr:nth-child(odd),
+  .dark .table-hover tbody tr:hover {
+    background-color: var(--color-zinc-800);
+  }
+
+  .dark .table-light,
+  .dark .table-light-row {
+    background-color: var(--color-zinc-900);
+    color: var(--color-zinc-200);
+  }
+
+  .dark .table-light th {
+    background-color: var(--color-zinc-800);
+    border-color: var(--color-zinc-700);
+    color: var(--color-zinc-100);
+  }
+
+  .dark .input:not([type='checkbox']):not([type='radio']),
+  .dark .select,
+  .dark .node-input,
+  .dark .node-select {
+    background-color: var(--color-zinc-800);
+    border-color: var(--color-zinc-600);
+    color: var(--color-zinc-100);
+  }
+
+  .dark input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']):not([type='range']):not([type='color']):not(.bg-transparent),
+  .dark select:not(.bg-transparent),
+  .dark textarea:not(.bg-transparent) {
+    background-color: var(--color-zinc-800);
+    border-color: var(--color-zinc-600);
+    color: var(--color-zinc-100);
+  }
+
+  .dark input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']):not([type='range']):not([type='color'])::placeholder,
+  .dark textarea::placeholder {
+    color: var(--color-zinc-400);
+  }
+
+  .dark input[type='checkbox'],
+  .dark input[type='radio'] {
+    background-color: var(--color-zinc-800);
+    border-color: var(--color-zinc-600);
+  }
+
+  .dark input[type='checkbox']:checked,
+  .dark input[type='radio']:checked {
+    background-color: currentColor;
+    border-color: transparent;
+  }
+
+  .dark input[type='checkbox']:focus,
+  .dark input[type='radio']:focus {
+    --tw-ring-offset-color: var(--color-zinc-900);
+  }
+
 }
 
 /*
@@ -140,8 +271,16 @@
         @apply bg-primary text-white border-[var(--color-primary-600)] ring-[var(--color-primary-500)];
     }
 
+    .dark .btn-primary:not(.btn-outline) {
+        @apply bg-zinc-800 border-zinc-600 text-zinc-100;
+    }
+
     .btn-primary:hover:not(:disabled) {
         @apply bg-[var(--color-primary-700)] border-[var(--color-primary-700)] text-white;
+    }
+
+    .dark .btn-primary:not(.btn-outline):hover:not(:disabled) {
+        @apply bg-zinc-700 border-zinc-500 text-zinc-100;
     }
 
     /* Reset primary button hover text color to override generic link hover */
@@ -766,20 +905,20 @@
 */
 @layer utilities {
     /*Default utilities*/
-    .input {
-      @apply px-3 py-2 text-sm border border-gray-200 rounded-xl focus:ring-1 focus:ring-primary focus:border-primary
+    .input:not([type='checkbox']):not([type='radio']) {
+      @apply px-3 py-2 text-sm border border-gray-200 rounded-xl focus:ring-1 focus:ring-primary focus:border-primary bg-white
     }
 
     /* Input size variants */
-    .input-sm {
+    .input-sm:not([type='checkbox']):not([type='radio']) {
       @apply px-2 py-1 text-xs
     }
 
-    .input-lg {
+    .input-lg:not([type='checkbox']):not([type='radio']) {
       @apply px-4 py-3 
     }
 
-    .input:disabled {
+    .input:disabled:not([type='checkbox']):not([type='radio']) {
       @apply bg-gray-100 cursor-not-allowed
     }
 
@@ -1232,6 +1371,39 @@ Dashboard
   top: 0;
   left: 0;
   white-space: pre-wrap;
+}
+
+/*
+  Text editor toolbar visibility
+*/
+
+[data-text-editor-toolbar] {
+  max-height: 100rem;
+  opacity: 1;
+  transition: max-height 220ms ease, opacity 180ms ease, margin-bottom 220ms ease;
+}
+
+[data-text-editor-toolbar][data-toolbar-hidden="true"] {
+  max-height: 0;
+  margin-bottom: 0 !important;
+  opacity: 0;
+  overflow: hidden !important;
+  pointer-events: none;
+}
+
+[data-text-editor-toolbar-reveal] {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 10;
+  opacity: 0.2;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+[data-text-editor-toolbar-reveal]:hover,
+[data-text-editor-toolbar-reveal]:focus-visible {
+  opacity: 1;
+  transform: scale(1.05);
 }
 
 /*

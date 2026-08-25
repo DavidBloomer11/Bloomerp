@@ -272,6 +272,12 @@ def serialize_workflow_run_result(workflow_run: WorkflowRun | None) -> dict | No
         "workflow_run_id": str(workflow_run.id),
     }
 
+
+def _get_active_workflow(workflow: Workflow) -> Workflow | None:
+    """Return the current database state only when the workflow is active."""
+    return Workflow.objects.filter(pk=workflow.pk, active=True).first()
+
+
 def run_workflow(
     workflow: Workflow,
     trigger_data: dict,
@@ -286,6 +292,10 @@ def run_workflow(
     """
     if start_node is not None and start_node.workflow_id != workflow.id:
         raise ValueError("Start node does not belong to the workflow.")
+
+    workflow = _get_active_workflow(workflow)
+    if workflow is None:
+        return None
 
     if workflow.run_asynchronously:
         serialized_trigger_data = _serialize_trigger_data(trigger_data)
@@ -615,9 +625,13 @@ def run_workflow_sync(
     workflow: Workflow,
     trigger_data: dict,
     start_node: WorkflowNode | None = None,
-) -> WorkflowRun:
+) -> WorkflowRun | None:
     if start_node is not None and start_node.workflow_id != workflow.id:
         raise ValueError("Start node does not belong to the workflow.")
+
+    workflow = _get_active_workflow(workflow)
+    if workflow is None:
+        return None
 
     workflow_run = WorkflowRun.objects.create(workflow=workflow)
     state = WorkflowRunState(

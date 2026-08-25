@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from urllib.parse import urlsplit
 
 from django.core.exceptions import ValidationError
@@ -32,44 +33,54 @@ class SidebarItem(models.Model):
     A sidebar item is something that appears in the sidebar. It can be a link to a particular page, or it can be a folder that contains other sidebar items. Each user can have multiple sidebar items, and they can be organized in a hierarchical structure using the parent field.
     """
     class Meta:
+        verbose_name = _("Sidebar Item")
+        verbose_name_plural = _("Sidebar Items")
         db_table = "bloomerp_sidebar_item"
 
     sidebar = models.ForeignKey(
         to="Sidebar",
         on_delete=models.CASCADE,
-        related_name="items"
+        related_name="items",
+        verbose_name=_("Sidebar"),
     )
     name = models.CharField(
         max_length=255,
         help_text="Name of the sidebar item.",
+        verbose_name=_("Name"),
     )
     icon = IconField(
-        help_text="Icon for the particular sidebar item."
+        help_text="Icon for the particular sidebar item.",
+        verbose_name=_("Icon"),
     )
     url = models.CharField(
         max_length=2048,
         help_text="URL that the sidebar item points to.",
         blank=True,
-        null=True
+        null=True,
+        verbose_name=_("URL"),
     )
     parent : Self = models.ForeignKey(
         to="self",
         null=True,
         blank=True,
         related_name="children",
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        verbose_name=_("Parent"),
     )
     is_folder = models.BooleanField(
-        default=False
+        default=False,
+        verbose_name=_("Is Folder"),
     )
     position = models.PositiveIntegerField(
         default=0,
-        help_text="Position of the sidebar item among its siblings. Lower numbers appear first."
+        help_text="Position of the sidebar item among its siblings. Lower numbers appear first.",
+        verbose_name=_("Position"),
     )
     color = models.CharField(
         max_length=7,
         default="#bfdbfe",
-        help_text="Hex color code for the sidebar item (e.g. #FF5733)."
+        help_text="Hex color code for the sidebar item (e.g. #FF5733).",
+        verbose_name=_("Color"),
     )
 
     def __str__(self):

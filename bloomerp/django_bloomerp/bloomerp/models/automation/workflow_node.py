@@ -28,33 +28,39 @@ class WorkflowNode(
         max_length=255,
         help_text=_("The name of the workflow node."),
         null=True,
-        blank=True
+        blank=True,
+        verbose_name=_("Name"),
     )
     workflow = models.ForeignKey(
         to="bloomerp.Workflow",
         on_delete=models.CASCADE,
-        related_name="nodes"
+        related_name="nodes",
+        verbose_name=_("Workflow"),
     )
     
     type = models.CharField(
         max_length=32,
         choices=WorkflowNodeType.choices(),
-        help_text=_("The type of the workflow node.")
+        help_text=_("The type of the workflow node."),
+        verbose_name=_("Type"),
     )
     
     config : dict = models.JSONField(
         default=dict,
-        help_text=_("The configuration for the workflow node.")
+        help_text=_("The configuration for the workflow node."),
+        verbose_name=_("Config"),
     )
     
     # UI position fields
     pos_x = models.IntegerField(
         help_text=_("The X position of the node in the workflow editor."),
-        default=0
+        default=0,
+        verbose_name=_("Pos X"),
         )
     pos_y = models.IntegerField(
         help_text=_("The Y position of the node in the workflow editor."),
-        default=0
+        default=0,
+        verbose_name=_("Pos Y"),
         )
 
     @property
@@ -164,7 +170,5 @@ class WorkflowNode(
 
     
     
-
-
 
 

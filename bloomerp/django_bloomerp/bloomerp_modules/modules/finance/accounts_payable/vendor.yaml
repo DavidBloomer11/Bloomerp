@@ -1,0 +1,81 @@
+id: vendor
+name: Vendor
+description: Vendor master record for accounts payable
+name_plural: Vendors
+string_representation: "{vendor_code} - {vendor_name}"
+fields:
+  - id: vendor_code
+    name: Vendor Code
+    type: CharField
+    options:
+      max_length: 20
+      unique: true
+  - id: vendor_name
+    name: Vendor Name
+    type: CharField
+    options:
+      max_length: 200
+  - id: crm_account
+    name: CRM Account
+    type: ForeignKey
+    options:
+      to: crm.core.crm_account
+      null: true
+      blank: true
+      on_delete: call(django.db.models.SET_NULL)
+  - id: email
+    name: Accounts Payable Email
+    type: EmailField
+    options:
+      null: true
+      blank: true
+  - id: phone
+    name: Vendor Phone
+    type: CharField
+    options:
+      max_length: 30
+      null: true
+      blank: true
+  - id: address
+    name: Vendor Address
+    type: TextField
+    options:
+      null: true
+      blank: true
+  - id: currency
+    name: Currency
+    type: CharField
+    options:
+      max_length: 10
+      default: USD
+  - id: payment_terms_days
+    name: Payment Terms Days
+    type: IntegerField
+    options:
+      default: 30
+  - id: tax_number
+    name: Tax Number
+    type: CharField
+    options:
+      max_length: 50
+      null: true
+      blank: true
+  - id: status
+    name: Status
+    type: ChoiceField
+    options:
+      choices:
+        - ["ACTIVE", "Active"]
+        - ["ON_HOLD", "On Hold"]
+        - ["INACTIVE", "Inactive"]
+  - id: is_active
+    name: Is Active
+    type: BooleanField
+    options:
+      default: true
+  - id: notes
+    name: Notes
+    type: TextField
+    options:
+      null: true
+      blank: true

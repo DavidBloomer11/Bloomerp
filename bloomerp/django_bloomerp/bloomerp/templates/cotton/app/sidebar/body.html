@@ -1,10 +1,11 @@
 {% load bloomerp %}
 {% load cotton %}
+{% load i18n %}
 {% load static %}
 
 
 <aside id="sidebar"
-    class="fixed left-0 top-0 h-screen w-64 transform -translate-x-full transition-transform duration-300 ease-in-out z-[70] overflow-visible bg-base"
+    class="fixed left-0 top-0 h-screen w-64 transform -translate-x-full transition-transform duration-300 ease-in-out z-[70] overflow-visible bg-base dark:bg-zinc-950"
     bloomerp-component="sidebar">
     <div class="px-4 pt-2 pb-6 flex flex-col h-full overflow-visible">
         <div class="flex items-center justify-between">
@@ -36,7 +37,9 @@
                 <button id="global-search-btn" type="button" aria-haspopup="dialog" aria-controls="global-search-modal"
                     class="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-xl hover:cursor-pointer focus:outline-none w-full hover:bg-gray-200">
                     <i class="fa fa-magnifying-glass text-gray-500"></i>
-                    <span class="text-sm text-gray-600">Search</span>
+                    <span class="text-sm text-gray-600">
+                        {% blocktrans %}Search{% endblocktrans %}
+                    </span>
                 </button>
             </div>
         </c-ui.shortcut_tooltip>
@@ -59,7 +62,9 @@
                     >
                     <div class="flex gap-2">
                         <i class="fa fa-inbox text-gray-500"></i>
-                        <span class="text-sm text-gray-600">Inbox</span>
+                        <span class="text-sm text-gray-600">
+                            {% blocktrans %}Inbox{% endblocktrans %}
+                        </span>
                     </div>
                     
                     <div id="inbox-notification-count" class="text-sm text-primary font-bold px-1">
@@ -78,7 +83,9 @@
         
         <div class="h-full">
             <div class="flex justify-between">
-                <span class="text-gray-500 text-sm  px-2">Sidebar</span>
+                <span class="text-gray-500 text-sm px-2">
+                    {% blocktrans %}Sidebar{% endblocktrans %}
+                </span>
                 <div>
                     <c-ui.dropdown.body
                         trigger_icon_class="fa-solid fa-ellipsis"
@@ -142,43 +149,6 @@
 
                         </c-ui.dropdown.submenu>
                         {% endif %}
-
-                        <c-ui.dropdown.divider />
-                        <c-ui.dropdown.submenu
-                            id="create-new-sidebar-btn"
-                            text="Create Sidebar"
-                            icon="fa-solid fa-plus"
-                        >
-                            <form 
-                                class="p-3" 
-                                hx-post="{% url 'components_workspaces_sidebar_create' %}"
-                                hx-target="#sidebar-content"
-                                hx-swap="outerHTML"
-                                >
-                                {% csrf_token %}
-                                <div class="mb-3">
-                                    <c-ui.text.label>
-                                        Name
-                                    </c-ui.text.label>
-                                    <input type="text" name="name" class="input w-full" required>
-                                </div>
-                                <button class="btn btn-primary" type="submit">Create</button>
-                            </form>
-                        </c-ui.dropdown.submenu>
-                        
-                        {% if can_manage %}
-                        <c-ui.dropdown.item 
-                            id="delete-sidebar-btn"
-                            text="Delete Sidebar"
-                            icon="fa-solid fa-trash"
-                            danger=True
-                            hx_post="{% url 'components_workspaces_sidebar_delete' sidebar_id=sidebar.id %}"
-                            hx_target="#sidebar-content"
-                            hx_swap="outerHTML"
-                            hx_vals='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'
-                            close_menu=True
-                        />
-                        {% endif %}
                     </c-ui.dropdown.body>
 
                 </div>
@@ -192,6 +162,10 @@
 
         <!-- Profile -->
         <div class="mt-auto pt-3">
+            {% translate "Account Settings" as account_settings_label %}
+            {% translate "Theme" as theme_label %}
+            {% translate "Languages" as languages_label %}
+            {% translate "Sign Out" as sign_out_label %}
             <nav class="ml-auto">
                 <ul class="flex items-center space-x-4 mb-0">
                     <li class="relative pr-3">
@@ -202,21 +176,41 @@
                                 <h6 class="text-sm font-semibold text-primary-800">{{request.user.username}}</h6>
                             </div>
 
-                            <c-ui.dropdown.item text="Account Settings" icon="bi bi-gear"
+                            <c-ui.dropdown.item text="{{ account_settings_label }}" icon="bi bi-gear"
                                 hx_get="{% url 'users_my_profile_overview' %}" hx_target="#main-content"
                                 hx_swap="innerHTML" hx_push_url="true" />
 
-                            {% if request.user.is_staff %}
-                            <c-ui.dropdown.item text="Admin page" icon="bi bi-hammer" href="/admin/" />
-                            {% endif %}
-
-                            <c-ui.dropdown.item text="Bookmarks" icon="bi bi-bookmark"
-                                hx_get="{% url 'bookmarks_user_bookmarks' %}" hx_target="#main-content"
-                                hx_swap="innerHTML" hx_push_url="true" />
+                            <c-ui.dropdown.submenu text="{{ theme_label }}" icon="bi bi-circle-half" direction="left">
+                                <c-app.theme_selector />
+                            </c-ui.dropdown.submenu>
+                            
+                            {% get_current_language as current_language %}
+                            {% get_bloomerp_languages as available_languages %}
+                            {% get_language_info_list for available_languages as languages %}
+                            <c-ui.dropdown.submenu text="{{ languages_label }}" icon="bi bi-translate" direction="right">
+                                {% for language in languages %}
+                                    <form action="{% url 'set_language' %}" method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                        <input type="hidden" name="language" value="{{ language.code }}">
+                                        <button
+                                            type="submit"
+                                            class="flex w-full items-center justify-between px-4 py-2 text-left text-sm transition-colors duration-150 {% if language.code == current_language %}cursor-default bg-gray-100 font-semibold text-primary-800{% else %}text-gray-700 hover:cursor-pointer hover:bg-gray-100 hover:text-primary-800{% endif %}"
+                                            {% if language.code == current_language %}disabled aria-current="true"{% endif %}
+                                        >
+                                            <span>{{ language.name_local|capfirst }}</span>
+                                            {% if language.code == current_language %}
+                                                <i class="fa-solid fa-check text-primary" aria-hidden="true"></i>
+                                                <span class="sr-only">{% blocktrans %}Current language{% endblocktrans %}</span>
+                                            {% endif %}
+                                        </button>
+                                    </form>
+                                {% endfor %}
+                            </c-ui.dropdown.submenu>
 
                             <c-ui.dropdown.item type="divider" />
 
-                            <c-ui.dropdown.item text="Sign Out" icon="bi bi-box-arrow-right" danger=True
+                            <c-ui.dropdown.item text="{{ sign_out_label }}" icon="bi bi-box-arrow-right" danger=True
                                 onclick="document.getElementById('logoutForm').submit()" />
 
                             <!-- Hidden logout form -->

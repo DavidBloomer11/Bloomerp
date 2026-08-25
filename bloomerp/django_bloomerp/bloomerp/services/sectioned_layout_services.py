@@ -13,6 +13,7 @@ from bloomerp.models.application_field import ApplicationField
 from bloomerp.permissions.manager import UserPolicyManager
 from bloomerp.services.permission_services import UserPermissionManager
 from django.db.models import QuerySet
+from django.utils.translation import gettext
 from bloomerp.models.users import User
 
 MAX_LAYOUT_COLUMNS = 12
@@ -230,7 +231,7 @@ def resolve_detail_layout_rows(
 
         rows.append(
             {
-                "title": row.title,
+                "title": gettext(row.title) if row.title else row.title,
                 "columns": row.columns,
                 "items": resolved_items,
             }

@@ -1,3 +1,4 @@
+{% load i18n %}
 {% comment %}
 container
 
@@ -88,7 +89,7 @@ Slots:
                 >
                 <button class="btn btn-sm btn-secondary" type="button" data-search-button aria-pressed="false">
                     <i class="fa fa-search"></i>
-                    <c-i18n.blocktrans>Search</c-i18n.blocktrans>
+                    {% blocktrans %}Search{% endblocktrans %}
                 </button>
             </c-ui.shortcut_tooltip>
 
@@ -107,7 +108,7 @@ Slots:
                 position="bottom">
                 <button class="btn btn-sm btn-secondary" type="button" data-layout-edit-toggle>
                     <i class="fa fa-gear"></i>
-                    <c-i18n.blocktrans>Edit</c-i18n.blocktrans>
+                    {% blocktrans %}Edit{% endblocktrans %}
                 </button>
             </c-ui.shortcut_tooltip>
 
@@ -122,7 +123,7 @@ Slots:
                         type="button"
                         >
                         <i class="fa fa-grip"></i>
-                        <c-i18n.blocktrans>Add items</c-i18n.blocktrans>
+                        {% blocktrans %}Add items{% endblocktrans %}
                     </button>
                 </c-ui.shortcut_tooltip>
             </div>
@@ -163,7 +164,12 @@ Slots:
     <!--End drawer section-->
 
     <!--Display options modal-->
-    <c-ui.modal id="field-display-option-modal" title="Edit display options"></c-ui.modal>
+    <c-ui.modal
+        id="field-display-option-modal"
+        title="Edit display options"
+        size="xl"
+        body_class="!max-h-[calc(100vh-8rem)]"
+    ></c-ui.modal>
     <!--End display options modal-->
     {% endif %}
 
@@ -189,5 +195,4 @@ Slots:
     </div>
     <!--End Search panel-->
 </div>
-
 

@@ -60,13 +60,13 @@ class TestWorkspaceViewE2E(BaseE2ETestCase):
                 query=f"SELECT * FROM {Todo._meta.db_table}",
                 type=type.value.key,
                 fields=fields,
-                filters={
-                    "title" : AnalyticsTileFilter(
+                filters=[
+                    AnalyticsTileFilter(
                         field="title",
                         type="text",
                         is_variable=False,
                     )
-                }
+                ]
             ).model_dump(),
             created_by=user,
             updated_by=user,

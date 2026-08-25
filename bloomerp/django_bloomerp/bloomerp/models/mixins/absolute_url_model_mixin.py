@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from django.db import models
 from django.urls import reverse
 
@@ -13,4 +14,6 @@ class AbsoluteUrlModelMixin(models.Model):
         """
         Returns the absolute URL of the model instance.
         """
-        return reverse(f'{self._meta.verbose_name_plural.replace(' ','_')}_detail_overview'.lower(), kwargs={'pk': self.pk})
+        from bloomerp.utils.models import get_detail_view_url
+
+        return reverse(get_detail_view_url(self.__class__), kwargs={'pk': self.pk})

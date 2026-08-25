@@ -7,6 +7,7 @@ from bloomerp.utils.renderer import render_field
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.urls import reverse
+from django.utils.translation import gettext
 
 @dataclass
 class ChangeContext:
@@ -177,7 +178,7 @@ class LayoutMixin(ABC):
             transformed_rows.append(
                 LayoutRow(
                     columns=row.columns,
-                    title=row.title,
+                    title=gettext(row.title) if row.title else row.title,
                     items=transformed_items,
                 )
             )

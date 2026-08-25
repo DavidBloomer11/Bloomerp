@@ -33,6 +33,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.urls import NoReverseMatch
+from django.utils.encoding import force_str
+import unicodedata
 
 
 from bloomerp.models.application_field import ApplicationField
@@ -67,7 +69,8 @@ def _split_query_and_suffix(value: str) -> tuple[str, str]:
     return value[:split_idx].strip(), value[split_idx:].strip()
 
 def _normalize_key(value: str) -> str:
-    return (value or "").strip().lower().replace("-", "_")
+    normalized = unicodedata.normalize("NFKC", force_str(value or ""))
+    return normalized.strip().casefold().replace("-", "_")
 
 def _ensure_module_registry_models() -> None:
     # Ensure dynamic models are mapped into the registry for search.
@@ -87,9 +90,14 @@ def _resolve_module(module_key: str):
     for item in module_registry.get_all().values():
         code = _normalize_key(item.code)
         name = _normalize_key(item.name)
-        if code == normalized or name == normalized:
+        localized_name = _normalize_key(item.localized_name)
+        module_id = _normalize_key(item.full_id or item.id)
+        if normalized in {code, name, localized_name, module_id}:
             exact_matches.append(item)
-        elif code.startswith(normalized) or name.startswith(normalized):
+        elif any(
+            value.startswith(normalized)
+            for value in (code, name, localized_name, module_id)
+        ):
             partial_matches.append(item)
     if exact_matches:
         return exact_matches[0]
@@ -197,7 +205,7 @@ def _collect_object_results(
         results.append(
             {
                 "model_label": model._meta.verbose_name_plural.title(),
-                "module_labels": [item.name for item in module_registry.get_lineage(module.full_id or module.id)] if module else [],
+                "module_labels": [item.localized_name for item in module_registry.get_lineage(module.full_id or module.id)] if module else [],
                 "objects": matching_objects, 
                 "detail_routes" : router.filter(
                     route_type="detail",
@@ -294,19 +302,20 @@ def global_search(request: HttpRequest) -> HttpResponse:
             if base_query:
                 matched_routes = []
                 for route in router.get_routes():
-                    if route.name.startswith("components_"):
-                        continue
-                    if route.path.startswith("/api/"):
+                    if not route.searchable:
                         continue
                     
                     # We don't want to include routes that require arguments in the global search, as they cannot be directly navigated to without additional input. This is because the global search is designed for quick navigation, and including routes with required arguments could lead to confusion or dead ends in the search results.
                     if route.nr_of_args() > 0:
                         continue
 
-                    route_name = route.name or ""
-                    route_desc = route.description or ""
+                    route_name = route.localized_name
+                    route_desc = route.localized_description
                     route_path = route.path or ""
-                    if base_query.lower() not in f"{route_name} {route_desc} {route_path}".lower():
+                    route_search_text = " ".join(
+                        [route_name, route_desc, route.url_name or "", route_path]
+                    )
+                    if _normalize_key(base_query) not in _normalize_key(route_search_text):
                         continue
 
                     route_url = None
@@ -325,7 +334,7 @@ def global_search(request: HttpRequest) -> HttpResponse:
                             "path": route_path,
                             "description": route_desc,
                             "url": route_url,
-                            "module": route.module.name if route.module else None,
+                            "module": route.module.localized_name if route.module else None,
                         }
                     )
 
@@ -426,7 +435,7 @@ def global_search(request: HttpRequest) -> HttpResponse:
                     if not module:
                         context["slash_error"] = "Module not found."
                     else:
-                        context["search_scope"] = {"module": module.name}
+                        context["search_scope"] = {"module": module.localized_name}
                         models = module_registry.get_models_for_module(module.id, include_descendants=True)
                         context["object_results"], truncated = _collect_object_results(
                             request,
@@ -458,7 +467,7 @@ def global_search(request: HttpRequest) -> HttpResponse:
                                 if model in module_registry.get_models_for_module(module.id, include_descendants=True)
                             ]
                             context["search_scope"] = {
-                                "module": module.name,
+                                "module": module.localized_name,
                                 "model": model_key,
                             }
                             if not models:
@@ -497,4 +506,3 @@ def global_search(request: HttpRequest) -> HttpResponse:
                 
 
     return render(request, "components/global_search.html", context)
-    

@@ -1,6 +1,6 @@
 [project]
 name = "Bloomerp"
-version = "1.12.0beta21"
+version = "1.13.0beta6"
 description = "Bloomerp is an open-source Business Management Software framework that lets you create fully functional business management applications just by defining your Django database models."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -153,6 +153,7 @@ dependencies = [
     "weasyprint>=62.3",
     "drf-spectacular>=0.30.0",
     "sqlglot>=30.12.0",
+    "django-countries==9.0.0",
 ]
 
 [project.optional-dependencies]
@@ -179,4 +180,6 @@ exclude = ["bloomerp.tests", "bloomerp.tests.*"]
 bloomerp = [
     "templates/**/*",
     "static/**/*",
+    "locale/**/*",
+    "i18n/*.mjs",
 ]

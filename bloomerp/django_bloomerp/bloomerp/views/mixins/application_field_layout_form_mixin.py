@@ -96,6 +96,15 @@ class ApplicationFieldLayoutFormMixin(LayoutFormMixin, ABC):
             "data-target-content-type-id": self.layout_content_type.pk,
         }
 
+    def render_extra_attrs(self, item: LayoutItem) -> dict[str, object]:
+        """Expose stable field metadata to layout-aware frontend components."""
+        application_field = self.get_application_field(item)
+        return {
+            **super().render_extra_attrs(item),
+            "data-application-field-id": application_field.pk,
+            "data-field-name": application_field.field,
+        }
+
     def get_user(self) -> AbstractBloomerpUser:
         if self.user is None:
             self.user = self.request.user

@@ -1,3 +1,4 @@
+{% load i18n %}
 {% load crispy_forms_tags %}
 
 <c-ui.container class="max-w-3xl mt-16">
@@ -18,7 +19,7 @@
         <button 
             class="btn btn-primary"
             type="submit"
-            ><c-i18n.blocktrans>Generate Token</c-i18n.blocktrans>
+            >{% blocktrans %}Generate Token{% endblocktrans %}
         </button>
     </form>
 

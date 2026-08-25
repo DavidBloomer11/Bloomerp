@@ -44,6 +44,11 @@ import { BaseWidget } from "../widgets/BaseWidget";
 import { parseBoolean } from "../../utils/booleans";
 
 import HtmlNode from "./nodes/HtmlNode";
+import {
+    createToolbarVisibilityCookie,
+    isToolbarHiddenFromCookie,
+    TEXT_EDITOR_TOOLBAR_VISIBILITY_EVENT,
+} from "./utils/toolbarVisibility";
 
 
 export class BloomerpTextEditor extends BaseWidget {
@@ -53,12 +58,17 @@ export class BloomerpTextEditor extends BaseWidget {
     private actions: Array<Action> = [];
     
     private actionsToolbar: HTMLElement | null = null;
+    private toolbarToggleButton: HTMLButtonElement | null = null;
+    private toolbarRevealButton: HTMLButtonElement | null = null;
+    private toolbarHidden: boolean = false;
+    private toolbarVisibilityHandler: ((event: Event) => void) | null = null;
     private hiddenInput:HTMLInputElement;
     private suppressNextChange: boolean = false;
     private isInitializing: boolean = false;
     private editorId:string;
     private includeToolbar:boolean = true;
     private editorRootSelector:string = '';
+    private hostClickHandler: ((event: MouseEvent) => void) | null = null;
 
     // Extra commands
     public slashExtraActions:string[] = []
@@ -127,8 +137,26 @@ export class BloomerpTextEditor extends BaseWidget {
             },
         });
         this.includeToolbar = parseBoolean(this.element.dataset.includeToolbar, true);
+        this.toolbarHidden = isToolbarHiddenFromCookie(document.cookie);
+        this.toolbarVisibilityHandler = (event: Event) => {
+            const customEvent = event as CustomEvent<{ hidden?: boolean }>;
+            const hidden = customEvent.detail?.hidden;
+
+            this.setToolbarHidden(
+                typeof hidden === "boolean"
+                    ? hidden
+                    : isToolbarHiddenFromCookie(document.cookie),
+                false,
+            );
+        };
+        window.addEventListener(TEXT_EDITOR_TOOLBAR_VISIBILITY_EVENT, this.toolbarVisibilityHandler);
 
         this.editor.setRootElement(editorRef);
+        this.hostClickHandler = (event: MouseEvent) => {
+            if (event.target !== this.element) return;
+            this.editor?.focus();
+        };
+        this.element.addEventListener('click', this.hostClickHandler);
         this.isInitializing = true;
         this.setValue(this.hiddenInput?.value ?? '', false);
 
@@ -166,6 +194,19 @@ export class BloomerpTextEditor extends BaseWidget {
     }
 
     public destroy(): void {
+        if (this.hostClickHandler) {
+            this.element?.removeEventListener('click', this.hostClickHandler);
+            this.hostClickHandler = null;
+        }
+
+        if (this.toolbarVisibilityHandler) {
+            window.removeEventListener(
+                TEXT_EDITOR_TOOLBAR_VISIBILITY_EVENT,
+                this.toolbarVisibilityHandler,
+            );
+            this.toolbarVisibilityHandler = null;
+        }
+
         this.unregister?.();
         this.unregister = null;
 
@@ -176,6 +217,10 @@ export class BloomerpTextEditor extends BaseWidget {
             this.actionsToolbar.innerHTML = ''
             this.actionsToolbar = null;
         }
+
+        this.toolbarToggleButton = null;
+        this.toolbarRevealButton?.remove();
+        this.toolbarRevealButton = null;
     }
 
     /**
@@ -202,6 +247,7 @@ export class BloomerpTextEditor extends BaseWidget {
         this.actionsToolbar = document.getElementById(actionsToolbarId) as HTMLElement | null;
         if (!this.actionsToolbar) return;
 
+        this.toolbarToggleButton = null;
         this.actionsToolbar.innerHTML = ''
 
 
@@ -226,6 +272,73 @@ export class BloomerpTextEditor extends BaseWidget {
         if (standardToolbar) {
             this.actionsToolbar.className = 'flex mb-4 gap-2 overflow-x-scroll'
         }
+
+        this.actionsToolbar.dataset.textEditorToolbar = 'true';
+        this.createToolbarToggleButton();
+        this.createToolbarRevealButton();
+        this.setToolbarHidden(this.toolbarHidden, false);
+    }
+
+    private createToolbarToggleButton(): void {
+        if (!this.actionsToolbar) return;
+
+        const toggleButton = document.createElement('button');
+        toggleButton.type = 'button';
+        toggleButton.className = 'btn btn-secondary btn-sm shrink-0';
+        toggleButton.setAttribute('aria-label', 'Hide formatting toolbar');
+        toggleButton.title = 'Hide formatting toolbar';
+        toggleButton.innerHTML = '<i class="fa-solid fa-eye-slash" aria-hidden="true"></i><span class="sr-only">Hide formatting toolbar</span>';
+        toggleButton.addEventListener('mousedown', (event) => {
+            event.preventDefault();
+        });
+        toggleButton.addEventListener('click', () => {
+            this.setToolbarHidden(true, true);
+        });
+
+        this.actionsToolbar.appendChild(toggleButton);
+        this.toolbarToggleButton = toggleButton;
+    }
+
+    private createToolbarRevealButton(): void {
+        if (this.toolbarRevealButton || !this.element) return;
+
+        const revealButton = document.createElement('button');
+        revealButton.type = 'button';
+        revealButton.className = 'btn btn-secondary btn-sm';
+        revealButton.setAttribute('aria-label', 'Show formatting toolbar');
+        revealButton.title = 'Show formatting toolbar';
+        revealButton.dataset.textEditorToolbarReveal = 'true';
+        revealButton.innerHTML = '<i class="fa-solid fa-ellipsis" aria-hidden="true"></i><span class="sr-only">Show formatting toolbar</span>';
+        revealButton.addEventListener('click', () => {
+            this.setToolbarHidden(false, true);
+        });
+
+        this.element.appendChild(revealButton);
+        this.toolbarRevealButton = revealButton;
+    }
+
+    private setToolbarHidden(hidden: boolean, persist: boolean): void {
+        this.toolbarHidden = hidden;
+        this.element.dataset.toolbarHidden = hidden ? 'true' : 'false';
+
+        if (this.actionsToolbar) {
+            this.actionsToolbar.dataset.toolbarHidden = hidden ? 'true' : 'false';
+        }
+
+        if (this.toolbarToggleButton) {
+            this.toolbarToggleButton.hidden = hidden;
+        }
+
+        if (this.toolbarRevealButton) {
+            this.toolbarRevealButton.hidden = !hidden;
+        }
+
+        if (!persist) return;
+
+        document.cookie = createToolbarVisibilityCookie(hidden);
+        window.dispatchEvent(new CustomEvent(TEXT_EDITOR_TOOLBAR_VISIBILITY_EVENT, {
+            detail: { hidden },
+        }));
     }
     
     public override onChange(): void {

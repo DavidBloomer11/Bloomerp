@@ -67,6 +67,13 @@ class WorkflowNodeType(Enum):
                 executor_cls=ObjectCrudTrigger,
                 icon="fa-solid fa-pen-to-square"
             ),
+            NodeSubTypeDefinition(
+                id="ON_OBJECT_CREATE_OR_UPDATE",
+                name="On Object Create or Update",
+                description="Triggered when an object is created or updated",
+                executor_cls=ObjectCrudTrigger,
+                icon="fa-solid fa-arrows-rotate"
+            ),
             NodeSubTypeDefinition( 
                 id="ON_OBJECT_DELETE",
                 name="On Object Deletion",

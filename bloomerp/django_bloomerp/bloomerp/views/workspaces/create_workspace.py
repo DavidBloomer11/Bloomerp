@@ -13,7 +13,11 @@ from bloomerp.views.base import BaseBloomerpView
 
 def _module_choice_label(module) -> str:
     lineage = module_registry.get_lineage(module.full_id or module.id)
-    return " / ".join(item.name for item in lineage) if lineage else module.name
+    return (
+        " / ".join(item.localized_name for item in lineage)
+        if lineage
+        else module.localized_name
+    )
 
 
 def _build_module_choices():

@@ -1,0 +1,78 @@
+id: customer_receipt
+name: Customer Receipt
+description: Customer payment received into a bank account
+name_plural: Customer Receipts
+string_representation: "{receipt_number} - {customer}"
+fields:
+  - id: receipt_number
+    name: Receipt Number
+    type: CharField
+    options:
+      max_length: 30
+      unique: true
+  - id: customer
+    name: Customer
+    type: ForeignKey
+    options:
+      to: finance.accounts_receivable.customer
+      on_delete: call(django.db.models.PROTECT)
+  - id: bank_account
+    name: Bank Account
+    type: ForeignKey
+    options:
+      to: finance.treasury.bank_account
+      on_delete: call(django.db.models.PROTECT)
+  - id: journal_entry
+    name: Journal Entry
+    type: ForeignKey
+    options:
+      to: finance.general_ledger.journal_entry
+      null: true
+      blank: true
+      on_delete: call(django.db.models.SET_NULL)
+  - id: receipt_date
+    name: Receipt Date
+    type: DateField
+  - id: amount
+    name: Amount
+    type: DecimalField
+    options:
+      max_digits: 15
+      decimal_places: 2
+      default: 0
+  - id: currency
+    name: Currency
+    type: CharField
+    options:
+      max_length: 10
+      default: USD
+  - id: payment_method
+    name: Payment Method
+    type: ChoiceField
+    options:
+      choices:
+        - ["ACH", "ACH"]
+        - ["WIRE", "Wire"]
+        - ["CARD", "Card"]
+        - ["CHECK", "Check"]
+  - id: reference_number
+    name: Reference Number
+    type: CharField
+    options:
+      max_length: 50
+      null: true
+      blank: true
+  - id: status
+    name: Status
+    type: ChoiceField
+    options:
+      choices:
+        - ["RECEIVED", "Received"]
+        - ["POSTED", "Posted"]
+        - ["REVERSED", "Reversed"]
+  - id: notes
+    name: Notes
+    type: TextField
+    options:
+      null: true
+      blank: true

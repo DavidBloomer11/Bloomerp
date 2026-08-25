@@ -69,7 +69,14 @@ class LayoutModelFormMixin(ApplicationFieldLayoutFormMixin, ABC):
         return self.get_form_instance()
 
     def get_form_hx_target(self) -> str:
-        return "#main-content" if self.is_create_layout() else "#detail-view-content"
+        if self.is_create_layout():
+            return "#main-content"
+
+        htmx_target = getattr(getattr(self.request, "htmx", None), "target", None)
+        if htmx_target == "data-table-detail-pane":
+            return "#data-table-detail-pane"
+
+        return "#detail-view-content"
 
     def get_form_hx_push_url(self) -> bool:
         return self.is_create_layout()
@@ -80,7 +87,55 @@ class LayoutModelFormMixin(ApplicationFieldLayoutFormMixin, ABC):
     def get_hidden_initial_fields(self) -> list[tuple[str, str]]:
         if not self.is_create_layout():
             return []
-        return list(self.request.GET.items())
+
+        form = self.get_form()
+        layout_field_names = {
+            self.resolve_form_key(item)
+            for row in self.get_layout().rows
+            for item in row.items
+        }
+        one_to_many_columns: dict[str, set[str]] = {}
+        for field_name in layout_field_names:
+            form_field = form.fields.get(field_name)
+            get_columns = (
+                getattr(form_field.widget, "get_columns", None)
+                if form_field
+                else None
+            )
+            if not callable(get_columns):
+                continue
+            one_to_many_columns[field_name] = {
+                column.field for column in get_columns()
+            }
+
+        return [
+            (field_name, value)
+            for field_name, value in self.request.GET.items()
+            if not self._is_rendered_initial_field(
+                field_name,
+                layout_field_names,
+                one_to_many_columns,
+            )
+        ]
+
+    @staticmethod
+    def _is_rendered_initial_field(
+        field_name: str,
+        layout_field_names: set[str],
+        one_to_many_columns: dict[str, set[str]],
+    ) -> bool:
+        """Return whether a query value already has a rendered form control."""
+        if field_name in layout_field_names:
+            return True
+
+        for parent_name, column_names in one_to_many_columns.items():
+            prefix = f"{parent_name}__"
+            if not field_name.startswith(prefix):
+                continue
+            nested_parts = field_name[len(prefix):].split("__", 1)
+            return len(nested_parts) == 2 and nested_parts[1] in column_names
+
+        return False
 
     def get_form_application_fields(self) -> models.QuerySet[ApplicationField]:
         """Return the application fields represented by the model form."""

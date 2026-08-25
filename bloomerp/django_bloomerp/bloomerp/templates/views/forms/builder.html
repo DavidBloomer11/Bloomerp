@@ -1,3 +1,4 @@
+{% load i18n %}
 {% if layout_non_field_errors %}
     <div class="space-y-2 mb-4">
         {% for error in layout_non_field_errors %}
@@ -27,13 +28,13 @@
             hx-trigger="click"
         >
             <i class="fa fa-table"></i>
-            <c-i18n.blocktrans>Initial data</c-i18n.blocktrans>
+            {% blocktrans %}Initial data{% endblocktrans %}
         </button>
     </c-slot>
 </c-features.layout.container>
 
 <c-ui.modal id="initial-data-modal" title="Initial data" size="lg">
     <div class="text-sm text-gray-500">
-        <c-i18n.blocktrans>Loading...</c-i18n.blocktrans>
+        {% blocktrans %}Loading...{% endblocktrans %}
     </div>
 </c-ui.modal>

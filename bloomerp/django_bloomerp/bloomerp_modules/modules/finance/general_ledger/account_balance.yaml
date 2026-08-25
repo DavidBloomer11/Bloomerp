@@ -46,6 +46,45 @@ fields:
       max_digits: 15
       decimal_places: 2
       default: 0
+
+  - id: currency
+    name: Currency
+    type: CharField
+    options:
+      max_length: 10
+      default: USD
+
+  - id: net_change
+    name: Net Change
+    type: DecimalField
+    options:
+      max_digits: 15
+      decimal_places: 2
+      default: 0
+
+  - id: year_to_date_debit
+    name: Year To Date Debit
+    type: DecimalField
+    options:
+      max_digits: 15
+      decimal_places: 2
+      default: 0
+
+  - id: year_to_date_credit
+    name: Year To Date Credit
+    type: DecimalField
+    options:
+      max_digits: 15
+      decimal_places: 2
+      default: 0
+
+  - id: year_to_date_balance
+    name: Year To Date Balance
+    type: DecimalField
+    options:
+      max_digits: 15
+      decimal_places: 2
+      default: 0
   - id: as_of_date
     name: As Of Date
     type: DateField

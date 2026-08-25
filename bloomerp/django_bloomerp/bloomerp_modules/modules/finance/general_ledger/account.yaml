@@ -19,6 +19,14 @@ fields:
     type: CharField
     options:
       max_length: 200
+
+  - id: currency
+    name: Currency
+    description: Currency used by this account
+    type: CharField
+    options:
+      max_length: 10
+      default: USD
       
   - id: account_type
     name: Account Type
@@ -62,7 +70,7 @@ fields:
       to: "self"
       "null": true
       blank: true
-      on_delete: call(django.db.models.CASCADE)
+      on_delete: call(django.db.models.PROTECT)
       
   - id: is_active
     name: Is Active
@@ -96,9 +104,41 @@ fields:
         DEBIT: "Debit"
         CREDIT: "Credit"
       default: "DEBIT"
+
+  - id: opening_balance
+    name: Opening Balance
+    description: Opening balance for the current fiscal year
+    type: DecimalField
+    options:
+      max_digits: 15
+      decimal_places: 2
+      default: 0
+
+  - id: allow_manual_posting
+    name: Allow Manual Posting
+    description: Whether users can post directly to this account
+    type: BooleanField
+    options:
+      default: true
+
+  - id: requires_reconciliation
+    name: Requires Reconciliation
+    description: Whether activity on this account should be reconciled
+    type: BooleanField
+    options:
+      default: false
+
+  - id: tax_code
+    name: Default Tax Code
+    description: Default tax code for transactions posted to the account
+    type: CharField
+    options:
+      max_length: 20
+      null: true
+      blank: true
       
   - id: bank_account
-    name: Bank acount
+    name: Bank Account
     description: Bank account associated to this account
     type: ForeignKey
     options:
@@ -106,6 +146,4 @@ fields:
       "null": true
       blank: true
       on_delete: "call(django.db.models.SET_NULL)"
-      
 
-      

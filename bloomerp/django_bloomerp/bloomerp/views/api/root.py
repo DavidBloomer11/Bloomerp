@@ -92,7 +92,7 @@ class BloomerpApiRootView(BaseBloomerpApiView):
     def _serialize_route(self, request, route: BloomerpRoute) -> dict:
         path_template = self._path_template(route.path)
         route_data = {
-            "name": route.name,
+            "name": route.localized_name,
             "urlName": route.url_name,
             "type": route.route_type.value,
             "path": path_template,

@@ -1,0 +1,45 @@
+# Italian translations for PROJECT.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-08-19 14:13+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: it\n"
+"Language-Team: it <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.16.0\n"
+
+#: static_src/ts/components/layouts/BaseSectionedLayoutContainer.ts:358
+msgid "Add row below"
+msgstr "Aggiungi riga sotto"
+
+#: static_src/ts/components/layouts/BaseSectionedLayoutContainer.ts:359
+msgid "Drag row"
+msgstr "Trascina riga"
+
+#: static_src/ts/components/layouts/BaseSectionedLayoutContainer.ts:360
+msgid "Remove row"
+msgstr "Rimuovi riga"
+
+#: static_src/ts/components/layouts/BaseSectionedLayoutContainer.ts:357
+msgid "Row title"
+msgstr "Titolo della riga"
+
+#: static_src/ts/components/detail_view_components/ObjectCRUDViewContainer.ts:522
+msgid "Show All Fields"
+msgstr "Mostra tutti i campi"
+
+#: static_src/ts/components/detail_view_components/ObjectCRUDViewContainer.ts:521
+msgid "Show Required Only"
+msgstr "Mostra solo i campi obbligatori"
+

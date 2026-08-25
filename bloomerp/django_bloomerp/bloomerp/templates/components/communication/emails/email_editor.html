@@ -8,11 +8,11 @@
     <header class="flex h-14 shrink-0 items-center justify-between border-b border-gray-200 px-5">
         <div class="min-w-0">
             <h2 class="truncate text-base font-semibold text-gray-950">
-                <c-i18n.blocktrans>{{ title }}</c-i18n.blocktrans>
+                {% translate title %}
             </h2>
             {% if from_email %}
                 <p class="truncate text-sm text-gray-500">
-                    <c-i18n.blocktrans>From {{ from_email }}</c-i18n.blocktrans>
+                    {% blocktrans %}From {{ from_email }}{% endblocktrans %}
                 </p>
             {% endif %}
         </div>
@@ -42,7 +42,7 @@
         {% if errors %}
             <div class="mx-5 mt-4 rounded-xl border border-danger-light bg-danger-light/10 px-4 py-3 text-sm text-danger-dark">
                 {% for error in errors %}
-                    <p><c-i18n.blocktrans>{{ error }}</c-i18n.blocktrans></p>
+                    <p>{% translate error %}</p>
                 {% endfor %}
             </div>
         {% endif %}
@@ -50,7 +50,7 @@
         <div class="shrink-0 divide-y divide-gray-200 border-b border-gray-200 px-5">
             <label class="grid min-h-12 grid-cols-[4rem_minmax(0,1fr)_auto] items-center gap-3">
                 <span class="text-sm font-medium text-gray-500">
-                    <c-i18n.blocktrans>To</c-i18n.blocktrans>
+                    {% blocktrans %}To{% endblocktrans %}
                 </span>
                 <input
                     class="min-w-0 border-0 px-0 text-sm text-gray-950 placeholder:text-gray-400 focus:ring-0"
@@ -69,7 +69,7 @@
 
             <label class="grid min-h-12 grid-cols-[4rem_minmax(0,1fr)] items-center gap-3 hidden" id="cc-field">
                 <span class="text-sm font-medium text-gray-500">
-                    <c-i18n.blocktrans>Cc</c-i18n.blocktrans>
+                    {% blocktrans %}Cc{% endblocktrans %}
                 </span>
                 <input
                     class="min-w-0 border-0 px-0 text-sm text-gray-950 placeholder:text-gray-400 focus:ring-0"
@@ -84,7 +84,7 @@
 
             <label class="grid min-h-12 grid-cols-[4rem_minmax(0,1fr)] items-center gap-3 hidden" id="bcc-field">
                 <span class="text-sm font-medium text-gray-500">
-                    <c-i18n.blocktrans>Bcc</c-i18n.blocktrans>
+                    {% blocktrans %}Bcc{% endblocktrans %}
                 </span>
                 <input
                     class="min-w-0 border-0 px-0 text-sm text-gray-950 placeholder:text-gray-400 focus:ring-0"
@@ -99,7 +99,7 @@
 
             <label class="grid min-h-12 grid-cols-[4rem_minmax(0,1fr)] items-center gap-3">
                 <span class="text-sm font-medium text-gray-500">
-                    <c-i18n.blocktrans>Subject</c-i18n.blocktrans>
+                    {% blocktrans %}Subject{% endblocktrans %}
                 </span>
                 <input
                     class="min-w-0 border-0 px-0 text-sm font-medium text-gray-950 placeholder:text-gray-400 focus:ring-0"
@@ -135,13 +135,13 @@
         <footer class="flex shrink-0 items-center justify-between border-t border-gray-200 px-5 py-3">
             <label class="btn btn-secondary btn-sm">
                 <i class="fa fa-paperclip"></i>
-                <span><c-i18n.blocktrans>Attach</c-i18n.blocktrans></span>
+                <span>{% blocktrans %}Attach{% endblocktrans %}</span>
                 <input class="hidden" type="file" name="attachments" multiple>
             </label>
 
             <div class="flex items-center gap-3">
                 <p class="text-sm text-gray-500">
-                    <c-i18n.blocktrans>Ready to send.</c-i18n.blocktrans>
+                    {% blocktrans %}Ready to send.{% endblocktrans %}
                 </p>
                 <button
                     class="btn btn-primary btn-sm"
@@ -149,7 +149,7 @@
                     {% if not send_enabled %}disabled{% endif %}
                 >
                     <i class="fa fa-paper-plane"></i>
-                    <span><c-i18n.blocktrans>{{ submit_label }}</c-i18n.blocktrans></span>
+                    <span>{% translate submit_label %}</span>
                 </button>
             </div>
         </footer>

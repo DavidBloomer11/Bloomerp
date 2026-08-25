@@ -5,6 +5,7 @@ from django.template.loader import render_to_string
 from django.test import RequestFactory
 from django.http import HttpResponse
 from django.urls import reverse
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from bloomerp.models.users.user_list_view_preference import UserListViewPreference
@@ -12,7 +13,11 @@ from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutR
 from bloomerp.models.workspaces.tile import Tile
 from bloomerp.components.layout.render_layout_item import _tile
 from bloomerp.services.permission_services import UserPermissionManager
-from bloomerp.services.workspace_services import render_tile_to_string
+from bloomerp.services.workspace_services import (
+    _localize_generated_module_links,
+    _tile_display_metadata,
+    render_tile_to_string,
+)
 from bloomerp.tests.base import BaseBloomerpModelTestCase
 from bloomerp.workspaces.links_tile.model import Link, LinkTileConfig
 from bloomerp.workspaces.links_tile.render import LinksTileRenderer
@@ -24,6 +29,7 @@ from bloomerp.workspaces.canvas_tile.render import CanvasTileRenderer
 from bloomerp.workspaces.text_tile.model import TextTileConfig
 from bloomerp.workspaces.text_tile.render import render_html
 from bloomerp.workspaces.tiles import TileType
+from bloomerp.modules.definition import ModuleConfig
 from bloomerp.workspaces.utils import UserParameterResolver
 from bloomerp.widgets.foreign_field_widget import ForeignFieldWidget
 from bloomerp.views.workspaces.create_tile import CREATE_TILE_SESSION_KEY
@@ -36,6 +42,51 @@ class WorkspaceTileRenderingTests(BaseBloomerpModelTestCase):
     def setUp(self):
         super().setUp()
         self.factory = RequestFactory()
+
+    def test_generated_module_tile_metadata_is_localized_without_mutating_storage(self):
+        module = ModuleConfig(
+            id="users",
+            code="users",
+            name="Users",
+            route_path="users",
+            owner_app_label="bloomerp",
+        )
+        tile = SimpleNamespace(
+            auto_generated=True,
+            name="Users",
+            description="Navigate to the 'Users' module.",
+            schema={"links": [{"url": "/users/", "name": "Users"}]},
+        )
+        links = [Link(url="/users/", name="Users", is_internal=True)]
+
+        with (
+            patch(
+                "bloomerp.services.workspace_services.module_registry.get_all",
+                return_value={"users": module},
+            ),
+            patch(
+                "bloomerp.modules.definition.pgettext",
+                side_effect=lambda _context, message: (
+                    "Utilizadores" if message == "Users" else message
+                ),
+            ),
+            patch(
+                "bloomerp.services.workspace_services.gettext",
+                side_effect=lambda message: (
+                    "Navegar para o módulo '{module}'."
+                    if message == "Navigate to the '{module}' module."
+                    else message
+                ),
+            ),
+        ):
+            title, description = _tile_display_metadata(tile)
+            _localize_generated_module_links(links)
+
+        self.assertEqual(title, "Utilizadores")
+        self.assertEqual(description, "Navegar para o módulo 'Utilizadores'.")
+        self.assertEqual(links[0].name, "Utilizadores")
+        self.assertEqual(tile.name, "Users")
+        self.assertEqual(tile.schema["links"][0]["name"], "Users")
 
     def test_text_tile_renders_template_content(self):
         """

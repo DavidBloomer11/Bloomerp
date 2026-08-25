@@ -5,7 +5,10 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.core.exceptions import FieldDoesNotExist
 from bloomerp.components.application_fields.filters import filters_init
+from bloomerp.dataviews.registry import DataviewType
 from bloomerp.models.definition import ObjectAction, get_model_config
+from bloomerp.permissions.definition import BloomerpPermission
+from bloomerp.permissions.manager import UserPolicyManager
 from bloomerp.services.preference_services import PreferenceManager
 from bloomerp.utils.models import get_model_and_content_type_or_404
 from bloomerp.router import router
@@ -13,12 +16,10 @@ from django.http import HttpRequest
 from django.http import HttpResponse
 from django.http import QueryDict
 from django.contrib.contenttypes.models import ContentType
-from bloomerp.services.permission_services import UserPermissionManager
-from bloomerp.services.permission_services import create_permission_str
 from bloomerp.services.user_services import get_data_view_fields
 from bloomerp.services.object_services import string_search_on_queryset
 from bloomerp.utils.filters import filter_model
-from bloomerp.models.users.user_list_view_preference import UserListViewPreference, DataviewType
+from bloomerp.models.users.user_list_view_preference import UserListViewPreference
 from bloomerp.models import ApplicationField
 from django.db.models import Model, QuerySet
 from dataclasses import dataclass
@@ -93,8 +94,8 @@ def _build_data_view_query_state(
     Model, content_type = get_model_and_content_type_or_404(content_type_id)
 
     # Get the permissions manager and initial queryset
-    permission_manager = UserPermissionManager(request.user)
-    queryset = permission_manager.get_queryset(Model, create_permission_str(Model, "view"))
+    policy_manager = UserPolicyManager(request.user)
+    queryset = policy_manager.get_queryset(Model, BloomerpPermission.VIEW)
     
     # Get preference and options
     if preference is None:
@@ -223,7 +224,9 @@ def _get_actions(model:type[Model]) -> list[ObjectAction]:
     return []
 
 
-def _get_dataview_type_definition(view_type: str) -> DataviewTypeDefinition:
+def _get_dataview_type_definition(
+    view_type: str,
+) -> DataviewTypeDefinition | None:
     try:
         return DataviewType.from_key(view_type)
     except ValueError:

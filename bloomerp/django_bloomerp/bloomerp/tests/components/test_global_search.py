@@ -1,11 +1,12 @@
 from typing import Optional
+from unittest.mock import patch
 from django.test import RequestFactory
 from bloomerp.field_types import Lookup
 from bloomerp.models import ContentType, User
 from django.urls import reverse
 
 from ..base import BaseBloomerpModelTestCase
-from bloomerp.components.global_search import global_search
+from bloomerp.components.global_search import _resolve_module, global_search
 from bs4 import BeautifulSoup
 from bloomerp.models import Policy, RowPolicy, FieldPolicy, RowPolicyRule
 from bloomerp.models import ApplicationField
@@ -13,6 +14,8 @@ from bloomerp.models.activity_log import ActivityLog, ActivityLogAction
 from django.contrib.admin.models import ADDITION, LogEntry
 from django.contrib.auth.models import Permission
 from django.contrib.auth import get_user_model
+from bloomerp.router import BloomerpRoute, RouteType, ViewType
+from bloomerp.modules.definition import ModuleConfig
 
 class SearchResultsTests(BaseBloomerpModelTestCase):
     auto_create_customers = False
@@ -40,6 +43,66 @@ class SearchResultsTests(BaseBloomerpModelTestCase):
         
         # Check response status code
         self.assertEqual(response.status_code, 200)
+
+    def test_route_search_matches_and_displays_active_language_metadata(self):
+        route = BloomerpRoute(
+            path="/customers/",
+            route_type=RouteType.APP,
+            name="Customers",
+            url_name="bloomerp_home_view",
+            view_type=ViewType.FUNCTION,
+            view=lambda request: None,
+            description="Browse customers.",
+            name_message="Customers",
+            description_message="Browse customers.",
+            owner_app_label="sales",
+        )
+
+        def translate_route(_context, message):
+            return {
+                "Customers": "Clientes",
+                "Browse customers.": "Consultar clientes.",
+            }.get(message, message)
+
+        request = self.get_request(">clientes")
+        with (
+            patch(
+                "bloomerp.components.global_search.router.get_routes",
+                return_value=[route],
+            ),
+            patch("bloomerp.router.pgettext", side_effect=translate_route),
+        ):
+            response = global_search(request)
+
+        text = BeautifulSoup(response.content.decode("utf-8"), "html.parser").get_text()
+        self.assertIn("Clientes", text)
+        self.assertIn("Consultar clientes.", text)
+
+    def test_module_scope_resolves_localized_name(self):
+        module = ModuleConfig(
+            id="users",
+            code="users",
+            name="Users",
+            owner_app_label="bloomerp",
+        )
+
+        with (
+            patch("bloomerp.components.global_search._ensure_module_registry_models"),
+            patch("bloomerp.components.global_search.module_registry.get", return_value=None),
+            patch(
+                "bloomerp.components.global_search.module_registry.get_all",
+                return_value={"users": module},
+            ),
+            patch(
+                "bloomerp.modules.definition.pgettext",
+                side_effect=lambda _context, message: (
+                    "Utilizadores" if message == "Users" else message
+                ),
+            ),
+        ):
+            resolved = _resolve_module("utilizadores")
+
+        self.assertIs(resolved, module)
     
     # ----------------------------------
     # GENERAL SEARCH FUNCTIONALITY TESTS
@@ -250,7 +313,6 @@ class SearchResultsTests(BaseBloomerpModelTestCase):
         results = response.content.decode('utf-8')
         soup = BeautifulSoup(results, 'html.parser')
         self.assertIn(cust1.__str__(), soup.get_text())
-        
     def test_module_specific_search_with_valid_module_and_invalid_model(self):
         """
         Tests whether module specific search returns no results for an invalid model.
@@ -313,7 +375,6 @@ class SearchResultsTests(BaseBloomerpModelTestCase):
         results = response.content.decode('utf-8')
         soup = BeautifulSoup(results, 'html.parser')
         self.assertIn(cust1.__str__(), soup.get_text())
-        
     def test_module_specific_search_with_full_module_and_partial_model(self):
         """
         Tests whether module specific search returns results for a query with full module and partial model.
@@ -441,4 +502,3 @@ class SearchResultsTests(BaseBloomerpModelTestCase):
         results = response.content.decode('utf-8')
         soup = BeautifulSoup(results, 'html.parser')
         self.assertIn(cust1.__str__(), soup.get_text())
-        
