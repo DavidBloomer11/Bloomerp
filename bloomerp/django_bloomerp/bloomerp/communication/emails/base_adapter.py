@@ -27,10 +27,13 @@ class BloomerpEmail(BaseModel):
     mailbox: str = "INBOX"
     subject: str = ""
     sender: str = ""
+    reply_to: list[str] = Field(default_factory=list)
     to: list[str] = Field(default_factory=list)
     cc: list[str] = Field(default_factory=list)
     date: datetime | None = None
     message_id: str | None = None
+    in_reply_to: str | None = None
+    references: list[str] = Field(default_factory=list)
     is_read: bool = False
     flags: list[str] = Field(default_factory=list)
     snippet: str = ""
@@ -46,6 +49,9 @@ class BloomerpEmail(BaseModel):
                 "email_account_id",
                 "mailbox",
                 "message_id",
+                "in_reply_to",
+                "references",
+                "reply_to",
                 "date",
                 "to",
                 "cc",
