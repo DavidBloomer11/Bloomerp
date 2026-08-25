@@ -18,33 +18,33 @@ class Form(BloomerpModel, ContentLayoutModelMixin, models.Model):
 
     bloomerp_config = BloomerpModelConfig(
         create_redirect_url_func=lambda x: reverse("forms_detail_form_builder", kwargs={"pk" : x.id}),
-        layout=FieldLayout(
-            rows=[
-                LayoutRow(
-                    columns=2,
-                    title=gettext_noop("Core Details"),
-                    items=[
-                        LayoutItem(id="name"),
-                        LayoutItem(id="content_type"),
-                        LayoutItem(id="description", colspan=2),
-                    ]
-                ),
-                LayoutRow(
-                    columns=2,
-                    title=gettext_noop("Settings"),
-                    items=[
-                        LayoutItem(id="requires_review", colspan=2),
-                        LayoutItem(id="requires_authentication"),
-                        LayoutItem(id="public_embed_enabled"),
-                        LayoutItem(id="max_submissions"),
-                        LayoutItem(id="max_submissions_per_ip"),
-                        LayoutItem(id="opens_at"),
-                        LayoutItem(id="closes_at"),   
-                    ]
-                )
-            ]
-        ),
         detail_view_settings=DetailViewSettings(
+            layout=[FieldLayout(
+                rows=[
+                    LayoutRow(
+                        columns=2,
+                        title=gettext_noop("Core Details"),
+                        items=[
+                            LayoutItem(id="name"),
+                            LayoutItem(id="content_type"),
+                            LayoutItem(id="description", colspan=2),
+                        ]
+                    ),
+                    LayoutRow(
+                        columns=2,
+                        title=gettext_noop("Settings"),
+                        items=[
+                            LayoutItem(id="requires_review", colspan=2),
+                            LayoutItem(id="requires_authentication"),
+                            LayoutItem(id="public_embed_enabled"),
+                            LayoutItem(id="max_submissions"),
+                            LayoutItem(id="max_submissions_per_ip"),
+                            LayoutItem(id="opens_at"),
+                            LayoutItem(id="closes_at"),
+                        ]
+                    )
+                ]
+            )],
             skip_views=[
                 "document_templates"
             ]

@@ -953,6 +953,34 @@ class PolicyManager:
         policy.global_permissions.set(permission_objects)
         return policy
     
+    @classmethod
+    @transaction.atomic
+    def create_policy(
+        cls,
+        model_or_content_type: Type[models.Model] | models.Model | ContentType,
+        access_rule:AccessRule,
+        global_permissions: Optional[list[str] | list[BloomerpPermission] | str | BloomerpPermission] = None,
+    ) -> Policy:
+        """Provides a simple interface to create a particular policy
+
+        Args:
+            model_or_content_type (Type[models.Model] | ContentType): The model or content type for which to create a policy
+            field_permissions (dict[str, list[str]  |  list[BloomerpPermission]]): The field permissions
+            row_permissions (list[RowPolicyRuleContent]): The row permissions
+            global_permissions (Optional[list[str]  |  list[BloomerpPermission]  |  str  |  BloomerpPermission], optional): Optional global permissions. Defaults to None.
+                Note: if global_permissions are None, it will infer the global permissions from the field permissions and row permissions.
+
+        Returns:
+            Policy: The created policy instance
+        """
+        return cls.create_policy(
+            model_or_content_type,
+            field_permissions=access_rule.field_permissions,
+            row_permissions=access_rule.row_permissions,
+            global_permissions=global_permissions,
+        )
+    
+    
     @staticmethod
     def assign(
         policy: Policy,

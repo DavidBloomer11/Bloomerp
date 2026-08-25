@@ -106,40 +106,6 @@ class Todo(BloomerpModel):
 
     bloomerp_config = BloomerpModelConfig(
         module="todos_and_initiatives",
-        layout=FieldLayout(
-            rows=[
-                LayoutRow(
-                    title=gettext_noop("Details"),
-                    columns=4,
-                    items=[
-                        LayoutItem(id="title", colspan=3),
-                        LayoutItem(id="status", colspan=1),
-                        LayoutItem(id="priority", colspan=1),
-                        LayoutItem(id="effort", colspan=1),
-                        LayoutItem(id="labels", colspan=1),
-                        LayoutItem(id="initiative", colspan=1),
-                        LayoutItem(id="content", colspan=4),
-                    ],
-                ),
-                LayoutRow(
-                    title=gettext_noop("Users"),
-                    columns=4,
-                    items=[
-                        LayoutItem(id="requested_by"),
-                        LayoutItem(id="assigned_to"),
-                    ],
-                ),
-                LayoutRow(
-                    title=gettext_noop("Timeline"),
-                    columns=4,
-                    items=[
-                        LayoutItem(id="required_by"),
-                        LayoutItem(id="datetime_completed"),
-                        LayoutItem(id="is_completed"),
-                    ],
-                ),
-            ]
-        ),  
         string_search_settings=StringSearchSettings(
             string_search_fields=["title", "content"],
         ),
@@ -181,6 +147,43 @@ class Todo(BloomerpModel):
                             url_name="todos_detail_overview",
                         )
                     ],
+                )
+            ],
+            layout=[
+                FieldLayout(
+                    name="Default",
+                    rows=[
+                        LayoutRow(
+                            title=gettext_noop("Details"),
+                            columns=4,
+                            items=[
+                                LayoutItem(id="title", colspan=3),
+                                LayoutItem(id="status", colspan=1),
+                                LayoutItem(id="priority", colspan=1),
+                                LayoutItem(id="effort", colspan=1),
+                                LayoutItem(id="labels", colspan=1),
+                                LayoutItem(id="initiative", colspan=1),
+                                LayoutItem(id="content", colspan=4),
+                            ],
+                        ),
+                        LayoutRow(
+                            title=gettext_noop("Users"),
+                            columns=4,
+                            items=[
+                                LayoutItem(id="requested_by"),
+                                LayoutItem(id="assigned_to"),
+                            ],
+                        ),
+                        LayoutRow(
+                            title=gettext_noop("Timeline"),
+                            columns=4,
+                            items=[
+                                LayoutItem(id="required_by"),
+                                LayoutItem(id="datetime_completed"),
+                                LayoutItem(id="is_completed"),
+                            ],
+                        ),
+                    ]
                 )
             ]
         ),

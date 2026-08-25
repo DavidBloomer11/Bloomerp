@@ -306,7 +306,7 @@ class TestI18nConfiguration(SimpleTestCase):
         self.assertEqual(ActivityLog._meta.get_field("source").choices, ActivityLogSource.choices)
 
     def test_static_layout_titles_remain_pydantic_safe_and_translate_when_resolved(self):
-        layout = Todo.bloomerp_config.layout
+        layout = Todo.bloomerp_config.detail_view_settings.get_default_layout()
 
         self.assertIsInstance(layout.rows[0].title, str)
         self.assertEqual(layout.rows[0].title, "Details")

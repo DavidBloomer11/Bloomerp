@@ -10,7 +10,7 @@ from bloomerp.models.base_bloomerp_model import BloomerpModel, FieldLayout, Layo
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.model_fields.text_editor_field import TextEditorField
 from django.utils.translation import gettext_lazy as _, gettext_noop
-from bloomerp.models.definition import BloomerpModelConfig
+from bloomerp.models.definition import BloomerpModelConfig, DetailViewSettings
 from bloomerp.models.document_templates.document_template_styling import DocumentTemplateStyling
 from bloomerp.models.document_templates.document_template_header import DocumentTemplateHeader
 from bloomerp.models.files.file_folder import FileFolder
@@ -97,20 +97,22 @@ class DocumentTemplate(BloomerpModel):
         db_table = 'bloomerp_document_template'
 
     bloomerp_config = BloomerpModelConfig(
-        layout=FieldLayout(
-            rows=[
-                LayoutRow(
-                    columns=2,
-                    title=gettext_noop("Core Details"),
-                    items=[
-                        LayoutItem(id="name"),
-                        LayoutItem(id="include_page_numbers"),
-                        LayoutItem(id="page_orientation"),
-                        LayoutItem(id="page_size"),
-                        LayoutItem(id="page_margin"),
-                    ]
-                )
-            ]
+        detail_view_settings=DetailViewSettings(
+            layout=[FieldLayout(
+                rows=[
+                    LayoutRow(
+                        columns=2,
+                        title=gettext_noop("Core Details"),
+                        items=[
+                            LayoutItem(id="name"),
+                            LayoutItem(id="include_page_numbers"),
+                            LayoutItem(id="page_orientation"),
+                            LayoutItem(id="page_size"),
+                            LayoutItem(id="page_margin"),
+                        ]
+                    )
+                ]
+            )],
         ),
         create_redirect_url_func=lambda x: reverse("document_templates_detail_builder", kwargs={"pk": x.pk}),
     )

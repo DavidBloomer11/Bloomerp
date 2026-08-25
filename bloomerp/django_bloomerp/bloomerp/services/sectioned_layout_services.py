@@ -112,10 +112,15 @@ def layout_has_items(layout: FieldLayout | dict[str, Any] | None) -> bool:
 
 def get_model_field_layout(model: Type[Model]) -> FieldLayout | None:
     bloomerp_config = getattr(model, "bloomerp_config", None)
-    if bloomerp_config is not None:
-        bloomerp_layout = getattr(bloomerp_config, "layout", None)
-        if bloomerp_layout:
-            return normalize_layout_payload(bloomerp_layout)
+    detail_view_settings = (
+        getattr(bloomerp_config, "detail_view_settings", None)
+        if bloomerp_config is not None
+        else None
+    )
+    if detail_view_settings is not None:
+        default_layout = detail_view_settings.get_default_layout()
+        if default_layout is not None:
+            return normalize_layout_payload(default_layout)
 
     legacy_layout = getattr(model, "field_layout", None)
     if legacy_layout:
@@ -366,6 +371,8 @@ def resolve_field(
 def create_default_layout(
     model: Type[Model],
     application_fields: QuerySet[ApplicationField] | list[ApplicationField] | None = None,
+    *,
+    layout: FieldLayout | None = None,
 ) -> FieldLayout:
     """
     Creates a default field layout based on the given model.
@@ -380,7 +387,7 @@ def create_default_layout(
         application_fields = sorted(application_fields, key=lambda field: field.field)
 
     available_field_ids = {application_field.pk for application_field in application_fields}
-    model_layout = get_model_field_layout(model)
+    model_layout = layout if layout is not None else get_model_field_layout(model)
 
     if model_layout:
         rows: list[LayoutRow] = []

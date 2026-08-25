@@ -7,7 +7,7 @@ from django.conf import settings
 from bloomerp.models.access_control import RowPolicy
 from bloomerp.models.access_control.field_policy import FieldPolicy
 from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
-from bloomerp.models.definition import BloomerpModelConfig
+from bloomerp.models.definition import BloomerpModelConfig, DetailViewSettings
 from bloomerp.models.mixins import TimestampModelMixin
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import QuerySet
@@ -31,8 +31,9 @@ class Policy(
         verbose_name_plural = _("Access Control Policies")
     
     bloomerp_config = BloomerpModelConfig(
-        layout=FieldLayout(
-            rows=[
+        detail_view_settings=DetailViewSettings(
+            layout=[FieldLayout(
+                rows=[
                 LayoutRow(
                     title=gettext_noop("Policy Details"),
                     columns=4,
@@ -58,7 +59,8 @@ class Policy(
                         LayoutItem(id="number_of_users", colspan=2),
                     ],
                 ),
-            ]
+                ]
+            )],
         )
     )
 

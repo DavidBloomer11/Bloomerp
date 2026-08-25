@@ -10,12 +10,17 @@ from django.http import HttpRequest, HttpResponse
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _, gettext_noop
 
+from bloomerp.dataviews.table.config import TableDataView
 from bloomerp.models.base_bloomerp_model import BloomerpModel
 from bloomerp.models.definition import (
     BloomerpModelConfig,
+    DataviewHTMLAction,
+    DataviewModalAction,
+    ModelViewSettings,
     ObjectAction,
     ObjectModalAction,
     StringSearchSettings,
+    get_default_dataview_actions,
 )
 from bloomerp.models.mixins.timestamp_model_mixin import TimestampModelMixin
 from bloomerp.models.mixins.user_stamp_model_mixin import UserStampModelMixin
@@ -49,6 +54,7 @@ def _can_delete_file(request: HttpRequest, file: "File") -> bool:
     return file.persisted and user_can_mutate_file(request, file, ("delete",))
 
 
+
 class File(
     TimestampModelMixin,
     UserStampModelMixin,
@@ -63,6 +69,28 @@ class File(
     bloomerp_config = BloomerpModelConfig(
         string_search_settings=StringSearchSettings(
             string_search_fields=["name"],
+        ),
+        model_view_settings=ModelViewSettings(
+            dataview_actions=[
+                DataviewModalAction(
+                    id="create_folder",
+                    label="Create Folder",
+                    endpoint=lambda x: reverse("components_create_folder"),
+                    modal_title="Create folder",
+                    icon="fa fa-folder-plus"
+                ),
+                *get_default_dataview_actions()
+            ],
+            default_dataviews=[
+                TableDataView(
+                    display_fields=[
+                        "name",
+                        "file",
+                        
+                    ]
+                )
+            ]   
+             
         ),
         object_actions=[
             ObjectAction(

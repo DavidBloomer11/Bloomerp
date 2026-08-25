@@ -28,19 +28,6 @@
                 {% endfor %}
             </c-ui.breadcrumb.body>
         {% endif %}
-
-        <div class="flex flex-wrap gap-2">
-            <button type="button" class="btn btn-secondary btn-sm" data-trigger-upload>
-                <i class="fa fa-upload"></i>
-                <span>{% trans "Upload files" %}</span>
-            </button>
-            {% if can_create_folder %}
-                <button type="button" class="btn btn-secondary btn-sm" data-create-folder>
-                    <i class="fa fa-folder-plus"></i>
-                    <span>{% trans "Create folder" %}</span>
-                </button>
-            {% endif %}
-        </div>
     </div>
 
     {% if navigation_items %}

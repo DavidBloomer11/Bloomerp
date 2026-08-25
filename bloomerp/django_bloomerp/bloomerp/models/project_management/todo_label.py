@@ -1,24 +1,26 @@
 from django.db import models
 from bloomerp.models.base_bloomerp_model import BloomerpModel, FieldLayout, LayoutItem, LayoutRow
-from bloomerp.models.definition import BloomerpModelConfig, StringSearchSettings
+from bloomerp.models.definition import BloomerpModelConfig, DetailViewSettings
 from django.utils.translation import gettext_lazy as _, gettext_noop
 
 class TodoLabel(BloomerpModel):
     """
     Model representing a label that can be assigned to to-do items.
     """
-    model_config = BloomerpModelConfig(
-        layout=FieldLayout(
-            rows=[
-                LayoutRow(
-                    title=gettext_noop("Label Details"),
-                    columns=2,
-                    items=[
-                        LayoutItem(id="name", colspan=1),
-                        LayoutItem(id="color", colspan=1),
-                    ],
-                )
-            ]
+    bloomerp_config = BloomerpModelConfig(
+        detail_view_settings=DetailViewSettings(
+            layout=[FieldLayout(
+                rows=[
+                    LayoutRow(
+                        title=gettext_noop("Label Details"),
+                        columns=2,
+                        items=[
+                            LayoutItem(id="name", colspan=1),
+                            LayoutItem(id="color", colspan=1),
+                        ],
+                    )
+                ]
+            )],
         )
     )
 

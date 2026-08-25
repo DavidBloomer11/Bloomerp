@@ -32,8 +32,9 @@ class Workflow(
     
     bloomerp_config = BloomerpModelConfig(
         module="automation",
-        layout=FieldLayout(
-            rows=[
+        detail_view_settings=DetailViewSettings(
+            layout=[FieldLayout(
+                rows=[
                 LayoutRow(
                     title=gettext_noop("Details"),
                     columns=2,
@@ -50,7 +51,9 @@ class Workflow(
                         LayoutItem(id="enable_logging"),
                     ]
                 ),
-            ]
+                ]
+            )],
+            skip_views=["document_templates", "files"],
         ),
         object_actions=[
             ObjectModalAction(
@@ -64,9 +67,6 @@ class Workflow(
         create_redirect_url_func=lambda x: reverse(
             "workflows_detail_builder",
             kwargs={"pk":x.pk}
-        ),
-        detail_view_settings=DetailViewSettings(
-            skip_views=["document_templates", "files"]
         ),
         tiles=[
             AnalyticsTileConfig(

@@ -106,8 +106,9 @@ class WorkflowRun(
     
     bloomerp_config = BloomerpModelConfig(
         module="automation",
-        layout=FieldLayout(
-            rows=[
+        detail_view_settings=DetailViewSettings(
+            layout=[FieldLayout(
+                rows=[
                 LayoutRow(
                     columns=2,
                     items=[
@@ -123,10 +124,9 @@ class WorkflowRun(
                         })
                     ]
                 )
-            ]
-        ),
-        detail_view_settings=DetailViewSettings(
-            skip_views=["files", "document_templates"]
+                ]
+            )],
+            skip_views=["files", "document_templates"],
         ),
         object_actions=[
             ObjectModalAction(

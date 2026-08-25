@@ -375,12 +375,33 @@ class DetailViewSettings(BaseModel):
         description="Optional list of view names to skip when generating the detail view router.",
     )
 
-    layout : Optional[list[FieldLayout]] = Field(
-        default=None,
-        description="Optional layout configuration for the detail view."
+    layout: list[FieldLayout] = Field(
+        default_factory=list,
+        description="Named object-layout configurations for detail and create views.",
     )
 
     tab_configurations: list[DetailTabsConfiguration] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_layouts(self):
+        """Require stable names and exactly one default configured layout."""
+        if not self.layout:
+            return self
+
+        names = [layout.name for layout in self.layout]
+        if len(names) != len(set(names)):
+            raise ValueError("Detail layout names must be unique.")
+
+        default_count = sum(layout.is_default for layout in self.layout)
+        if default_count != 1:
+            raise ValueError(
+                "Exactly one configured detail layout must have is_default=True."
+            )
+        return self
+
+    def get_default_layout(self) -> FieldLayout | None:
+        """Return the configured default object layout, if one exists."""
+        return next((layout for layout in self.layout if layout.is_default), None)
 
 class ModelViewSettings(BaseModel):
     """Optional settings for a model's collection views."""
@@ -432,7 +453,7 @@ class BloomerpModelConfig(BaseModel):
 
     Settings are:
         - module: the canonical module to which this model belongs.
-        - layout: a layout object defining how the default CRUD layout for users is.
+        - detail_view_settings: detail tabs and named object layouts.
         - tiles: reusable tile configurations associated with this model.
         - string_search_fields: optional field paths used by the shared string search service.
 
@@ -448,8 +469,6 @@ class BloomerpModelConfig(BaseModel):
     """
     module: str | type | None = None
     
-    layout: Optional[FieldLayout] = None
-
     tiles: list[SerializeAsAny[BaseTileConfig]] = Field(
         default_factory=list,
         description="Optional list of reusable tile configurations associated with this model."

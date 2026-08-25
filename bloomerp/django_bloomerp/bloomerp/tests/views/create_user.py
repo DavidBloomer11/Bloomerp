@@ -145,7 +145,7 @@ class TestCreateUserView(BaseBloomerpModelTestCase):
     def test_user_model_config_defines_default_layout(self):
         # UC: The User model is opened in a detail layout. Expected Result: The model config provides default user fields.
         # 1. Read the configured layout rows from the User model config.
-        layout = User.bloomerp_config.layout
+        layout = User.bloomerp_config.detail_view_settings.get_default_layout()
         layout_field_ids = [
             item.id
             for row in layout.rows
