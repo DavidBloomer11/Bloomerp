@@ -47,23 +47,25 @@ class ApiKey(BloomerpModel):
                 should_render_func=lambda request, obj: obj.is_usable
             )
         ],
-        layout=FieldLayout(
-            rows=[
-                LayoutRow(
-                    columns=2,
-                    title=gettext_noop("API Key Details"),
-                    items=[
-                        LayoutItem(id="account"),
-                        LayoutItem(id="name"),
-                        LayoutItem(id="is_usable"),
-                        LayoutItem(id="last_used_at"),
-                        LayoutItem(id="expires_at"),
-                        LayoutItem(id="revoked_at"),
+        detail_view_settings=DetailViewSettings(
+            layout=[
+                FieldLayout(
+                    rows=[
+                        LayoutRow(
+                            columns=2,
+                            title=gettext_noop("API Key Details"),
+                            items=[
+                                LayoutItem(id="account"),
+                                LayoutItem(id="name"),
+                                LayoutItem(id="is_usable"),
+                                LayoutItem(id="last_used_at"),
+                                LayoutItem(id="expires_at"),
+                                LayoutItem(id="revoked_at"),
+                            ]
+                        )
                     ]
                 )
-            ]
-        ),
-        detail_view_settings=DetailViewSettings(
+            ],
             skip_views=[
                 "document_templates",
                 "files"

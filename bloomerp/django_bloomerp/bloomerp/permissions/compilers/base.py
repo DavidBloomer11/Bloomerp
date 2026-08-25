@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Any, Generic, TypeVar
 
+from django.core.exceptions import ValidationError
+
 from bloomerp.field_types.lookups import Lookup
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.permissions.definition import (
@@ -27,9 +29,10 @@ BOOLEAN_NORMALIZATION = {
 class BasePermissionCompiler(ABC, Generic[CompiledPermission]):
     """Shared normalization and lookup behavior for permission compilers."""
 
-    def __init__(self, rules, *, user=None):
+    def __init__(self, rules, *, user=None, model=None):
         self.rules = rules
         self.user = user
+        self.model = model
 
     @abstractmethod
     def compile(self, *args, **kwargs) -> CompiledPermission:
@@ -147,7 +150,10 @@ class BasePermissionCompiler(ABC, Generic[CompiledPermission]):
         return value
 
     @staticmethod
-    def get_application_fields(rules: list[AccessRule]) -> dict[str, ApplicationField]:
+    def get_application_fields(
+        rules: list[AccessRule],
+        model=None,
+    ) -> dict[str, ApplicationField]:
         referenced_ids = {
             str(condition.application_field_id)
             for rule in rules
@@ -161,13 +167,40 @@ class BasePermissionCompiler(ABC, Generic[CompiledPermission]):
             for field_id in rule.field_permissions
             if field_id != "__all__"
         )
+        referenced_names = {
+            str(condition.field).replace(".", "__").split("__", 1)[0]
+            for rule in rules
+            for row_rule in rule.row_permissions
+            for condition in row_rule.conditions
+            if condition.field not in (None, "", "__all__")
+        }
+        referenced_names.update(
+            str(field_name).replace(".", "__").split("__", 1)[0]
+            for rule in rules
+            for field_name in rule.field_permissions
+            if field_name != "__all__" and not str(field_name).isdigit()
+        )
         valid_ids = []
         for field_id in referenced_ids:
             try:
                 valid_ids.append(ApplicationField._meta.pk.to_python(field_id))
-            except (TypeError, ValueError):
+            except (TypeError, ValueError, ValidationError):
                 continue
-        return {
+        queryset = ApplicationField.objects.filter(pk__in=valid_ids)
+        if model is not None:
+            from django.contrib.contenttypes.models import ContentType
+
+            content_type = ContentType.objects.get_for_model(model)
+            model_fields = ApplicationField.objects.filter(content_type=content_type)
+            if any("__all__" in rule.field_permissions for rule in rules):
+                queryset = queryset | model_fields
+            elif referenced_names:
+                queryset = queryset | model_fields.filter(field__in=referenced_names)
+
+        fields = list(queryset.distinct())
+        resolved = {
             str(field.pk): field
-            for field in ApplicationField.objects.filter(pk__in=valid_ids)
+            for field in fields
         }
+        resolved.update({field.field: field for field in fields})
+        return resolved

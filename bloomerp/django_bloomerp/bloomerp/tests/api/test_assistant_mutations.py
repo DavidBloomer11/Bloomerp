@@ -6,7 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from bloomerp.models import FieldPolicy, Policy, RowPolicy
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.models.definition import BloomerpModelConfig
-from bloomerp.services.permission_services import ensure_model_permissions
+from bloomerp.permissions.manager import ensure_model_permissions
 from bloomerp.tests.base import BaseBloomerpModelTestCase
 
 

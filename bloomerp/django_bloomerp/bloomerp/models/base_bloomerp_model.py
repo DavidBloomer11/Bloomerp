@@ -9,7 +9,6 @@ from typing import Optional
 from bloomerp.models.definition import BaseLayout, FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.mixins.absolute_url_model_mixin import AbsoluteUrlModelMixin
 from bloomerp.models.mixins.avatar_model_mixin import AvatarModelMixin
-from bloomerp.models.mixins.string_search_model_mixin import StringSearchModelMixin
 from bloomerp.models.mixins.timestamp_model_mixin import TimestampModelMixin
 from bloomerp.models.mixins.user_stamp_model_mixin import UserStampModelMixin
 from bloomerp.models.mixins.uuid_model_mixin import UuidModelMixin
@@ -18,7 +17,6 @@ from bloomerp.permissions.definition import BloomerpPermission
 class BloomerpModel(
     UuidModelMixin,
     TimestampModelMixin,
-    StringSearchModelMixin,
     UserStampModelMixin,
     AbsoluteUrlModelMixin,
     AvatarModelMixin,

@@ -5,7 +5,7 @@ from bloomerp.models import ApplicationField
 from django.db import models
 from django import db
 from bloomerp.field_types.types import FieldType
-from bloomerp.services.permission_services import ensure_bloomerp_model_permissions
+from bloomerp.permissions.manager import ensure_bloomerp_model_permissions
 from django.utils.encoding import force_str
 
 class Command(BaseCommand):

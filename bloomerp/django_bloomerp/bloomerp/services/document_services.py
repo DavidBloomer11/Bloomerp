@@ -17,7 +17,7 @@ from bloomerp.forms.document_templates import DocumentTemplateForm
 from bloomerp.models import AbstractBloomerpUser, ApplicationField, DocumentTemplate
 from bloomerp.models.document_templates.document_template import FreeVariableConfig
 from bloomerp.models.files.file import File
-from bloomerp.services.permission_services import UserPermissionManager
+from bloomerp.permissions.manager import UserPolicyManager
 from bloomerp.utils.pdf import generate_pdf
 from bloomerp.widgets.foreign_field_widget import ForeignFieldWidget
 
@@ -313,7 +313,7 @@ class DocumentTemplateService:
         if not content_types.exists():
             return ApplicationField.objects.none()
         if self.user:
-            manager = UserPermissionManager(self.user)
+            manager = UserPolicyManager(self.user)
             field_ids: list[int] = []
             for content_type in content_types:
                 permission = f"view_{content_type.model}"

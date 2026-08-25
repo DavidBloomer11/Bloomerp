@@ -13,8 +13,8 @@ from django.db.models import Model, QuerySet
 from django.db.models.fields.files import FieldFile
 
 from bloomerp.models.application_field import ApplicationField
+from bloomerp.permissions.manager import UserPolicyManager
 from bloomerp.services.object_services import string_search_on_queryset
-from bloomerp.services.permission_services import UserPermissionManager
 from bloomerp.utils.filters import filter_model
 
 MULTI_VALUE_SEPARATOR = ";"
@@ -26,7 +26,7 @@ class ExportService:
         self.user = user
         self.permission_str = permission_str
         self.content_type = ContentType.objects.get_for_model(model)
-        self.permission_manager = UserPermissionManager(user)
+        self.permission_manager = UserPolicyManager(user)
 
     @classmethod
     def from_content_type_id(cls, content_type_id: int, user, *, permission_str: str) -> "ExportService":

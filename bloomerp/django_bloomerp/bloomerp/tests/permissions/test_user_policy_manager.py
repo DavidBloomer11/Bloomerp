@@ -1,6 +1,11 @@
 from bloomerp.field_types.lookups import Lookup
 from bloomerp.models.application_field import ApplicationField
-from bloomerp.permissions.definition import BloomerpPermission, RowPolicyRuleCondition, RowPolicyRuleContent
+from bloomerp.permissions.definition import (
+    AccessRule,
+    BloomerpPermission,
+    RowPolicyRuleCondition,
+    RowPolicyRuleContent,
+)
 from bloomerp.permissions.manager import PolicyManager, UserPolicyManager
 from bloomerp.tests.base import BaseBloomerpModelTestCase
 from django.contrib.contenttypes.models import ContentType
@@ -90,6 +95,34 @@ class TestUserPermissionManager(BaseBloomerpModelTestCase):
         
         #4. Validate that the accessible queryset is empty
         self._validate_queryset_results(accessible_queryset, self.CustomerModel.objects.none())
+
+    def test_supplied_access_rules_can_preview_without_a_stored_policy(self):
+        first_name = FIRST_NAMES[0]
+        access_rule = AccessRule(
+            row_permissions=[
+                RowPolicyRuleContent(
+                    permissions=["preview"],
+                    conditions=[
+                        RowPolicyRuleCondition(
+                            field="first_name",
+                            operator=Lookup.EQUALS.value.id,
+                            value=first_name,
+                        )
+                    ],
+                )
+            ]
+        )
+
+        queryset = UserPolicyManager(self.normal_user).get_queryset_for_access_rules(
+            self.CustomerModel,
+            [access_rule],
+            "preview",
+        )
+
+        self._validate_queryset_results(
+            queryset,
+            self.CustomerModel.objects.filter(first_name=first_name),
+        )
         
     def test_normal_user_with_only_global_access_has_no_access_to_objects(self):
         """

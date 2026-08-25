@@ -4,7 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.models.base_bloomerp_model import BloomerpModel, FieldLayout, LayoutItem, LayoutRow
-from bloomerp.models.definition import BloomerpModelConfig, ObjectHTML, DetailViewSettings
+from bloomerp.models.definition import BloomerpModelConfig, ObjectHTMLAction, DetailViewSettings
 from bloomerp.models.mixins.content_layout_model_mixin import ContentLayoutModelMixin
 from django.utils.translation import gettext_lazy as _, gettext_noop
 from bloomerp.services.sectioned_layout_services import create_default_layout
@@ -18,43 +18,42 @@ class Form(BloomerpModel, ContentLayoutModelMixin, models.Model):
 
     bloomerp_config = BloomerpModelConfig(
         create_redirect_url_func=lambda x: reverse("forms_detail_form_builder", kwargs={"pk" : x.id}),
-        allow_string_search=True,
-        layout=FieldLayout(
-            rows=[
-                LayoutRow(
-                    columns=2,
-                    title=gettext_noop("Core Details"),
-                    items=[
-                        LayoutItem(id="name"),
-                        LayoutItem(id="content_type"),
-                        LayoutItem(id="description", colspan=2),
-                    ]
-                ),
-                LayoutRow(
-                    columns=2,
-                    title=gettext_noop("Settings"),
-                    items=[
-                        LayoutItem(id="requires_review", colspan=2),
-                        LayoutItem(id="requires_authentication"),
-                        LayoutItem(id="public_embed_enabled"),
-                        LayoutItem(id="max_submissions"),
-                        LayoutItem(id="max_submissions_per_ip"),
-                        LayoutItem(id="opens_at"),
-                        LayoutItem(id="closes_at"),   
-                    ]
-                )
-            ]
-        ),
         detail_view_settings=DetailViewSettings(
+            layout=[FieldLayout(
+                rows=[
+                    LayoutRow(
+                        columns=2,
+                        title=gettext_noop("Core Details"),
+                        items=[
+                            LayoutItem(id="name"),
+                            LayoutItem(id="content_type"),
+                            LayoutItem(id="description", colspan=2),
+                        ]
+                    ),
+                    LayoutRow(
+                        columns=2,
+                        title=gettext_noop("Settings"),
+                        items=[
+                            LayoutItem(id="requires_review", colspan=2),
+                            LayoutItem(id="requires_authentication"),
+                            LayoutItem(id="public_embed_enabled"),
+                            LayoutItem(id="max_submissions"),
+                            LayoutItem(id="max_submissions_per_ip"),
+                            LayoutItem(id="opens_at"),
+                            LayoutItem(id="closes_at"),
+                        ]
+                    )
+                ]
+            )],
             skip_views=[
                 "document_templates"
             ]
         ),
         object_actions=[
-            ObjectHTML(
+            ObjectHTMLAction(
                 template_name="models/forms/links_btn.html"
             ),
-            ObjectHTML(
+            ObjectHTMLAction(
                 template_name="models/forms/public_embed_btn.html",
                 should_render_func=lambda request, obj: obj.public_embed_enabled,
             ),

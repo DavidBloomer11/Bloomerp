@@ -12,7 +12,8 @@ from django.shortcuts import render
 from django.utils import timezone
 
 from bloomerp.models.application_field import ApplicationField
-from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
+from bloomerp.permissions.definition import BloomerpPermission
+from bloomerp.permissions.manager import UserPolicyManager
 
 from ..base import BaseDataviewRenderer, DataviewRenderState
 from ..gant.renderer import GantDataviewRenderer
@@ -248,13 +249,12 @@ class CalendarDataviewRenderer(BaseDataviewRenderer):
         if any(fields_by_key[key] is None for key in requested_field_keys):
             return HttpResponse("Calendar end field is not configured", status=400)
 
-        permission = create_permission_str(state.model, "change")
-        permission_manager = UserPermissionManager(request.user)
-        if not permission_manager.has_global_permission(state.model, permission):
+        permission_manager = UserPolicyManager(request.user)
+        if not permission_manager.has_global_permission(state.model, BloomerpPermission.CHANGE):
             return HttpResponse("Permission denied", status=403)
         if any(
             not GantDataviewRenderer._field_is_editable(fields_by_key[key])
-            or not permission_manager.has_field_permission(fields_by_key[key], permission)
+            or not permission_manager.has_field_permission(fields_by_key[key], BloomerpPermission.CHANGE)
             for key in requested_field_keys
         ):
             return HttpResponse("Permission denied", status=403)
@@ -267,7 +267,7 @@ class CalendarDataviewRenderer(BaseDataviewRenderer):
 
         with transaction.atomic():
             objects = list(
-                permission_manager.get_queryset(state.model, permission)
+                permission_manager.get_queryset(state.model, BloomerpPermission.CHANGE)
                 .select_for_update()
                 .filter(pk__in=object_ids)
             )
@@ -529,18 +529,16 @@ class CalendarDataviewRenderer(BaseDataviewRenderer):
         start_field: ApplicationField,
         end_field: ApplicationField | None,
     ) -> tuple[bool, bool]:
-        permission = create_permission_str(self.state.model, "change")
-        permission_manager = UserPermissionManager(self.state.request.user)
-        if not permission_manager.has_access_to_object(obj, permission):
+        if not UserPolicyManager(self.state.request.user).has_access_to_object(obj, BloomerpPermission.CHANGE):
             return False, False
         can_edit_start = (
             GantDataviewRenderer._field_is_editable(start_field)
-            and permission_manager.has_field_permission(start_field, permission)
+            and UserPolicyManager(self.state.request.user).has_field_permission(start_field, BloomerpPermission.CHANGE)
         )
         can_edit_end = bool(
             end_field
             and GantDataviewRenderer._field_is_editable(end_field)
-            and permission_manager.has_field_permission(end_field, permission)
+            and UserPolicyManager(self.state.request.user).has_field_permission(end_field, BloomerpPermission.CHANGE)
         )
         return can_edit_start, can_edit_end
 

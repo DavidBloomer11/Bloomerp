@@ -22,7 +22,6 @@ class Category(BloomerpModel):
     description = models.TextField(blank=True, null=True)
 
     string_search_fields = ['name', 'description']
-    allow_string_search = True
 ```
 
 ### 2. Accessing the API Endpoints

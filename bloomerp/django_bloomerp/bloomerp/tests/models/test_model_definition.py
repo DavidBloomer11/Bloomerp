@@ -5,6 +5,9 @@ from bloomerp.dataviews.kanban.config import KanbanDataView
 from bloomerp.dataviews.table.config import TableDataView
 from bloomerp.models.definition import (
     BloomerpModelConfig,
+    FieldLayout,
+    LayoutItem,
+    LayoutRow,
     ModelViewSettings,
 )
 from bloomerp.models.project_management.todo import Todo
@@ -149,6 +152,62 @@ class BloomerpModelConfigDataViewTests(SimpleTestCase):
         self.assertEqual(data_views[1].name, "All todos")
         self.assertFalse(data_views[1].is_default)
 class DetailViewSettingsTests(SimpleTestCase):
+    def test_detail_view_settings_accept_multiple_layouts_and_find_default(self):
+        settings = DetailViewSettings(
+            layout=[
+                FieldLayout(
+                    name="Compact",
+                    is_default=False,
+                    rows=[
+                        LayoutRow(
+                            columns=1,
+                            items=[LayoutItem(id="name")],
+                        )
+                    ],
+                ),
+                FieldLayout(
+                    name="Detailed",
+                    rows=[
+                        LayoutRow(
+                            columns=1,
+                            items=[LayoutItem(id="description")],
+                        )
+                    ],
+                ),
+            ]
+        )
+
+        self.assertEqual(
+            [layout.name for layout in settings.layout],
+            ["Compact", "Detailed"],
+        )
+        self.assertEqual(settings.get_default_layout().name, "Detailed")
+
+    def test_detail_view_settings_require_unique_layout_names_and_one_default(self):
+        with self.assertRaisesRegex(ValidationError, "names must be unique"):
+            DetailViewSettings(
+                layout=[
+                    FieldLayout(name="Default"),
+                    FieldLayout(name="Default", is_default=False),
+                ]
+            )
+
+        with self.assertRaisesRegex(ValidationError, "Exactly one configured"):
+            DetailViewSettings(
+                layout=[
+                    FieldLayout(name="Compact", is_default=False),
+                    FieldLayout(name="Detailed", is_default=False),
+                ]
+            )
+
+        with self.assertRaisesRegex(ValidationError, "Exactly one configured"):
+            DetailViewSettings(
+                layout=[
+                    FieldLayout(name="Compact"),
+                    FieldLayout(name="Detailed"),
+                ]
+            )
+
     def test_detail_view_settings_accept_named_tab_configurations(self):
         """
         Use case: A model declares multiple named detail-tab configurations.

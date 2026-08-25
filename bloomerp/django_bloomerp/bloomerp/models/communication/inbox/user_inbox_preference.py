@@ -1,6 +1,6 @@
 from django.utils.translation import gettext_lazy as _
 from bloomerp.models.base_bloomerp_model import BloomerpModel
-from bloomerp.models.definition import BloomerpModelConfig
+from bloomerp.models.definition import ActivityLogSettings, BloomerpModelConfig
 from bloomerp.models.users.user import AbstractBloomerpUser
 from django.db import models
 from django.conf import settings
@@ -12,7 +12,7 @@ class UserInboxPreference(BloomerpModel):
         verbose_name_plural = _("User Inbox Preferences")
 
     bloomerp_config = BloomerpModelConfig(
-        record_activity_log=False,
+        activity_log_settings=ActivityLogSettings(enabled=False),
         is_internal=True,
     )
 

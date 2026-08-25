@@ -48,7 +48,7 @@ For direct auth checks, the full string is typically:
 - `field_policy` controls field-level access.
 - `global_permissions` exists, but enforcement is not wired through the main permission service.
 
-`UserPermissionManager.get_user_policies()` resolves policies from both direct user assignment and group membership.
+`UserPolicyManager.get_user_policies()` resolves policies from both direct user assignment and group membership.
 
 ## Field Policies
 `FieldPolicy.rule` is JSON keyed by `ApplicationField.id`.
@@ -67,7 +67,7 @@ Important details:
 - Keys are field ids as strings or ints.
 - Values are bare codenames such as `view_customer`, not `bloomerp.view_customer`.
 - `__all__` is a wildcard grant for all fields on that content type.
-- No matching field policy means `UserPermissionManager.has_field_permission(...)` returns `False` for non-superusers.
+- No matching field policy means `UserPolicyManager.has_field_permission(...)` returns `False` for non-superusers.
 
 `get_accessible_fields(...)` unions matching grants across the user's field policies.
 
@@ -92,7 +92,7 @@ Typical rule shape:
 Important details:
 - Rule permissions are stored as `Permission` objects for the same content type as the row policy.
 - `add_permission("view_customer")` resolves the permission against the row policy content type.
-- `UserPermissionManager.get_queryset(...)` keeps only rules whose attached permission codename matches the requested permission.
+- `UserPolicyManager.get_queryset(...)` keeps only rules whose attached permission codename matches the requested permission.
 - Matching row rules combine with OR semantics.
 - No row policies or no matching rules means an empty queryset for non-superusers.
 
@@ -107,7 +107,7 @@ Supported rule patterns visible in tests:
 ## API Enforcement
 `BloomerpModelViewSet` is the main permission-aware API path.
 
-- `get_queryset()` delegates row filtering to `UserPermissionManager.get_queryset(...)`.
+- `get_queryset()` delegates row filtering to `UserPolicyManager.get_queryset(...)`.
 - `_apply_field_permissions(...)` strips disallowed serializer fields from read responses.
 - `_enforce_write_field_permissions(...)` rejects writes to fields without the requested field permission.
 - Action-to-permission mapping is:
@@ -121,7 +121,7 @@ If an API task changes permissions, verify both queryset behavior and serializer
 ## Components And Layouts
 Permission-sensitive UI code appears in two patterns:
 
-- `UserPermissionManager` gates for row/field-sensitive rendering.
+- `UserPolicyManager` gates for row/field-sensitive rendering.
 
 Examples worth checking:
 - `bloomerp/django_bloomerp/bloomerp/components/detail_layout_render_field.py`
@@ -130,7 +130,7 @@ Examples worth checking:
 - `bloomerp/django_bloomerp/bloomerp/components/objects/dataview.py`
 
 ## Important Limitations And Sharp Edges
-- `UserPermissionManager.has_global_permission(...)` is currently a stub.
+- `UserPolicyManager.has_global_permission(...)` is currently a stub.
 - `AbstractBloomerpUser.get_content_types_for_user(...)` only reflects Django user/group permissions, not policy-derived row or field access.
 - Some code paths still rely only on `has_perm(...)`, so adding a policy may not be enough if the entrypoint has its own auth gate.
 - `PolicySerializer.PermissionCodenameField.to_internal_value(...)` fetches `Permission` by codename alone, so inspect carefully if a serializer change could confuse content types.

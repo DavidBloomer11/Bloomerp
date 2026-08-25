@@ -1,8 +1,4 @@
-
-
-
 from enum import Enum
-
 
 class BaseTypeDefinition(Enum):
     @classmethod

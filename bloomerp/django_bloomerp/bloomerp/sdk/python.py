@@ -3,8 +3,6 @@ from __future__ import annotations
 
 import json
 
-from django.apps import apps
-
 from bloomerp.sdk.base import BaseSdkGenerator, SdkModelDefinition
 
 
@@ -479,7 +477,7 @@ bloomerp_auth_strategy_types: tuple[str, ...] = tuple({auth_strategy_types})
         return lines
 
     def get_top_level_nested_types(self, model_definition: SdkModelDefinition) -> dict[str, str]:
-        model = apps.get_model(model_definition.app_label, model_definition.model_name)
+        model = model_definition.model_class
         nested_types: dict[str, str] = {}
 
         for nesting_rule in model_definition.public_access.get("nesting", []):

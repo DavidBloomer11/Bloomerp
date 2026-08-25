@@ -16,6 +16,8 @@ from bloomerp.dataviews.table.config import TableDataView
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.models.definition import get_model_config
 from bloomerp.models.users.base_view_preference import BaseViewPreference
+from bloomerp.permissions.definition import BloomerpPermission
+from bloomerp.permissions.manager import UserPolicyManager
 
 if TYPE_CHECKING:
     from bloomerp.models.users.user import AbstractBloomerpUser
@@ -114,10 +116,6 @@ class UserListViewPreference(BaseViewPreference):
         default_dataviews: list[BaseDataView],
     ) -> "UserListViewPreference":
         """Materialize all configured data views and return the selected one."""
-        from bloomerp.services.permission_services import (
-            UserPermissionManager,
-            create_permission_str,
-        )
 
         model = content_type.model_class()
         application_fields = list(
@@ -128,9 +126,9 @@ class UserListViewPreference(BaseViewPreference):
             for application_field in application_fields
         }
         accessible_field_ids = set(
-            UserPermissionManager(user).get_accessible_fields(
+            UserPolicyManager(user).get_accessible_fields(
                 content_type,
-                create_permission_str(model, "view"),
+                BloomerpPermission.VIEW,
             ).values_list("id", flat=True)
         )
 

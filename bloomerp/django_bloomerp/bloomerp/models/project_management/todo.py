@@ -1,3 +1,5 @@
+from tokenize import String
+
 from django.db import connection, models
 from django.http import HttpRequest, HttpResponse
 from slugify import slugify
@@ -15,14 +17,13 @@ from bloomerp.dataviews.table.config import TableDataView
 from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.definition import (
     BloomerpModelConfig,
-    ModelViewSettings,
-    ObjectAction,
-    ObjectHTML,
     DetailTab,
     DetailTabsConfiguration,
     DetailViewSettings,
+    ModelViewSettings,
     ObjectAction,
-    ObjectHTML,
+    ObjectHTMLAction,
+    StringSearchSettings,
 )
 from bloomerp.utils.models import get_list_view_url
 from bloomerp.workspaces.analytics_tile.model import AnalyticsTileFilter, FieldConfig
@@ -80,8 +81,8 @@ def _mark_as_completed(request:HttpRequest, object:"Todo") -> HttpResponse:
     """
     Marks the todo as completed and sets the datetime_completed field to the current time.
     """
-    from bloomerp.permissions.manager import UserPermissionManager
-    manager = UserPermissionManager(request.user)
+    from bloomerp.permissions.manager import UserPolicyManager
+    manager = UserPolicyManager(request.user)
 
     if not manager.has_access_to_object(object, BloomerpPermission.CHANGE):
         message = _("You do not have permission to mark this todo as completed.")
@@ -105,41 +106,9 @@ class Todo(BloomerpModel):
 
     bloomerp_config = BloomerpModelConfig(
         module="todos_and_initiatives",
-        layout=FieldLayout(
-            rows=[
-                LayoutRow(
-                    title=gettext_noop("Details"),
-                    columns=4,
-                    items=[
-                        LayoutItem(id="title", colspan=3),
-                        LayoutItem(id="status", colspan=1),
-                        LayoutItem(id="priority", colspan=1),
-                        LayoutItem(id="effort", colspan=1),
-                        LayoutItem(id="labels", colspan=1),
-                        LayoutItem(id="initiative", colspan=1),
-                        LayoutItem(id="content", colspan=4),
-                    ],
-                ),
-                LayoutRow(
-                    title=gettext_noop("Users"),
-                    columns=4,
-                    items=[
-                        LayoutItem(id="requested_by"),
-                        LayoutItem(id="assigned_to"),
-                    ],
-                ),
-                LayoutRow(
-                    title=gettext_noop("Timeline"),
-                    columns=4,
-                    items=[
-                        LayoutItem(id="required_by"),
-                        LayoutItem(id="datetime_completed"),
-                        LayoutItem(id="is_completed"),
-                    ],
-                ),
-            ]
+        string_search_settings=StringSearchSettings(
+            string_search_fields=["title", "content"],
         ),
-        string_search_fields=["title", "content"],
         model_view_settings=ModelViewSettings(
             default_dataviews=[
                 KanbanDataView(
@@ -158,7 +127,7 @@ class Todo(BloomerpModel):
             ]
         ),
         object_actions=[
-            ObjectHTML(
+            ObjectHTMLAction(
                 template_name="models/todo/copy_git_branch_name.html"
             ),
             ObjectAction(
@@ -178,6 +147,43 @@ class Todo(BloomerpModel):
                             url_name="todos_detail_overview",
                         )
                     ],
+                )
+            ],
+            layout=[
+                FieldLayout(
+                    name="Default",
+                    rows=[
+                        LayoutRow(
+                            title=gettext_noop("Details"),
+                            columns=4,
+                            items=[
+                                LayoutItem(id="title", colspan=3),
+                                LayoutItem(id="status", colspan=1),
+                                LayoutItem(id="priority", colspan=1),
+                                LayoutItem(id="effort", colspan=1),
+                                LayoutItem(id="labels", colspan=1),
+                                LayoutItem(id="initiative", colspan=1),
+                                LayoutItem(id="content", colspan=4),
+                            ],
+                        ),
+                        LayoutRow(
+                            title=gettext_noop("Users"),
+                            columns=4,
+                            items=[
+                                LayoutItem(id="requested_by"),
+                                LayoutItem(id="assigned_to"),
+                            ],
+                        ),
+                        LayoutRow(
+                            title=gettext_noop("Timeline"),
+                            columns=4,
+                            items=[
+                                LayoutItem(id="required_by"),
+                                LayoutItem(id="datetime_completed"),
+                                LayoutItem(id="is_completed"),
+                            ],
+                        ),
+                    ]
                 )
             ]
         ),
@@ -375,7 +381,7 @@ class Todo(BloomerpModel):
     )
 
     avatar = None
-    allow_string_search = False # Do not allow string search for todos (we dont want to-do's to be searchable in the search bar)
+    allow_global_search = False # Do not allow string search for todos (we dont want to-do's to be searchable in the search bar)
 
     assigned_to = UserField(
         on_delete=models.CASCADE, 

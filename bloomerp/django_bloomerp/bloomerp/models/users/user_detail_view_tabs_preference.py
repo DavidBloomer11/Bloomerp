@@ -11,16 +11,23 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import Q
+from bloomerp.field_types.lookups import Lookup
 
 from bloomerp.models.definition import (
+    ApiAccessSettings,
     ApiSettings,
     BloomerpModelConfig,
     DetailTab,
     DetailTabFolder,
     DetailTabsConfiguration,
-    UserAccessRule,
     get_model_config,
     validate_detail_tab_url,
+)
+from bloomerp.permissions.definition import (
+    AccessRule,
+    BloomerpPermission,
+    RowPolicyRuleCondition,
+    RowPolicyRuleContent,
 )
 from bloomerp.models.users.base_preference import BasePreference
 from bloomerp.router import router
@@ -40,16 +47,34 @@ class UserDetailViewTabsPreference(BasePreference):
         is_internal=True,
         api_settings=ApiSettings(
             enable_auto_generation=True,
-            user_access=[
-                UserAccessRule(
-                    through_field="user",
-                    field_actions={
-                        "id": ["view"],
-                        "name": ["view", "change"],
-                    },
-                    row_actions=["view", "change"],
-                ),
-            ],
+            access=ApiAccessSettings(
+                authenticated=[
+                    AccessRule(
+                        row_permissions=[
+                            RowPolicyRuleContent(
+                                permissions=[
+                                    BloomerpPermission.VIEW,
+                                    BloomerpPermission.CHANGE,
+                                ],
+                                conditions=[
+                                    RowPolicyRuleCondition(
+                                        field="user",
+                                        operator=Lookup.EQUALS_USER.value.id,
+                                        value="$user",
+                                    )
+                                ],
+                            )
+                        ],
+                        field_permissions={
+                            "id": [BloomerpPermission.VIEW],
+                            "name": [
+                                BloomerpPermission.VIEW,
+                                BloomerpPermission.CHANGE,
+                            ],
+                        },
+                    )
+                ]
+            ),
         ),
     )
 

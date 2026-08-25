@@ -66,7 +66,13 @@ export function registerComponent(
  * Looks for elements with attribute and instantiates them
  */
 export function initComponents(container: Document | HTMLElement = document): void {
-    const elements = container.querySelectorAll<HTMLElement>(`[${componentIdentifier}]`);
+    const elements = new Set<HTMLElement>();
+    if (container instanceof HTMLElement && container.matches(`[${componentIdentifier}]`)) {
+        elements.add(container);
+    }
+    container.querySelectorAll<HTMLElement>(`[${componentIdentifier}]`).forEach((element) => {
+        elements.add(element);
+    });
     
     elements.forEach((element) => {
         const componentId = element.getAttribute(componentIdentifier);
@@ -115,7 +121,22 @@ export function initComponents(container: Document | HTMLElement = document): vo
 export function setupComponentAutoInit(): void {
     const runAfterSwapCallbacks = (container: Document | HTMLElement): void => {
         const scope = container instanceof Document ? document : container;
-        const instances = scope.querySelectorAll<HTMLElement>(`[${componentIdentifier}][data-component-initialized="true"]`);
+        const selector = `[${componentIdentifier}][data-component-initialized="true"]`;
+        const instances = new Set<HTMLElement>();
+
+        if (scope instanceof HTMLElement) {
+            if (scope.matches(selector)) instances.add(scope);
+            scope.querySelectorAll<HTMLElement>(selector).forEach((element) => instances.add(element));
+
+            let ancestor = scope.parentElement?.closest<HTMLElement>(selector) ?? null;
+            while (ancestor) {
+                instances.add(ancestor);
+                ancestor = ancestor.parentElement?.closest<HTMLElement>(selector) ?? null;
+            }
+        } else {
+            scope.querySelectorAll<HTMLElement>(selector).forEach((element) => instances.add(element));
+        }
+
         instances.forEach((el) => {
             const instance = getComponent(el);
             if (instance) {

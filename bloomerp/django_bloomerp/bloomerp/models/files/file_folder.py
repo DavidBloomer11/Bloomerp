@@ -3,23 +3,68 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.http import HttpRequest
+from django.urls import reverse
 from bloomerp.models.base_bloomerp_model import BloomerpModel
-from bloomerp.models.definition import BloomerpModelConfig
+from bloomerp.models.definition import (
+    BloomerpModelConfig,
+    ObjectModalAction,
+    StringSearchSettings,
+)
 from bloomerp.models.mixins.absolute_url_model_mixin import AbsoluteUrlModelMixin
-from bloomerp.models.mixins.string_search_model_mixin import StringSearchModelMixin
 from bloomerp.models.mixins.timestamp_model_mixin import TimestampModelMixin
 from bloomerp.models.mixins.user_stamp_model_mixin import UserStampModelMixin
+from bloomerp.permissions.definition import BloomerpPermission
+from bloomerp.permissions.manager import UserPolicyManager
+from django.utils.translation import gettext_noop
+
+
+def user_can_change_folder(request: HttpRequest, folder: "FileFolder") -> bool:
+    return not folder.protected and UserPolicyManager(
+        request.user
+    ).has_global_permission(type(folder), BloomerpPermission.CHANGE)
+
+
+def user_can_delete_folder(request: HttpRequest, folder: "FileFolder") -> bool:
+    return not folder.protected and UserPolicyManager(
+        request.user
+    ).has_global_permission(type(folder), BloomerpPermission.DELETE)
 
 
 class FileFolder(
     TimestampModelMixin,
     UserStampModelMixin,
     AbsoluteUrlModelMixin,
-    StringSearchModelMixin,
     models.Model,
 ):
     bloomerp_config = BloomerpModelConfig(
-        string_search_fields=["name"],
+        string_search_settings=StringSearchSettings(
+            string_search_fields=["name"],
+            allow_global_search=False,
+        ),
+        object_actions=[
+            ObjectModalAction(
+                id="rename_folder",
+                label=gettext_noop("Rename"),
+                endpoint=lambda folder: reverse(
+                    "components_files_rename_folder",
+                    kwargs={"folder_id": folder.pk},
+                ),
+                should_render_func=user_can_change_folder,
+                modal_title=gettext_noop("Rename folder"),
+            ),
+            ObjectModalAction(
+                id="delete_folder",
+                label=gettext_noop("Delete"),
+                endpoint=lambda folder: reverse(
+                    "components_files_delete_folder",
+                    kwargs={"folder_id": folder.pk},
+                ),
+                should_render_func=user_can_delete_folder,
+                modal_title=gettext_noop("Delete folder"),
+                style="secondary",
+            ),
+        ],
     )
 
     class Meta(BloomerpModel.Meta):
@@ -57,7 +102,6 @@ class FileFolder(
     def __str__(self):
         return self.name
 
-    allow_string_search = True
 
     def clean(self):
         super().clean()

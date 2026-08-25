@@ -5,8 +5,9 @@ from bloomerp.components.objects.dataviews.dataview import _get_accessible_appli
 from bloomerp.dataviews.registry import DataviewType
 from bloomerp.models import ApplicationField
 from bloomerp.models.users.user_list_view_preference import UserListViewPreference
+from bloomerp.permissions.definition import BloomerpPermission
+from bloomerp.permissions.manager import UserPolicyManager
 from bloomerp.router import router
-from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
 from bloomerp.services.preference_services import PreferenceManager
 from bloomerp.services.user_services import get_data_view_fields, toggle_field_visibility
 from django.contrib.contenttypes.models import ContentType
@@ -26,12 +27,12 @@ def _change_data_view_field_visibility(
         if _get_dataview_type_definition(view_type) is None:
             return HttpResponse("Invalid view type", status=400)
 
-        permission_manager = UserPermissionManager(request.user)
+        permission_manager = UserPolicyManager(request.user)
         application_field = ApplicationField.objects.get(id=field_id)
 
         if not permission_manager.has_field_permission(
             application_field,
-            create_permission_str(content_type.model_class(), "view")
+            BloomerpPermission.VIEW
         ):
             return HttpResponse("Permission denied", status=403)
 

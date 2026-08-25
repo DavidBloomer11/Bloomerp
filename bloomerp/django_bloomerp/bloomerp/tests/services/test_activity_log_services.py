@@ -2,7 +2,7 @@ import uuid
 from types import SimpleNamespace
 
 from bloomerp.models.activity_log import ActivityLog, ActivityLogAction
-from bloomerp.models.definition import BloomerpModelConfig
+from bloomerp.models.definition import ActivityLogSettings, BloomerpModelConfig
 from bloomerp.serializers.model_serializers import _model_serializers, get_serializer_cls, set_serializer_cls
 from bloomerp.services.activity_log_services import ActivityLogManager
 from bloomerp.tests.base import BaseBloomerpModelTestCase
@@ -15,7 +15,7 @@ class ActivityLogManagerTestCase(BaseBloomerpModelTestCase):
         if hasattr(self.CustomerModel, "bloomerp_config"):
             delattr(self.CustomerModel, "bloomerp_config")
         self.customer = self.create_customer("Ada", "Lovelace", 28)
-        self.CustomerModel.bloomerp_config = BloomerpModelConfig(record_activity_log=True)
+        self.CustomerModel.bloomerp_config = BloomerpModelConfig(activity_log_settings=ActivityLogSettings(enabled=True))
         set_serializer_cls(self.CustomerModel)
         ActivityLog.objects.all().delete()
 

@@ -5,7 +5,7 @@ from django.urls import reverse
 from bloomerp.models.automation import workflow
 from bloomerp.models.automation.workflow_run_step import WorkflowRunStepStatus
 from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
-from bloomerp.models.definition import BloomerpModelConfig, DetailViewSettings, ObjectModalAction
+from bloomerp.models.definition import ActivityLogSettings, BloomerpModelConfig, DetailViewSettings, ObjectModalAction
 from bloomerp.models.mixins.absolute_url_model_mixin import AbsoluteUrlModelMixin
 from bloomerp.models.mixins import TimestampModelMixin
 from django.utils.translation import gettext_lazy as _, gettext_noop
@@ -106,8 +106,9 @@ class WorkflowRun(
     
     bloomerp_config = BloomerpModelConfig(
         module="automation",
-        layout=FieldLayout(
-            rows=[
+        detail_view_settings=DetailViewSettings(
+            layout=[FieldLayout(
+                rows=[
                 LayoutRow(
                     columns=2,
                     items=[
@@ -123,10 +124,9 @@ class WorkflowRun(
                         })
                     ]
                 )
-            ]
-        ),
-        detail_view_settings=DetailViewSettings(
-            skip_views=["files", "document_templates"]
+                ]
+            )],
+            skip_views=["files", "document_templates"],
         ),
         object_actions=[
             ObjectModalAction(
@@ -142,7 +142,7 @@ class WorkflowRun(
                 modal_title=gettext_noop("Approve workflow continuation")
             )
         ],
-        record_activity_log=False,
+        activity_log_settings=ActivityLogSettings(enabled=False),
         tiles=[
             AnalyticsTileConfig(
                 id="workflow_run:number_of_runs",

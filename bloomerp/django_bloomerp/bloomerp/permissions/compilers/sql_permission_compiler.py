@@ -82,6 +82,7 @@ class SqlPermissionCompiler(BasePermissionCompiler[CompiledSqlAccess]):
             compiled_access = DjangoQPermissionCompiler(
                 self.rules[model],
                 user=self.user,
+                model=model,
             ).compile(permissions, match)
             table.replace(
                 self._secure_table_expression(
