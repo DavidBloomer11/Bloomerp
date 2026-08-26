@@ -5,10 +5,7 @@ from django.db.models import Q, QuerySet
 from django.contrib.auth.models import Permission
 from django.utils.translation import gettext_lazy as _, gettext_noop
 from bloomerp.models.base_bloomerp_model import BloomerpModel, FieldLayout, LayoutItem, LayoutRow
-from bloomerp.models.definition import BloomerpModelConfig
-from bloomerp.models.mixins import (
-    StringSearchModelMixin,
-)
+from bloomerp.models.definition import BloomerpModelConfig, DetailViewSettings
 from bloomerp.models.mixins.absolute_url_model_mixin import AbsoluteUrlModelMixin
 from bloomerp.models.mixins.avatar_model_mixin import AvatarModelMixin
 
@@ -16,29 +13,31 @@ from bloomerp.models.mixins.avatar_model_mixin import AvatarModelMixin
 
 USER_CONFIG = BloomerpModelConfig(
     module="users",
-    layout=FieldLayout(
-        rows=[
-            LayoutRow(
-                columns=2,
-                title=gettext_noop("Profile"),
-                items=[
-                    LayoutItem(id="username"),
-                    LayoutItem(id="email"),
-                    LayoutItem(id="first_name"),
-                    LayoutItem(id="last_name"),
-                ],
-            ),
-            LayoutRow(
-                columns=2,
-                title=gettext_noop("Access"),
-                items=[
-                    LayoutItem(id="is_active"),
-                    LayoutItem(id="is_staff"),
-                    LayoutItem(id="is_superuser"),
-                    LayoutItem(id="groups"),
-                ],
-            ),
-        ]
+    detail_view_settings=DetailViewSettings(
+        layout=[FieldLayout(
+            rows=[
+                LayoutRow(
+                    columns=2,
+                    title=gettext_noop("Profile"),
+                    items=[
+                        LayoutItem(id="username"),
+                        LayoutItem(id="email"),
+                        LayoutItem(id="first_name"),
+                        LayoutItem(id="last_name"),
+                    ],
+                ),
+                LayoutRow(
+                    columns=2,
+                    title=gettext_noop("Access"),
+                    items=[
+                        LayoutItem(id="is_active"),
+                        LayoutItem(id="is_staff"),
+                        LayoutItem(id="is_superuser"),
+                        LayoutItem(id="groups"),
+                    ],
+                ),
+            ]
+        )],
     ),
 )
 
@@ -71,15 +70,12 @@ class DetailSidebarViewPreference(models.TextChoices):
 
 class AbstractBloomerpUser(
     AbstractUser, 
-    StringSearchModelMixin, 
     AbsoluteUrlModelMixin,
     AvatarModelMixin
     ):
     class Meta:
         abstract = True
-
-    allow_string_search = True
-
+    
     date_view_preference = models.CharField(
         max_length=20,
         default=DateViewPreference.DAY_MONTH_YEAR,

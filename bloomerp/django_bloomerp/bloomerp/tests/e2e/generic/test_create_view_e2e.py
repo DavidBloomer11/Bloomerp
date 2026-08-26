@@ -16,7 +16,7 @@ class TestCreateViewE2E(CrudViewTestMixin, BaseE2ETestCase):
             reverse(get_create_view_url(model=model))
         )
 
-    
+
     def test_admin_can_view_fields_with_initial_layout_in_create_view(self):
         """
         UC: An admin user that has access to all fields should be able to view all fields in the create view from the getgo
@@ -29,7 +29,7 @@ class TestCreateViewE2E(CrudViewTestMixin, BaseE2ETestCase):
         self.goto_create_view(model=Todo)
         
         # 2. Check that all fields in the layout are visible
-        for row in Todo.bloomerp_config.layout.rows:
+        for row in Todo.bloomerp_config.detail_view_settings.get_default_layout().rows:
             for item in row.items:
                 # Locate the field
                 field_locator = self.page.locator("#id_"+item.id)
@@ -72,7 +72,7 @@ class TestCreateViewE2E(CrudViewTestMixin, BaseE2ETestCase):
         self.goto_create_view(model=Todo)
         
         # 4. Check that the fields in the layout that the user has access to are visible
-        for row in Todo.bloomerp_config.layout.rows:
+        for row in Todo.bloomerp_config.detail_view_settings.get_default_layout().rows:
             for item in row.items:
                 field_locator = self.page.locator("#id_"+item.id)
                 if item.id in ["title",]:
@@ -81,7 +81,7 @@ class TestCreateViewE2E(CrudViewTestMixin, BaseE2ETestCase):
                     expect(field_locator).not_to_be_visible()
                     
         # 5. Check that the labels are still visible for the fields that the user does not have access to
-        for row in Todo.bloomerp_config.layout.rows:
+        for row in Todo.bloomerp_config.detail_view_settings.get_default_layout().rows:
             for item in row.items:
                 field = ApplicationField.get_for_model(Todo).get(
                     field=item.id
@@ -187,13 +187,10 @@ class TestCreateViewE2E(CrudViewTestMixin, BaseE2ETestCase):
         self.goto_create_view(model=Todo)
         
         # 4. Check that the user gets a layout of the fields that they have access to
-        for row in Todo.bloomerp_config.layout.rows:
+        for row in Todo.bloomerp_config.detail_view_settings.get_default_layout().rows:
             for item in row.items:
                 field_locator = self.page.locator("#id_"+item.id)
                 if item.id in ["title",]:
                     expect(field_locator).to_be_visible()
                 else:
                     expect(field_locator).not_to_be_visible()
-
-    
-    

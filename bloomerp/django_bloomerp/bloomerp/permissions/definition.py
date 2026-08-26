@@ -73,6 +73,12 @@ class BloomerpPermission(Enum):
         description="Permission to import records.",
         scopes=[PermissionScope.GLOBAL, PermissionScope.FIELD, PermissionScope.ROW]
     )
+    BULK_ADD = BloomerpPermissionDefinition(
+        name="Bulk Add",
+        codename="bulk_add",
+        description="Permission to add multiple records at once.",
+        scopes=[PermissionScope.GLOBAL, PermissionScope.FIELD, PermissionScope.ROW]
+    )
     BULK_CHANGE = BloomerpPermissionDefinition(
         name="Bulk Change",
         codename="bulk_change",

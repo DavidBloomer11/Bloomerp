@@ -18,6 +18,7 @@ from bloomerp.models.users.user_detail_view_tabs_preference import (
     UserDetailViewTabItem,
     UserDetailViewTabsPreference,
 )
+from bloomerp.permissions.definition import BloomerpPermission
 from bloomerp.services.preference_services import PreferenceManager
 
 
@@ -201,10 +202,14 @@ class UserDetailViewTabsPreferenceTests(TestCase):
 
         # 2. Confirm the preference API is generated for authenticated owners.
         self.assertTrue(preference_api.enable_auto_generation)
-        self.assertEqual(preference_api.user_access[0].through_field, "user")
+        owner_rule = preference_api.access.authenticated[0]
         self.assertEqual(
-            preference_api.user_access[0].field_actions["name"],
-            ["view", "change"],
+            owner_rule.row_permissions[0].conditions[0].field,
+            "user",
+        )
+        self.assertEqual(
+            owner_rule.field_permissions["name"],
+            [BloomerpPermission.VIEW, BloomerpPermission.CHANGE],
         )
 
         # 3. Confirm relational items remain behind the permission-aware components.

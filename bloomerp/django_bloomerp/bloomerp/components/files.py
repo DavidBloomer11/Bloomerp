@@ -1,47 +1,30 @@
-import json
-import uuid
 from urllib.parse import parse_qs
 from dataclasses import dataclass
 from pathlib import Path
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
-from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
-from django.core.exceptions import ValidationError
 from django.db.models import QuerySet
-from django.http import HttpRequest, HttpResponse, JsonResponse, QueryDict
+from django.http import HttpRequest, HttpResponse, QueryDict
 from django.shortcuts import get_object_or_404, render
+from django.urls import reverse
 
-from bloomerp.components.application_fields.filters import FILTERABLE_FIELD_TYPES
-from bloomerp.dataviews.base import BaseDataviewRenderer
-from bloomerp.models import ApplicationField, File, FileFolder
-from bloomerp.models.users.user_list_view_preference import UserListViewPreference
+from bloomerp.components.objects.dataviews.dataview import dataview
+from bloomerp.models import File, FileFolder
 from bloomerp.router import router
 from bloomerp.services.file_services import ensure_folder_hierarchy_for_object
-from bloomerp.permissions.manager import UserPermissionManager
+from bloomerp.services.file_permission_services import (
+    get_linked_object_files_field as _get_linked_object_files_field,
+    has_linked_file_permission,
+    user_can_mutate_file as _user_can_mutate_file,
+    user_can_view_file as _user_can_view_file,
+)
+from bloomerp.permissions.manager import UserPolicyManager
 from bloomerp.permissions.manager import create_permission_str
-from bloomerp.services.preference_services import PreferenceManager
-from bloomerp.utils.filters import filter_model
 
 
 __path__ = [str(Path(__file__).with_name("files"))]
 
-FILE_BROWSER_VIEW_TYPES = ("table", "card")
-FILE_BROWSER_FIXED_COLUMNS = (
-    "name",
-    "content_object",
-    "folder",
-    "size_str",
-    "datetime_updated",
-)
-FILE_BROWSER_FILTER_FIELDS = (
-    "name",
-    "content_type",
-    "object_id",
-    "created_by",
-    "datetime_created",
-    "datetime_updated",
-)
 FILE_BROWSER_RESERVED_QUERY_KEYS = {
     "q",
     "page",
@@ -55,105 +38,6 @@ FILE_BROWSER_RESERVED_QUERY_KEYS = {
     "hide_ancestor_folders",
     "view_type",
 }
-FILE_BROWSER_PAGE_SIZE = 25
-FILE_BROWSER_LOOKUP_LABELS = {
-    "exact": "is",
-    "equals": "is",
-    "icontains": "contains",
-    "contains": "contains",
-    "startswith": "starts with",
-    "endswith": "ends with",
-    "gte": ">=",
-    "lte": "<=",
-    "gt": ">",
-    "lt": "<",
-    "isnull": "is empty",
-    "in": "in",
-    "year": "year is",
-    "month": "month is",
-    "day": "day is",
-    "week": "week is",
-    "today": "is today",
-    "yesterday": "was yesterday",
-    "this_week": "is in this week",
-    "last_week": "is in last week",
-    "this_month": "is in this month",
-    "last_month": "is in last month",
-    "this_quarter": "is in this quarter",
-    "last_quarter": "is in last quarter",
-    "this_year": "is in this year",
-    "last_year": "is in last year",
-}
-
-
-def _humanize_filter_field_path(value: str) -> str:
-    parts = [part for part in value.split("__") if part]
-    labels = [part.replace("_", " ").title() for part in parts]
-    return " > ".join(labels)
-
-
-def _format_file_browser_applied_filters(
-    query_params: QueryDict,
-    reserved_keys: set[str] | None = None,
-) -> list[dict]:
-    applied = []
-    reserved_keys = reserved_keys or FILE_BROWSER_RESERVED_QUERY_KEYS
-
-    for key in query_params.keys():
-        if key in reserved_keys or key.startswith("_arg_"):
-            continue
-
-        values = query_params.getlist(key)
-        if not values:
-            continue
-
-        raw_value = ", ".join([str(value) for value in values if value != ""])
-        if raw_value == "":
-            continue
-
-        parts = [part for part in key.split("__") if part]
-        lookup = None
-        field_path = key
-        if len(parts) > 1 and parts[-1] in FILE_BROWSER_LOOKUP_LABELS:
-            lookup = parts[-1]
-            field_path = "__".join(parts[:-1])
-
-        field_label = _humanize_filter_field_path(field_path)
-        lookup_label = FILE_BROWSER_LOOKUP_LABELS.get(lookup, lookup or "is")
-
-        if lookup == "isnull":
-            lowered = raw_value.lower()
-            label = f"{field_label} is empty" if lowered in {"true", "1", "yes"} else f"{field_label} has value"
-        elif lookup in {
-            "today",
-            "yesterday",
-            "this_week",
-            "last_week",
-            "this_month",
-            "last_month",
-            "this_quarter",
-            "last_quarter",
-            "this_year",
-            "last_year",
-        }:
-            label = f"{field_label} {lookup_label}"
-        else:
-            label = f"{field_label} {lookup_label} {raw_value}"
-
-        applied.append({
-            "key": key,
-            "label": label,
-            "tooltip": f"{key} = {raw_value}",
-        })
-
-    return applied
-
-
-@dataclass
-class FilePermissionContext:
-    file: File
-    linked_object: object | None
-    files_field: ApplicationField | None
 
 
 @dataclass
@@ -189,13 +73,6 @@ def _get_folder_linked_object(folder: FileFolder):
     )
 
 
-def _get_file_linked_object(file: File):
-    return _resolve_linked_object(
-        content_type=file.content_type,
-        object_id=file.object_id,
-    )
-
-
 def _coerce_query_value(value: str | None) -> str | None:
     if value in {"", "None", None}:
         return None
@@ -223,56 +100,6 @@ def _hydrate_legacy_querystring(request: HttpRequest, legacy_query: str | None =
         for value in values:
             query_dict.appendlist(key, value)
     request.GET = query_dict
-
-
-def _get_file_preference(user, content_type: ContentType) -> UserListViewPreference:
-    preference = PreferenceManager(user).get_or_create_selected(
-        UserListViewPreference,
-        scope={
-            "content_type_id" : content_type.id
-        }
-    )
-    
-    if preference.view_type not in FILE_BROWSER_VIEW_TYPES:
-        preference.view_type = FILE_BROWSER_VIEW_TYPES[0]
-        preference.save(update_fields=["view_type"])
-    return preference
-
-
-def _sanitize_filter_params(query_params) -> dict[str, list[str]]:
-    allowed = set(FILE_BROWSER_FILTER_FIELDS)
-    sanitized: dict[str, list[str]] = {}
-
-    for key in query_params.keys():
-        if key in FILE_BROWSER_RESERVED_QUERY_KEYS:
-            continue
-
-        base_key = key.split("__", 1)[0]
-        if base_key not in allowed:
-            continue
-
-        values = [value for value in query_params.getlist(key) if value != ""]
-        if values:
-            sanitized[key] = values
-
-    return sanitized
-
-
-def _get_filter_section(request: HttpRequest, file_content_type_id: int) -> str:
-    application_fields = ApplicationField.get_for_content_type_id(file_content_type_id).filter(
-        field__in=FILE_BROWSER_FILTER_FIELDS,
-        field_type__in=FILTERABLE_FIELD_TYPES,
-    )
-    return render(
-        request,
-        "components/filters/init.html",
-        {
-            "content_type_id": file_content_type_id,
-            "application_fields": application_fields,
-            "selected_application_field": None,
-            "html_content": "",
-        },
-    ).content.decode("utf-8")
 
 
 def _folder_path(folder: FileFolder) -> str:
@@ -313,26 +140,6 @@ def _get_folder_display_name(folder: FileFolder) -> str:
     return folder.name
 
 
-def _normalize_folder_label(folder: FileFolder, current_folder: FileFolder | None) -> str:
-    if current_folder and folder.parent_id == current_folder.id:
-        return _get_folder_display_name(folder)
-    return _folder_path(folder)
-
-
-def _get_folder_choices(
-    *,
-    folders: QuerySet[FileFolder],
-    current_folder: FileFolder | None,
-) -> list[dict[str, str]]:
-    return [
-        {
-            "id": str(folder.id),
-            "label": _normalize_folder_label(folder, current_folder),
-        }
-        for folder in folders.order_by("name").distinct()
-    ]
-
-
 def _get_object_scope(content_type_id: str | None, object_id: str | None):
     if not content_type_id or not object_id:
         return None, None
@@ -345,83 +152,16 @@ def _get_object_scope(content_type_id: str | None, object_id: str | None):
     return content_type, get_object_or_404(model, pk=object_id)
 
 
-def _get_linked_object_files_field(linked_object) -> ApplicationField | None:
-    if linked_object is None:
-        return None
-
-    return ApplicationField.get_by_field(linked_object.__class__, "files")
-
-
 def _check_linked_file_permission(
     *,
     request: HttpRequest,
     linked_object,
-    files_field: ApplicationField | None,
+    files_field,
     operation: str,
 ) -> bool:
-    if linked_object is None:
-        return False
-
-    permission_manager = UserPermissionManager(request.user)
-    if not permission_manager.has_access_to_object(
-        linked_object,
-        create_permission_str(linked_object, "view"),
-    ):
-        return False
-
     if files_field is None:
         return False
-
-    return permission_manager.has_field_permission(
-        files_field,
-        create_permission_str(linked_object, operation),
-    )
-
-
-def _resolve_file_permission_context(file: File) -> FilePermissionContext:
-    linked_object = _get_file_linked_object(file)
-    files_field = _get_linked_object_files_field(linked_object) if linked_object else None
-    return FilePermissionContext(file=file, linked_object=linked_object, files_field=files_field)
-
-
-def _user_can_view_file(request: HttpRequest, file: File) -> bool:
-    if request.user.is_superuser:
-        return True
-
-    context = _resolve_file_permission_context(file)
-    if context.linked_object is not None:
-        return _check_linked_file_permission(
-            request=request,
-            linked_object=context.linked_object,
-            files_field=context.files_field,
-            operation="view",
-        )
-
-    permission_manager = UserPermissionManager(request.user)
-    return permission_manager.has_global_permission(File, create_permission_str(File, "view"))
-
-
-def _user_can_mutate_file(request: HttpRequest, file: File, operations: tuple[str, ...]) -> bool:
-    if request.user.is_superuser:
-        return True
-
-    context = _resolve_file_permission_context(file)
-    if context.linked_object is not None:
-        return any(
-            _check_linked_file_permission(
-                request=request,
-                linked_object=context.linked_object,
-                files_field=context.files_field,
-                operation=operation,
-            )
-            for operation in operations
-        )
-
-    permission_manager = UserPermissionManager(request.user)
-    return any(
-        permission_manager.has_global_permission(File, create_permission_str(File, operation))
-        for operation in operations
-    )
+    return has_linked_file_permission(request, linked_object, operation)
 
 
 def _user_can_view_folder(request: HttpRequest, folder: FileFolder) -> bool:
@@ -494,7 +234,7 @@ def _build_visible_files_queryset(
     current_folder: FileFolder | None,
     query: str | None,
 ):
-    permission_manager = UserPermissionManager(request.user)
+    permission_manager = UserPolicyManager(request.user)
     files = File.objects.select_related("content_type", "created_by", "updated_by")
 
     if query and current_folder:
@@ -532,83 +272,7 @@ def _build_visible_files_queryset(
         "updated_by",
     )
 
-    sanitized_filters = _sanitize_filter_params(request.GET)
-    if sanitized_filters:
-        mutable_get = request.GET.copy()
-        for key in list(mutable_get.keys()):
-            if key not in FILE_BROWSER_RESERVED_QUERY_KEYS and key not in sanitized_filters:
-                mutable_get.pop(key, None)
-
-        queryset = filter_model(File, mutable_get, queryset)
-
     return queryset.order_by("name")
-
-
-def _serialize_file_row(request: HttpRequest, file: File, current_folder: FileFolder | None) -> dict:
-    folder_label = (
-        _get_folder_display_name(current_folder)
-        if current_folder
-        else (_get_folder_display_name(file.folder) if file.folder_id else "Root")
-    )
-    linked_object = _get_file_linked_object(file)
-
-    return {
-        "id": str(file.id),
-        "name": file.name or str(file),
-        "kind": "file",
-        "folder_label": folder_label,
-        "size": file.size_str,
-        "datetime_updated": file.datetime_updated,
-        "content_object_label": str(linked_object) if linked_object else "Unlinked",
-        "content_object_url": getattr(linked_object, "get_absolute_url", None) if linked_object else None,
-        "content_type_label": file.content_type.name if file.content_type_id else "Unlinked",
-        "view_url": file.url if file.file else None,
-        "download_url": file.url if file.file else None,
-        "rename_allowed": file.persisted and _user_can_mutate_file(request, file, ("change", "add")),
-        "move_allowed": file.persisted and _user_can_mutate_file(request, file, ("change", "add")),
-        "delete_allowed": file.persisted and _user_can_mutate_file(request, file, ("delete",)),
-        "file": file,
-    }
-
-
-def _prepare_file_rows(
-    request: HttpRequest,
-    queryset: QuerySet[File],
-    current_folder: FileFolder | None,
-) -> list[dict]:
-    return [_serialize_file_row(request, file, current_folder) for file in queryset]
-
-
-def _prepare_file_cards(
-    request: HttpRequest,
-    queryset: QuerySet[File],
-    current_folder: FileFolder | None,
-) -> list[dict]:
-    cards: list[dict] = []
-    for file in queryset:
-        linked_object = _get_file_linked_object(file)
-        cards.append(
-            {
-                "id": str(file.id),
-                "name": file.name or str(file),
-                "size": file.size_str,
-                "updated_at": file.datetime_updated,
-                "object_label": str(linked_object) if linked_object else "Unlinked",
-                "object_url": getattr(linked_object, "get_absolute_url", None) if linked_object else None,
-                "folder_label": (
-                    _get_folder_display_name(current_folder)
-                    if current_folder
-                    else (_get_folder_display_name(file.folder) if file.folder_id else "Root")
-                ),
-                "view_url": file.url if file.file else None,
-                "download_url": file.url if file.file else None,
-                "rename_allowed": file.persisted and _user_can_mutate_file(request, file, ("change", "add")),
-                "move_allowed": file.persisted and _user_can_mutate_file(request, file, ("change", "add")),
-                "delete_allowed": file.persisted and _user_can_mutate_file(request, file, ("delete",)),
-                "file": file,
-            }
-        )
-    return cards
 
 
 def _get_model_scope_folder(content_type: ContentType | None) -> FileFolder | None:
@@ -628,6 +292,7 @@ def _get_model_scope_folder(content_type: ContentType | None) -> FileFolder | No
 def _serialize_folder_item(
     folder: FileFolder,
     *,
+    request: HttpRequest,
     query: str | None = None,
     current_folder: FileFolder | None = None,
 ) -> dict:
@@ -640,10 +305,9 @@ def _serialize_folder_item(
             if query and not current_folder
             else (_get_folder_display_name(folder.parent) if folder.parent_id else "Root")
         ),
-        "icon_class": "fa fa-folder text-amber-500",
+        "icon_class": "fa fa-folder text-primary",
         "open_folder_id": str(folder.id),
-        "rename_allowed": not folder.protected,
-        "delete_allowed": not folder.protected,
+        "url": _build_file_browser_url(request, folder_id=str(folder.id)),
         "is_dropzone": True,
         "folder": folder,
     }
@@ -664,7 +328,12 @@ def _build_navigation_items(
             query=query,
         )
         return [
-            _serialize_folder_item(folder, query=query, current_folder=scope.current_folder)
+            _serialize_folder_item(
+                folder,
+                request=request,
+                query=query,
+                current_folder=scope.current_folder,
+            )
             for folder in folders.order_by("name")
         ]
 
@@ -676,7 +345,10 @@ def _build_navigation_items(
             current_folder=None,
             query=query,
         )
-        return [_serialize_folder_item(folder, query=query) for folder in folders.order_by("name")]
+        return [
+            _serialize_folder_item(folder, request=request, query=query)
+            for folder in folders.order_by("name")
+        ]
 
     root_folders = _build_visible_folders_queryset(
         request=request,
@@ -686,7 +358,8 @@ def _build_navigation_items(
         query=query,
     )
     return [
-        _serialize_folder_item(folder, query=query) for folder in root_folders.order_by("name")
+        _serialize_folder_item(folder, request=request, query=query)
+        for folder in root_folders.order_by("name")
     ]
 
 
@@ -830,12 +503,8 @@ def _render_file_browser(
     object_id: str | None = None,
     folder_id: str | None = None,
 ) -> HttpResponse:
-    render_id = request.GET.get("_render_id") or str(uuid.uuid4())
-    data_section_id = f"file-browser-data-section-{render_id}"
     file_content_type = _get_file_content_type()
-    preference = _get_file_preference(request.user, file_content_type)
     query = request.GET.get("q") or None
-    page = request.GET.get("page", 1)
     hide_ancestor_folders = request.GET.get("hide_ancestor_folders") == "true"
 
     module_id = _coerce_query_value(module_id or request.GET.get("module_id"))
@@ -887,87 +556,52 @@ def _render_file_browser(
     )
     navigation_items = _build_navigation_items(request=request, scope=scope, query=query)
 
-    paginator = Paginator(visible_files, FILE_BROWSER_PAGE_SIZE)
-    try:
-        page_obj = paginator.page(page)
-    except PageNotAnInteger:
-        page_obj = paginator.page(1)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages or 1)
-
-    page_querystring = request.GET.copy()
-    page_querystring.pop("page", None)
-    search_querystring = request.GET.copy()
-    search_querystring.pop("page", None)
-    search_querystring.pop("q", None)
-    applied_filter_query = request.GET.copy()
-    for key in list(applied_filter_query.keys()):
-        if key in FILE_BROWSER_RESERVED_QUERY_KEYS:
-            applied_filter_query.pop(key, None)
-
-    current_url = request.get_full_path()
-    available_move_folders = FileFolder.objects.all()
-    if linked_content_type:
-        available_move_folders = available_move_folders.filter(content_type=linked_content_type)
-    else:
-        available_move_folders = available_move_folders.filter(content_type__isnull=True)
-    if linked_object:
-        available_move_folders = available_move_folders.filter(object_id=str(linked_object.pk))
-    else:
-        available_move_folders = available_move_folders.filter(object_id__isnull=True)
-    if query or hide_ancestor_folders:
-        folder_choices = []
-    else:
-        available_move_folder_ids = [
-            folder.id
-            for folder in available_move_folders.distinct()
-            if _user_can_view_folder(request, folder)
-        ]
-        folder_choices = _get_folder_choices(
-            folders=FileFolder.objects.filter(id__in=available_move_folder_ids),
-            current_folder=current_folder,
-        )
-
-    context = {
-        "render_id": render_id,
-        "data_section_id": data_section_id,
-        "current_url": current_url,
-        "base_url": request.path,
-        "module_id": module_id,
-        "content_type_id": (
-            str(linked_content_type.id)
-            if linked_content_type
-            else (str(current_folder.content_type_id) if current_folder and current_folder.content_type_id else None)
-        ),
-        "object_id": (
-            str(linked_object.pk)
-            if linked_object
-            else (current_folder.object_id if current_folder and current_folder.object_id else None)
-        ),
-        "file_content_type_id": file_content_type.id,
-        "preference": preference,
-        "view_types": FILE_BROWSER_VIEW_TYPES,
-        "fixed_columns": FILE_BROWSER_FIXED_COLUMNS,
-        "filter_section": _get_filter_section(request, file_content_type.id),
-        "search_query": query or "",
-        "search_querystring": search_querystring.urlencode(),
-        "page_querystring": page_querystring.urlencode(),
+    scoped_content_type_id = (
+        str(linked_content_type.id)
+        if linked_content_type
+        else (str(current_folder.content_type_id) if current_folder and current_folder.content_type_id else None)
+    )
+    scoped_object_id = (
+        str(linked_object.pk)
+        if linked_object
+        else (current_folder.object_id if current_folder and current_folder.object_id else None)
+    )
+    folder_context = {
         "current_folder": current_folder,
+        "scoped_content_type_id": scoped_content_type_id,
+        "scoped_object_id": scoped_object_id,
         "breadcrumbs": _build_scope_breadcrumbs(request, scope, hide_ancestor_folders=hide_ancestor_folders),
         "navigation_items": navigation_items,
-        "page_obj": page_obj,
-        "files": page_obj.object_list,
-        "file_rows": _prepare_file_rows(request, page_obj.object_list, current_folder),
-        "file_cards": _prepare_file_cards(request, page_obj.object_list, current_folder),
-        "pagination_pages": BaseDataviewRenderer.build_pagination_range(page_obj),
-        "applied_filters": _format_file_browser_applied_filters(applied_filter_query),
-        "folder_options_json": json.dumps(folder_choices),
-        "target": getattr(getattr(request, "htmx", None), "target", None),
-        "is_data_section_target": getattr(getattr(request, "htmx", None), "target", None) == data_section_id,
-        "sync_url": request.headers.get("X-Bloomerp-Sync-Url", "false").lower() == "true",
+        "file_folder_actions": FileFolder.bloomerp_config.object_actions,
+        "file_folder_content_type_id": ContentType.objects.get_for_model(
+            FileFolder
+        ).pk,
+    }
+    folders_html = render(
+        request,
+        "components/files/folders.html",
+        folder_context,
+    ).content.decode("utf-8")
+
+    component_args = {
+        "scope-content-type-id": scoped_content_type_id or "",
+        "scope-object-id": scoped_object_id or "",
+        "folder-id": str(current_folder.id) if current_folder else "",
+        "upload-url": reverse("components_files_upload"),
+        "move-url": reverse("components_files_move_browser_item"),
+        "hide-filters": ",".join(sorted(FILE_BROWSER_RESERVED_QUERY_KEYS)),
     }
 
-    return render(request, "components/files/browser.html", context)
+    return dataview(
+        request,
+        file_content_type.id,
+        base_queryset=visible_files,
+        additional_reserved_query_keys=FILE_BROWSER_RESERVED_QUERY_KEYS,
+        component_id="file-dataview-container",
+        component_args=component_args,
+        dataview_base_url=request.path,
+        before_data_view=folders_html,
+    )
 
 
 @router.register(path="components/files/&<path:legacy_query>", name="components_files_legacy")
@@ -976,25 +610,6 @@ def _render_file_browser(
 def files(request: HttpRequest, legacy_query: str | None = None) -> HttpResponse:
     _hydrate_legacy_querystring(request, legacy_query)
     return _render_file_browser(request)
-
-
-@router.register(path="components/files/preference/", name="components_files_preference")
-@login_required
-def change_file_browser_preference(request: HttpRequest) -> HttpResponse:
-    if request.method != "POST":
-        return HttpResponse("Method not allowed", status=405)
-
-    file_content_type = _get_file_content_type()
-    preference = _get_file_preference(request.user, file_content_type)
-
-    view_type = request.POST.get("view_type")
-    if view_type:
-        if view_type not in FILE_BROWSER_VIEW_TYPES:
-            return HttpResponse("Invalid view type", status=400)
-        preference.view_type = view_type
-        preference.save(update_fields=["view_type"])
-
-    return JsonResponse({"ok": True, "view_type": preference.view_type})
 
 
 def _get_target_folder(folder_id: str | None) -> FileFolder | None:
@@ -1025,264 +640,3 @@ def _get_folder_descendants(folder: FileFolder) -> tuple[list[FileFolder], list[
         stack.extend(children)
 
     return folders, list(files.values())
-
-
-def _folder_accepts_file(folder: FileFolder | None, file: File) -> bool:
-    if folder is None:
-        return True
-
-    return (
-        folder.content_type_id == file.content_type_id
-        and (folder.object_id or None) == (file.object_id or None)
-    )
-
-
-@router.register(path="components/files/upload/", name="components_files_upload")
-@login_required
-def upload_files(request: HttpRequest) -> HttpResponse:
-    if request.method != "POST":
-        return HttpResponse("Method not allowed", status=405)
-
-    content_type_id = _coerce_query_value(request.POST.get("content_type_id"))
-    object_id = _coerce_query_value(request.POST.get("object_id"))
-    folder_id = _coerce_query_value(request.POST.get("folder_id"))
-
-    linked_content_type, linked_object = _get_object_scope(content_type_id, object_id)
-    files_field = _get_linked_object_files_field(linked_object) if linked_object else None
-    requested_object_id = str(linked_object.pk) if linked_object else None
-
-    if linked_object:
-        if not _check_linked_file_permission(
-            request=request,
-            linked_object=linked_object,
-            files_field=files_field,
-            operation="add",
-        ):
-            return HttpResponse(status=403)
-    elif not request.user.has_perm("bloomerp.add_file"):
-        return HttpResponse(status=403)
-
-    target_folder = _get_target_folder(folder_id)
-    if target_folder and (
-        target_folder.content_type_id != (linked_content_type.id if linked_content_type else None)
-        or (target_folder.object_id or None) != requested_object_id
-    ):
-        return HttpResponse("Selected folder has a different scope", status=400)
-
-    uploaded_files = request.FILES.getlist("files")
-    for uploaded in uploaded_files:
-        file = File.objects.create(
-            file=uploaded,
-            name=uploaded.name,
-            persisted=True,
-            content_type=linked_content_type,
-            object_id=requested_object_id,
-            folder=target_folder,
-            created_by=request.user,
-            updated_by=request.user,
-        )
-
-    return JsonResponse({"ok": True, "count": len(uploaded_files)})
-
-
-@router.register(path="components/files/folders/create/", name="components_files_create_folder")
-@login_required
-def create_file_folder(request: HttpRequest) -> HttpResponse:
-    if request.method != "POST":
-        return HttpResponse("Method not allowed", status=405)
-
-    content_type_id = _coerce_query_value(request.POST.get("content_type_id"))
-    object_id = _coerce_query_value(request.POST.get("object_id"))
-    parent_folder = _get_target_folder(_coerce_query_value(request.POST.get("parent_folder_id")))
-
-    linked_content_type, linked_object = _get_object_scope(content_type_id, object_id)
-    files_field = _get_linked_object_files_field(linked_object) if linked_object else None
-
-    if linked_object:
-        if not _check_linked_file_permission(
-            request=request,
-            linked_object=linked_object,
-            files_field=files_field,
-            operation="add",
-        ):
-            return HttpResponse(status=403)
-    elif not request.user.has_perm("bloomerp.add_filefolder"):
-        return HttpResponse(status=403)
-
-    name = (request.POST.get("name") or "").strip()
-    if not name:
-        return HttpResponse("Folder name is required", status=400)
-
-    folder_content_type = linked_content_type or (parent_folder.content_type if parent_folder else None)
-    folder_object_id = (
-        str(linked_object.pk)
-        if linked_object
-        else (parent_folder.object_id if parent_folder else None)
-    )
-
-    folder = FileFolder(
-        name=name,
-        parent=parent_folder,
-        content_type=folder_content_type,
-        object_id=folder_object_id,
-        created_by=request.user,
-        updated_by=request.user,
-    )
-    try:
-        folder.save()
-    except ValidationError as exc:
-        return HttpResponse(exc.messages[0], status=400)
-    return JsonResponse({"ok": True, "folder_id": folder.id, "name": folder.name})
-
-
-@router.register(path="components/files/move/", name="components_files_move")
-@login_required
-def move_file_browser_item(request: HttpRequest) -> HttpResponse:
-    if request.method != "POST":
-        return HttpResponse("Method not allowed", status=405)
-
-    item_type = request.POST.get("item_type")
-    target_folder = _get_target_folder(_coerce_query_value(request.POST.get("target_folder_id")))
-
-    if item_type == "file":
-        file = _get_file_for_mutation(request)
-        if not _folder_accepts_file(target_folder, file):
-            return HttpResponse("File cannot be moved into a folder with a different scope", status=400)
-        file.folder = target_folder
-        file.updated_by = request.user
-        file.save(update_fields=["folder", "updated_by"])
-        return JsonResponse({"ok": True})
-
-    if item_type == "folder":
-        folder = get_object_or_404(FileFolder, id=request.POST.get("folder_id"))
-        if not request.user.has_perm("bloomerp.change_filefolder"):
-            return HttpResponse(status=403)
-
-        if target_folder and target_folder.id == folder.id:
-            return HttpResponse("Cannot move a folder into itself", status=400)
-
-        ancestor = target_folder
-        while ancestor is not None:
-            if ancestor.id == folder.id:
-                return HttpResponse("Cannot move a folder into its own descendant", status=400)
-            ancestor = ancestor.parent
-
-        if target_folder:
-            folder.content_type = target_folder.content_type
-            folder.object_id = target_folder.object_id
-
-        folder.parent = target_folder
-        folder.updated_by = request.user
-        try:
-            folder.save()
-        except ValidationError as exc:
-            return HttpResponse(exc.messages[0], status=400)
-        return JsonResponse({"ok": True})
-
-    return HttpResponse("Unsupported item type", status=400)
-
-
-@router.register(path="components/files/rename/", name="components_files_rename")
-@login_required
-def rename_file_browser_item(request: HttpRequest) -> HttpResponse:
-    if request.method != "POST":
-        return HttpResponse("Method not allowed", status=405)
-
-    item_type = request.POST.get("item_type")
-    name = (request.POST.get("name") or "").strip()
-    if not name:
-        return HttpResponse("Name is required", status=400)
-
-    if item_type == "file":
-        try:
-            file = _get_file_for_mutation(request)
-        except PermissionError:
-            return HttpResponse(status=403)
-
-        file.name = name
-        file.updated_by = request.user
-        file.save(update_fields=["name", "updated_by"])
-        return JsonResponse({"ok": True, "name": file.name})
-
-    if item_type == "folder":
-        folder = get_object_or_404(FileFolder, id=request.POST.get("folder_id"))
-        if not request.user.has_perm("bloomerp.change_filefolder"):
-            return HttpResponse(status=403)
-
-        folder.name = name
-        folder.updated_by = request.user
-        folder.save(update_fields=["name", "updated_by"])
-        return JsonResponse({"ok": True, "name": folder.name})
-
-    return HttpResponse("Unsupported item type", status=400)
-
-
-@router.register(path="components/files/delete-preview/", name="components_files_delete_preview")
-@login_required
-def delete_file_browser_item_preview(request: HttpRequest) -> HttpResponse:
-    item_type = request.GET.get("item_type")
-
-    if item_type == "file":
-        file = get_object_or_404(File, id=request.GET.get("file_id"))
-        if not _user_can_mutate_file(request, file, ("delete",)):
-            return HttpResponse(status=403)
-        return JsonResponse({"ok": True, "files": 1, "folders": 0})
-
-    if item_type == "folder":
-        folder = get_object_or_404(FileFolder, id=request.GET.get("folder_id"))
-        descendant_folders, descendant_files = _get_folder_descendants(folder)
-        can_delete_files = all(
-            _user_can_mutate_file(request, file, ("delete",))
-            for file in descendant_files
-        )
-        can_delete_folder = request.user.has_perm("bloomerp.delete_filefolder")
-        if not (can_delete_files and can_delete_folder):
-            return HttpResponse(status=403)
-
-        return JsonResponse(
-            {
-                "ok": True,
-                "files": len(descendant_files),
-                "folders": len(descendant_folders),
-            }
-        )
-
-    return HttpResponse("Unsupported item type", status=400)
-
-
-@router.register(path="components/files/delete/", name="components_files_delete")
-@login_required
-def delete_file_browser_item(request: HttpRequest) -> HttpResponse:
-    if request.method != "POST":
-        return HttpResponse("Method not allowed", status=405)
-
-    item_type = request.POST.get("item_type")
-
-    if item_type == "file":
-        file = get_object_or_404(File, id=request.POST.get("file_id"))
-        if not _user_can_mutate_file(request, file, ("delete",)):
-            return HttpResponse(status=403)
-        file.delete()
-        return JsonResponse({"ok": True})
-
-    if item_type == "folder":
-        folder = get_object_or_404(FileFolder, id=request.POST.get("folder_id"))
-        descendant_folders, descendant_files = _get_folder_descendants(folder)
-        can_delete_files = all(
-            _user_can_mutate_file(request, file, ("delete",))
-            for file in descendant_files
-        )
-        can_delete_folder = request.user.has_perm("bloomerp.delete_filefolder")
-        if not (can_delete_files and can_delete_folder):
-            return HttpResponse(status=403)
-
-        folder.delete()
-        return JsonResponse(
-            {
-                "ok": True,
-                "files_deleted": len(descendant_files),
-                "folders_deleted": len(descendant_folders),
-            }
-        )
-
-    return HttpResponse("Unsupported item type", status=400)

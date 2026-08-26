@@ -13,8 +13,10 @@ from bloomerp.models.access_control.policy import Policy
 from bloomerp.models.access_control.row_policy import RowPolicy
 from bloomerp.models.access_control.row_policy_rule import RowPolicyRule
 from bloomerp.models.application_field import ApplicationField
+from bloomerp.models.base_bloomerp_model import BloomerpModel
 from bloomerp.models.users.user import AbstractBloomerpUser
 from bloomerp.permissions.compilers.django_q_permission_compiler import (
+    CompiledDjangoAccess,
     DjangoQPermissionCompiler,
 )
 from bloomerp.permissions.compilers.python_permission_compiler import (
@@ -382,11 +384,48 @@ class UserPolicyManager:
 
         requested = PolicyManager._qualify_permission_codenames(model, permissions)
         access_rules = self.get_access_rules(model, permissions, match)
-        compilation = DjangoQPermissionCompiler(
+        return self.get_queryset_for_access_rules(
+            model,
+            access_rules,
+            requested,
+            match,
+        )
+
+    def get_queryset_for_access_rules(
+        self,
+        model_or_content_type: Type[models.Model] | ContentType,
+        access_rules: list[AccessRule],
+        permissions: list[str] | list[BloomerpPermission] | str | BloomerpPermission,
+        match: PermissionMatch = PermissionMatch.ANY,
+    ) -> QuerySet[models.Model]:
+        """Apply supplied access rules for this manager's user.
+
+        Unlike :meth:`get_accessible_queryset`, this method does not load the
+        user's stored policies. It supports callers that need to evaluate a
+        draft or model-configured set of access rules.
+        """
+        model, _ = resolve_model_and_content_type(model_or_content_type)
+        compilation = self._compile_access_rules(
+            model,
+            access_rules,
+            permissions,
+            match,
+        )
+        return model.objects.filter(compilation.row_filter).distinct()
+
+    def _compile_access_rules(
+        self,
+        model: Type[models.Model],
+        access_rules: list[AccessRule],
+        permissions: list[str] | list[BloomerpPermission] | str | BloomerpPermission,
+        match: PermissionMatch,
+    ) -> CompiledDjangoAccess:
+        requested = PolicyManager._qualify_permission_codenames(model, permissions)
+        return DjangoQPermissionCompiler(
             access_rules,
             user=self.user,
+            model=model,
         ).compile(requested, match)
-        return model.objects.filter(compilation.row_filter).distinct()
 
     def get_queryset(
         self,
@@ -541,6 +580,7 @@ class UserPolicyManager:
         compilation = DjangoQPermissionCompiler(
             access_rules,
             user=self.user,
+            model=model,
         ).compile(requested, match)
         if not compilation.field_filters:
             return fields.none()
@@ -685,16 +725,15 @@ class UserPolicyManager:
             permissions,
             match,
         )
-        evaluator = PythonPermissionCompiler(rules, user=self.user).compile(
+        evaluator = PythonPermissionCompiler(
+            rules,
+            user=self.user,
+            model=type(candidate),
+        ).compile(
             requested,
             match,
         )
         return evaluator.matches(candidate)
-
-
-# Keep the established service name available while callers migrate to the
-# more precise UserPolicyManager name.
-UserPermissionManager = UserPolicyManager
 
 
 class PolicyManager:
@@ -914,6 +953,34 @@ class PolicyManager:
         policy.global_permissions.set(permission_objects)
         return policy
     
+    @classmethod
+    @transaction.atomic
+    def create_policy(
+        cls,
+        model_or_content_type: Type[models.Model] | models.Model | ContentType,
+        access_rule:AccessRule,
+        global_permissions: Optional[list[str] | list[BloomerpPermission] | str | BloomerpPermission] = None,
+    ) -> Policy:
+        """Provides a simple interface to create a particular policy
+
+        Args:
+            model_or_content_type (Type[models.Model] | ContentType): The model or content type for which to create a policy
+            field_permissions (dict[str, list[str]  |  list[BloomerpPermission]]): The field permissions
+            row_permissions (list[RowPolicyRuleContent]): The row permissions
+            global_permissions (Optional[list[str]  |  list[BloomerpPermission]  |  str  |  BloomerpPermission], optional): Optional global permissions. Defaults to None.
+                Note: if global_permissions are None, it will infer the global permissions from the field permissions and row permissions.
+
+        Returns:
+            Policy: The created policy instance
+        """
+        return cls.create_policy(
+            model_or_content_type,
+            field_permissions=access_rule.field_permissions,
+            row_permissions=access_rule.row_permissions,
+            global_permissions=global_permissions,
+        )
+    
+    
     @staticmethod
     def assign(
         policy: Policy,
@@ -949,5 +1016,63 @@ class PolicyManager:
         if not isinstance(policy, Policy):
             raise TypeError("policy must be a Policy instance")
         return policy.get_users()
+
+
+def get_bloomerp_model_default_permissions(model: type[models.Model]) -> tuple[str, ...]:
+    """Returns the default permissions for a model
+
+    Args:
+        model (type[models.Model]): the model
+
+    Returns:
+        tuple[str, ...]: the default permissions for the model
+    """
+    default_permissions = tuple(getattr(model._meta, "default_permissions", ()))
+    if issubclass(model, BloomerpModel):
+        return tuple(dict.fromkeys((*default_permissions, *BloomerpPermission.to_tuple())))
+    return default_permissions
+
+
+def ensure_model_permissions(model: type[models.Model]) -> int:
+    """Ensures permissions the default permissions are created for models
+
+    Args:
+        model (type[models.Model]): the model
+
+    Returns:
+        int: the number of permissions created
+    """
+    if model._meta.abstract or model._meta.proxy:
+        return 0
+
+    default_permissions = get_bloomerp_model_default_permissions(model)
+    if not default_permissions:
+        return 0
+
+    content_type = ContentType.objects.get_for_model(model)
+    created_count = 0
+
+    for permission in default_permissions:
+        _, created = Permission.objects.get_or_create(
+            codename=f"{permission}_{model._meta.model_name}",
+            content_type=content_type,
+            defaults={"name": f"Can {permission} {model._meta.verbose_name}"},
+        )
+        if created:
+            created_count += 1
+
+    return created_count
+
+
+def ensure_bloomerp_model_permissions(**kwargs) -> int:
+    """Ensures permissions for all Bloomerp models.
+
+    Returns:
+        int: the number of permissions created
+    """
+    created_count = 0
+    for model in apps.get_models():
+        created_count += ensure_model_permissions(model)
+    return created_count
     
     

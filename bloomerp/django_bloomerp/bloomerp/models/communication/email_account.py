@@ -41,8 +41,9 @@ class EmailAccount(BloomerpModel):
     bloomerp_config = BloomerpModelConfig(
         module=None,
         api_settings=ApiSettings(enable_auto_generation=False),
-        layout=FieldLayout(
-            rows=[
+        detail_view_settings=DetailViewSettings(
+            layout=[FieldLayout(
+                rows=[
                 LayoutRow(
                     columns=2,
                     title=gettext_noop("Account"),
@@ -83,9 +84,8 @@ class EmailAccount(BloomerpModel):
                         LayoutItem(id="next_sync_at"),
                     ]
                 )
-            ]
-        ),
-        detail_view_settings=DetailViewSettings(
+                ]
+            )],
             skip_views=[
                 "document_templates",
                 "files",

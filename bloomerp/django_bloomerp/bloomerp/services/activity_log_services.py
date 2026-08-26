@@ -150,5 +150,5 @@ class ActivityLogManager:
         if not isinstance(config, BloomerpModelConfig):
             return False
         
-        return config.record_activity_log
+        return config.activity_log_settings.enabled
     

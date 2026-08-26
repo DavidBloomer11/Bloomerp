@@ -9,7 +9,7 @@ from bloomerp.models.access_control.row_policy import RowPolicy
 from bloomerp.models.access_control.row_policy_rule import RowPolicyRule
 from bloomerp.permissions.definition import BloomerpPermission, RowPolicyRuleCondition, RowPolicyRuleContent
 from bloomerp.permissions.manager import PolicyManager
-from bloomerp.services.permission_services import ensure_model_permissions
+from bloomerp.permissions.manager import ensure_model_permissions
 from bloomerp.tests.base import BaseBloomerpModelTestCase
 
 class TestPolicyManager(BaseBloomerpModelTestCase):

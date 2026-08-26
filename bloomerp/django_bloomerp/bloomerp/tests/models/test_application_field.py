@@ -24,7 +24,7 @@ from bloomerp.services.form_services import FormManager
 from bloomerp.services.one_to_many_field_services import (
     save_submitted_one_to_many_fields,
 )
-from bloomerp.field_types import FieldType, Lookup
+from bloomerp.field_types.types import FieldType, Lookup
 from bloomerp.form_fields.address_field import AddressFormField, AddressValue
 from bloomerp.form_fields.files_relation_field import FilesCleanedData
 from bloomerp.form_fields.one_to_many_field import OneToManyCleanedData, OneToManyField

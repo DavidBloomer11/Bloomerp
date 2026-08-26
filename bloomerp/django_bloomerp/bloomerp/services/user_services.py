@@ -8,8 +8,9 @@ from bloomerp.models.users.user import AbstractBloomerpUser
 from django.core.cache import cache
 from dataclasses import dataclass
 
-from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
-from bloomerp.field_types import FieldType
+from bloomerp.permissions.definition import BloomerpPermission
+from bloomerp.permissions.manager import UserPolicyManager
+from bloomerp.field_types.types import FieldType
 from bloomerp.services.preference_services import PreferenceManager
 
 AUTO_MANAGED_FIELD_NAMES = {
@@ -67,12 +68,11 @@ def get_data_view_fields(preference: UserListViewPreference, view_type: str = No
     view_type = view_type or preference.view_type
     
     # Get all accessible fields for this user and content type
-    manager = UserPermissionManager(preference.user)
-    permission_str = create_permission_str(preference.content_type.model_class(), "view")
+    manager = UserPolicyManager(preference.user)
     
     accessible_fields_qs = manager.get_accessible_fields(
         preference.content_type,
-        permission_str
+        BloomerpPermission.VIEW
     ).exclude(
         field_type__in=[
             FieldType.ONE_TO_MANY_FIELD.value.id,
@@ -138,10 +138,9 @@ def toggle_field_visibility(
     )
     view_type = view_type or preference.view_type
 
-    manager = UserPermissionManager(user)
-    permission_str = create_permission_str(content_type.model_class(), "view")
+    manager = UserPolicyManager(user)
     accessible_field_ids = set(
-        manager.get_accessible_fields(content_type, permission_str).values_list("id", flat=True)
+        manager.get_accessible_fields(content_type, BloomerpPermission.VIEW).values_list("id", flat=True)
     )
 
     if field_id not in accessible_field_ids:

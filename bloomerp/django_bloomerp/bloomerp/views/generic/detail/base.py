@@ -3,10 +3,10 @@ from typing import Any
 
 from django.views.generic.detail import DetailView
 from bloomerp.models.application_field import ApplicationField
-from bloomerp.models.definition import ObjectHTML, get_model_config
+from bloomerp.models.definition import get_model_config
 from bloomerp.permissions.definition import BloomerpPermission
 from bloomerp.permissions.manager import UserPolicyManager
-from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
+from bloomerp.permissions.manager import create_permission_str
 from bloomerp.views.base import BaseBloomerpView
 from bloomerp.views.mixins.model_context_mixin import BloomerpModelContextMixin
 from bloomerp.router import router

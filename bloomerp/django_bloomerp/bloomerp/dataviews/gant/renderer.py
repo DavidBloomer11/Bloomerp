@@ -12,7 +12,8 @@ from django.shortcuts import render
 from django.utils import timezone
 
 from bloomerp.models.application_field import ApplicationField
-from bloomerp.services.permission_services import UserPermissionManager, create_permission_str
+from bloomerp.permissions.definition import BloomerpPermission
+from bloomerp.permissions.manager import UserPolicyManager
 
 from ..base import BaseDataviewRenderer, DataviewPagination, DataviewRenderState
 
@@ -213,9 +214,8 @@ class GantDataviewRenderer(BaseDataviewRenderer):
         if start_field is None or end_field is None:
             return HttpResponse("Gantt date fields are not configured", status=400)
 
-        permission = create_permission_str(state.model, "change")
-        permission_manager = UserPermissionManager(request.user)
-        if not permission_manager.has_global_permission(state.model, permission):
+        permission_manager = UserPolicyManager(request.user)
+        if not permission_manager.has_global_permission(state.model, BloomerpPermission.CHANGE):
             return HttpResponse("Permission denied", status=403)
 
         requested_field_keys = {
@@ -230,7 +230,7 @@ class GantDataviewRenderer(BaseDataviewRenderer):
         fields_by_key = {"start_ms": start_field, "end_ms": end_field}
         if any(
             not cls._field_is_editable(fields_by_key[key])
-            or not permission_manager.has_field_permission(fields_by_key[key], permission)
+            or not permission_manager.has_field_permission(fields_by_key[key], BloomerpPermission.CHANGE)
             for key in requested_field_keys
         ):
             return HttpResponse("Permission denied", status=403)
@@ -243,7 +243,7 @@ class GantDataviewRenderer(BaseDataviewRenderer):
 
         with transaction.atomic():
             objects = list(
-                permission_manager.get_queryset(state.model, permission)
+                permission_manager.get_queryset(state.model, BloomerpPermission.CHANGE)
                 .select_for_update()
                 .filter(pk__in=object_ids)
             )
@@ -363,8 +363,7 @@ class GantDataviewRenderer(BaseDataviewRenderer):
 
         if application_field.field_type not in {"DateField", "DateTimeField"}:
             return None
-        permission = create_permission_str(preference.content_type.model_class(), "view")
-        if not UserPermissionManager(request.user).has_field_permission(application_field, permission):
+        if not UserPolicyManager(request.user).has_field_permission(application_field, BloomerpPermission.VIEW):
             return None
         return application_field
 
@@ -452,8 +451,8 @@ class GantDataviewRenderer(BaseDataviewRenderer):
         start_field: ApplicationField,
         end_field: ApplicationField,
     ) -> tuple[bool, bool]:
-        permission = create_permission_str(self.state.model, "change")
-        permission_manager = UserPermissionManager(self.state.request.user)
+        permission = BloomerpPermission.CHANGE
+        permission_manager = UserPolicyManager(self.state.request.user)
         can_edit_row = permission_manager.has_access_to_object(obj, permission)
         if not can_edit_row:
             return False, False

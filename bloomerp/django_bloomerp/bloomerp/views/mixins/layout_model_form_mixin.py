@@ -218,7 +218,10 @@ class LayoutModelFormMixin(ApplicationFieldLayoutFormMixin, ABC):
             self.model,
             [field.field for field in application_fields],
         )
-        is_post = self.request.method.upper() == "POST"
+        is_post = (
+            self.request.method.upper() == "POST"
+            and not getattr(self, "_render_saved_form", False)
+        )
         instance = self.get_form_instance()
         initial = super().get_initial()
         if self.is_create_layout():
@@ -361,6 +364,9 @@ class LayoutModelFormMixin(ApplicationFieldLayoutFormMixin, ABC):
             for message in exc.messages:
                 form.add_error(None, message)
             return self.form_invalid(form)
+        self.object.refresh_from_db()
+        self._layout_form = None
+        self._render_saved_form = True
         return self.get_success_response(form)
 
     def form_invalid(self, form: BloomerpModelForm):

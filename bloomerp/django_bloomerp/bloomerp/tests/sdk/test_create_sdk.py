@@ -4,7 +4,13 @@ from tempfile import TemporaryDirectory
 from django.core.management import call_command
 from django.core.management.base import CommandError
 
-from bloomerp.models.definition import ApiNesting, ApiSettings, BloomerpModelConfig, PublicAccessRule
+from bloomerp.models.definition import ApiAccessSettings, ApiNesting, ApiSettings, BloomerpModelConfig
+from bloomerp.permissions.definition import (
+    AccessRule,
+    BloomerpPermission,
+    RowPolicyRuleCondition,
+    RowPolicyRuleContent,
+)
 from bloomerp.tests.base import BaseBloomerpModelTestCase
 
 
@@ -15,16 +21,23 @@ class TestCreateSdkCommand(BaseBloomerpModelTestCase):
         self.CustomerModel.bloomerp_config = BloomerpModelConfig(
             api_settings=ApiSettings(
                 enable_auto_generation=True,
-                public_access=[
-                    PublicAccessRule(
-                        row_actions=["list", "read"],
-                        field_actions={
-                            "id": ["list", "read"],
-                            "first_name": ["list", "read"],
-                            "country": ["read"],
-                        },
-                    )
-                ],
+                access=ApiAccessSettings(
+                    anonymous=[
+                        AccessRule(
+                            row_permissions=[
+                                RowPolicyRuleContent(
+                                    permissions=[BloomerpPermission.VIEW],
+                                    conditions=[RowPolicyRuleCondition(field="__all__")],
+                                )
+                            ],
+                            field_permissions={
+                                "id": [BloomerpPermission.VIEW],
+                                "first_name": [BloomerpPermission.VIEW],
+                                "country": [BloomerpPermission.VIEW],
+                            },
+                        )
+                    ]
+                ),
                 nesting=[
                     ApiNesting(for_field="country", fields=["name"], on_action=["read"]),
                 ],
@@ -33,15 +46,22 @@ class TestCreateSdkCommand(BaseBloomerpModelTestCase):
         self.CountryModel.bloomerp_config = BloomerpModelConfig(
             api_settings=ApiSettings(
                 enable_auto_generation=True,
-                public_access=[
-                    PublicAccessRule(
-                        row_actions=["read"],
-                        field_actions={
-                            "id": ["read"],
-                            "name": ["read"],
-                        },
-                    )
-                ],
+                access=ApiAccessSettings(
+                    anonymous=[
+                        AccessRule(
+                            row_permissions=[
+                                RowPolicyRuleContent(
+                                    permissions=[BloomerpPermission.VIEW],
+                                    conditions=[RowPolicyRuleCondition(field="__all__")],
+                                )
+                            ],
+                            field_permissions={
+                                "id": [BloomerpPermission.VIEW],
+                                "name": [BloomerpPermission.VIEW],
+                            },
+                        )
+                    ]
+                ),
             )
         )
 
@@ -86,7 +106,7 @@ class TestCreateSdkCommand(BaseBloomerpModelTestCase):
             self.assertIn("nesting: BloomerpModelNestingMetadata[]", index_contents)
             self.assertIn("export interface BloomerpFieldChoiceMetadata", index_contents)
             self.assertIn('"choices": [', index_contents)
-            self.assertIn('country: number | null | Country;', index_contents)
+            self.assertIn('country: string | null | Country;', index_contents)
             self.assertIn('"forField": "country"', index_contents)
             self.assertIn("bloomerpAuthStrategyTypes", index_contents)
             self.assertIn('"/api/customers/"', index_contents)
@@ -169,7 +189,7 @@ class TestCreateSdkCommand(BaseBloomerpModelTestCase):
             self.assertIn("class ModelApi(Generic[TModel, TId, TCreate, TUpdate]):", sdk_contents)
             self.assertIn("def retrieve(self, object_id: TId, options: BloomerpRequestOptions | None = None) -> TModel:", sdk_contents)
             self.assertIn("def list_results(", sdk_contents)
-            self.assertIn("country: int | None | Country", sdk_contents)
+            self.assertIn("country: str | None | Country", sdk_contents)
             self.assertIn("'forField': 'country'", sdk_contents)
             self.assertIn("customers_fields: dict[str, BloomerpFieldMetadata]", sdk_contents)
             self.assertIn("choices: list[dict[str, Any]] | None", sdk_contents)

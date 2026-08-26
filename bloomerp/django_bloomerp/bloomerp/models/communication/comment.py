@@ -36,7 +36,5 @@ class Comment(
         verbose_name=_("Content"),
     )
 
-    allow_string_search = False
-
     def __str__(self):
         return f"{self.content} - {self.created_by} - {self.datetime_created}"

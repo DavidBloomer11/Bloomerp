@@ -2,7 +2,7 @@ from django.db import models
 from django.http import HttpRequest, HttpResponse
 
 from bloomerp.models.base_bloomerp_model import BloomerpModel, FieldLayout, LayoutItem, LayoutRow
-from bloomerp.models.definition import BloomerpModelConfig, ObjectAction
+from bloomerp.models.definition import BloomerpModelConfig, DetailViewSettings, ObjectAction
 from django.utils.translation import gettext_lazy as _, gettext_noop
 from bloomerp.utils.requests import render_message
 
@@ -32,18 +32,20 @@ class FormSubmission(BloomerpModel):
         verbose_name_plural = _("Form Submissions")
 
     bloomerp_config = BloomerpModelConfig(
-        layout=FieldLayout(
-            rows=[
-                LayoutRow(
-                    title=gettext_noop("Details"),
-                    columns=2,
-                    items=[
-                        LayoutItem(id="form"),
-                        LayoutItem(id="persisted"),
-                        LayoutItem(id="data", colspan=2)
-                    ]
-                )
-            ]
+        detail_view_settings=DetailViewSettings(
+            layout=[FieldLayout(
+                rows=[
+                    LayoutRow(
+                        title=gettext_noop("Details"),
+                        columns=2,
+                        items=[
+                            LayoutItem(id="form"),
+                            LayoutItem(id="persisted"),
+                            LayoutItem(id="data", colspan=2)
+                        ]
+                    )
+                ]
+            )],
         ),
         object_actions=[
             ObjectAction(

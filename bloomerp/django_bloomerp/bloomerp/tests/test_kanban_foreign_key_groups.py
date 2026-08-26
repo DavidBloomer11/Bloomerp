@@ -17,7 +17,7 @@ from bloomerp.models.access_control.row_policy_rule import (
     RowPolicyRuleCondition,
     RowPolicyRuleContent,
 )
-from bloomerp.services.permission_services import ensure_model_permissions
+from bloomerp.permissions.manager import ensure_model_permissions
 from bloomerp.tests.base import BaseBloomerpModelTestCase
 
 

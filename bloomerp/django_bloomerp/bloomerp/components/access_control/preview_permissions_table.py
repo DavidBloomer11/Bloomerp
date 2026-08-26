@@ -8,13 +8,15 @@ from django.shortcuts import get_object_or_404, render
 
 from bloomerp.field_types.types import FieldType
 from bloomerp.models import ApplicationField
-from bloomerp.models.access_control.row_policy_rule import RowPolicyRuleContent
+from bloomerp.permissions.definition import AccessRule, RowPolicyRuleContent
+from bloomerp.permissions.manager import UserPolicyManager
 from bloomerp.router import router
-from bloomerp.services.permission_services import UserPermissionManager
 from pydantic import ValidationError as PydanticValidationError
-PREVIEW_PAGE_SIZE = 10
 
-# PERM_MIGRATION: Low priority
+PREVIEW_PAGE_SIZE = 10
+PREVIEW_PERMISSION = "preview"
+
+
 def _parse_json_payload(raw_value: str | None, fallback):
     if not raw_value:
         return fallback
@@ -25,37 +27,44 @@ def _parse_json_payload(raw_value: str | None, fallback):
         return fallback
 
 
-def _get_row_policy_rule_dict(row_policy_rule: dict) -> dict:
+def _get_preview_access_rule(row_policy_rule: dict) -> AccessRule | None:
     if not isinstance(row_policy_rule, dict):
-        return {}
+        return None
 
     rule_dict = row_policy_rule.get("rule") or {}
     if not isinstance(rule_dict, dict):
-        return {}
+        return None
 
     try:
-        return RowPolicyRuleContent.model_validate(rule_dict).model_dump(exclude_none=True)
+        row_rule = RowPolicyRuleContent.model_validate(rule_dict).model_copy(
+            update={"permissions": [PREVIEW_PERMISSION]}
+        )
     except PydanticValidationError:
-        return {}
+        return None
+
+    return AccessRule(row_permissions=[row_rule])
 
 
 def _build_preview_queryset(
-    request: HttpRequest,
     content_type: ContentType,
     row_policy_rules: list[dict],
+    permission_manager: UserPolicyManager,
 ):
     model = content_type.model_class()
     if model is None:
         return None
 
-    permission_manager = UserPermissionManager(request.user)
-    rule_dicts = [
-        rule_dict
+    access_rules = [
+        access_rule
         for row_policy_rule in row_policy_rules
-        for rule_dict in [_get_row_policy_rule_dict(row_policy_rule)]
-        if rule_dict
+        for access_rule in [_get_preview_access_rule(row_policy_rule)]
+        if access_rule is not None
     ]
-    return permission_manager.build_queryset_from_rule_dicts(content_type, rule_dicts)
+    return permission_manager.get_queryset_for_access_rules(
+        content_type,
+        access_rules,
+        PREVIEW_PERMISSION,
+    )
 
 
 def _format_permission_label(permission_codename: str) -> str:
@@ -107,21 +116,34 @@ def _get_preview_columns(content_type: ContentType, field_policies: dict) -> lis
 def _build_preview_rows(
     page_obj,
     row_policy_rules: list[dict],
-    permission_manager: UserPermissionManager,
+    permission_manager: UserPolicyManager,
     preview_columns: list[dict],
 ) -> list[dict]:
     preview_rows = []
+    model = page_obj.object_list.model
+    page_object_ids = [obj.pk for obj in page_obj.object_list]
+    matching_ids_by_rule = []
+
+    for row_policy_rule in row_policy_rules:
+        access_rule = _get_preview_access_rule(row_policy_rule)
+        if access_rule is None:
+            continue
+        matching_ids = set(
+            permission_manager.get_queryset_for_access_rules(
+                model,
+                [access_rule],
+                PREVIEW_PERMISSION,
+            )
+            .filter(pk__in=page_object_ids)
+            .values_list("pk", flat=True)
+        )
+        matching_ids_by_rule.append((row_policy_rule, matching_ids))
 
     for obj in page_obj.object_list:
         matched_permissions = OrderedDict()
 
-        for row_policy_rule in row_policy_rules:
-            rule_dict = _get_row_policy_rule_dict(row_policy_rule)
-            rule_q = permission_manager.build_q_for_rule_dict(rule_dict)
-            if rule_q is None:
-                continue
-
-            if not obj.__class__.objects.filter(pk=obj.pk).filter(rule_q).exists():
+        for row_policy_rule, matching_ids in matching_ids_by_rule:
+            if obj.pk not in matching_ids:
                 continue
 
             for permission_codename in row_policy_rule.get("permissions", []):
@@ -174,10 +196,14 @@ def preview_permissions_table(request: HttpRequest, content_type_id: int) -> Htt
     except (TypeError, ValueError):
         page_number = 1
 
-    queryset = _build_preview_queryset(request, content_type, row_policy_rules)
+    permission_manager = UserPolicyManager(request.user)
+    queryset = _build_preview_queryset(
+        content_type,
+        row_policy_rules,
+        permission_manager,
+    )
     if queryset is None:
         return HttpResponse("Unable to build preview.", status=400)
-    permission_manager = UserPermissionManager(request.user)
     preview_columns = _get_preview_columns(content_type, field_policies)
 
     paginator = Paginator(queryset, PREVIEW_PAGE_SIZE)

@@ -119,8 +119,18 @@ class PythonPermissionCompiler(BasePermissionCompiler[CompiledPythonAccess]):
     ) -> bool | None:
         if condition.field == "__all__" or condition.application_field_id == "__all__":
             return True
-        application_field = application_fields.get(str(condition.application_field_id))
-        if application_field is None or not condition.operator:
+        normalized_field = str(condition.field or "").replace(".", "__")
+        field_root = normalized_field.split("__", 1)[0]
+        application_field = application_fields.get(
+            str(condition.application_field_id)
+        ) or application_fields.get(field_root)
+        model_field = None
+        if self.model is not None and field_root:
+            try:
+                model_field = self.model._meta.get_field(field_root)
+            except Exception:
+                pass
+        if (application_field is None and model_field is None) or not condition.operator:
             return None
 
         operator = str(condition.operator)
@@ -129,15 +139,19 @@ class PythonPermissionCompiler(BasePermissionCompiler[CompiledPythonAccess]):
             field_path, lookup = self._advanced_path_and_lookup(operator)
         else:
             field_path = (
-                condition.field
-                if isinstance(condition.field, str) and "__" in condition.field
+                normalized_field
+                if normalized_field
                 else application_field.field
             )
             lookup = (
                 Lookup.EQUALS_USER
                 if self.resolve_lookup_globally(operator) == Lookup.EQUALS_USER
                 or str(condition.value) == "$user"
-                else self.resolve_lookup(application_field, operator)
+                else (
+                    self.resolve_lookup(application_field, operator)
+                    if application_field is not None
+                    else self.resolve_lookup_globally(operator)
+                )
             )
         if lookup is None or lookup.value.python_eval is None:
             return None
@@ -150,8 +164,13 @@ class PythonPermissionCompiler(BasePermissionCompiler[CompiledPythonAccess]):
         ) else condition.value
         if expected is None and str(condition.value) == "$user":
             return None
-        expected = self.normalize_lookup_value(application_field, lookup, expected)
-        if not advanced and "__" not in str(condition.field or ""):
+        if application_field is not None:
+            expected = self.normalize_lookup_value(application_field, lookup, expected)
+        if (
+            application_field is not None
+            and not advanced
+            and "__" not in str(condition.field or "")
+        ):
             expected = self._coerce_expected_value(application_field, lookup, expected)
         actual = self._normalize_comparison_value(actual)
         expected = self._normalize_comparison_value(expected)
@@ -167,7 +186,7 @@ class PythonPermissionCompiler(BasePermissionCompiler[CompiledPythonAccess]):
     ) -> CompiledPythonAccess:
         rules = self.normalize_access_rules(self.rules)
         requested = self.normalize_permissions(permissions)
-        application_fields = self.get_application_fields(rules)
+        application_fields = self.get_application_fields(rules, self.model)
 
         def evaluator(candidate: models.Model) -> bool:
             if not isinstance(candidate, models.Model):

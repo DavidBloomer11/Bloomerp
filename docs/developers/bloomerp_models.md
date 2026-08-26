@@ -9,14 +9,13 @@ The `BloomerpModel` class is the base model for all models in the Bloomerp frame
 - **files**: A generic relation to the `File` model, allowing any Bloomerp model to have associated files.
 - **comments**: A generic relation to the `Comment` model, enabling commenting functionality on any Bloomerp model.
 - **string_search_fields**: Specifies fields for string-based searches. This attribute should be defined in the subclass.
-- **allow_string_search**: A boolean that determines if the model is searchable via the global search bar. This attribute should be defined in the subclass.
+- **allow_global_search**: A boolean that determines if the model is searchable via the global search bar. This attribute should be defined in the subclass.
 
 ### Mixins
 
 The `BloomerpModel` class inherits from several mixins that provide additional functionalities:
 
 - **TimestampModelMixin**: Adds `created_at` and `updated_at` fields to track the creation and modification times.
-- **StringSearchModelMixin**: Provides methods for performing string-based searches on the specified fields.
 - **UserStampModelMixin**: Adds `created_by` and `updated_by` fields to track the user who created and last modified the record.
 - **AbsoluteUrlModelMixin**: Provides a method to get the absolute URL of the model instance.
 
@@ -42,7 +41,7 @@ class Customer(BloomerpModel):
     address = models.TextField()
 
     string_search_fields = ['name', 'email']
-    allow_string_search = True
+    allow_global_search = True
 
 class Product(BloomerpModel):
     name = models.CharField(max_length=255)
@@ -51,7 +50,7 @@ class Product(BloomerpModel):
     price = models.DecimalField(max_digits=10, decimal_places=2)
 
     string_search_fields = ['name', 'description']
-    allow_string_search = True
+    allow_global_search = True
 
 class Order(BloomerpModel):
     STATUS_CHOICES = (
@@ -66,10 +65,10 @@ class Order(BloomerpModel):
     status = models.CharField(max_length=255, choices=STATUS_CHOICES, default='pending')
 
     string_search_fields = ['product__name', 'status']
-    allow_string_search = True
+    allow_global_search = True
 ```
 
-In this example, `Customer`, `Product`, and `Order` models inherit from `BloomerpModel`, gaining all the functionalities provided by the base class and its mixins. The `string_search_fields` and `allow_string_search` attributes are defined to enable string-based searches on specific fields.
+In this example, `Customer`, `Product`, and `Order` models inherit from `BloomerpModel`, gaining all the functionalities provided by the base class and its mixins. The `string_search_fields` and `allow_global_search` attributes are defined to enable string-based searches on specific fields.
 
 ## Class File
 

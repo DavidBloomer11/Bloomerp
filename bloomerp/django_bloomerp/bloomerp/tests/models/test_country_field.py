@@ -1,7 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
 from django_countries.fields import Country, CountryField
 
-from bloomerp.field_types import FieldType
+from bloomerp.field_types.types import FieldType
 from bloomerp.forms.model_form import bloomerp_modelform_factory
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.tests.base import BaseBloomerpModelTestCase

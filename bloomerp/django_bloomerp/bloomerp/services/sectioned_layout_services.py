@@ -11,10 +11,8 @@ from bloomerp.field_types.types import FieldType
 from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.permissions.manager import UserPolicyManager
-from bloomerp.services.permission_services import UserPermissionManager
 from django.db.models import QuerySet
 from django.utils.translation import gettext
-from bloomerp.models.users import User
 
 MAX_LAYOUT_COLUMNS = 12
 
@@ -114,10 +112,15 @@ def layout_has_items(layout: FieldLayout | dict[str, Any] | None) -> bool:
 
 def get_model_field_layout(model: Type[Model]) -> FieldLayout | None:
     bloomerp_config = getattr(model, "bloomerp_config", None)
-    if bloomerp_config is not None:
-        bloomerp_layout = getattr(bloomerp_config, "layout", None)
-        if bloomerp_layout:
-            return normalize_layout_payload(bloomerp_layout)
+    detail_view_settings = (
+        getattr(bloomerp_config, "detail_view_settings", None)
+        if bloomerp_config is not None
+        else None
+    )
+    if detail_view_settings is not None:
+        default_layout = detail_view_settings.get_default_layout()
+        if default_layout is not None:
+            return normalize_layout_payload(default_layout)
 
     legacy_layout = getattr(model, "field_layout", None)
     if legacy_layout:
@@ -197,7 +200,7 @@ def resolve_detail_layout_rows(
     content_type: ContentType,
     user,
 ) -> list[dict[str, Any]]:
-    manager = UserPermissionManager(user)
+    manager = UserPolicyManager(user)
     model = content_type.model_class()
     permission_str = f"view_{model._meta.model_name}"
     change_permission_str = f"change_{model._meta.model_name}"
@@ -368,6 +371,8 @@ def resolve_field(
 def create_default_layout(
     model: Type[Model],
     application_fields: QuerySet[ApplicationField] | list[ApplicationField] | None = None,
+    *,
+    layout: FieldLayout | None = None,
 ) -> FieldLayout:
     """
     Creates a default field layout based on the given model.
@@ -382,7 +387,7 @@ def create_default_layout(
         application_fields = sorted(application_fields, key=lambda field: field.field)
 
     available_field_ids = {application_field.pk for application_field in application_fields}
-    model_layout = get_model_field_layout(model)
+    model_layout = layout if layout is not None else get_model_field_layout(model)
 
     if model_layout:
         rows: list[LayoutRow] = []

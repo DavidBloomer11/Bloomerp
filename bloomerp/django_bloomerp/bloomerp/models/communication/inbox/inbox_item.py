@@ -6,7 +6,7 @@ from django.db.models import Q
 from django.http import HttpRequest
 from bloomerp.communication.inbox_folder_definition import InboxItemTypeDefinition, InboxFolderType
 from bloomerp.models.base_bloomerp_model import BloomerpModel
-from bloomerp.models.definition import BloomerpModelConfig
+from bloomerp.models.definition import ActivityLogSettings, BloomerpModelConfig
 
 class InboxItem(BloomerpModel):
     class Meta:
@@ -25,7 +25,7 @@ class InboxItem(BloomerpModel):
         ]
     
     bloomerp_config = BloomerpModelConfig(
-        record_activity_log=False,
+        activity_log_settings=ActivityLogSettings(enabled=False)
     )
     
     item_type = models.CharField(
