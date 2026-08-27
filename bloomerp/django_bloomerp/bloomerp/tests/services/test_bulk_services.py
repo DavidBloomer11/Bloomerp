@@ -1,10 +1,10 @@
 from unittest.mock import patch
 
 from bloomerp.services.bulk_services import BulkCrudService
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 
 
-class TestBulkCrudService(BaseBloomerpModelTestCase):
+class TestBulkCrudService(BaseBloomerpTestCaseWithModels):
     auto_create_customers = False
 
     def test_process_rows_sends_completion_message_to_user(self):

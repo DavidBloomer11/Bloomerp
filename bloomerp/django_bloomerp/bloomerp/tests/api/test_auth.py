@@ -10,12 +10,12 @@ from bloomerp.config.definition import (
     InteractiveAuthSettings,
     SessionAuthSettings,
 )
-from bloomerp.models.api_key import ApiKey
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.models.api.api_key import ApiKey
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 from bloomerp.api.authentication_classes import BloomerpApiKeyAuthentication
 
 
-class TestBloomerpAuthApi(BaseBloomerpModelTestCase):
+class TestBloomerpAuthApi(BaseBloomerpTestCaseWithModels):
     def test_session_endpoint_reports_authentication_state(self):
         response = self.client.get("/api/auth/session/")
         self.assertEqual(response.status_code, 200)
@@ -219,7 +219,7 @@ class TestBloomerpAuthApi(BaseBloomerpModelTestCase):
         self.assertTrue(session_response.json()["authenticated"])
 
 
-class TestBloomerpApiKeyAuthentication(BaseBloomerpModelTestCase):
+class TestBloomerpApiKeyAuthentication(BaseBloomerpTestCaseWithModels):
     """
     This test suite tests whether token based authentication works
     """

@@ -1,10 +1,10 @@
 from django.urls import resolve, reverse
 
 from bloomerp.models.workspaces import SqlQuery
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 
 
-class SqlQueryApiTests(BaseBloomerpModelTestCase):
+class SqlQueryApiTests(BaseBloomerpTestCaseWithModels):
     def test_generated_endpoint_scopes_queries_to_the_authenticated_creator(self):
         url = reverse("sql_queries-list")
 

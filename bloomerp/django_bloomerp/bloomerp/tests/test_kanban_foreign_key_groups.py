@@ -18,10 +18,10 @@ from bloomerp.models.access_control.row_policy_rule import (
     RowPolicyRuleContent,
 )
 from bloomerp.permissions.manager import ensure_model_permissions
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 
 
-class TestKanbanForeignKeyGroups(BaseBloomerpModelTestCase):
+class TestKanbanForeignKeyGroups(BaseBloomerpTestCaseWithModels):
     auto_create_customers = False
     create_foreign_models = True
 

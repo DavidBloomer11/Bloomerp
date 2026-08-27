@@ -4,11 +4,11 @@ from django_countries.fields import Country, CountryField
 from bloomerp.field_types.types import FieldType
 from bloomerp.forms.model_form import bloomerp_modelform_factory
 from bloomerp.models.application_field import ApplicationField
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 from bloomerp.tests.utils.dynamic_models import create_test_models
 
 
-class TestCountryField(BaseBloomerpModelTestCase):
+class TestCountryField(BaseBloomerpTestCaseWithModels):
     auto_create_customers = False
     auto_create_users = False
 

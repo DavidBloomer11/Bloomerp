@@ -37,7 +37,7 @@ from bloomerp.forms.model_form import (
 from bloomerp.model_fields.address_field import AddressField
 from bloomerp.model_fields.phone_number_field import PhoneNumberField
 from bloomerp.model_fields.week_field import WeekField
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 from bloomerp.tests.utils.dynamic_models import create_test_models
 from bloomerp.widgets.address_widget import AddressWidget
 from bloomerp.widgets.code_editor_widget import CodeEditorWidget
@@ -47,7 +47,7 @@ from bloomerp.widgets.phone_number_widget import PhoneNumberWidget
 from bloomerp.widgets.week_widget import WeekWidget
 
 
-class TestApplicationField(BaseBloomerpModelTestCase):
+class TestApplicationField(BaseBloomerpTestCaseWithModels):
     auto_create_customers = False
 
     @classmethod
@@ -1476,7 +1476,7 @@ class TestApplicationField(BaseBloomerpModelTestCase):
         )
 
 
-class FormCleanTestCase(BaseBloomerpModelTestCase):
+class FormCleanTestCase(BaseBloomerpTestCaseWithModels):
     auto_create_customers = False
     auto_create_users = False
     create_foreign_models = True

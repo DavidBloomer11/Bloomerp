@@ -12,7 +12,7 @@ from bloomerp.management.commands import save_application_fields
 from bloomerp.models import ApplicationField
 from bloomerp.models.users.user_list_view_preference import UserListViewPreference
 from bloomerp.models import ApplicationField, Sidebar, SidebarItem
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 from bloomerp.tests.utils.dynamic_models import create_test_models
 from bloomerp.utils.models import get_list_view_url
 
@@ -35,7 +35,7 @@ def dataview_model(db):
         use_bloomerp_base=True,
     )
     Customer = models_by_name["E2ECustomer"]
-    BaseBloomerpModelTestCase._register_dynamic_model_routes([Customer])
+    BaseBloomerpTestCaseWithModels._register_dynamic_model_routes([Customer])
 
     Customer.objects.all().delete()
     Customer.objects.create(first_name="Playwright", last_name="Target", age=41)

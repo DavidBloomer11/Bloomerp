@@ -8,11 +8,11 @@ from bloomerp.permissions.definition import (
 )
 from bloomerp.permissions.manager import PolicyManager, UserPolicyManager
 from bloomerp.services.sql_services import SqlExecutor
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 from bloomerp.tests.utils.names import FIRST_NAMES, LAST_NAMES
 
 
-class TestSqlPermissionCompiler(BaseBloomerpModelTestCase):
+class TestSqlPermissionCompiler(BaseBloomerpTestCaseWithModels):
     def _assign_policy(self, *, fields: list[str], row_rule: RowPolicyRuleContent):
         policy = PolicyManager.create_policy(
             model_or_content_type=self.CustomerModel,

@@ -2,10 +2,10 @@ from django.contrib.contenttypes.models import ContentType
 
 from bloomerp.forms.bulk_upload_form import BloomerpBulkForm
 from bloomerp.models import ApplicationField
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 
 
-class TestBloomerpBulkForm(BaseBloomerpModelTestCase):
+class TestBloomerpBulkForm(BaseBloomerpTestCaseWithModels):
     def test_default_behavior_skips_ineligible_fields(self):
         """
         Default behavior being for imports

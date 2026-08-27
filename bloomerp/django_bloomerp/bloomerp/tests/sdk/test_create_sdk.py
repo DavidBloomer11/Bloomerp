@@ -11,10 +11,10 @@ from bloomerp.permissions.definition import (
     RowPolicyRuleCondition,
     RowPolicyRuleContent,
 )
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 
 
-class TestCreateSdkCommand(BaseBloomerpModelTestCase):
+class TestCreateSdkCommand(BaseBloomerpTestCaseWithModels):
     create_foreign_models = True
 
     def _set_nested_sdk_config(self):

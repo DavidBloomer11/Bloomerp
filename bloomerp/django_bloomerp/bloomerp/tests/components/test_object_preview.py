@@ -1,11 +1,11 @@
 from django.contrib.contenttypes.models import ContentType
 from unittest.mock import patch
 
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 
 # TODO: Check tests and add descriptions
 
-class TestObjectPreview(BaseBloomerpModelTestCase):
+class TestObjectPreview(BaseBloomerpTestCaseWithModels):
     def test_object_preview_renders_for_authorized_user(self):
         customer = self.CustomerModel.objects.first()
         content_type = ContentType.objects.get_for_model(self.CustomerModel)

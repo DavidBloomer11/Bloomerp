@@ -7,10 +7,10 @@ from bloomerp.models import FieldPolicy, Policy, RowPolicy
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.models.definition import BloomerpModelConfig
 from bloomerp.permissions.manager import ensure_model_permissions
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 
 
-class AssistantMutationApiTests(BaseBloomerpModelTestCase):
+class AssistantMutationApiTests(BaseBloomerpTestCaseWithModels):
     create_foreign_models = True
 
     def extendedSetup(self):

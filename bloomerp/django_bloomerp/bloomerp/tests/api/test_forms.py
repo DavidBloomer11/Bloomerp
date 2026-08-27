@@ -1,13 +1,13 @@
 
 
 from bloomerp.models.forms.form import Form
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 from django.contrib.contenttypes.models import ContentType
 from django.urls import resolve
 import json
 import requests
 
-class TestFormAPI(BaseBloomerpModelTestCase):
+class TestFormAPI(BaseBloomerpTestCaseWithModels):
     
     def create_form(self, **kwargs):
         """

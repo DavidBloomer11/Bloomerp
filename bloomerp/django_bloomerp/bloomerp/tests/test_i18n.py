@@ -32,7 +32,7 @@ from bloomerp.i18n.languages import catalog_locale, normalize_language_code
 from bloomerp.i18n.routes import route_messages
 from bloomerp.i18n.translator import TranslationBatch, TranslationResult, translate_catalog
 from bloomerp.management.commands.bloomerp_i18n import Command as I18nCommand
-from bloomerp.models.activity_log import ActivityLog, ActivityLogAction, ActivityLogSource
+from bloomerp.models.audit.activity_log import ActivityLog, ActivityLogAction, ActivityLogSource
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.models.project_management.todo import Todo, TodoStatus
 from bloomerp.models.workspaces.workspace import Workspace

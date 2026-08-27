@@ -9,10 +9,10 @@ from bloomerp.models.users.base_preference import BasePreference
 from bloomerp.models.workspaces.sidebar import Sidebar
 from bloomerp.models.workspaces.workspace import Workspace
 from bloomerp.services.preference_services import PreferenceManager, clean_scope
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 
 
-class PreferenceManagerTestCase(BaseBloomerpModelTestCase):
+class PreferenceManagerTestCase(BaseBloomerpTestCaseWithModels):
     auto_create_customers = False
 
     def extendedSetup(self):

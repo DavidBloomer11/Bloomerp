@@ -7,7 +7,7 @@ from bloomerp.permissions.definition import (
     RowPolicyRuleContent,
 )
 from bloomerp.permissions.manager import PolicyManager, UserPolicyManager
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
@@ -25,7 +25,7 @@ Batch field resolution and query counts.
 Compatibility between the old and new manager APIs.
 """
 
-class TestUserPermissionManager(BaseBloomerpModelTestCase):
+class TestUserPermissionManager(BaseBloomerpTestCaseWithModels):
     """
     Test cases for UserPermissionManager
     """
