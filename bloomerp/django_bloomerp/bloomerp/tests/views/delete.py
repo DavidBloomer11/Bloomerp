@@ -2,12 +2,12 @@ from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from django.db import models
 
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 from bloomerp.tests.utils.dynamic_models import create_test_models
 from bloomerp.utils.labels import safe_object_label
 
 
-class TestDeleteView(BaseBloomerpModelTestCase):
+class TestDeleteView(BaseBloomerpTestCaseWithModels):
     auto_create_customers = False
 
     @classmethod

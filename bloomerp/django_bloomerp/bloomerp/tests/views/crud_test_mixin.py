@@ -8,10 +8,10 @@ from bloomerp.models.access_control.row_policy_rule import RowPolicyRule
 from bloomerp.models.access_control.field_policy import FieldPolicy
 from bloomerp.models.access_control.policy import Policy
 from bloomerp.models.users.user import User
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 from bs4 import BeautifulSoup
 
-class CrudViewTestMixin(BaseBloomerpModelTestCase):
+class CrudViewTestMixin(BaseBloomerpTestCaseWithModels):
     
     def field_has_value(self, response:HttpResponse, field_name:str, value:str) -> bool:
         """

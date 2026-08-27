@@ -9,7 +9,7 @@ from django.utils import timezone
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import Permission
 from bloomerp.services.preference_services import PreferenceManager
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 from bloomerp.models import ApplicationField, Todo
 from bloomerp.models import Policy, FieldPolicy, RowPolicy, RowPolicyRule
 from bloomerp.models.definition import (
@@ -43,7 +43,7 @@ def _deny_test_dataview_action(context) -> bool:
     return False
 
 
-class TestDataView(BaseBloomerpModelTestCase):
+class TestDataView(BaseBloomerpTestCaseWithModels):
     create_foreign_models = True
 
     def extendedSetup(self):
@@ -1049,7 +1049,7 @@ class TestDataView(BaseBloomerpModelTestCase):
         self.assertNotIn("bg-primary-100", first_name_button.group(1))
 
 
-class TestCalendarDataView(BaseBloomerpModelTestCase):
+class TestCalendarDataView(BaseBloomerpTestCaseWithModels):
     auto_create_customers = False
 
     @classmethod
@@ -1316,7 +1316,7 @@ class TestCalendarDataView(BaseBloomerpModelTestCase):
         self.assertNotContains(page_response, "Load more", html=False)
 
 
-class TestGantDataView(BaseBloomerpModelTestCase):
+class TestGantDataView(BaseBloomerpTestCaseWithModels):
     auto_create_customers = False
 
     @classmethod

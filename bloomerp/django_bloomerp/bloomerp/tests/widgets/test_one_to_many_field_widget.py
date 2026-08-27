@@ -2,10 +2,10 @@ from bs4 import BeautifulSoup
 from django.http import QueryDict
 
 from bloomerp.models.workspaces.sidebar_item import SidebarItem
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 from bloomerp.widgets.one_to_many_field_widget import OneToManyFieldWidget
 
-class TestCreateView(BaseBloomerpModelTestCase):
+class TestCreateView(BaseBloomerpTestCaseWithModels):
     create_foreign_models = True
     
     # --------------------------------------

@@ -17,7 +17,7 @@ from bloomerp.tests.utils.dynamic_models import create_test_models
 from bloomerp.tests.utils.names import FIRST_NAMES, LAST_NAMES
 
 @modify_settings(INSTALLED_APPS={'remove': 'bloomerp_modules'})
-class BaseBloomerpModelTestCase(TransactionTestCase):
+class BaseBloomerpTestCaseWithModels(TransactionTestCase):
     auto_create_customers = True
     auto_create_users = True
     use_bloomerp_base = True
@@ -333,4 +333,16 @@ class BaseBloomerpModelTestCase(TransactionTestCase):
         )
 
     
-    
+class BaseBloomerpModelTestCase(TransactionTestCase):
+    pass    
+
+
+class BaseBloomerpWidgetTestCase():
+    pass
+
+
+class BaseBloomerpComponentTestCase():
+    pass
+
+class BaseBloomerpViewTestCase():
+    pass

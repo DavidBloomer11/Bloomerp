@@ -17,7 +17,7 @@ from bloomerp.form_fields.behavior import (
 )
 from bloomerp.form_fields.behavior_field import BehaviorField
 from bloomerp.models import ApplicationField
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 from bloomerp.widgets.behavior_builder_widget import BehaviorBuilderWidget
 
 
@@ -245,7 +245,7 @@ class BehaviorDisplayOptionDatabaseTest(TestCase):
         self.assertEqual(widget.source_field["fieldType"], FieldType.CHAR_FIELD.value.id)
 
 
-class BehaviorOneToManyCatalogTest(BaseBloomerpModelTestCase):
+class BehaviorOneToManyCatalogTest(BaseBloomerpTestCaseWithModels):
     create_foreign_models = True
 
     def test_catalog_exposes_configured_one_to_many_columns(self):

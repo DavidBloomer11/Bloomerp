@@ -1,5 +1,5 @@
 from bloomerp.forms.model_form import bloomerp_modelform_factory
-from bloomerp.models.api_key import ApiKey
+from bloomerp.models.api.api_key import ApiKey
 from bloomerp.router import router
 from bloomerp.views.base import BaseBloomerpView
 from django.db import transaction

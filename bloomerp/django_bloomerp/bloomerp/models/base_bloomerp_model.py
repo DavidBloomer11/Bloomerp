@@ -1,12 +1,10 @@
 from django.utils.translation import gettext_lazy as _
-import json
-from enum import Enum
 
 from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
 from typing import Optional
 
-from bloomerp.models.definition import BaseLayout, FieldLayout, LayoutItem, LayoutRow
+from bloomerp.models.definition import FieldLayout
 from bloomerp.models.mixins.absolute_url_model_mixin import AbsoluteUrlModelMixin
 from bloomerp.models.mixins.avatar_model_mixin import AvatarModelMixin
 from bloomerp.models.mixins.timestamp_model_mixin import TimestampModelMixin

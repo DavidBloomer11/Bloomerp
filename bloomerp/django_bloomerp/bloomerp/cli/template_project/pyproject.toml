@@ -3,12 +3,29 @@ name = "__DISTRIBUTION_NAME__"
 version = "0.1.0"
 description = "Bloomerp starter project"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.14"
 dependencies = [
     "Django>=5.1,<6.0",
     "Bloomerp>=0.1.0",
+    "boto3>=1.39,<2",
+    "celery[redis]>=5.4,<6",
+    "channels>=4.1,<5",
+    "channels-redis>=4.2,<5",
+    "daphne>=4.1,<5",
+    "django-storages[s3]>=1.14.6,<2",
+    "psycopg[binary]>=3.2,<3.3",
 ]
 
 [build-system]
 requires = ["setuptools>=75", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["apps*", "config*"]
+
+[tool.setuptools.package-data]
+"*" = [
+    "templates/**/*",
+    "static/**/*",
+    "bloomerp.toml",
+]

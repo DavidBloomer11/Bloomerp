@@ -6,11 +6,11 @@ from django.urls import resolve, reverse
 from bloomerp.models import FieldPolicy, Policy, RowPolicy
 from bloomerp.models.access_control.row_policy_rule import RowPolicyRule
 from bloomerp.models.users.user import User
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 from bloomerp.utils.models import get_detail_view_url
 
 
-class TestCreateUserView(BaseBloomerpModelTestCase):
+class TestCreateUserView(BaseBloomerpTestCaseWithModels):
     auto_create_customers = False
 
     def get_url(self) -> str:

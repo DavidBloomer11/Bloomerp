@@ -326,6 +326,97 @@ raise SystemExit(main())
 PY
 }
 
+autoCreateTests() {
+  local script_dir
+  script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  python3 - "$script_dir" "$@" <<'PY'
+from __future__ import annotations
+
+import argparse
+import re
+import sys
+from pathlib import Path
+
+
+TYPE_TO_BASE_CLASS = {
+    "models": "BaseBloomerpModelTestCase",
+    "views": "BaseBloomerpViewTestCase",
+    "widgets": "BaseBloomerpWidgetTestCase",
+    "components": "BaseBloomerpComponentTestCase",
+}
+
+
+def snake_to_pascal(value: str) -> str:
+    return "".join(part.capitalize() for part in re.split(r"[_\-\s]+", value) if part)
+
+
+def build_test_content(base_class: str, source_relative: Path) -> str:
+    class_name = f"Test{snake_to_pascal(source_relative.stem)}"
+    return (
+        f"from bloomerp.tests.base import {base_class}\n\n\n"
+        f"class {class_name}({base_class}):\n"
+        "    def test_placeholder(self):\n"
+        "        self.assertTrue(True)\n"
+    )
+
+
+def iter_source_files(source_root: Path):
+    for file_path in sorted(source_root.rglob("*.py")):
+        if file_path.name == "__init__.py":
+            continue
+        if "__pycache__" in file_path.parts:
+            continue
+        yield file_path
+
+
+def main(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(
+        prog="./scripts.sh autoCreateTests",
+        description="Create missing test files for a source type.",
+    )
+    parser.add_argument(
+        "--type",
+        choices=sorted(TYPE_TO_BASE_CLASS.keys()),
+        required=True,
+        help="Source type folder to scaffold tests for.",
+    )
+    args = parser.parse_args(argv)
+
+    script_dir = Path(sys.argv[1]).resolve()
+    bloomerp_dir = script_dir / "bloomerp/django_bloomerp/bloomerp"
+    source_root = bloomerp_dir / args.type
+    tests_root = bloomerp_dir / "tests" / args.type
+
+    if not source_root.exists():
+        print(f"Source type directory does not exist: {source_root}", file=sys.stderr)
+        return 1
+
+    base_class = TYPE_TO_BASE_CLASS[args.type]
+    created = 0
+    skipped = 0
+
+    for source_file in iter_source_files(source_root):
+        rel_source = source_file.relative_to(source_root)
+        test_filename = f"test_{rel_source.stem}.py"
+        test_path = tests_root / rel_source.parent / test_filename
+
+        if test_path.exists():
+            skipped += 1
+            continue
+
+        test_path.parent.mkdir(parents=True, exist_ok=True)
+        content = build_test_content(base_class, rel_source)
+        test_path.write_text(content, encoding="utf-8")
+        created += 1
+
+    print(f"Scaffold complete for type={args.type}: created={created}, skipped_existing={skipped}")
+    return 0
+
+
+raise SystemExit(main(sys.argv[2:]))
+PY
+}
+
 case "${1:-}" in
     update-internal-sdk)
         shift
@@ -343,6 +434,10 @@ case "${1:-}" in
     shift
     document-cotton-components "$@"
     ;;
+    autoCreateTests)
+        shift
+        autoCreateTests "$@"
+        ;;
   ""|-h|--help|help)
         echo "Usage: ./scripts.sh <command>"
         echo
@@ -351,11 +446,12 @@ case "${1:-}" in
         echo "  update-field-types"
         echo "  reset-test-data"
         echo "  document-cotton-components"
+                echo "  autoCreateTests --type [components|models|views|widgets]"
     ;;
   *)
     echo "Unknown command: $1" >&2
     echo "Usage: ./scripts.sh <command>" >&2
-        echo "Commands: update-internal-sdk, update-field-types, reset-test-data, document-cotton-components" >&2
+                echo "Commands: update-internal-sdk, update-field-types, reset-test-data, document-cotton-components, autoCreateTests" >&2
     exit 1
     ;;
 esac

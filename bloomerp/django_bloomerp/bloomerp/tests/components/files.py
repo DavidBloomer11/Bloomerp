@@ -7,7 +7,7 @@ from unittest.mock import patch
 from django.urls import reverse
 from urllib.parse import urlencode
 
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 from bloomerp.models.files.file import File
 from bloomerp.models.files.file_folder import FileFolder
 from django.core.files.base import ContentFile
@@ -17,7 +17,7 @@ from django.contrib.contenttypes.models import ContentType
 from bloomerp.modules.misc import MiscModule
 from bloomerp.components.files import _get_folder_display_name
 
-class TestFilesComponent(BaseBloomerpModelTestCase):
+class TestFilesComponent(BaseBloomerpTestCaseWithModels):
     auto_create_customers = False
     create_foreign_models = True
     url_name = "components_files"
@@ -627,7 +627,7 @@ class TestFilesComponent(BaseBloomerpModelTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response.content, "Orphaned folder")
 
-class TestFilesUploadComponent(BaseBloomerpModelTestCase):
+class TestFilesUploadComponent(BaseBloomerpTestCaseWithModels):
     auto_create_customers = False
     create_foreign_models = True
     url_name = "components_files_upload"

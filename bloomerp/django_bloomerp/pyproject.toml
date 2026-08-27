@@ -5,6 +5,7 @@ description = "Bloomerp is an open-source Business Management Software framework
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "build>=1.2,<2.0",
     "annotated-types==0.7.0",
     "anyio==4.6.2.post1",
     "arabic-reshaper==3.0.0",
@@ -139,6 +140,7 @@ dependencies = [
     "urllib3==2.2.3",
     "webencodings==0.5.1",
     "websocket-client==1.8.0",
+    "wheel>=0.45,<1",
     "zipp==3.21.0",
     "zopfli==0.2.3",
     "crispy-tailwind==1.0.3",
@@ -178,6 +180,10 @@ exclude = ["bloomerp.tests", "bloomerp.tests.*"]
 
 [tool.setuptools.package-data]
 bloomerp = [
+    "cli/template_project/**/*",
+    "cli/template_project/.env",
+    "cli/template_project/.gitignore",
+    "cli/template_project/.python-version",
     "templates/**/*",
     "static/**/*",
     "locale/**/*",
