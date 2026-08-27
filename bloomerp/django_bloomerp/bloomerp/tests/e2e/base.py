@@ -17,10 +17,10 @@ from playwright.sync_api import (
     sync_playwright,
 )
 
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 
 
-class BaseE2ETestCase(BaseBloomerpModelTestCase, StaticLiveServerTestCase):
+class BaseE2ETestCase(BaseBloomerpTestCaseWithModels, StaticLiveServerTestCase):
     """Base class for stateful Bloomerp end-to-end tests.
 
     The class combines the standard Bloomerp test data with a static live

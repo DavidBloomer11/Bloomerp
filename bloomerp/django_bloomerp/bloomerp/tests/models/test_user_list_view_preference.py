@@ -11,10 +11,10 @@ from bloomerp.models.definition import (
 )
 from bloomerp.models.project_management.todo import Todo
 from bloomerp.models.users.user_list_view_preference import UserListViewPreference
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 
 
-class UserListViewPreferenceDefaultTests(BaseBloomerpModelTestCase):
+class UserListViewPreferenceDefaultTests(BaseBloomerpTestCaseWithModels):
     def setUp(self):
         super().setUp()
         self.content_type = ContentType.objects.get_for_model(self.CustomerModel)

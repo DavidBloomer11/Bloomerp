@@ -3,10 +3,10 @@ from unittest.mock import patch
 from django.contrib.auth.models import Permission
 
 from bloomerp.services.sql_services import DatabaseTable, Field
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 
 
-class SqlExecuteApiTests(BaseBloomerpModelTestCase):
+class SqlExecuteApiTests(BaseBloomerpTestCaseWithModels):
     def extendedSetup(self):
         self.url = "/api/sql/execute/"
         self.db_table = self.CustomerModel._meta.db_table

@@ -13,10 +13,10 @@ from bloomerp.models.definition import (
 from bloomerp.models.users.user_object_layout_preference import (
     UserObjectLayoutPreference,
 )
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 
 
-class UserObjectLayoutPreferenceDefaultTests(BaseBloomerpModelTestCase):
+class UserObjectLayoutPreferenceDefaultTests(BaseBloomerpTestCaseWithModels):
     def setUp(self):
         super().setUp()
         self.content_type = ContentType.objects.get_for_model(self.CustomerModel)

@@ -1,7 +1,7 @@
 from drf_spectacular.extensions import OpenApiAuthenticationExtension
 
 from bloomerp.config.definition import get_bloomerp_config
-from bloomerp.models.api_key import ApiKey
+from bloomerp.models.api.api_key import ApiKey
 from drf_spectacular.extensions import OpenApiAuthenticationExtension
 
 from rest_framework.authentication import BaseAuthentication, get_authorization_header

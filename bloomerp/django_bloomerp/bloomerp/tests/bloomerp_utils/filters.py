@@ -9,12 +9,12 @@ from django_countries.fields import CountryField
 
 from bloomerp.field_types.types import FieldType
 from bloomerp.model_fields.week_field import WeekField
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 from bloomerp.tests.utils.dynamic_models import create_test_models
 from bloomerp.utils.filters import dynamic_filterset_factory, filter_model
 
 
-class TestFilterUtil(BaseBloomerpModelTestCase):
+class TestFilterUtil(BaseBloomerpTestCaseWithModels):
     auto_create_customers = False
     auto_create_users = False
 

@@ -1,14 +1,14 @@
 from django.contrib.auth import SESSION_KEY, get_user_model
 from django.urls import resolve, reverse
 
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 from bloomerp.utils.models import get_detail_view_url
 
 
 User = get_user_model()
 
 
-class TestUserPasswordResetViews(BaseBloomerpModelTestCase):
+class TestUserPasswordResetViews(BaseBloomerpTestCaseWithModels):
     auto_create_customers = False
 
     def setUp(self):

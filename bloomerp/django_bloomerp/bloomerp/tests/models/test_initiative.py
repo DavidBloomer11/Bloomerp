@@ -1,9 +1,9 @@
 from bloomerp.models.project_management import Initiative, InitiativeStatus, Todo
 from bloomerp.models.project_management.todo import TodoStatus
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 
 
-class TestInitiative(BaseBloomerpModelTestCase):
+class TestInitiative(BaseBloomerpTestCaseWithModels):
     auto_create_customers = False
 
     def test_initiative_todo_count(self):

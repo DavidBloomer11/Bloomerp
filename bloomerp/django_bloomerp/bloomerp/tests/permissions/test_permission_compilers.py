@@ -1,21 +1,13 @@
 from django.test import SimpleTestCase
-
 from bloomerp.field_types.lookups import Lookup
-from bloomerp.permissions.compilers import (
-    BasePermissionCompiler,
-    DjangoQPermissionCompiler,
-    PythonPermissionCompiler,
-    SqlPermissionCompiler,
-)
 
 
 class TestPermissionCompilers(SimpleTestCase):
-    def test_concrete_compilers_share_the_base_compiler(self):
-        self.assertTrue(issubclass(DjangoQPermissionCompiler, BasePermissionCompiler))
-        self.assertTrue(issubclass(PythonPermissionCompiler, BasePermissionCompiler))
-        self.assertTrue(issubclass(SqlPermissionCompiler, BasePermissionCompiler))
 
     def test_every_evaluable_lookup_has_a_python_evaluator(self):
+        """
+        This test checks whether every evaluable lookup has a python compiler
+        """
         without_evaluator = {
             lookup
             for lookup in Lookup

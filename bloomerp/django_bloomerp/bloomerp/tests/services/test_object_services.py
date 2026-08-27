@@ -1,9 +1,9 @@
 from bloomerp.models.definition import BloomerpModelConfig, StringSearchSettings
 from bloomerp.services.object_services import string_search_on_queryset
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 
 
-class StringSearchOnQuerysetTests(BaseBloomerpModelTestCase):
+class StringSearchOnQuerysetTests(BaseBloomerpTestCaseWithModels):
     create_foreign_models = True
 
     def test_string_search_uses_bloomerp_config_related_fields(self):

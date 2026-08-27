@@ -6,12 +6,12 @@ from django.test import RequestFactory
 
 from bloomerp.field_types import Lookup
 from bloomerp.models import ApplicationField, FieldPolicy, Policy, RowPolicy, RowPolicyRule
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 from bloomerp.tests.utils.dynamic_models import create_test_models
 from bloomerp.views.generic.detail.foreign_relationship import ForeignRelationshipView
 
 
-class TestForeignRelationshipView(BaseBloomerpModelTestCase):
+class TestForeignRelationshipView(BaseBloomerpTestCaseWithModels):
     auto_create_customers = False
 
     @classmethod

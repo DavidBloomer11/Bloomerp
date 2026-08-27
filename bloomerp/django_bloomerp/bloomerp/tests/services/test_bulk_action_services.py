@@ -16,10 +16,10 @@ from bloomerp.models.access_control.row_policy_rule import (
 )
 from bloomerp.services.bulk_action_services import BulkActionService
 from bloomerp.permissions.manager import ensure_model_permissions
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 
 
-class TestBulkActionService(BaseBloomerpModelTestCase):
+class TestBulkActionService(BaseBloomerpTestCaseWithModels):
     auto_create_customers = False
 
     def test_delete_objects_deletes_only_requested_objects(self):

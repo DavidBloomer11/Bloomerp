@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from unittest.mock import patch
 
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 from django.urls import reverse
 from django.utils import timezone
 
@@ -14,7 +14,7 @@ from django.db import models
 
 # TODO: Review tests thoroughly
 
-class TestFilterComponent(BaseBloomerpModelTestCase):
+class TestFilterComponent(BaseBloomerpTestCaseWithModels):
     create_foreign_models = True
 
     @classmethod

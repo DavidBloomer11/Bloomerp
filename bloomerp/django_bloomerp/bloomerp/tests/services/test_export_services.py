@@ -10,11 +10,11 @@ from django.http import QueryDict
 from bloomerp.models import ApplicationField, FieldPolicy, Policy, RowPolicy, RowPolicyRule
 from bloomerp.model_fields.week_field import WeekField
 from bloomerp.services.export_services import ExportService
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 from bloomerp.tests.utils.dynamic_models import create_test_models
 
 
-class TestExportService(BaseBloomerpModelTestCase):
+class TestExportService(BaseBloomerpTestCaseWithModels):
     def _ensure_permissions_for_model(self, model):
         content_type = ContentType.objects.get_for_model(model)
         for perm in set(model._meta.default_permissions) | {"export"}:
@@ -167,7 +167,7 @@ class TestExportService(BaseBloomerpModelTestCase):
         self.assertTrue(all(row[0] for row in rows[1:]))
 
 
-class TestExportServiceRelationships(BaseBloomerpModelTestCase):
+class TestExportServiceRelationships(BaseBloomerpTestCaseWithModels):
     auto_create_customers = False
 
     @classmethod
@@ -219,7 +219,7 @@ class TestExportServiceRelationships(BaseBloomerpModelTestCase):
         self.assertEqual(rows[1][0], f"{self.note_one.pk};{self.note_two.pk}")
 
 
-class TestExportServiceExcel(BaseBloomerpModelTestCase):
+class TestExportServiceExcel(BaseBloomerpTestCaseWithModels):
     create_foreign_models = True
 
     def test_create_export_bytes_xlsx_serializes_uuid_backed_foreign_keys(self):
@@ -262,7 +262,7 @@ class TestExportServiceExcel(BaseBloomerpModelTestCase):
         self.assertIn(str(customer.country_id), exported_values)
 
 
-class TestExportServiceExcelUnsupportedValues(BaseBloomerpModelTestCase):
+class TestExportServiceExcelUnsupportedValues(BaseBloomerpTestCaseWithModels):
     auto_create_customers = False
 
     @classmethod
@@ -312,7 +312,7 @@ class TestExportServiceExcelUnsupportedValues(BaseBloomerpModelTestCase):
         self.assertEqual(sheet["B2"].value, "2026-W22")
 
 
-class TestExportServiceFileFields(BaseBloomerpModelTestCase):
+class TestExportServiceFileFields(BaseBloomerpTestCaseWithModels):
     auto_create_customers = False
 
     @classmethod

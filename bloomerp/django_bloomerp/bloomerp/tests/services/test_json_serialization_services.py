@@ -7,11 +7,11 @@ from django.contrib.contenttypes.models import ContentType
 from bloomerp.models.forms.form import Form
 from bloomerp.models.forms.form_submission import FormSubmission
 from bloomerp.services.form_services import FormManager
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 from bloomerp.utils.json_serialization import make_json_safe
 
 
-class JsonSerializationServicesTestCase(BaseBloomerpModelTestCase):
+class JsonSerializationServicesTestCase(BaseBloomerpTestCaseWithModels):
     create_foreign_models = True
 
     def test_make_json_safe_serializes_django_values_recursively(self):

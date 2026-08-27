@@ -1,11 +1,11 @@
 from bloomerp.permissions.definition import BloomerpPermission, RowPolicyRuleCondition, RowPolicyRuleContent
 from bloomerp.permissions.manager import PolicyManager, UserPolicyManager
 from bloomerp.services.sql_services import SqlExecutor
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 from bloomerp.utils.sql import SqlQueryExecutor
 from unittest.mock import patch
 
-class TestSQLServices(BaseBloomerpModelTestCase):
+class TestSQLServices(BaseBloomerpTestCaseWithModels):
     create_foreign_models = True
     
     CUSTOMER_TABLE : str

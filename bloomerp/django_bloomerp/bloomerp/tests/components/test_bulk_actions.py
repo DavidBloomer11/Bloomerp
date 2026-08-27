@@ -3,10 +3,10 @@ from unittest.mock import patch
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 
 
-class TestBulkActionsComponent(BaseBloomerpModelTestCase):
+class TestBulkActionsComponent(BaseBloomerpTestCaseWithModels):
     auto_create_customers = False
 
     def test_bulk_actions_modal_offers_delete_for_permitted_objects(self):

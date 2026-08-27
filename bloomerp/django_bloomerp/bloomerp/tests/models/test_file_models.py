@@ -1,5 +1,5 @@
 
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 from bloomerp.models.files.file import File
 from bloomerp.models.files.file_folder import FileFolder
 from django.core.files.base import ContentFile
@@ -8,7 +8,7 @@ from django.contrib.contenttypes.models import ContentType
 from bloomerp.modules.misc import MiscModule
 from bloomerp.services.file_services import ensure_folder_hierarchy_for_object
 
-class TestFileModels(BaseBloomerpModelTestCase):
+class TestFileModels(BaseBloomerpTestCaseWithModels):
     auto_create_customers = True
     create_foreign_models = False
 

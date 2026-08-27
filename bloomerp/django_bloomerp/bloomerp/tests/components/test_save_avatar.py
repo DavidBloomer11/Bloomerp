@@ -2,10 +2,10 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 
 
-class TestSaveAvatar(BaseBloomerpModelTestCase):
+class TestSaveAvatar(BaseBloomerpTestCaseWithModels):
     def _avatar_url(self, object):
         content_type = ContentType.objects.get_for_model(self.CustomerModel)
         return reverse(

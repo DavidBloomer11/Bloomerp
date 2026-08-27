@@ -19,7 +19,7 @@ from bloomerp.services.workspace_services import (
     _tile_display_metadata,
     render_tile_to_string,
 )
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 from bloomerp.workspaces.links_tile.model import Link, LinkTileConfig
 from bloomerp.workspaces.links_tile.render import LinksTileRenderer
 from bloomerp.workspaces.dataview_tile.form import DataViewTileForm
@@ -37,7 +37,7 @@ from bloomerp.views.workspaces.create_tile import CREATE_TILE_SESSION_KEY
 from bloomerp.views.workspaces.base import BaseWorkspaceView
 
 
-class WorkspaceTileRenderingTests(BaseBloomerpModelTestCase):
+class WorkspaceTileRenderingTests(BaseBloomerpTestCaseWithModels):
     auto_create_customers = False
 
     def setUp(self):

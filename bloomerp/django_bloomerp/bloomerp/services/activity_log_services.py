@@ -6,7 +6,7 @@ from django.db.models import Model, QuerySet
 from django.http import HttpRequest
 
 from bloomerp.communication.inbox_sources import publish_event
-from bloomerp.models.activity_log import ActivityLog, ActivityLogAction, ActivityLogSource
+from bloomerp.models.audit.activity_log import ActivityLog, ActivityLogAction, ActivityLogSource
 from bloomerp.models.definition import BloomerpModelConfig
 from bloomerp.models.users.user import User
 from bloomerp.serializers.model_serializers import get_serializer_cls

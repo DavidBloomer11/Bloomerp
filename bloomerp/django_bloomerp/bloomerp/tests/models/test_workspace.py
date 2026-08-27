@@ -20,12 +20,12 @@ from bloomerp.services.workspace_services import (
     resolve_tile_type_from_config,
     select_workspace,
 )
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 from bloomerp.workspaces.text_tile.model import TextTileConfig
 from bloomerp.workspaces.tiles import TileType
 
 
-class WorkspaceModelTestCase(BaseBloomerpModelTestCase):
+class WorkspaceModelTestCase(BaseBloomerpTestCaseWithModels):
     auto_create_customers = False
 
     def create_tile(self, name: str) -> Tile:

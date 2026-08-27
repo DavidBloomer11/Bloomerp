@@ -1,14 +1,14 @@
 import uuid
 from types import SimpleNamespace
 
-from bloomerp.models.activity_log import ActivityLog, ActivityLogAction
+from bloomerp.models.audit.activity_log import ActivityLog, ActivityLogAction
 from bloomerp.models.definition import ActivityLogSettings, BloomerpModelConfig
 from bloomerp.serializers.model_serializers import _model_serializers, get_serializer_cls, set_serializer_cls
 from bloomerp.services.activity_log_services import ActivityLogManager
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 
 
-class ActivityLogManagerTestCase(BaseBloomerpModelTestCase):
+class ActivityLogManagerTestCase(BaseBloomerpTestCaseWithModels):
     auto_create_customers = False
 
     def extendedSetup(self):

@@ -9,11 +9,11 @@ from bloomerp.dataviews.pivot_table.renderer import (
 from bloomerp.models import ApplicationField
 from bloomerp.models.users.user_list_view_preference import UserListViewPreference
 from bloomerp.services.preference_services import PreferenceManager
-from bloomerp.tests.base import BaseBloomerpModelTestCase
+from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 from bloomerp.tests.utils.dynamic_models import create_test_models
 
 
-class TestPivotDataView(BaseBloomerpModelTestCase):
+class TestPivotDataView(BaseBloomerpTestCaseWithModels):
     auto_create_customers = False
 
     @classmethod

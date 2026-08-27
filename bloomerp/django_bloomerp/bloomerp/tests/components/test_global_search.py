@@ -5,19 +5,19 @@ from bloomerp.field_types import Lookup
 from bloomerp.models import ContentType, User
 from django.urls import reverse
 
-from ..base import BaseBloomerpModelTestCase
+from ..base import BaseBloomerpTestCaseWithModels
 from bloomerp.components.global_search import _resolve_module, global_search
 from bs4 import BeautifulSoup
 from bloomerp.models import Policy, RowPolicy, FieldPolicy, RowPolicyRule
 from bloomerp.models import ApplicationField
-from bloomerp.models.activity_log import ActivityLog, ActivityLogAction
+from bloomerp.models.audit.activity_log import ActivityLog, ActivityLogAction
 from django.contrib.admin.models import ADDITION, LogEntry
 from django.contrib.auth.models import Permission
 from django.contrib.auth import get_user_model
 from bloomerp.router import BloomerpRoute, RouteType, ViewType
 from bloomerp.modules.definition import ModuleConfig
 
-class SearchResultsTests(BaseBloomerpModelTestCase):
+class SearchResultsTests(BaseBloomerpTestCaseWithModels):
     auto_create_customers = False
     auto_create_users = True
     
