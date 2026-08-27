@@ -23,7 +23,7 @@ class UserObjectLayoutPreferenceDefaultTests(BaseBloomerpTestCaseWithModels):
 
     def test_create_default_for_user_materializes_all_layouts_and_selects_default(self):
         settings = DetailViewSettings(
-            layout=[
+            layouts=[
                 FieldLayout(
                     name="Compact",
                     is_default=False,

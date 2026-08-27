@@ -38,7 +38,7 @@ class Initiative(BloomerpModel):
     bloomerp_config = BloomerpModelConfig(
         module="todos_and_initiatives",
         detail_view_settings=DetailViewSettings(
-            layout=[FieldLayout(
+            layouts=[FieldLayout(
                 rows=[
                 LayoutRow(
                     title=gettext_noop("Details"),

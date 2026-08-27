@@ -33,7 +33,7 @@ class Workflow(
     bloomerp_config = BloomerpModelConfig(
         module="automation",
         detail_view_settings=DetailViewSettings(
-            layout=[FieldLayout(
+            layouts=[FieldLayout(
                 rows=[
                 LayoutRow(
                     title=gettext_noop("Details"),

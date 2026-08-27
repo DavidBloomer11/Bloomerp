@@ -4,8 +4,9 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q, QuerySet
 from django.contrib.auth.models import Permission
 from django.utils.translation import gettext_lazy as _, gettext_noop
-from bloomerp.models.base_bloomerp_model import BloomerpModel, FieldLayout, LayoutItem, LayoutRow
-from bloomerp.models.definition import BloomerpModelConfig, DetailViewSettings
+from bloomerp.models import BloomerpModel
+
+from bloomerp.models.definition import BloomerpModelConfig, DetailViewSettings, FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.mixins.absolute_url_model_mixin import AbsoluteUrlModelMixin
 from bloomerp.models.mixins.avatar_model_mixin import AvatarModelMixin
 
@@ -14,7 +15,7 @@ from bloomerp.models.mixins.avatar_model_mixin import AvatarModelMixin
 USER_CONFIG = BloomerpModelConfig(
     module="users",
     detail_view_settings=DetailViewSettings(
-        layout=[FieldLayout(
+        layouts=[FieldLayout(
             rows=[
                 LayoutRow(
                     columns=2,

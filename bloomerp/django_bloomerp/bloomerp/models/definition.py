@@ -375,7 +375,7 @@ class DetailViewSettings(BaseModel):
         description="Optional list of view names to skip when generating the detail view router.",
     )
 
-    layout: list[FieldLayout] = Field(
+    layouts: list[FieldLayout] = Field(
         default_factory=list,
         description="Named object-layout configurations for detail and create views.",
     )
@@ -385,14 +385,14 @@ class DetailViewSettings(BaseModel):
     @model_validator(mode="after")
     def validate_layouts(self):
         """Require stable names and exactly one default configured layout."""
-        if not self.layout:
+        if not self.layouts:
             return self
 
-        names = [layout.name for layout in self.layout]
+        names = [layout.name for layout in self.layouts]
         if len(names) != len(set(names)):
             raise ValueError("Detail layout names must be unique.")
 
-        default_count = sum(layout.is_default for layout in self.layout)
+        default_count = sum(layout.is_default for layout in self.layouts)
         if default_count != 1:
             raise ValueError(
                 "Exactly one configured detail layout must have is_default=True."
@@ -401,7 +401,7 @@ class DetailViewSettings(BaseModel):
 
     def get_default_layout(self) -> FieldLayout | None:
         """Return the configured default object layout, if one exists."""
-        return next((layout for layout in self.layout if layout.is_default), None)
+        return next((layout for layout in self.layouts if layout.is_default), None)
 
 class ModelViewSettings(BaseModel):
     """Optional settings for a model's collection views."""

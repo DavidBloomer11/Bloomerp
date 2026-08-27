@@ -48,7 +48,7 @@ class ApiKey(BloomerpModel):
             )
         ],
         detail_view_settings=DetailViewSettings(
-            layout=[
+            layouts=[
                 FieldLayout(
                     rows=[
                         LayoutRow(

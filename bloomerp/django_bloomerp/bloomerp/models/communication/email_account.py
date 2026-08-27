@@ -42,7 +42,7 @@ class EmailAccount(BloomerpModel):
         module=None,
         api_settings=ApiSettings(enable_auto_generation=False),
         detail_view_settings=DetailViewSettings(
-            layout=[FieldLayout(
+            layouts=[FieldLayout(
                 rows=[
                 LayoutRow(
                     columns=2,

@@ -33,7 +33,7 @@ class FormSubmission(BloomerpModel):
 
     bloomerp_config = BloomerpModelConfig(
         detail_view_settings=DetailViewSettings(
-            layout=[FieldLayout(
+            layouts=[FieldLayout(
                 rows=[
                     LayoutRow(
                         title=gettext_noop("Details"),

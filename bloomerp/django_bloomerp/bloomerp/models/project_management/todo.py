@@ -149,7 +149,7 @@ class Todo(BloomerpModel):
                     ],
                 )
             ],
-            layout=[
+            layouts=[
                 FieldLayout(
                     name="Default",
                     rows=[

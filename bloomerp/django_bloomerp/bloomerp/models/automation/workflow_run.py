@@ -107,7 +107,7 @@ class WorkflowRun(
     bloomerp_config = BloomerpModelConfig(
         module="automation",
         detail_view_settings=DetailViewSettings(
-            layout=[FieldLayout(
+            layouts=[FieldLayout(
                 rows=[
                 LayoutRow(
                     columns=2,

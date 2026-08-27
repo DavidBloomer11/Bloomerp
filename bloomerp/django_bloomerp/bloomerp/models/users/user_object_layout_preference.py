@@ -27,7 +27,7 @@ class UserObjectLayoutPreference(ContentLayoutModelMixin, BaseViewPreference):
             model_config.detail_view_settings if model_config is not None else None
         )
         configured_layouts = (
-            detail_view_settings.layout
+            detail_view_settings.layouts
             if detail_view_settings is not None
             else []
         )

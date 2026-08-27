@@ -154,7 +154,7 @@ class BloomerpModelConfigDataViewTests(SimpleTestCase):
 class DetailViewSettingsTests(SimpleTestCase):
     def test_detail_view_settings_accept_multiple_layouts_and_find_default(self):
         settings = DetailViewSettings(
-            layout=[
+            layouts=[
                 FieldLayout(
                     name="Compact",
                     is_default=False,
@@ -178,7 +178,7 @@ class DetailViewSettingsTests(SimpleTestCase):
         )
 
         self.assertEqual(
-            [layout.name for layout in settings.layout],
+            [layout.name for layout in settings.layouts],
             ["Compact", "Detailed"],
         )
         self.assertEqual(settings.get_default_layout().name, "Detailed")
@@ -186,7 +186,7 @@ class DetailViewSettingsTests(SimpleTestCase):
     def test_detail_view_settings_require_unique_layout_names_and_one_default(self):
         with self.assertRaisesRegex(ValidationError, "names must be unique"):
             DetailViewSettings(
-                layout=[
+                layouts=[
                     FieldLayout(name="Default"),
                     FieldLayout(name="Default", is_default=False),
                 ]
@@ -194,7 +194,7 @@ class DetailViewSettingsTests(SimpleTestCase):
 
         with self.assertRaisesRegex(ValidationError, "Exactly one configured"):
             DetailViewSettings(
-                layout=[
+                layouts=[
                     FieldLayout(name="Compact", is_default=False),
                     FieldLayout(name="Detailed", is_default=False),
                 ]
@@ -202,7 +202,7 @@ class DetailViewSettingsTests(SimpleTestCase):
 
         with self.assertRaisesRegex(ValidationError, "Exactly one configured"):
             DetailViewSettings(
-                layout=[
+                layouts=[
                     FieldLayout(name="Compact"),
                     FieldLayout(name="Detailed"),
                 ]

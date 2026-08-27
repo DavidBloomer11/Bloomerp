@@ -98,7 +98,7 @@ class DocumentTemplate(BloomerpModel):
 
     bloomerp_config = BloomerpModelConfig(
         detail_view_settings=DetailViewSettings(
-            layout=[FieldLayout(
+            layouts=[FieldLayout(
                 rows=[
                     LayoutRow(
                         columns=2,
