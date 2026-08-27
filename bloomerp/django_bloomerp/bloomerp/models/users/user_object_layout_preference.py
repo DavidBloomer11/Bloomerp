@@ -2,7 +2,7 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 
-from bloomerp.models.base_bloomerp_model import FieldLayout
+from bloomerp.models.definition import FieldLayout
 from bloomerp.models.definition import get_model_config
 from bloomerp.models.mixins.content_layout_model_mixin import ContentLayoutModelMixin
 from bloomerp.models.users.base_view_preference import BaseViewPreference

@@ -14,7 +14,7 @@ from django.core.exceptions import ValidationError
 
 from bloomerp.dataviews.kanban.config import KanbanDataView
 from bloomerp.dataviews.table.config import TableDataView
-from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
+from bloomerp.models import FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.definition import (
     BloomerpModelConfig,
     DetailTab,

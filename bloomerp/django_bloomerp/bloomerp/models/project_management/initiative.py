@@ -8,7 +8,7 @@ from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _, gettext_noop
 
 from bloomerp.form_fields.behavior import BehaviorAction, BehaviorConfig, BehaviorRule
-from bloomerp.models.base_bloomerp_model import BloomerpModel, FieldLayout, LayoutItem, LayoutRow
+from bloomerp.models import BloomerpModel, FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.definition import (
     BloomerpModelConfig,
     DetailViewSettings,

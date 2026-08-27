@@ -38,7 +38,6 @@ import unicodedata
 
 
 from bloomerp.models.application_field import ApplicationField
-from bloomerp.models.base_bloomerp_model import BloomerpModel
 from bloomerp.models.definition import BloomerpModelConfig
 from bloomerp.permissions.definition import BloomerpPermission
 from bloomerp.router import router

@@ -5,7 +5,7 @@ from django.db import models
 from django.db.models import Q
 from django.http import HttpRequest
 from bloomerp.communication.inbox_folder_definition import InboxItemTypeDefinition, InboxFolderType
-from bloomerp.models.base_bloomerp_model import BloomerpModel
+from bloomerp.models import BloomerpModel
 from bloomerp.models.definition import ActivityLogSettings, BloomerpModelConfig
 
 class InboxItem(BloomerpModel):

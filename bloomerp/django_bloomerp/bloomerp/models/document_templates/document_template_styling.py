@@ -1,5 +1,5 @@
 from django.db import models
-from bloomerp.models.base_bloomerp_model import BloomerpModel
+from bloomerp.models import BloomerpModel
 from bloomerp.model_fields.code_field import CodeField
 from django.utils.translation import gettext_lazy as _
 

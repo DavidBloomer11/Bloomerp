@@ -11,7 +11,7 @@ from django.urls import reverse
 
 from bloomerp.field_types.types import FieldTypeDefinition
 from bloomerp.models import ApplicationField
-from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem
+from bloomerp.models.definition import FieldLayout, LayoutItem
 from bloomerp.models.forms.form import Form
 from bloomerp.models.mixins.content_layout_model_mixin import ContentLayoutModelMixin
 from bloomerp.models.users.user_object_layout_preference import UserObjectLayoutPreference

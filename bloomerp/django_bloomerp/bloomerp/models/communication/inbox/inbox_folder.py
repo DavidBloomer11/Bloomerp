@@ -4,7 +4,7 @@ from typing import Type
 from django.db import models
 from django.db.models import Q
 from bloomerp.communication.inbox_folder_definition import InboxFolderType, InboxFolderTypeDefinition
-from bloomerp.models.base_bloomerp_model import BloomerpModel
+from bloomerp.models import BloomerpModel
 from bloomerp.models.communication.inbox.inbox_item import InboxItem
 from bloomerp.models.users.user import AbstractBloomerpUser
 from bloomerp.utils.requests import parse_bool_parameter

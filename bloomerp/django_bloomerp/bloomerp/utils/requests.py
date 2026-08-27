@@ -12,7 +12,7 @@ from django.template.loader import render_to_string
 from django.contrib import messages
 from django_cotton import render_component
 
-from bloomerp.models.base_bloomerp_model import FieldLayout
+from bloomerp.models import FieldLayout
 from bloomerp.utils.renderer import render_field
 
 def parse_bool_parameter(value : Any, default_value=False) -> bool:

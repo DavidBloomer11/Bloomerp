@@ -1,4 +1,4 @@
-from bloomerp.models.base_bloomerp_model import BloomerpModel
+from bloomerp.models import BloomerpModel
 from django.db import models
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _

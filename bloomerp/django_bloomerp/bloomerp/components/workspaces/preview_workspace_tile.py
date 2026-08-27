@@ -6,7 +6,7 @@ from django.urls import NoReverseMatch, reverse
 from django.utils.translation import gettext_lazy as _
 
 from bloomerp.forms.workspaces import DEFAULT_TILE_ICON, TileMetadataForm
-from bloomerp.models.base_bloomerp_model import LayoutItem
+from bloomerp.models.definition import LayoutItem
 from bloomerp.router import router
 from bloomerp.services.sql_services import DatabaseTable
 from bloomerp.utils.requests import parse_bool_parameter

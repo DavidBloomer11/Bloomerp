@@ -7,7 +7,7 @@ from django.db import connection
 from django.http import QueryDict
 from django.utils.datastructures import MultiValueDict
 
-from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
+from bloomerp.models import FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.access_control.field_policy import FieldPolicy
 from bloomerp.models.access_control.policy import Policy
 from bloomerp.models.access_control.row_policy import RowPolicy

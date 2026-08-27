@@ -13,7 +13,7 @@ from bloomerp.models.access_control.policy import Policy
 from bloomerp.models.access_control.row_policy import RowPolicy
 from bloomerp.models.access_control.row_policy_rule import RowPolicyRule
 from bloomerp.models.application_field import ApplicationField
-from bloomerp.models.base_bloomerp_model import BloomerpModel
+from bloomerp.models import BloomerpModel
 from bloomerp.models.users.user import AbstractBloomerpUser
 from bloomerp.permissions.compilers.django_q_permission_compiler import (
     CompiledDjangoAccess,

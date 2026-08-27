@@ -8,7 +8,7 @@ from django.forms import BoundField
 from django.db.models import Model
 
 from bloomerp.field_types.types import FieldType
-from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
+from bloomerp.models import FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.permissions.manager import UserPolicyManager
 from django.db.models import QuerySet

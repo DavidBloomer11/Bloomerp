@@ -1,4 +1,4 @@
-from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
+from bloomerp.models import FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models import ApplicationField
 from django.db.models import Model
 from bloomerp.models import AbstractBloomerpUser

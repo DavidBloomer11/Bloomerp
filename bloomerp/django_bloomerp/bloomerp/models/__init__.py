@@ -1,3 +1,4 @@
+from .definition import *
 from .mixins import *
 from .base_bloomerp_model import *
 from .application_field import *
@@ -15,4 +16,5 @@ from .communication import *
 from .llm import *
 from .access_control import *
 from .automation import *
+
 

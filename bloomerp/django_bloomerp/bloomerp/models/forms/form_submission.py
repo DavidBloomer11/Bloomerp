@@ -1,7 +1,8 @@
 from django.db import models
 from django.http import HttpRequest, HttpResponse
 
-from bloomerp.models.base_bloomerp_model import BloomerpModel, FieldLayout, LayoutItem, LayoutRow
+from bloomerp.models.definition import FieldLayout, LayoutItem, LayoutRow
+from bloomerp.models import BloomerpModel
 from bloomerp.models.definition import BloomerpModelConfig, DetailViewSettings, ObjectAction
 from django.utils.translation import gettext_lazy as _, gettext_noop
 from bloomerp.utils.requests import render_message

@@ -6,7 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
 from bloomerp.models import ApplicationField
-from bloomerp.models.base_bloomerp_model import FieldLayout
+from bloomerp.models import FieldLayout
 
 
 ROW_KEY_SEPARATOR = "__"

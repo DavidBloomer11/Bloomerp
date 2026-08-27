@@ -10,7 +10,7 @@ from django.db import models
 from django.db.models import Model
 
 from bloomerp.field_types.types import FieldType, FieldTypeDefinition
-from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
+from bloomerp.models import FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.definition import BloomerpModelConfig
 from bloomerp.modules.definition import ModuleConfig, module_registry
 from bloomerp.modules.definition import BaseConfig
@@ -235,7 +235,7 @@ def create_model_from_config(
     if hasattr(model_config, "has_avatar") and model_config.has_avatar is False:
         attrs["avatar"] = None
 
-    from bloomerp.models.base_bloomerp_model import BloomerpModel
+    from bloomerp.models import BloomerpModel
 
     return type(model_class_name, (BloomerpModel,), attrs)
 

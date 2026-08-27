@@ -4,7 +4,7 @@ from django.db import connection, models
 from django.urls import reverse
 from bloomerp.models.automation import workflow
 from bloomerp.models.automation.workflow_run_step import WorkflowRunStepStatus
-from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
+from bloomerp.models.definition import FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.definition import ActivityLogSettings, BloomerpModelConfig, DetailViewSettings, ObjectModalAction
 from bloomerp.models.mixins.absolute_url_model_mixin import AbsoluteUrlModelMixin
 from bloomerp.models.mixins import TimestampModelMixin

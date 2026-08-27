@@ -8,8 +8,8 @@ from django.contrib.auth.hashers import check_password, make_password
 from django.db import models
 from django.http import HttpResponse
 from django.utils import timezone
-
-from bloomerp.models.base_bloomerp_model import BloomerpModel, FieldLayout, LayoutItem, LayoutRow
+from bloomerp.models import BloomerpModel
+from bloomerp.models.definition import FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.definition import ApiSettings, BloomerpModelConfig, DetailViewSettings, ModelViewSettings, ObjectAction
 from bloomerp.modules.users import UsersModule
 from django_htmx.http import HttpResponseClientRefresh

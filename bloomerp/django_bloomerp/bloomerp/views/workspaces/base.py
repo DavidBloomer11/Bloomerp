@@ -7,7 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q, QuerySet
 from django.urls import reverse
 
-from bloomerp.models.base_bloomerp_model import LayoutItem
+from bloomerp.models import LayoutItem
 from bloomerp.models.workspaces.tile import Tile
 from bloomerp.models.workspaces.workspace import Workspace
 from bloomerp.services.sectioned_layout_services import dump_layout_json

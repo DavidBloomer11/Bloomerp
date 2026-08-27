@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _, gettext_noop
 
 from bloomerp.dataviews.table.config import TableDataView
-from bloomerp.models.base_bloomerp_model import BloomerpModel
+from bloomerp.models import BloomerpModel
 from bloomerp.models.definition import (
     BloomerpModelConfig,
     DataviewHTMLAction,

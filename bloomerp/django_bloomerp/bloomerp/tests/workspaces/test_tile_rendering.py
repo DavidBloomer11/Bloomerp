@@ -9,7 +9,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from bloomerp.models.users.user_list_view_preference import UserListViewPreference
-from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
+from bloomerp.models import FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.workspaces.tile import Tile
 from bloomerp.components.layout.render_layout_item import _tile
 from bloomerp.permissions.manager import UserPolicyManager

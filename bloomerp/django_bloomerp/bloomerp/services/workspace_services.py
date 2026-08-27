@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext
 
-from bloomerp.models.base_bloomerp_model import LayoutItem
+from bloomerp.models import LayoutItem
 from bloomerp.models.workspaces.workspace import Workspace
 from bloomerp.models.workspaces.tile import Tile
 from bloomerp.modules.definition import ModuleRegistry, module_registry

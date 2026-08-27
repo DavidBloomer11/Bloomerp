@@ -1,7 +1,7 @@
 from django import forms
 from django.test import SimpleTestCase
 
-from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
+from bloomerp.models import FieldLayout, LayoutItem, LayoutRow
 from bloomerp.views.mixins.layout_form_mixin import LayoutFormMixin
 from bloomerp.views.mixins.layout_mixin import LayoutMixin
 

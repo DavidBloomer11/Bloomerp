@@ -3,7 +3,8 @@ from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from bloomerp.models.application_field import ApplicationField
-from bloomerp.models.base_bloomerp_model import BloomerpModel, FieldLayout, LayoutItem, LayoutRow
+from bloomerp.models.definition import FieldLayout, LayoutItem, LayoutRow
+from bloomerp.models import BloomerpModel
 from bloomerp.models.definition import BloomerpModelConfig, ObjectHTMLAction, DetailViewSettings
 from bloomerp.models.mixins.content_layout_model_mixin import ContentLayoutModelMixin
 from django.utils.translation import gettext_lazy as _, gettext_noop

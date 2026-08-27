@@ -3,7 +3,7 @@ from typing import Optional
 from django.db.models import QuerySet
 
 from bloomerp.model_fields.icon_field import IconField
-from bloomerp.models.base_bloomerp_model import BloomerpModel
+from bloomerp.models import BloomerpModel
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 

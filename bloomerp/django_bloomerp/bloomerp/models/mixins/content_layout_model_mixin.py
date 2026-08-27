@@ -1,7 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 from django.db import models
 
-from bloomerp.models.base_bloomerp_model import FieldLayout
+from bloomerp.models.definition import FieldLayout
 
 
 class ContentLayoutModelMixin(models.Model):

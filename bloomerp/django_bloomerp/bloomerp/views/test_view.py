@@ -1,4 +1,4 @@
-from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
+from bloomerp.models import FieldLayout, LayoutItem, LayoutRow
 from bloomerp.router import router
 from bloomerp.views.base import BaseBloomerpView
 from bloomerp.views.mixins.layout_form_mixin import LayoutFormMixin

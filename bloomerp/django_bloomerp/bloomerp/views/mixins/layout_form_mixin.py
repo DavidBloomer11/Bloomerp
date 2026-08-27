@@ -4,7 +4,7 @@ from django import forms
 from django.utils.html import format_html, format_html_join
 from django.views.generic.edit import FormMixin
 
-from bloomerp.models.base_bloomerp_model import LayoutItem
+from bloomerp.models import LayoutItem
 from bloomerp.services.sectioned_layout_services import get_layout_widget_attrs
 from bloomerp.views.mixins.layout_mixin import LayoutMixin
 

@@ -13,7 +13,7 @@ from bloomerp.forms.model_form import (
     get_model_form_application_fields,
 )
 from bloomerp.models.application_field import ApplicationField
-from bloomerp.models.base_bloomerp_model import LayoutItem
+from bloomerp.models import LayoutItem
 from bloomerp.models.users.user import AbstractBloomerpUser
 from bloomerp.permissions.manager import UserPolicyManager
 from bloomerp.views.mixins.layout_form_mixin import LayoutFormMixin

@@ -1,5 +1,5 @@
 from django.db import models
-from bloomerp.models.base_bloomerp_model import BloomerpModel, FieldLayout, LayoutItem, LayoutRow
+from bloomerp.models import BloomerpModel, FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.definition import BloomerpModelConfig, DetailViewSettings
 from django.utils.translation import gettext_lazy as _, gettext_noop
 

@@ -3,7 +3,7 @@ from django.test import SimpleTestCase
 from bloomerp.components.layout.save_layout_object import (
     _protected_layout_items_are_unchanged,
 )
-from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
+from bloomerp.models import FieldLayout, LayoutItem, LayoutRow
 
 
 class TestSaveLayoutObject(SimpleTestCase):

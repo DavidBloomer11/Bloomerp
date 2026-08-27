@@ -6,7 +6,7 @@ from django.http import HttpRequest, HttpResponse
 from django.template.loader import render_to_string
 from django.urls import reverse
 from bloomerp.models.application_field import ApplicationField
-from bloomerp.models.base_bloomerp_model import LayoutItem
+from bloomerp.models.definition import LayoutItem
 from bloomerp.models.forms.form import Form
 from bloomerp.models.users.user_object_layout_preference import UserObjectLayoutPreference
 from bloomerp.models.workspaces.tile import Tile

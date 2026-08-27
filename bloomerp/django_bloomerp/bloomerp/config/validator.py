@@ -13,7 +13,7 @@ from django.db.models import Model
 from tenacity import retry_if_not_exception_message
 
 from bloomerp.config.definition import BloomerpConfig
-from bloomerp.models.base_bloomerp_model import BloomerpModel
+from bloomerp.models import BloomerpModel
 from bloomerp.models.definition import BloomerpModelConfig
 from bloomerp.models.users.user import AbstractBloomerpUser
 from bloomerp.modules.definition import module_registry

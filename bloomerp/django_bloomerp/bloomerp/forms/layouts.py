@@ -1,7 +1,7 @@
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, HTML, Field
 from django.utils.translation import gettext
-from bloomerp.models.base_bloomerp_model import LayoutRow
+from bloomerp.models.definition import LayoutRow
 
 class BloomerpModelformHelper(FormHelper):
     layout_defined: bool = False

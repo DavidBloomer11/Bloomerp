@@ -3,7 +3,7 @@ from django.urls import reverse
 from playwright.sync_api import Locator, Response, expect
 
 from bloomerp.field_types.lookups import Lookup
-from bloomerp.models.base_bloomerp_model import LayoutItem, LayoutRow
+from bloomerp.models import LayoutItem, LayoutRow
 from bloomerp.models.project_management.todo import Todo
 from bloomerp.models.users.user import AbstractBloomerpUser
 from bloomerp.models.workspaces.tile import Tile

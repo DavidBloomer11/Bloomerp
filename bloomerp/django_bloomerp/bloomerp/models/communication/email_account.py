@@ -6,8 +6,9 @@ from django.utils import timezone
 from bloomerp.communication.utils.crypto import encrypt_email_secret
 from bloomerp.communication.utils.crypto import decrypt_email_secret
 from bloomerp.communication.emails.email_providers import EmailProvider, EmailSyncMode
-from bloomerp.models.base_bloomerp_model import BloomerpModel, FieldLayout, LayoutItem, LayoutRow
+from bloomerp.models.definition import FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.definition import ApiSettings, BloomerpModelConfig, DetailViewSettings
+from bloomerp.models import BloomerpModel
 
 
 class EmailAccount(BloomerpModel):

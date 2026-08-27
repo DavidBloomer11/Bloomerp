@@ -2,9 +2,6 @@ from django.utils.translation import gettext_lazy as _
 
 from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
-from typing import Optional
-
-from bloomerp.models.definition import FieldLayout
 from bloomerp.models.mixins.absolute_url_model_mixin import AbsoluteUrlModelMixin
 from bloomerp.models.mixins.avatar_model_mixin import AvatarModelMixin
 from bloomerp.models.mixins.timestamp_model_mixin import TimestampModelMixin
@@ -27,8 +24,6 @@ class BloomerpModel(
     files = GenericRelation("bloomerp.File")
     comments = GenericRelation("bloomerp.Comment")
 
-    field_layout:Optional[FieldLayout] = None # DEPR
-    form_layout:dict = None # DEPR 
 
 
 

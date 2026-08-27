@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Optional, Self
 from urllib.parse import urlencode
-from bloomerp.models.base_bloomerp_model import FieldLayout, LayoutItem, LayoutRow
+from bloomerp.models import FieldLayout, LayoutItem, LayoutRow
 from dataclasses import dataclass
 from bloomerp.utils.renderer import render_field
 from django.contrib.contenttypes.models import ContentType

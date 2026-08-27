@@ -6,7 +6,7 @@ from django.db import models, transaction
 from django.db.models import Case, IntegerField, QuerySet, When
 from django.urls import reverse
 
-from bloomerp.models.base_bloomerp_model import BloomerpModel, FieldLayout, LayoutRow
+from bloomerp.models import BloomerpModel, FieldLayout, LayoutRow
 from bloomerp.models.mixins.content_layout_model_mixin import ContentLayoutModelMixin
 from bloomerp.models.users.base_preference import BasePreference
 from bloomerp.models.users.user import AbstractBloomerpUser
