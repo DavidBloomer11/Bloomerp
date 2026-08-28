@@ -41,7 +41,7 @@ def _read_toml_model(path: Path, model_type):
 def get_project_manifest() -> BloomerpProjectManifest:
     """Return the manifest for the project containing the current directory."""
     return _read_toml_model(
-        get_project_metadata_dir() / "project.toml",
+        get_project_metadata_dir() / "project.bloomerp.toml",
         BloomerpProjectManifest,
     )
 
@@ -61,7 +61,7 @@ def write_project_state(state: BloomerpProjectState) -> None:
 
 def write_project_manifest(manifest:BloomerpProjectManifest) -> None:
     """Writes the project manifest using the remote"""
-    write_toml_model(get_project_metadata_dir() / "project.toml", manifest)
+    write_toml_model(get_project_metadata_dir() / "project.bloomerp.toml", manifest)
 
 
 def get_remote_project(project_id:str) -> dict:

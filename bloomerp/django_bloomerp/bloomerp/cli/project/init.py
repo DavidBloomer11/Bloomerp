@@ -127,7 +127,7 @@ def _write_project_metadata(
     create_local_files: bool,
 ) -> None:
     metadata_dir = target_dir / ".bloomerp"
-    write_toml_model(metadata_dir / "project.toml", manifest)
+    write_toml_model(metadata_dir / "project.bloomerp.toml", manifest)
     if create_local_files:
         write_toml_model(
             metadata_dir / "state.toml",
@@ -198,10 +198,10 @@ def initialize_project(
     for app_name in options.app_names:
         create_app(app_name, target_dir)
 
-    final_manifest = _load_manifest(target_dir / ".bloomerp" / "project.toml")
+    final_manifest = _load_manifest(target_dir / ".bloomerp" / "project.bloomerp.toml")
     return ProjectInitializationResult(
         project_root=target_dir,
-        manifest_path=target_dir / ".bloomerp" / "project.toml",
+        manifest_path=target_dir / ".bloomerp" / "project.bloomerp.toml",
         created_files=sum(1 for path in target_dir.rglob("*") if path.is_file()),
         installed_apps=tuple(final_manifest.django.installed_apps),
     )
@@ -213,7 +213,7 @@ def initialize_project(
     "--manifest",
     "manifest_path",
     type=click.Path(path_type=Path, exists=True, dir_okay=False),
-    help="Initialize from an existing .bloomerp/project.toml manifest.",
+    help="Initialize from an existing .bloomerp/project.bloomerp.toml manifest.",
 )
 @click.option("--name", help="Project name for a newly generated manifest.")
 @click.option(

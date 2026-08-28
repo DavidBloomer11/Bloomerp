@@ -17,7 +17,7 @@ python manage.py runserver
 ## Project configuration
 
 - Add dependencies to `pyproject.toml`.
-- Register Django applications in `.bloomerp/project.toml`.
+- Register Django applications in `.bloomerp/project.bloomerp.toml`.
 - Put shared custom settings in `config/settings/common.py`.
 - Put environment-specific overrides in `local.py` or `production.py`.
 - Put custom URLs in `config/project_urls.py`.

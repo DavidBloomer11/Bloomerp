@@ -6,7 +6,7 @@ import click
 import requests
 
 from .base import BLOOMERP_IO_URL
-from .credentials import load_api_key
+from .credentials import load_api_key, load_organization_id
 
 
 class BloomerpCliClient:
@@ -15,9 +15,15 @@ class BloomerpCliClient:
         *,
         server_url: str = BLOOMERP_IO_URL,
         api_key: str | None = None,
+        organization_id: str | None = None,
     ) -> None:
         self.server_url = server_url.rstrip("/")
         self.api_key = api_key if api_key is not None else load_api_key(self.server_url)
+        self.organization_id = (
+            organization_id
+            if organization_id is not None
+            else load_organization_id(self.server_url)
+        )
 
     def request(
         self,

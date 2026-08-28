@@ -74,7 +74,7 @@ def test_project_link_confirms_before_replacing_a_valid_link(client_type: Mock):
         ) == {"project_id": "project-2"}
         assert client_type.return_value.request.call_args_list[0].args == (
             "GET",
-            "/api/projects/project-1/",
+            "/api/projects/project-1/?type=SELF_MANAGED_CLOUD",
         )
         assert client_type.return_value.request.call_args_list[0].kwargs == {
             "allow_not_found": True
@@ -103,13 +103,81 @@ def test_project_link_lists_owned_projects_and_writes_selection(client_type: Moc
         assert result.exit_code == 0
         assert "1. First" in result.output
         assert "2. Second" in result.output
+        assert "3. Create a new project" in result.output
         assert "Linked this project to Second" in result.output
         assert tomllib.loads(
             (project_root / ".bloomerp/state.toml").read_text(encoding="utf-8")
         ) == {"project_id": "project-2"}
         client_type.return_value.request.assert_called_once_with(
-            "GET", "/api/projects/"
+            "GET", "/api/projects/?type=SELF_MANAGED_CLOUD"
         )
+
+
+@patch("bloomerp.cli.project.link.BloomerpCliClient")
+def test_project_link_can_create_from_manifest_when_one_project_exists(
+    client_type: Mock,
+):
+    projects_response = Mock()
+    projects_response.json.return_value = [
+        {"id": "project-existing", "name": "Existing", "domain_name": "existing"}
+    ]
+    created_response = Mock()
+    created_response.json.return_value = {
+        "id": "project-created",
+        "name": "Example",
+        "domain_name": "example",
+    }
+    client = client_type.return_value
+    client.request.side_effect = [projects_response, created_response]
+    client.session.return_value = {"user": {"id": 42}}
+    runner = CliRunner()
+
+    with runner.isolated_filesystem():
+        Path(".bloomerp").mkdir()
+        Path(".bloomerp/state.toml").write_text("", encoding="utf-8")
+        Path(".bloomerp/project.bloomerp.toml").write_text(
+            '''name = "Example"
+description = "Example project"
+
+[environment]
+required = ["DJANGO_SECRET_KEY"]
+optional = []
+
+[runtime]
+bloomerp_version = "1.2.3"
+python_version = "3.13"
+
+[deployment]
+server_location = "US_EAST"
+''',
+            encoding="utf-8",
+        )
+
+        result = runner.invoke(main, ["project", "link"], input="2\n")
+
+        assert result.exit_code == 0
+        assert "1. Existing" in result.output
+        assert "2. Create a new project" in result.output
+        assert "Created Example" in result.output
+        assert "Linked this project to Example" in result.output
+        assert tomllib.loads(
+            Path(".bloomerp/state.toml").read_text(encoding="utf-8")
+        ) == {"project_id": "project-created"}
+        assert client.request.call_args_list == [
+            call("GET", "/api/projects/?type=SELF_MANAGED_CLOUD"),
+            call(
+                "POST",
+                "/api/projects/",
+                json={
+                    "name": "Example",
+                    "description": "Example project",
+                    "owner": 42,
+                    "server_location": "US_EAST",
+                    "bloomerp_version": "1.2.3",
+                    "type": "SELF_MANAGED_CLOUD",
+                },
+            ),
+        ]
 
 
 @patch("bloomerp.cli.project._django.subprocess.run")
@@ -240,7 +308,7 @@ def test_project_upload_sends_manifest_and_existing_wheel(client_type: Mock):
         Path(".bloomerp/state.toml").write_text(
             'project_id = "project-1"\n', encoding="utf-8"
         )
-        Path(".bloomerp/project.toml").write_text(
+        Path(".bloomerp/project.bloomerp.toml").write_text(
             """name = "Example"
 description = "Demo"
 
@@ -305,7 +373,7 @@ def test_project_build_wheel_contains_project_package_data():
         with zipfile.ZipFile(wheels[0]) as wheel:
             members = set(wheel.namelist())
 
-        assert "apps/inventory/bloomerp.toml" in members
+        assert "apps/inventory/app.bloomerp.toml" in members
         assert "apps/inventory/templates/sample_detail_view.html" in members
         assert "apps/inventory/static/inventory/app.js" in members
 
@@ -561,7 +629,7 @@ def test_project_init_creates_manifests_without_requiring_an_app():
         assert not Path("example/core").exists()
 
         project_manifest = tomllib.loads(
-            Path("example/.bloomerp/project.toml").read_text(encoding="utf-8")
+            Path("example/.bloomerp/project.bloomerp.toml").read_text(encoding="utf-8")
         )
         assert project_manifest["name"] == "example"
         assert project_manifest["environment"]["required"] == [
@@ -609,7 +677,7 @@ def test_project_init_can_run_the_app_init_flow():
 
         assert result.exit_code == 0
         app_manifest = tomllib.loads(
-            Path("example/apps/inventory/bloomerp.toml").read_text(
+            Path("example/apps/inventory/app.bloomerp.toml").read_text(
                 encoding="utf-8"
             )
         )
@@ -619,7 +687,7 @@ def test_project_init_can_run_the_app_init_flow():
             "description": "",
         }
         project_manifest = tomllib.loads(
-            Path("example/.bloomerp/project.toml").read_text(encoding="utf-8")
+            Path("example/.bloomerp/project.bloomerp.toml").read_text(encoding="utf-8")
         )
         assert project_manifest["django"]["installed_apps"] == ["apps.inventory"]
         settings = Path(
@@ -634,7 +702,7 @@ def test_project_init_supports_manifest_driven_non_interactive_generation():
 
     with runner.isolated_filesystem():
         generator_version = version("Bloomerp")
-        manifest_path = Path("managed-project.toml")
+        manifest_path = Path("managed-project.bloomerp.toml")
         manifest_path.write_text(
             f'''name = "Managed Project"
 description = ""
@@ -675,10 +743,9 @@ installed_apps = ["generated_apps.project_app"]
         assert payload["generator_version"] == generator_version
         assert payload["installed_apps"] == ["generated_apps.project_app"]
         assert Path("managed-project/manage.py").is_file()
-        assert Path("managed-project/.bloomerp/project.toml").is_file()
+        assert Path("managed-project/.bloomerp/project.bloomerp.toml").is_file()
         assert Path("managed-project/.bloomerp/scaffold.lock").is_file()
         assert not Path("managed-project/.bloomerp/state.toml").exists()
         assert not Path("managed-project/.env").exists()
         assert not Path("managed-project/.gitignore").exists()
         assert not Path("managed-project/.python-version").exists()
-

@@ -9,7 +9,6 @@ from .organization import organization
 from .project import project
 
 
-
 @click.group()
 def main() -> None:
     """Develop, extend, and deploy Bloomerp projects."""
