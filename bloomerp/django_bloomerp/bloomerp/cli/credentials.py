@@ -56,7 +56,26 @@ def load_api_key(server_url: str = BLOOMERP_IO_URL) -> str | None:
 
 def save_api_key(api_key: str, server_url: str = BLOOMERP_IO_URL) -> None:
     payload = _read_credentials()
-    payload["profiles"][server_url.rstrip("/")] = {"api_key": api_key}
+    profile = payload["profiles"].setdefault(server_url.rstrip("/"), {})
+    profile["api_key"] = api_key
+    _write_credentials(payload)
+
+
+def load_organization_id(server_url: str = BLOOMERP_IO_URL) -> str | None:
+    profile = _read_credentials()["profiles"].get(server_url.rstrip("/"), {})
+    organization_id = (
+        profile.get("organization_id") if isinstance(profile, dict) else None
+    )
+    return str(organization_id).strip() if organization_id else None
+
+
+def save_organization_id(
+    organization_id: str,
+    server_url: str = BLOOMERP_IO_URL,
+) -> None:
+    payload = _read_credentials()
+    profile = payload["profiles"].setdefault(server_url.rstrip("/"), {})
+    profile["organization_id"] = organization_id
     _write_credentials(payload)
 
 

@@ -92,6 +92,179 @@ reset-test-data() {
   uv run manage.py create_test_data
 }
 
+sync-cli-config-settings() {
+    local script_dir
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+  python3 - "$script_dir" "$@" <<'PY'
+from __future__ import annotations
+
+import argparse
+import shutil
+import tomllib
+from datetime import UTC, datetime
+from pathlib import Path
+from pprint import pformat
+
+
+def unique(values: list[str]) -> list[str]:
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for value in values:
+        if value in seen:
+            continue
+        seen.add(value)
+        ordered.append(value)
+    return ordered
+
+
+def load_project_installed_apps(manifest_path: Path, legacy_settings_path: Path) -> list[str]:
+    installed_apps: list[str] = []
+
+    if manifest_path.is_file():
+        data = tomllib.loads(manifest_path.read_text(encoding="utf-8"))
+        django_settings = data.get("django", {})
+        if isinstance(django_settings, dict):
+            apps = django_settings.get("installed_apps", [])
+            if isinstance(apps, list):
+                installed_apps.extend(
+                    app
+                    for app in apps
+                    if isinstance(app, str) and app.strip()
+                )
+
+    # Preserve the development module app currently used by this repo.
+    if legacy_settings_path.is_file():
+        legacy_settings = legacy_settings_path.read_text(encoding="utf-8")
+        if "'bloomerp_modules'" in legacy_settings or '"bloomerp_modules"' in legacy_settings:
+            installed_apps.append("bloomerp_modules")
+
+    return unique(installed_apps)
+
+
+def copy_cli_config(template_config_dir: Path, target_config_dir: Path, *, backup: bool) -> Path | None:
+    backup_root: Path | None = None
+    if target_config_dir.exists() and backup:
+        timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+        backup_root = target_config_dir.parent / ".bloomerp" / "config-sync-backups" / timestamp
+        shutil.copytree(target_config_dir, backup_root / "config")
+
+    if target_config_dir.exists():
+        shutil.rmtree(target_config_dir)
+
+    shutil.copytree(
+        template_config_dir,
+        target_config_dir,
+        ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.pyo"),
+    )
+    return backup_root
+
+
+def render_project_registry(project_registry_path: Path, installed_apps: list[str]) -> None:
+    source = project_registry_path.read_text(encoding="utf-8")
+    rendered = source.replace(
+        "__PROJECT_INSTALLED_APPS__",
+        pformat(installed_apps, width=88, sort_dicts=False),
+    )
+    project_registry_path.write_text(rendered, encoding="utf-8")
+
+
+def expected_snapshot(template_config_dir: Path, installed_apps: list[str]) -> dict[str, str]:
+    snapshot: dict[str, str] = {}
+    for path in sorted(template_config_dir.rglob("*.py")):
+        if "__pycache__" in path.parts:
+            continue
+        relative = path.relative_to(template_config_dir).as_posix()
+        contents = path.read_text(encoding="utf-8")
+        if relative == "settings/generated/project_registry.py":
+            contents = contents.replace(
+                "__PROJECT_INSTALLED_APPS__",
+                pformat(installed_apps, width=88, sort_dicts=False),
+            )
+        snapshot[relative] = contents
+    return snapshot
+
+
+def check_sync(template_config_dir: Path, target_config_dir: Path, installed_apps: list[str]) -> int:
+    expected = expected_snapshot(template_config_dir, installed_apps)
+    actual: dict[str, str] = {}
+    for path in sorted(target_config_dir.rglob("*.py")):
+        if "__pycache__" in path.parts:
+            continue
+        actual[path.relative_to(target_config_dir).as_posix()] = path.read_text(encoding="utf-8")
+
+    drift = sorted(
+        {
+            *[key for key, value in expected.items() if actual.get(key) != value],
+            *[key for key in actual if key not in expected],
+        }
+    )
+
+    if drift:
+        print("Config scaffold drift detected:")
+        for path in drift:
+            print(f"  - config/{path}")
+        return 1
+
+    print("Config scaffold is current.")
+    return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        prog="./scripts.sh sync-cli-config-settings",
+        description="Sync bloomerp/django_bloomerp/config from CLI template_project/config.",
+    )
+    parser.add_argument("--check", action="store_true", help="Check drift without writing files.")
+    parser.add_argument(
+        "--no-backup",
+        action="store_true",
+        help="Do not create a backup before replacing config.",
+    )
+    import sys
+
+    args = parser.parse_args(sys.argv[2:])
+
+    script_dir = Path(sys.argv[1]).resolve()
+    django_root = script_dir / "bloomerp/django_bloomerp"
+    template_config_dir = django_root / "bloomerp/cli/template_project/config"
+    target_config_dir = django_root / "config"
+    manifest_path = django_root / ".bloomerp/project.bloomerp.toml"
+    legacy_settings_path = target_config_dir / "settings.py"
+
+    if not template_config_dir.is_dir():
+        raise SystemExit(f"Template config directory not found: {template_config_dir}")
+
+    installed_apps = load_project_installed_apps(manifest_path, legacy_settings_path)
+    if args.check:
+        if not target_config_dir.exists():
+            print("Config scaffold drift detected:")
+            print("  - config/ (missing)")
+            return 1
+        return check_sync(template_config_dir, target_config_dir, installed_apps)
+
+    backup_root = copy_cli_config(
+        template_config_dir,
+        target_config_dir,
+        backup=not args.no_backup,
+    )
+    project_registry_path = target_config_dir / "settings/generated/project_registry.py"
+    render_project_registry(project_registry_path, installed_apps)
+
+    if backup_root is not None:
+        print(f"Backed up previous config to {backup_root / 'config'}")
+    print(f"Synced config scaffold from CLI template into {target_config_dir}")
+    if installed_apps:
+        print(f"Rendered project apps into project_registry.py: {installed_apps}")
+    else:
+        print("Rendered project apps into project_registry.py: []")
+    return 0
+
+
+raise SystemExit(main())
+PY
+}
+
 document-cotton-components() {
   local script_dir
   script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -426,6 +599,10 @@ case "${1:-}" in
         shift
         update-field-types "$@"
         ;;
+    sync-cli-config-settings)
+        shift
+        sync-cli-config-settings "$@"
+        ;;
   reset-test-data)
     shift
     reset-test-data "$@"
@@ -444,6 +621,7 @@ case "${1:-}" in
         echo "Commands:"
         echo "  update-internal-sdk [create_sdk options]"
         echo "  update-field-types"
+        echo "  sync-cli-config-settings [--check] [--no-backup]"
         echo "  reset-test-data"
         echo "  document-cotton-components"
                 echo "  autoCreateTests --type [components|models|views|widgets]"
@@ -451,7 +629,7 @@ case "${1:-}" in
   *)
     echo "Unknown command: $1" >&2
     echo "Usage: ./scripts.sh <command>" >&2
-                echo "Commands: update-internal-sdk, update-field-types, reset-test-data, document-cotton-components, autoCreateTests" >&2
+                                echo "Commands: update-internal-sdk, update-field-types, sync-cli-config-settings, reset-test-data, document-cotton-components, autoCreateTests" >&2
     exit 1
     ;;
 esac

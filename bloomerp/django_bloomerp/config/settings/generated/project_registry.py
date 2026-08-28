@@ -1,3 +1,3 @@
 """Generated from .bloomerp/project.bloomerp.toml by `bloomerp project scaffold-sync`."""
 
-PROJECT_INSTALLED_APPS = __PROJECT_INSTALLED_APPS__
+PROJECT_INSTALLED_APPS = ['bloomerp_modules']

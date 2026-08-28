@@ -48,14 +48,13 @@ AUTHENTICATION_BACKENDS = BLOOMERP_AUTHENTICATION_BACKENDS
 SITE_ID = BLOOMERP_SITE_ID
 
 INSTALLED_APPS = [
-    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'channels',
+    'bloomerp',
 ]
 
 # Don't load the optional "bloomerp_modules" app during tests because it

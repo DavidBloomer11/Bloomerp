@@ -5,6 +5,7 @@ __pycache__/
 db.sqlite3
 staticfiles/
 .bloomerp/state.toml
+.bloomerp/apps/
 .bloomerp/scaffold-backups/
 build/
 dist/

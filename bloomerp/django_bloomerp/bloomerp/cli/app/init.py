@@ -7,6 +7,8 @@ from pathlib import Path
 
 import click
 
+from bloomerp.cli.utils import get_project_manifest, write_project_manifest
+
 from ..base import BloomerpAppManifest, BloomerpProjectManifest
 from ..toml import write_toml_model
 
@@ -54,7 +56,7 @@ def _copy_app_template(target_dir: Path, replacements: dict[str, str]) -> None:
 def _register_app_in_project(project_dir: Path, app_import_path: str) -> None:
     from ..project.scaffold_sync import synchronize_scaffold
 
-    manifest_path = project_dir / ".bloomerp" / "project.toml"
+    manifest_path = project_dir / ".bloomerp" / "project.bloomerp.toml"
     if not manifest_path.is_file():
         return
 
@@ -91,10 +93,20 @@ def create_app(name: str, parent_dir: Path) -> Path:
     }
     _copy_app_template(target_dir, replacements)
     write_toml_model(
-        target_dir / "bloomerp.toml",
+        target_dir / "app.bloomerp.toml",
         BloomerpAppManifest(name=app_name),
     )
     _register_app_in_project(parent_dir, app_import_path)
+    
+    project_manifest = get_project_manifest()
+    if project_manifest:
+        current_installed_apps = set(project_manifest.django.installed_apps)
+        current_installed_apps.add(app_import_path)
+        
+        project_manifest.django.installed_apps = list(current_installed_apps)
+        
+        write_project_manifest(project_manifest)
+    
     return target_dir
 
 

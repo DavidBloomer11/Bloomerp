@@ -1,5 +1,5 @@
 import os
-from typing import Optional
+
 from pydantic import BaseModel, ConfigDict, Field
 
 DEFAULT_BLOOMERP_IO_URL = "http://127.0.0.1:8000"
@@ -31,6 +31,9 @@ class BloomerpDjango(BaseModel):
     installed_apps: list[str] = Field(default_factory=list)
 
 class BloomerpProjectManifest(BaseModel):
+    """
+    The manifest for a BloomERP project
+    """
     model_config = ConfigDict(extra="allow")
 
     name : str
@@ -38,12 +41,41 @@ class BloomerpProjectManifest(BaseModel):
     environment: BloomerpEnvironment
     runtime: BloomerpRuntime
     django: BloomerpDjango = Field(default_factory=BloomerpDjango)
-    
-    
+
+
+class BloomerpAppDjango(BaseModel):
+    app_config: str = ""
+
+
+class BloomerpAppModule(BaseModel):
+    id: str
+    name: str
+    description: str = ""
+
+
+class BloomerpAppModel(BaseModel):
+    name: str
+    database_table: str
+
+
 class BloomerpAppManifest(BaseModel):
+    """
+    The manifest for a BloomERP app.
+    """
     name: str
     version: str = "0.1.0"
     description: str = ""
+    environment: BloomerpEnvironment = Field(
+        default_factory=lambda: BloomerpEnvironment(required=[], optional=[])
+    )
+    django: BloomerpAppDjango = Field(default_factory=BloomerpAppDjango)
+    modules: list[BloomerpAppModule] = Field(default_factory=list)
+    models: list[BloomerpAppModel] = Field(default_factory=list)
+
+
+class BloomerpAppState(BaseModel):
+    marketplace_app_id: str = ""
+
 
 class BloomerpProjectState(BaseModel):
     project_id:str = ""

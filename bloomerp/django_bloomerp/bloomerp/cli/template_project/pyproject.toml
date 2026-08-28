@@ -27,5 +27,5 @@ include = ["apps*", "config*"]
 "*" = [
     "templates/**/*",
     "static/**/*",
-    "bloomerp.toml",
+    "app.bloomerp.toml",
 ]

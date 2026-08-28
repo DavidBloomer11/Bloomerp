@@ -20,10 +20,15 @@ def _format_value(value: Any) -> str:
 
 
 def _render_table(data: dict[str, Any], prefix: tuple[str, ...] = ()) -> list[str]:
+    def is_array_table(value: Any) -> bool:
+        return isinstance(value, list) and bool(value) and all(
+            isinstance(item, dict) for item in value
+        )
+
     lines = [
         f"{key} = {_format_value(value)}"
         for key, value in data.items()
-        if not isinstance(value, dict)
+        if not isinstance(value, dict) and not is_array_table(value)
     ]
 
     for key, value in data.items():
@@ -34,6 +39,16 @@ def _render_table(data: dict[str, Any], prefix: tuple[str, ...] = ()) -> list[st
         section = ".".join((*prefix, key))
         lines.append(f"[{section}]")
         lines.extend(_render_table(value, (*prefix, key)))
+
+    for key, value in data.items():
+        if not is_array_table(value):
+            continue
+        section = ".".join((*prefix, key))
+        for item in value:
+            if lines:
+                lines.append("")
+            lines.append(f"[[{section}]]")
+            lines.extend(_render_table(item, (*prefix, key)))
 
     return lines
 

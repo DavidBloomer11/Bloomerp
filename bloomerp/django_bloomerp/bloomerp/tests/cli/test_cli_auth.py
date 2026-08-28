@@ -7,7 +7,13 @@ from unittest.mock import Mock, patch
 from click.testing import CliRunner
 
 from bloomerp.cli.client import BloomerpCliClient
-from bloomerp.cli.credentials import delete_api_key, load_api_key, save_api_key
+from bloomerp.cli.credentials import (
+    delete_api_key,
+    load_api_key,
+    load_organization_id,
+    save_api_key,
+    save_organization_id,
+)
 from bloomerp.cli.main import main
 
 
@@ -66,12 +72,19 @@ def test_credentials_are_stored_per_server_with_restricted_permissions(tmp_path:
     ):
         save_api_key("first-key", "https://first.example")
         save_api_key("second-key", "https://second.example")
+        save_organization_id("organization-1", "https://first.example")
 
         assert load_api_key("https://first.example") == "first-key"
         assert load_api_key("https://second.example") == "second-key"
+        assert load_organization_id("https://first.example") == "organization-1"
+        assert (
+            BloomerpCliClient(server_url="https://first.example").organization_id
+            == "organization-1"
+        )
         assert path.stat().st_mode & 0o777 == 0o600
         assert delete_api_key("https://first.example")
         assert load_api_key("https://first.example") is None
+        assert load_organization_id("https://first.example") is None
 
 
 @patch("bloomerp.cli.client.requests.request")
@@ -87,4 +100,3 @@ def test_client_sends_the_api_key_header(request: Mock):
     assert request.call_args.kwargs["headers"] == {
         "X-API-Key": "blp_live_test_secret"
     }
-
