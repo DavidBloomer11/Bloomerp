@@ -292,6 +292,151 @@ def test_project_upload_requires_a_link_before_building():
         assert "bloomerp project link" in result.output
 
 
+def _write_push_envs_project_manifest() -> None:
+    Path(".bloomerp").mkdir()
+    Path(".bloomerp/state.toml").write_text(
+        'project_id = "project-1"\n',
+        encoding="utf-8",
+    )
+    Path(".bloomerp/project.bloomerp.toml").write_text(
+        """name = "Example"
+description = "Demo"
+
+[environment]
+required = ["API_TOKEN"]
+optional = ["SENTRY_DSN", "WEBHOOK_SECRET"]
+
+[runtime]
+bloomerp_version = "1.14.2"
+python_version = "3.13"
+""",
+        encoding="utf-8",
+    )
+
+
+def test_project_push_envs_requires_a_link_before_prompting():
+    runner = CliRunner()
+
+    with runner.isolated_filesystem():
+        Path(".bloomerp").mkdir()
+        Path(".bloomerp/state.toml").write_text("", encoding="utf-8")
+
+        result = runner.invoke(main, ["project", "push-envs"])
+
+        assert result.exit_code == 1
+        assert "bloomerp project link" in result.output
+
+
+@patch("bloomerp.cli.project.push_envs.BloomerpCliClient")
+def test_project_push_envs_reads_dotenv_file(client_type: Mock):
+    response = Mock()
+    response.json.return_value = {"created": 3, "updated": 0, "total": 3}
+    client_type.return_value.request.return_value = response
+    runner = CliRunner()
+
+    with runner.isolated_filesystem():
+        _write_push_envs_project_manifest()
+        Path(".env").write_text(
+            """# Deployment values
+API_TOKEN=token-value
+export SENTRY_DSN="https://example.test/123"
+WEBHOOK_SECRET='value with spaces' # webhook
+""",
+            encoding="utf-8",
+        )
+
+        result = runner.invoke(main, ["project", "push-envs"], input="1\n\n")
+
+        assert result.exit_code == 0, result.output
+        assert "Pushed 3 environment variables" in result.output
+        client_type.return_value.request.assert_called_once_with(
+            "POST",
+            "/api/projects/project-1/push-envs/",
+            json={
+                "variables": [
+                    {"name": "API_TOKEN", "value": "token-value"},
+                    {"name": "SENTRY_DSN", "value": "https://example.test/123"},
+                    {"name": "WEBHOOK_SECRET", "value": "value with spaces"},
+                ]
+            },
+        )
+
+
+@patch("bloomerp.cli.project.push_envs.BloomerpCliClient")
+def test_project_push_envs_prompts_for_manifest_variables(client_type: Mock):
+    response = Mock()
+    response.json.return_value = {"created": 2, "updated": 0, "total": 2}
+    client_type.return_value.request.return_value = response
+    runner = CliRunner()
+
+    with runner.isolated_filesystem():
+        _write_push_envs_project_manifest()
+
+        result = runner.invoke(
+            main,
+            ["project", "push-envs"],
+            input="2\ntoken-value\n\nwebhook-value\n",
+        )
+
+        assert result.exit_code == 0, result.output
+        assert "Pushed 2 environment variables" in result.output
+        assert "token-value" not in result.output
+        assert "webhook-value" not in result.output
+        client_type.return_value.request.assert_called_once_with(
+            "POST",
+            "/api/projects/project-1/push-envs/",
+            json={
+                "variables": [
+                    {"name": "API_TOKEN", "value": "token-value"},
+                    {"name": "WEBHOOK_SECRET", "value": "webhook-value"},
+                ]
+            },
+        )
+
+
+@patch("bloomerp.cli.project.push_envs.BloomerpCliClient")
+def test_project_push_envs_rejects_invalid_dotenv_before_request(client_type: Mock):
+    runner = CliRunner()
+
+    with runner.isolated_filesystem():
+        _write_push_envs_project_manifest()
+        Path(".env").write_text("NOT VALID\n", encoding="utf-8")
+
+        result = runner.invoke(main, ["project", "push-envs"], input="1\n\n")
+
+        assert result.exit_code == 1
+        assert "expected NAME=VALUE" in result.output
+        client_type.return_value.request.assert_not_called()
+
+
+@patch("bloomerp.cli.project.push_envs.BloomerpCliClient")
+def test_project_push_envs_allows_all_optional_values_to_be_skipped(
+    client_type: Mock,
+):
+    runner = CliRunner()
+
+    with runner.isolated_filesystem():
+        _write_push_envs_project_manifest()
+        manifest_path = Path(".bloomerp/project.bloomerp.toml")
+        manifest_path.write_text(
+            manifest_path.read_text(encoding="utf-8").replace(
+                'required = ["API_TOKEN"]',
+                "required = []",
+            ),
+            encoding="utf-8",
+        )
+
+        result = runner.invoke(
+            main,
+            ["project", "push-envs"],
+            input="2\n\n\n",
+        )
+
+        assert result.exit_code == 0, result.output
+        assert "nothing was pushed" in result.output
+        client_type.return_value.request.assert_not_called()
+
+
 @patch("bloomerp.cli.project.upload.BloomerpCliClient")
 def test_project_upload_sends_manifest_and_existing_wheel(client_type: Mock):
     response = Mock()
