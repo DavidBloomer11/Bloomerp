@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from bs4 import BeautifulSoup
 from django.test import TestCase, override_settings
 from django.urls import path, reverse
@@ -9,11 +7,8 @@ from bloomerp.views.base import BaseBloomerpView
 from bloomerp.views.generic.markdown import MarkdownView
 
 
-FIXTURE_DIRECTORY = Path(__file__).parent / "fixtures" / "markdown"
-
-
 class MarkdownFixtureView(MarkdownView):
-    markdown_file = FIXTURE_DIRECTORY / "simple.md"
+    markdown_file = "tests/markdown/simple.md"
 
     def get_markdown_context(self, **kwargs) -> dict[str, object]:
         return {"document_title": "Markdown view"}
