@@ -5,10 +5,10 @@ from urllib.parse import urlencode, urlsplit
 import bleach
 import mistune
 from bs4 import BeautifulSoup
-from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.http import FileResponse, Http404, HttpResponse
-from django.template import Context, Template
+from django.template import Context, Template, TemplateDoesNotExist
+from django.template.loader import get_template
 from django.utils.safestring import mark_safe
 from django.utils.text import slugify
 from django.utils.translation import gettext as _
@@ -143,22 +143,43 @@ class MarkdownView(BaseBloomerpView, TemplateView):
     media_query_parameter = "_markdown_media"
 
     def get_markdown_path(self) -> Path:
-        """Return the configured Markdown path relative to Bloomerp's templates directory."""
+        """Return the filesystem origin selected by Django's template loaders."""
         if self.markdown_file is None:
             raise ImproperlyConfigured(
                 f"{self.__class__.__name__} requires a markdown_file."
             )
 
         markdown_path = Path(self.markdown_file).expanduser()
-        if not markdown_path.is_absolute():
-            markdown_path = (
-                Path(settings.BASE_DIR) / "bloomerp" / "templates" / markdown_path
+        if markdown_path.is_absolute():
+            resolved_path = markdown_path.resolve()
+        else:
+            markdown_template = self.get_markdown_template()
+            origin_name = getattr(
+                getattr(markdown_template, "origin", None),
+                "name",
+                None,
             )
-        markdown_path = markdown_path.resolve()
+            if not origin_name:
+                raise Http404(
+                    "Markdown template does not have a filesystem-backed origin."
+                )
+            resolved_path = Path(origin_name).resolve()
 
-        if not markdown_path.is_file():
+        if not resolved_path.is_file():
             raise Http404("Markdown file not found.")
-        return markdown_path
+        return resolved_path
+
+    def get_markdown_template(self):
+        """Load a relative Markdown file through Django's configured template loaders."""
+        if self.markdown_file is None:
+            raise ImproperlyConfigured(
+                f"{self.__class__.__name__} requires a markdown_file."
+            )
+
+        try:
+            return get_template(str(self.markdown_file))
+        except TemplateDoesNotExist as error:
+            raise Http404("Markdown template not found.") from error
 
     def get(self, request, *args, **kwargs) -> HttpResponse:
         """Render the document or serve an image referenced by the document."""
@@ -190,7 +211,6 @@ class MarkdownView(BaseBloomerpView, TemplateView):
         """Add rendered Markdown and its header-based table of contents."""
         context = super().get_context_data(**kwargs)
         markdown_source = self.render_markdown_template(
-            self.get_markdown_path().read_text(encoding="utf-8"),
             context,
             **kwargs,
         )
@@ -209,14 +229,22 @@ class MarkdownView(BaseBloomerpView, TemplateView):
 
     def render_markdown_template(
         self,
-        markdown_source: str,
         context: dict[str, object] | None = None,
         **kwargs,
     ) -> str:
         """Render Django variables before converting the source to Markdown HTML."""
         template_context = dict(context or {})
         template_context.update(self.get_markdown_context(**kwargs))
-        return Template(markdown_source).render(Context(template_context))
+
+        markdown_path = Path(str(self.markdown_file)).expanduser()
+        if markdown_path.is_absolute():
+            markdown_source = self.get_markdown_path().read_text(encoding="utf-8")
+            return Template(markdown_source).render(Context(template_context))
+
+        return self.get_markdown_template().render(
+            template_context,
+            request=self.request,
+        )
 
     def render_markdown(self, markdown_source: str) -> tuple[str, list[dict[str, object]]]:
         """Render safe HTML, route local images, and collect unique heading anchors."""
