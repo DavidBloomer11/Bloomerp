@@ -73,6 +73,7 @@ import { EmailEditor } from './components/inbox/EmailEditor';
 import { SelectPreference } from './components/SelectPreference';
 import BaseSectionedLayoutContainer from './components/layouts/BaseSectionedLayoutContainer';
 import ThemeProvider from './components/theme/ThemeProvider';
+import MarkdownCodeBlock from './components/MarkdownCodeBlock';
 import { loadTranslations } from './utils/i18n';
 
 Object.assign(window, { showMessage });
@@ -84,6 +85,7 @@ registerComponent('sidebar', Sidebar);
 registerComponent('breadcrumb', Breadcrumb);
 registerComponent('resizable-div', ResizableDiv);
 registerComponent('theme-provider', ThemeProvider);
+registerComponent('markdown-code-block', MarkdownCodeBlock);
 
 // Dataview component
 registerComponent('dataview-container', DataViewContainer);

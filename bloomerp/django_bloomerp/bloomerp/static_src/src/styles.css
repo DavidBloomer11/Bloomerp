@@ -131,6 +131,8 @@
   .dark .bg-primary-100 { background-color: var(--color-primary-900); }
   .dark .bg-primary-200 { background-color: var(--color-primary-800); }
   .dark .bg-primary-300 { background-color: var(--color-primary-700); }
+  
+  .dark .bg-secondary-100 { background-color: var(--color-secondary-900); }
 
   .bg-yellow-200 { background-color: var(--color-yellow-600); }
 
@@ -161,6 +163,7 @@
   .dark .text-primary-200 { color: var(--color-primary-800); }
   .dark .text-primary-100 { color: var(--color-primary-900); }
   .dark .text-primary-950 { color: var(--color-primary-50); }
+  .dark .text-dark { color: var(--color-zinc-100); }
 
   .dark .text-slate-700 { color: var(--color-zinc-300); }
 
@@ -250,6 +253,46 @@
 * Buttons
 */
 @layer components {
+    .markdown-view-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1.5rem;
+    }
+
+    .markdown-view-content {
+        min-width: 0;
+    }
+
+    .markdown-view-toc {
+        order: -1;
+    }
+
+    .markdown-code-block {
+        position: relative;
+        margin-block: 1rem;
+    }
+
+    .markdown-code-block > pre {
+        margin-block: 0;
+        max-height: 28rem;
+        overflow: auto;
+        padding-top: 3rem;
+    }
+
+    .markdown-code-copy {
+        @apply absolute right-3 top-3 rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1 text-xs font-medium text-zinc-100 transition hover:bg-zinc-700;
+    }
+
+    @media (min-width: 64rem) {
+        .markdown-view-layout {
+            grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
+        }
+
+        .markdown-view-toc {
+            order: 0;
+        }
+    }
+
     .btn {
         @apply px-4 py-2 font-semibold rounded-xl shadow-xs;
     }
@@ -289,11 +332,19 @@
     }
 
     .btn-secondary {
-        @apply bg-[var(--color-secondary-100)] text-[var(--color-secondary-900)] border-[var(--color-secondary-300)] ring-[var(--color-secondary-500)];
+        @apply bg-secondary-100 text-[var(--color-secondary-900)] border-[var(--color-secondary-300)] ring-[var(--color-secondary-500)];
+    }
+
+    .dark .btn-secondary {
+        @apply bg-secondary-900 text-secondary-100 border-secondary-700;
     }
 
     .btn-secondary:hover:not(:disabled) {
         @apply bg-[var(--color-secondary-200)] border-[var(--color-secondary-400)];
+    }
+
+    .dark .btn-secondary:hover:not(:disabled) {
+        @apply bg-secondary-800 border-secondary-600;
     }
 
     .btn-success {

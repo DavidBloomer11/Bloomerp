@@ -1,0 +1,34 @@
+{% load i18n %}
+
+<div class="markdown-view-layout">
+    <article class="markdown-view-content">
+        {{ rendered_markdown }}
+    </article>
+
+    <aside class="markdown-view-toc">
+        <nav
+            class="rounded-xl border border-gray-200 bg-base p-4 shadow-xs lg:sticky lg:top-4"
+            aria-label="{% translate 'On this page' %}"
+        >
+            <h2 class="mb-3 text-sm font-semibold text-dark">
+                {% translate "On this page" %}
+            </h2>
+            <ol class="space-y-2">
+                {% for item in table_of_contents %}
+                    <li style="padding-left: {{ item.indent_rem }}rem">
+                        <a
+                            class="block text-sm text-gray-600 hover:text-primary-600"
+                            href="#{{ item.anchor }}"
+                        >
+                            {{ item.title }}
+                        </a>
+                    </li>
+                {% empty %}
+                    <li class="text-sm text-gray-500">
+                        {% translate "No sections" %}
+                    </li>
+                {% endfor %}
+            </ol>
+        </nav>
+    </aside>
+</div>
