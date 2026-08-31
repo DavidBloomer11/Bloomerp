@@ -143,7 +143,7 @@ class MarkdownView(BaseBloomerpView, TemplateView):
     media_query_parameter = "_markdown_media"
 
     def get_markdown_path(self) -> Path:
-        """Return the configured Markdown path, relative to ``BASE_DIR`` when needed."""
+        """Return the configured Markdown path relative to Bloomerp's templates directory."""
         if self.markdown_file is None:
             raise ImproperlyConfigured(
                 f"{self.__class__.__name__} requires a markdown_file."
@@ -151,7 +151,9 @@ class MarkdownView(BaseBloomerpView, TemplateView):
 
         markdown_path = Path(self.markdown_file).expanduser()
         if not markdown_path.is_absolute():
-            markdown_path = Path(settings.BASE_DIR) / markdown_path
+            markdown_path = (
+                Path(settings.BASE_DIR) / "bloomerp" / "templates" / markdown_path
+            )
         markdown_path = markdown_path.resolve()
 
         if not markdown_path.is_file():
