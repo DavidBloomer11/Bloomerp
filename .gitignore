@@ -99,3 +99,6 @@ bloomerp/django_bloomerp/db.sqlite3
 # 
 bloomerp/django_bloomerp/bloomerp/bloomerp_modules
 bloomerp/django_bloomerp/avatars
+
+# Test project
+bloomerp/django_bloomerp/self-managed-test-project
