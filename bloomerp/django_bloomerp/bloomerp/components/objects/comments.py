@@ -42,7 +42,7 @@ def comments(request:HttpRequest, content_type_id:int, object_id:str) -> HttpRes
     
     return render(
         request,
-        "components/comments.html",
+        "components/objects/comments.html",
         context={
             "object" : object,
             "content_type_id" : content_type_id,
