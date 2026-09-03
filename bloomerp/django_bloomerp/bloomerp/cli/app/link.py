@@ -67,9 +67,12 @@ def _create_app(client: BloomerpCliClient, app_dir) -> dict:
         "POST",
         MARKETPLACE_APPS_ENDPOINT,
         json={
-            "name": manifest.name.replace("_", " ").title(),
+            "name": (
+                manifest.display_name or manifest.name.replace("_", " ").title()
+            ),
             "slug": manifest.name.replace("_", "-"),
             "description": manifest.description,
+            "tagline": manifest.tagline,
             "owner": user_id,
         },
     )

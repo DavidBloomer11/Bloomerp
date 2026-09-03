@@ -7,7 +7,7 @@ from .auth import auth
 from .marketplace import marketplace
 from .organization import organization
 from .project import project
-
+from .sync import sync
 
 @click.group()
 def main() -> None:
@@ -19,7 +19,7 @@ main.add_command(organization)
 main.add_command(project)
 main.add_command(app)
 main.add_command(marketplace)
-
+main.add_command(sync)
 
 if __name__ == "__main__":
     main()

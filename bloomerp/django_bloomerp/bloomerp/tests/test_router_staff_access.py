@@ -1,3 +1,4 @@
+from django.apps import apps
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
@@ -145,3 +146,13 @@ class BloomerpRouteStaffAccessTests(TestCase):
         response = registry.routes[0].view(request)
 
         self.assertEqual(response.content, b"first")
+
+    def test_get_routes_by_app_returns_only_routes_owned_by_app(self):
+        registry = BloomerpRouteRegistry()
+        registry.register(path="/owned/", name="Owned")(sample_function_view)
+        registry.register(path="/other/", name="Other")(second_route_view)
+        registry.routes[1].owner_app_label = "another_app"
+
+        routes = registry.get_routes_by_app(apps.get_app_config("bloomerp"))
+
+        self.assertEqual([route.path for route in routes], ["/owned/"])

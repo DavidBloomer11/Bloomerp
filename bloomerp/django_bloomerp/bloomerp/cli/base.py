@@ -18,7 +18,7 @@ class BloomerpRuntime(BaseModel):
 class BloomerpEnvironment(BaseModel):
     model_config = ConfigDict(extra="allow")
 
-    required:list[str] = Field(default_factory=lambda: ["DJANGO_SECRET_KEY"])
+    required:list[str] = Field(default_factory=list)
     optional:list[str] = Field(default_factory=list)
 
 class BloomerpDeploymentManifest(BaseModel):
@@ -58,19 +58,35 @@ class BloomerpAppModel(BaseModel):
     database_table: str
 
 
+class BloomerpAppRoute(BaseModel):
+    url: str
+    name: str
+    description: str
+
+
 class BloomerpAppManifest(BaseModel):
     """
     The manifest for a BloomERP app.
     """
+
+    # Basic information about the app
     name: str
+    display_name: str | None = None
     version: str = "0.1.0"
+    required_version: str | None = None
     description: str = ""
+    tagline: str = Field(default_factory=str)
+
+    # Environment variables & Django configuration
     environment: BloomerpEnvironment = Field(
         default_factory=lambda: BloomerpEnvironment(required=[], optional=[])
     )
     django: BloomerpAppDjango = Field(default_factory=BloomerpAppDjango)
+
+    # App components
     modules: list[BloomerpAppModule] = Field(default_factory=list)
     models: list[BloomerpAppModel] = Field(default_factory=list)
+    routes: list[BloomerpAppRoute] = Field(default_factory=list)
 
 
 class BloomerpAppState(BaseModel):

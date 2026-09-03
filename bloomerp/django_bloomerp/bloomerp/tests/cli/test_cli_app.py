@@ -2,16 +2,19 @@ import json
 import tomllib
 import zipfile
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from click.testing import CliRunner
 
 from bloomerp.cli.app.build import build_app_wheel
+from bloomerp.cli.app.sync import discover_app_manifest
 from bloomerp.cli.base import (
     BloomerpAppDjango,
     BloomerpAppManifest,
     BloomerpAppModel,
     BloomerpAppModule,
+    BloomerpAppRoute,
     BloomerpEnvironment,
 )
 from bloomerp.cli.main import main
@@ -143,6 +146,57 @@ def test_app_manifest_writes_structured_modules():
             {"name": "SampleRecord", "database_table": "sample_record"}
         ]
         assert "manifest_version" not in manifest
+
+
+def test_app_manifest_discovers_routes_owned_by_the_app(tmp_path: Path):
+    app_dir = tmp_path / "apps" / "sample_app"
+    app_dir.mkdir(parents=True)
+    (app_dir / "readme.md").write_text(" Sample app documentation. \n")
+    app_config = SimpleNamespace(
+        name="apps.sample_app",
+        label="sample_app",
+        get_models=lambda: [],
+    )
+    discovered_routes = [
+        SimpleNamespace(path="/z-last/", name="Last", description=None),
+        SimpleNamespace(path="/a-first/", name="First", description="First route"),
+    ]
+    existing = BloomerpAppManifest(
+        name="sample_app",
+        routes=[
+            BloomerpAppRoute(
+                url="/stale/",
+                name="Stale",
+                description="Removed route",
+            )
+        ],
+    )
+
+    with (
+        patch(
+            "bloomerp.cli.app.sync.get_project_root",
+            return_value=tmp_path,
+        ),
+        patch("django.setup"),
+        patch("django.apps.apps.get_app_configs", return_value=[app_config]),
+        patch("bloomerp.modules.definition.module_registry.refresh"),
+        patch(
+            "bloomerp.modules.definition.module_registry.get_all",
+            return_value={},
+        ),
+        patch(
+            "bloomerp.router.router.get_routes_by_app",
+            return_value=discovered_routes,
+        ) as get_routes_by_app,
+    ):
+        manifest = discover_app_manifest(app_dir, existing)
+
+    get_routes_by_app.assert_called_once_with(app_config)
+    assert manifest.description == "Sample app documentation."
+    assert [route.model_dump() for route in manifest.routes] == [
+        {"url": "/a-first/", "name": "First", "description": "First route"},
+        {"url": "/z-last/", "name": "Last", "description": ""},
+    ]
 
 
 def test_app_build_creates_a_wheel_with_the_app_manifest():

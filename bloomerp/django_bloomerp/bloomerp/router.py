@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 from django.views import View
-from django.apps import apps
+from django.apps import AppConfig, apps
 from django.utils.encoding import force_str
 from django.utils.translation import gettext, pgettext
 from typing import Union
@@ -985,6 +985,11 @@ class BloomerpRouteRegistry:
         """Get all routes registered for a specific model."""
         self._auto_import_views()
         return [route for route in self.routes if route.model == model]
+
+    def get_routes_by_app(self, app: AppConfig) -> List[BloomerpRoute]:
+        """Get all routes owned by a specific Django app."""
+        self._auto_import_views()
+        return [route for route in self.routes if route.owner_app_label == app.label]
 
     def get_routes_by_type(self, route_type: str | RouteType) -> List[BloomerpRoute]:
         """Get all routes of a specific type."""
