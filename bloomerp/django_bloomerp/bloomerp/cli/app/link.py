@@ -72,6 +72,7 @@ def _create_app(client: BloomerpCliClient, app_dir) -> dict:
             ),
             "slug": manifest.name.replace("_", "-"),
             "description": manifest.description,
+            "tagline": manifest.tagline,
             "owner": user_id,
         },
     )
