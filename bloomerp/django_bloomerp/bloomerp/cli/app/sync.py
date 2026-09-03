@@ -87,7 +87,7 @@ def discover_app_manifest(
     description = (
         description_path.read_text(encoding="utf-8").strip()
         if description_path.is_file()
-        else ""
+        else existing.description
     )
 
     return existing.model_copy(
