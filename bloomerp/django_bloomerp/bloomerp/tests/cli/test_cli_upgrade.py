@@ -144,6 +144,88 @@ def test_upgrade_install_targets_project_virtualenv_through_uv():
         )
 
 
+def test_upgrade_install_preserves_dependency_extras_and_marker():
+    """
+    Use case: The project's Bloomerp dependency declares extras and a marker.
+    Expected result: Installation uses the complete rewritten requirement.
+    """
+    runner = CliRunner()
+
+    with runner.isolated_filesystem():
+        # 1. Create a project with optional Bloomerp dependencies and a target Python.
+        _manifest_path, pyproject_path = create_project()
+        pyproject_path.write_text(
+            pyproject_path.read_text(encoding="utf-8").replace(
+                "Bloomerp>=1.14",
+                'Bloomerp[postgres]>=1.14; python_version >= \\"3.12\\"',
+            ),
+            encoding="utf-8",
+        )
+        python = Path(".venv/bin/python")
+        python.parent.mkdir(parents=True)
+        python.write_text("", encoding="utf-8")
+
+        # 2. Upgrade and install the dependency through uv.
+        with (
+            patch.dict(os.environ, {"VIRTUAL_ENV": ""}),
+            patch("bloomerp.cli.upgrade.shutil.which", return_value="/usr/bin/uv"),
+            patch("bloomerp.cli.upgrade.subprocess.run") as run,
+        ):
+            result = runner.invoke(main, ["upgrade", "1.15.0", "--install"])
+
+        # 3. Verify the installer and pyproject receive the same full requirement.
+        requirement = 'Bloomerp[postgres]==1.15.0; python_version >= "3.12"'
+        assert result.exit_code == 0, result.output
+        run.assert_called_once_with(
+            [
+                "/usr/bin/uv",
+                "pip",
+                "install",
+                "--python",
+                str(python.resolve()),
+                requirement,
+            ],
+            cwd=Path.cwd(),
+            check=True,
+        )
+        dependencies = tomllib.loads(pyproject_path.read_text(encoding="utf-8"))[
+            "project"
+        ]["dependencies"]
+        assert requirement in dependencies
+
+
+def test_upgrade_install_finds_windows_active_virtualenv():
+    """
+    Use case: An activated Windows virtualenv exposes Python under Scripts.
+    Expected result: Installation targets that Python executable.
+    """
+    runner = CliRunner()
+
+    with runner.isolated_filesystem():
+        # 1. Create a project and a Windows-style active virtualenv interpreter.
+        create_project()
+        environment = Path("active-environment").resolve()
+        python = environment / "Scripts" / "python.exe"
+        python.parent.mkdir(parents=True)
+        python.write_text("", encoding="utf-8")
+
+        # 2. Upgrade while VIRTUAL_ENV points to the Windows-style environment.
+        with (
+            patch.dict(os.environ, {"VIRTUAL_ENV": str(environment)}),
+            patch("bloomerp.cli.upgrade.shutil.which", return_value=None),
+            patch("bloomerp.cli.upgrade.subprocess.run") as run,
+        ):
+            result = runner.invoke(main, ["upgrade", "1.15.0", "--install"])
+
+        # 3. Verify the pip fallback targets Scripts/python.exe.
+        assert result.exit_code == 0, result.output
+        run.assert_called_once_with(
+            [str(python), "-m", "pip", "install", "Bloomerp==1.15.0"],
+            cwd=Path.cwd(),
+            check=True,
+        )
+
+
 def test_upgrade_install_refuses_implicit_global_environment_before_writes():
     """
     Use case: Installation is requested without a virtualenv or explicit override.

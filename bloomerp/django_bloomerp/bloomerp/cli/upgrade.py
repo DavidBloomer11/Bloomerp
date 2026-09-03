@@ -85,8 +85,8 @@ def _bloomerp_requirement(dependencies: object) -> tuple[str, str]:
     return dependency, f"Bloomerp{extras}=={{version}}{marker}"
 
 
-def updated_pyproject_contents(path: Path, version: str) -> str:
-    """Return pyproject contents with its Bloomerp requirement pinned to VERSION."""
+def updated_pyproject_contents(path: Path, version: str) -> tuple[str, str]:
+    """Return updated pyproject contents and the exact Bloomerp requirement."""
 
     try:
         contents = path.read_text(encoding="utf-8")
@@ -120,11 +120,12 @@ def updated_pyproject_contents(path: Path, version: str) -> str:
             "Use a standard double-quoted dependency entry."
         )
     updated_section = section.replace(encoded_current, encoded_replacement, 1)
-    return (
+    updated_contents = (
         contents[: project_match.start()]
         + updated_section
         + contents[project_match.end() :]
     )
+    return updated_contents, replacement
 
 
 def _environment_python(project_root: Path, explicit_python: Path | None) -> Path:
@@ -133,11 +134,16 @@ def _environment_python(project_root: Path, explicit_python: Path | None) -> Pat
 
     active_environment = os.environ.get("VIRTUAL_ENV")
     if active_environment:
-        candidate = Path(active_environment) / "bin" / "python"
-        if candidate.is_file():
-            return candidate.resolve()
+        environment_root = Path(active_environment)
+        candidates = (
+            environment_root / "bin" / "python",
+            environment_root / "Scripts" / "python.exe",
+        )
+        for candidate in candidates:
+            if candidate.is_file():
+                return candidate.resolve()
         raise click.ClickException(
-            f"VIRTUAL_ENV does not contain a Python executable: {candidate}"
+            f"VIRTUAL_ENV does not contain a Python executable: {environment_root}"
         )
 
     candidates = (
@@ -155,13 +161,13 @@ def _environment_python(project_root: Path, explicit_python: Path | None) -> Pat
 
 
 def install_bloomerp(
-    version: str,
+    requirement: str,
     *,
     project_root: Path,
     explicit_python: Path | None,
     system: bool,
 ) -> Path:
-    """Install an exact Bloomerp version into the selected Python environment."""
+    """Install a Bloomerp requirement into the selected Python environment."""
 
     if explicit_python is not None and system:
         raise click.ClickException("--python and --system cannot be used together.")
@@ -172,7 +178,6 @@ def install_bloomerp(
     if not python.is_file():
         raise click.ClickException(f"Python executable does not exist: {python}")
 
-    requirement = f"Bloomerp=={version}"
     uv = shutil.which("uv")
     command = (
         [uv, "pip", "install", "--python", str(python), requirement]
@@ -223,7 +228,10 @@ def upgrade(
     metadata_dir = get_project_metadata_dir()
     project_root = metadata_dir.parent
     pyproject_path = project_root / "pyproject.toml"
-    pyproject_contents = updated_pyproject_contents(pyproject_path, selected_version)
+    pyproject_contents, requirement = updated_pyproject_contents(
+        pyproject_path,
+        selected_version,
+    )
     manifest = get_project_manifest()
     manifest = manifest.model_copy(
         update={
@@ -236,7 +244,7 @@ def upgrade(
     installed_python = None
     if install:
         installed_python = install_bloomerp(
-            selected_version,
+            requirement,
             project_root=project_root,
             explicit_python=python_path,
             system=system,
