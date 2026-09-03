@@ -158,7 +158,7 @@ def assert_scaffold_current(
     raise click.ClickException(
         "Project scaffold is not current:\n"
         f"{formatted_paths}\n"
-        "Run 'bloomerp project scaffold-sync' before building."
+        "Run 'bloomerp project sync' before building."
     )
 
 
@@ -250,7 +250,10 @@ def synchronize_scaffold(
     show_default=True,
 )
 def scaffold_sync(force: bool, check: bool, output_format: str) -> None:
-    """Update generated project scaffold while preserving project-owned files."""
+    """Deprecated compatibility command for scaffold-only synchronization."""
+
+    if output_format.lower() != "json":
+        click.echo("Deprecated: use 'bloomerp project sync' instead.", err=True)
 
     if force and check:
         raise click.ClickException("--force cannot be combined with --check.")

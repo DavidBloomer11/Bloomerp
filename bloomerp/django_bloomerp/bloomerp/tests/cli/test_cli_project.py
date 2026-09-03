@@ -3,6 +3,7 @@ import os
 import subprocess
 import sys
 import zipfile
+from importlib.metadata import version
 
 from bloomerp.cli.main import main
 
@@ -632,9 +633,7 @@ def test_project_init_creates_manifests_without_requiring_an_app():
             Path("example/.bloomerp/project.bloomerp.toml").read_text(encoding="utf-8")
         )
         assert project_manifest["name"] == "example"
-        assert project_manifest["environment"]["required"] == [
-            "DJANGO_SECRET_KEY"
-        ]
+        assert project_manifest["environment"]["required"] == []
         assert project_manifest["runtime"]["bloomerp_version"]
         assert project_manifest["runtime"]["python_version"] in {"3.12", "3.13"}
         assert Path("example/.python-version").read_text(encoding="utf-8") == (
@@ -685,6 +684,12 @@ def test_project_init_can_run_the_app_init_flow():
             "name": "inventory",
             "version": "0.1.0",
             "description": "",
+            "tagline": "",
+            "environment": {"required": [], "optional": []},
+            "django": {"app_config": ""},
+            "modules": [],
+            "models": [],
+            "routes": [],
         }
         project_manifest = tomllib.loads(
             Path("example/.bloomerp/project.bloomerp.toml").read_text(encoding="utf-8")

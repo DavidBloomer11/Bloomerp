@@ -19,6 +19,16 @@ def get_project_root() -> Path:
     return get_project_metadata_dir().parent
 
 
+def find_app_dirs(project_root: Path | None = None) -> list[Path]:
+    """Return every app directory in stable name order."""
+
+    root = project_root or get_project_root()
+    return sorted(
+        (path.parent for path in (root / "apps").glob(f"*/{APP_MANIFEST_FILENAME}")),
+        key=lambda path: path.name,
+    )
+
+
 def resolve_app_dir(name: str | None = None) -> Path:
     project_root = get_project_root()
     if name:
@@ -34,9 +44,7 @@ def resolve_app_dir(name: str | None = None) -> Path:
         if (directory / APP_MANIFEST_FILENAME).is_file():
             return directory
 
-    app_dirs = sorted(
-        path.parent for path in (project_root / "apps").glob(f"*/{APP_MANIFEST_FILENAME}")
-    )
+    app_dirs = find_app_dirs(project_root)
     if len(app_dirs) == 1:
         return app_dirs[0]
     if not app_dirs:
