@@ -144,6 +144,47 @@ def test_upgrade_install_targets_project_virtualenv_through_uv():
         )
 
 
+def test_upgrade_install_preserves_virtualenv_python_symlink():
+    """
+    Use case: A uv virtualenv's Python points to uv's managed base interpreter.
+    Expected result: Installation targets the virtualenv path, not the symlink target.
+    """
+    runner = CliRunner()
+
+    with runner.isolated_filesystem():
+        # 1. Create a project virtualenv linked to a managed Python installation.
+        create_project()
+        managed_python = Path("uv-managed/bin/python3.13").absolute()
+        managed_python.parent.mkdir(parents=True)
+        managed_python.write_text("", encoding="utf-8")
+        virtualenv_python = Path(".venv/bin/python")
+        virtualenv_python.parent.mkdir(parents=True)
+        virtualenv_python.symlink_to(managed_python)
+
+        # 2. Upgrade and install through uv using the project environment.
+        with (
+            patch.dict(os.environ, {"VIRTUAL_ENV": ""}),
+            patch("bloomerp.cli.upgrade.shutil.which", return_value="/usr/bin/uv"),
+            patch("bloomerp.cli.upgrade.subprocess.run") as run,
+        ):
+            result = runner.invoke(main, ["upgrade", "1.15.0", "--install"])
+
+        # 3. Verify the virtualenv path was preserved instead of dereferenced.
+        assert result.exit_code == 0, result.output
+        run.assert_called_once_with(
+            [
+                "/usr/bin/uv",
+                "pip",
+                "install",
+                "--python",
+                str(virtualenv_python.absolute()),
+                "Bloomerp==1.15.0",
+            ],
+            cwd=Path.cwd(),
+            check=True,
+        )
+
+
 def test_upgrade_install_preserves_dependency_extras_and_marker():
     """
     Use case: The project's Bloomerp dependency declares extras and a marker.
