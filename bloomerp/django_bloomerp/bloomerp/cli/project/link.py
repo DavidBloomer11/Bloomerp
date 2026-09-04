@@ -10,7 +10,6 @@ from bloomerp.cli.utils import (
 
 
 PROJECTS_ENDPOINT = "/api/projects/"
-SELF_MANAGED_PROJECT_TYPE = "SELF_MANAGED_CLOUD"
 DEFAULT_SERVER_LOCATION = "EU_CENTRAL"
 
 
@@ -42,7 +41,7 @@ def _projects_from_response(payload: object) -> list[dict]:
 def _confirm_relink(client: BloomerpCliClient, project_id: str) -> None:
     response = client.request(
         "GET",
-        f"{PROJECTS_ENDPOINT}{project_id}/?type={SELF_MANAGED_PROJECT_TYPE}",
+        f"{PROJECTS_ENDPOINT}{project_id}/",
         allow_not_found=True,
     )
     if response.status_code == 404:
@@ -106,7 +105,6 @@ def _create_project(client: BloomerpCliClient) -> dict:
             "owner": user_id,
             "server_location": server_location,
             "bloomerp_version": manifest.runtime.bloomerp_version,
-            "type": SELF_MANAGED_PROJECT_TYPE,
         },
     )
     project = response.json()
@@ -129,7 +127,7 @@ def link() -> None:
     projects = _projects_from_response(
         client.request(
             "GET",
-            PROJECTS_ENDPOINT + f"?type={SELF_MANAGED_PROJECT_TYPE}",
+            PROJECTS_ENDPOINT,
         ).json()
     )
     selected_project = _select_project(projects) or _create_project(client)

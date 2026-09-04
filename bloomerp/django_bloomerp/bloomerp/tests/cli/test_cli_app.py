@@ -276,6 +276,7 @@ def test_app_link_can_create_a_private_marketplace_app():
         "slug": "sample-app",
         "description": "Reusable workflows.",
         "owner": "5f0d014c-3e77-44e1-8010-a9b317905669",
+        "tagline": "",
     }
 
 

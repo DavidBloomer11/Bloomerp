@@ -108,28 +108,8 @@ def synchronize_project_from_remote(
 
     project_id = _linked_project_id()
     api_client = client or BloomerpCliClient()
-    remote = api_client.request(
-        "GET",
-        f"{PROJECTS_ENDPOINT}{project_id}/",
-    ).json()
-    if not isinstance(remote, dict):
-        raise click.ClickException("Bloomerp.io returned invalid project metadata.")
-
-    manifest = get_project_manifest()
-    updates = {
-        field: str(remote[field] or "")
-        for field in ("name", "description")
-        if field in remote
-    }
-    if "bloomerp_version" in remote:
-        updates["runtime"] = manifest.runtime.model_copy(
-            update={"bloomerp_version": str(remote["bloomerp_version"])}
-        )
-    if isinstance(remote.get("instance_config"), dict):
-        updates["bloomerp"] = manifest.bloomerp.model_validate(
-            remote["instance_config"]
-        )
-    manifest = manifest.model_copy(update=updates)
+    from .remote import pull_project
+    manifest = pull_project(api_client, project_id, force=force)
 
     environment_payload = api_client.request(
         "GET",

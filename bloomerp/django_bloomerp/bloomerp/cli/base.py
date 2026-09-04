@@ -98,4 +98,7 @@ class BloomerpAppState(BaseModel):
 
 class BloomerpProjectState(BaseModel):
     project_id:str = ""
+    snapshot_id: str = ""
+    generated_wheel_sha256: str = ""
+    generated_wheel_filename: str = ""
     

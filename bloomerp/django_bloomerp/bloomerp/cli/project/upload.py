@@ -25,12 +25,23 @@ def upload_project_wheel(wheel_path: Path) -> dict:
             "This project is not linked. Run 'bloomerp project link' first."
         )
 
+    from .remote import verify_generated_artifact
+    verify_generated_artifact()
     manifest = get_project_manifest()
+    manifest = manifest.model_copy(deep=True)
+    generated_apps = getattr(manifest.django, "generated_apps", ["project_app"])
+    manifest.django.installed_apps = [app for app in manifest.django.installed_apps if app not in generated_apps]
+    project_files = {
+        name: (get_project_root() / name).read_text(encoding="utf-8")
+        for name in ("pyproject.toml", "README.md")
+        if (get_project_root() / name).is_file()
+    }
+    manifest = manifest.model_copy(update={"project_files": project_files})
     with wheel_path.open("rb") as wheel_file:
         response = BloomerpCliClient().request(
             "POST",
             f"/api/projects/{state.project_id}/upload-from-cli/",
-            data={"manifest": json.dumps(manifest.model_dump(mode="json"))},
+            data={"manifest": json.dumps(manifest.model_dump(mode="json")), "base_snapshot_id": state.snapshot_id},
             files={
                 "wheel": (
                     wheel_path.name,
@@ -49,6 +60,9 @@ def upload_project_wheel(wheel_path: Path) -> dict:
         ) from exc
     if not isinstance(payload, dict) or not payload.get("id"):
         raise click.ClickException("Bloomerp.io returned an invalid upload response.")
+    from ..utils import write_project_state
+    state.snapshot_id = str(payload["id"])
+    write_project_state(state)
     return payload
 
 

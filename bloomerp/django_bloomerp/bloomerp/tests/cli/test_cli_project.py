@@ -37,7 +37,7 @@ def test_project_link_keeps_state_when_relink_is_cancelled(client_type: Mock):
         assert result.exit_code == 1
         assert tomllib.loads(
             Path(".bloomerp/state.toml").read_text(encoding="utf-8")
-        ) == {"project_id": "project-1"}
+        ) ["project_id"] == "project-1"
         assert client_type.return_value.request.call_count == 1
 
 
@@ -72,10 +72,10 @@ def test_project_link_confirms_before_replacing_a_valid_link(client_type: Mock):
         assert "Are you sure you want to continue?" in result.output
         assert tomllib.loads(
             Path(".bloomerp/state.toml").read_text(encoding="utf-8")
-        ) == {"project_id": "project-2"}
+        ) ["project_id"] == "project-2"
         assert client_type.return_value.request.call_args_list[0].args == (
             "GET",
-            "/api/projects/project-1/?type=SELF_MANAGED_CLOUD",
+            "/api/projects/project-1/",
         )
         assert client_type.return_value.request.call_args_list[0].kwargs == {
             "allow_not_found": True
@@ -108,9 +108,9 @@ def test_project_link_lists_owned_projects_and_writes_selection(client_type: Moc
         assert "Linked this project to Second" in result.output
         assert tomllib.loads(
             (project_root / ".bloomerp/state.toml").read_text(encoding="utf-8")
-        ) == {"project_id": "project-2"}
+        ) ["project_id"] == "project-2"
         client_type.return_value.request.assert_called_once_with(
-            "GET", "/api/projects/?type=SELF_MANAGED_CLOUD"
+            "GET", "/api/projects/"
         )
 
 
@@ -163,9 +163,9 @@ server_location = "US_EAST"
         assert "Linked this project to Example" in result.output
         assert tomllib.loads(
             Path(".bloomerp/state.toml").read_text(encoding="utf-8")
-        ) == {"project_id": "project-created"}
+        ) ["project_id"] == "project-created"
         assert client.request.call_args_list == [
-            call("GET", "/api/projects/?type=SELF_MANAGED_CLOUD"),
+            call("GET", "/api/projects/"),
             call(
                 "POST",
                 "/api/projects/",
@@ -175,7 +175,6 @@ server_location = "US_EAST"
                     "owner": 42,
                     "server_location": "US_EAST",
                     "bloomerp_version": "1.2.3",
-                    "type": "SELF_MANAGED_CLOUD",
                 },
             ),
         ]
@@ -326,10 +325,8 @@ python_version = "3.13"
         wheel = Path("example.whl")
         wheel.write_bytes(b"wheel bytes")
 
-        result = runner.invoke(
-            main,
-            ["project", "upload", "--wheel", str(wheel)],
-        )
+        with patch("bloomerp.cli.project.remote.verify_generated_artifact"):
+            result = runner.invoke(main, ["project", "upload", "--wheel", str(wheel)])
 
         assert result.exit_code == 0
         assert "Created project snapshot snapshot-1" in result.output

@@ -132,14 +132,22 @@ def test_project_sync_from_remote_imports_only_user_variable_names():
         {"name": "PROJECT_TOKEN", "value": "", "is_secret": True},
         {"name": "DJANGO_SECRET_KEY", "is_platform_managed": True},
     ]
-    client.request.side_effect = [project_response, environment_response]
+    client.request.side_effect = [environment_response]
 
     with runner.isolated_filesystem():
         # 1. Create a linked local project.
         create_project(linked=True)
 
+        from bloomerp.cli.utils import get_project_manifest
+        from bloomerp.config import BloomerpConfig
+        remote_manifest = get_project_manifest().model_copy(update={
+            "name": "Remote Example", "description": "Remote description",
+            "runtime": get_project_manifest().runtime.model_copy(update={"bloomerp_version": "1.15.0"}),
+            "bloomerp": BloomerpConfig.model_validate(project_response.json.return_value["instance_config"]),
+        })
         # 2. Pull remote state without writing real scaffold files.
         with (
+            patch("bloomerp.cli.project.remote.pull_project", return_value=remote_manifest),
             patch(
                 "bloomerp.cli.project.sync.BloomerpCliClient",
                 return_value=client,
@@ -169,7 +177,6 @@ def test_project_sync_from_remote_imports_only_user_variable_names():
             "optional": ["REMOTE_SECRET", "SHARED_KEY"],
         }
         assert client.request.call_args_list == [
-            call("GET", "/api/projects/project-1/"),
             call("GET", "/api/project_environment_variables/?project=project-1"),
         ]
 
