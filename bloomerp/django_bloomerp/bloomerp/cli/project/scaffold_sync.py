@@ -22,7 +22,6 @@ GENERATED_PATHS = (
     Path("config/__init__.py"),
     Path("config/asgi.py"),
     Path("config/celery.py"),
-    Path("config/routing.py"),
     Path("config/urls.py"),
     Path("config/wsgi.py"),
     Path("config/settings/__init__.py"),
@@ -33,7 +32,7 @@ GENERATED_PATHS = (
     Path("config/settings/generated/project_registry.py"),
 )
 USER_PATHS = (
-    Path("config/project_routing.py"),
+    Path("config/project_channels.py"),
     Path("config/project_urls.py"),
     Path("config/settings/common.py"),
     Path("config/settings/local.py"),

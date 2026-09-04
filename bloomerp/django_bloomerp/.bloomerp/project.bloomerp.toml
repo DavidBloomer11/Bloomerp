@@ -1,2 +1,5 @@
 name="BloomERP"
 description="The official BloomERP project"
+
+[django]
+installed_apps = ["bloomerp_modules"]

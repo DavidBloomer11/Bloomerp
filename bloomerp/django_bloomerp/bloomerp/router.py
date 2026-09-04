@@ -151,6 +151,7 @@ class RouteType(Enum):
     API = "api"
     API_MODEL = "api_model"
     API_DETAIL = "api_detail"
+    WEBSOCKET = "websocket"
 
 class ViewType(Enum):
     CLASS = "class"
@@ -175,6 +176,7 @@ class BloomerpRoute:
     translatable: bool = True
     searchable: bool = True
     message_format_values: Optional[dict[str, object]] = None
+    re_path: Optional[str] = None
 
     def _translation_context(self, field: str) -> str:
         owner = self.owner_app_label or "bloomerp"
@@ -232,6 +234,8 @@ class BloomerpRoute:
     
     def nr_of_args(self) -> int:
         """Number of arguments the view takes (excluding 'request')"""
+        if self.re_path is not None:
+            return 0
         # Each arg contains one "<"
         return self.path.count("<")
     
@@ -288,6 +292,10 @@ def _is_api_route(route_type: RouteType) -> bool:
         RouteType.API_MODEL,
         RouteType.API_DETAIL,
     }
+
+
+def _is_websocket_route(route_type: RouteType) -> bool:
+    return route_type == RouteType.WEBSOCKET
 
 
 def _get_api_model_path(model: Model) -> str:
@@ -377,6 +385,8 @@ def _auto_generate_url_name(name: Optional[str], route_type: RouteType, model: O
             return _transform_str(name)
         case RouteType.API:
             return _transform_str(name)
+        case RouteType.WEBSOCKET:
+            return _transform_str(name)
         case RouteType.API_MODEL:
             model_path = _get_api_model_path(model)
             return f"{model_path}-list" if name is None else _transform_str(name)
@@ -419,7 +429,10 @@ class BloomerpRouteRegistry:
             return False
         if existing.module != incoming.module:
             return False
-        return existing.path == incoming.path or existing.url_name == incoming.url_name
+        return (
+            existing.path == incoming.path
+            and existing.re_path == incoming.re_path
+        ) or existing.url_name == incoming.url_name
 
     def _add_route(self, route: BloomerpRoute) -> bool:
         conflicting_routes = [
@@ -527,7 +540,8 @@ class BloomerpRouteRegistry:
     def register(
         self,
         path: str = None,
-        route_type: Literal['app', 'module', 'detail', 'model', 'api', 'api_model', 'api_detail'] = 'app',
+        re_path: Optional[str] = None,
+        route_type: Literal['app', 'module', 'detail', 'model', 'api', 'api_model', 'api_detail', 'websocket'] = 'app',
         models: Union[Model, List[Model], str, None] = None,
         modules: Union[BloomerpModule, List[BloomerpModule], str, None] = None,
         exclude_models:Union[Model, List[Model], str, None] = None,
@@ -544,7 +558,8 @@ class BloomerpRouteRegistry:
         Works for both function-based and class-based views.
 
         Args:
-            path: The URL path for the route (optional, auto-generated if not provided)
+            path: A Django ``path()`` pattern (optional, auto-generated if omitted)
+            re_path: A complete Django ``re_path()`` regular expression
             models: The model(s) associated with this route
             route_type: Type of route ('app', 'module', 'detail', 'model', 'api', 'api_model', 'api_detail')
             name: Name for the route (optional, derived from view if not provided)
@@ -552,13 +567,22 @@ class BloomerpRouteRegistry:
             override: Whether to override existing routes with same path
         """
         def decorator(view):
+            if path is not None and re_path is not None:
+                raise ValueError("Only one of 'path' or 're_path' may be provided")
+
             # Use local variables to avoid nonlocal complications
             _name = name
             _description = description
             _path = path
+            _re_path = re_path
             _url_name = url_name
             _route_type = route_type if isinstance(route_type, RouteType) else RouteType(str(route_type).lower())
             _modules = modules
+
+            if _is_websocket_route(_route_type) and not hasattr(view, 'as_asgi'):
+                raise TypeError(
+                    "Websocket routes must use a Channels consumer with an 'as_asgi' method"
+                )
 
             owner_app = apps.get_containing_app_config(getattr(view, "__module__", ""))
 
@@ -596,7 +620,7 @@ class BloomerpRouteRegistry:
             view_type = ViewType.FUNCTION
             registered_view = view
 
-            if hasattr(view, 'as_view'):
+            if hasattr(view, 'as_view') or hasattr(view, 'as_asgi'):
                 # Class-based view
                 view_type = ViewType.CLASS
             elif callable(view):
@@ -609,6 +633,8 @@ class BloomerpRouteRegistry:
                 raise TypeError("The provided view is neither a valid function-based view nor a class-based view.")
             
             def _auto_path() -> str:
+                if _re_path is not None:
+                    return _re_path
                 if _path is not None:
                     return _path
                 if hasattr(view, '__name__'):
@@ -623,6 +649,11 @@ class BloomerpRouteRegistry:
                 if hasattr(view, '__doc__') and view.__doc__:
                     return view.__doc__.strip()
                 return f"Route for {actual_name}"
+
+            def _resolved_path(actual_path: str, model=None, module=None) -> str:
+                if _re_path is not None:
+                    return actual_path
+                return _generate_path(actual_path, _route_type, model, module)
 
             match _route_type:
                 case RouteType.APP:
@@ -643,7 +674,8 @@ class BloomerpRouteRegistry:
 
                     self._add_route(
                         BloomerpRoute(
-                            path=_generate_path(actual_path, _route_type),
+                            path=_resolved_path(actual_path),
+                            re_path=_re_path,
                             route_type=_route_type,
                             name=actual_name,
                             url_name=generated_url_name,
@@ -705,7 +737,8 @@ class BloomerpRouteRegistry:
 
                         self._add_route(
                             BloomerpRoute(
-                                path=_generate_path(actual_path, _route_type, None, module),
+                                path=_resolved_path(actual_path, None, module),
+                                re_path=_re_path,
                                 route_type=_route_type,
                                 name=actual_name,
                                 url_name=generated_url_name,
@@ -733,6 +766,7 @@ class BloomerpRouteRegistry:
                     # Store template so late-arriving models can be registered later
                     self._model_route_templates.append({
                         'path': _auto_path(),
+                        're_path': _re_path,
                         'route_type': _route_type,
                         'name': _name,
                         'description': _description,
@@ -780,7 +814,7 @@ class BloomerpRouteRegistry:
                         actual_url_name = _url_name if _url_name else (
                             _name if _is_api_route(_route_type) else actual_name
                         )
-                        generated_path = _generate_path(actual_path, _route_type, model, module)
+                        generated_path = _resolved_path(actual_path, model, module)
                         generated_url_name = _auto_generate_url_name(
                             actual_url_name,
                             _route_type,
@@ -789,6 +823,7 @@ class BloomerpRouteRegistry:
                         )
                         route = BloomerpRoute(
                             path=generated_path,
+                            re_path=_re_path,
                             model=model,
                             module=module,
                             route_type=_route_type,
@@ -832,7 +867,53 @@ class BloomerpRouteRegistry:
 
                     self._add_route(
                         BloomerpRoute(
-                            path=_generate_path(actual_path, _route_type),
+                            path=_resolved_path(actual_path),
+                            re_path=_re_path,
+                            route_type=_route_type,
+                            name=actual_name,
+                            url_name=generated_url_name,
+                            view=registered_view,
+                            view_type=view_type,
+                            module=None,
+                            description=_generate_description(
+                                actual_description,
+                                None,
+                                registered_view,
+                                None,
+                                message_format_values,
+                            ),
+                            override=override,
+                            **_route_metadata(
+                                actual_path,
+                                generated_url_name,
+                                actual_name,
+                                actual_description,
+                            ),
+                        )
+                    )
+
+                case RouteType.WEBSOCKET:
+                    if _modules or models or exclude_models:
+                        raise ValueError(
+                            "Modules and models parameters are not applicable for 'websocket' route type"
+                        )
+
+                    actual_name = _generate_name(
+                        _name,
+                        None,
+                        registered_view,
+                        None,
+                        message_format_values,
+                    )
+                    actual_description = _auto_description(actual_name)
+                    actual_path = _auto_path()
+                    actual_url_name = _url_name if _url_name else actual_name
+                    generated_url_name = _auto_generate_url_name(actual_url_name, _route_type)
+
+                    self._add_route(
+                        BloomerpRoute(
+                            path=_resolved_path(actual_path),
+                            re_path=_re_path,
                             route_type=_route_type,
                             name=actual_name,
                             url_name=generated_url_name,
@@ -903,7 +984,11 @@ class BloomerpRouteRegistry:
                 template['name'] if _is_api_route(route_type) else actual_name
             )
             url_name = _auto_generate_url_name(actual_url_name_raw, route_type, model, module)
-            generated_path = _generate_path(actual_path, route_type, model, module)
+            generated_path = (
+                actual_path
+                if template.get('re_path') is not None
+                else _generate_path(actual_path, route_type, model, module)
+            )
             owner_app = apps.get_containing_app_config(
                 getattr(template['view'], "__module__", "")
             )
@@ -917,6 +1002,7 @@ class BloomerpRouteRegistry:
 
             route = BloomerpRoute(
                 path=generated_path,
+                re_path=template.get('re_path'),
                 model=model,
                 module=module,
                 route_type=route_type,
@@ -1016,9 +1102,20 @@ class BloomerpRouteRegistry:
 
         patterns = []
         for route in self.routes:
+            if _is_websocket_route(route.route_type):
+                continue
             patterns.append(self.build_url_pattern(route))
 
         return patterns
+
+    def create_websocket_url_patterns(self):
+        """Create Channels URL patterns for all registered websocket consumers."""
+        self._auto_import_views()
+        return [
+            self.build_websocket_url_pattern(route)
+            for route in self.routes
+            if _is_websocket_route(route.route_type)
+        ]
 
     def _get_route_kwargs(self, route: BloomerpRoute) -> dict:
         args = dict(route.args) if route.args else {}
@@ -1037,24 +1134,40 @@ class BloomerpRouteRegistry:
         return view_callable
 
     def build_url_pattern(self, route: BloomerpRoute):
-        from django.urls import path as django_path
+        from django.urls import path as django_path, re_path as django_re_path
+
+        if _is_websocket_route(route.route_type):
+            raise ValueError("Websocket routes must be built with build_websocket_url_pattern")
 
         args = self._get_route_kwargs(route)
         view_callable = self._build_view_callable(route, args)
+        path_func = django_re_path if route.re_path is not None else django_path
+        route_pattern = route.re_path if route.re_path is not None else route.path.lstrip('/')
 
         if route.view_type == ViewType.CLASS:
-            return django_path(
-                route.path.lstrip('/'),
+            return path_func(
+                route_pattern,
                 view_callable,
                 name=route.url_name,
             )
 
-        return django_path(
-            route.path.lstrip('/'),
+        return path_func(
+            route_pattern,
             view_callable,
             name=route.url_name,
             kwargs=args,
         )
+
+    def build_websocket_url_pattern(self, route: BloomerpRoute):
+        """Build a Channels URL pattern for a registered websocket consumer."""
+        from django.urls import path as django_path, re_path as django_re_path
+
+        if not _is_websocket_route(route.route_type):
+            raise ValueError("Expected a websocket route")
+
+        path_func = django_re_path if route.re_path is not None else django_path
+        route_pattern = route.re_path if route.re_path is not None else route.path.lstrip('/')
+        return path_func(route_pattern, route.view.as_asgi(), name=route.url_name)
 
     def clear_routes(self):
         """Clear all registered routes."""
@@ -1062,7 +1175,7 @@ class BloomerpRouteRegistry:
 
     def filter(
         self,
-        route_type: Optional[Literal['app', 'model', 'module', 'detail', 'api', 'api_model', 'api_detail']] | Optional[RouteType] = None,
+        route_type: Optional[Literal['app', 'model', 'module', 'detail', 'api', 'api_model', 'api_detail', 'websocket']] | Optional[RouteType] = None,
         model: Optional[Model] = None,
         module: Optional[ModuleConfig] = None,
         view_type: Optional[str] | Optional[ViewType] = None,
@@ -1160,5 +1273,6 @@ router = BloomerpRouteRegistry(
     dirs=[
         "views",
         "components",
+        "channels",
     ]
 )

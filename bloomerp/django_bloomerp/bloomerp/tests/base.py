@@ -7,6 +7,8 @@ from django.db import models
 from django.apps import apps
 from django.db import connection
 from django.urls import clear_url_caches
+from channels.routing import URLRouter
+from channels.testing import WebsocketCommunicator
 import re
 import tempfile
 from bloomerp.management.commands import save_application_fields
@@ -15,6 +17,16 @@ from bloomerp.model_fields.text_editor_field import TextEditorField
 from bloomerp.tests.utils.users import create_admin, create_normal_user
 from bloomerp.tests.utils.dynamic_models import create_test_models
 from bloomerp.tests.utils.names import FIRST_NAMES, LAST_NAMES
+
+
+class BloomerpChannelTestCase(TransactionTestCase):
+    """Base test case for websocket consumers registered with a route registry."""
+
+    def websocket_application(self, registry):
+        return URLRouter(registry.create_websocket_url_patterns())
+
+    def websocket_communicator(self, registry, path: str):
+        return WebsocketCommunicator(self.websocket_application(registry), path)
 
 @modify_settings(INSTALLED_APPS={'remove': 'bloomerp_modules'})
 class BaseBloomerpTestCaseWithModels(TransactionTestCase):

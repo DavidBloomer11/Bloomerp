@@ -649,8 +649,20 @@ def test_project_init_creates_manifests_without_requiring_an_app():
         assert Path("example/.bloomerp/scaffold.lock").is_file()
         assert Path("example/config/settings/generated/common.py").is_file()
         assert Path("example/config/celery.py").is_file()
-        assert Path("example/config/routing.py").is_file()
-        assert Path("example/config/project_routing.py").is_file()
+        assert not Path("example/config/routing.py").exists()
+        assert Path("example/config/project_channels.py").is_file()
+        assert (
+            "from bloomerp.router import router"
+            in Path("example/config/asgi.py").read_text(encoding="utf-8")
+        )
+        assert (
+            "from config.project_channels import websocket_urlpatterns"
+            in Path("example/config/asgi.py").read_text(encoding="utf-8")
+        )
+        assert (
+            "from config.project_routing import websocket_urlpatterns"
+            in Path("example/config/project_channels.py").read_text(encoding="utf-8")
+        )
         assert Path("example/config/settings/common.py").is_file()
         assert not Path("example/config/settings/bloomerp.py").exists()
         user_common_settings = Path("example/config/settings/common.py").read_text(
