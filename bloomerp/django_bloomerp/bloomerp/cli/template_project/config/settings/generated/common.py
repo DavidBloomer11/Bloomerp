@@ -11,6 +11,7 @@ from bloomerp.config.settings import (
 )
 
 from .project_registry import PROJECT_INSTALLED_APPS
+from .project_manifest import BLOOMERP_CONFIG
 
 
 BASE_DIR = Path(

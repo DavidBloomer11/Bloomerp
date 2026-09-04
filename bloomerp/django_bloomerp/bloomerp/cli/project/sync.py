@@ -125,6 +125,10 @@ def synchronize_project_from_remote(
         updates["runtime"] = manifest.runtime.model_copy(
             update={"bloomerp_version": str(remote["bloomerp_version"])}
         )
+    if isinstance(remote.get("instance_config"), dict):
+        updates["bloomerp"] = manifest.bloomerp.model_validate(
+            remote["instance_config"]
+        )
     manifest = manifest.model_copy(update=updates)
 
     environment_payload = api_client.request(
@@ -169,6 +173,10 @@ def synchronize_project_to_remote(
             "name": manifest.name,
             "description": manifest.description,
             "bloomerp_version": manifest.runtime.bloomerp_version,
+            "instance_config": manifest.bloomerp.model_dump(
+                mode="json",
+                exclude_none=True,
+            ),
         },
     )
     return result

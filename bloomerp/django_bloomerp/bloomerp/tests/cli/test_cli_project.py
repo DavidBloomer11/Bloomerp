@@ -634,6 +634,16 @@ def test_project_init_creates_manifests_without_requiring_an_app():
         )
         assert project_manifest["name"] == "example"
         assert project_manifest["environment"]["required"] == []
+        assert project_manifest["bloomerp"]["auth"]["interactive"] == {
+            "enabled": True,
+            "login_identifier": "username",
+            "signup_enabled": False,
+            "password_reset_enabled": True,
+            "email_verification": "none",
+            "use_allauth": False,
+            "social_providers": [],
+            "allow_non_staff_bloomerp_access": False,
+        }
         assert project_manifest["runtime"]["bloomerp_version"]
         assert project_manifest["runtime"]["python_version"] in {"3.12", "3.13"}
         assert Path("example/.python-version").read_text(encoding="utf-8") == (
@@ -648,6 +658,9 @@ def test_project_init_creates_manifests_without_requiring_an_app():
         assert Path("example/.bloomerp/state.toml").read_text(encoding="utf-8") == ""
         assert Path("example/.bloomerp/scaffold.lock").is_file()
         assert Path("example/config/settings/generated/common.py").is_file()
+        assert Path(
+            "example/config/settings/generated/project_manifest.py"
+        ).is_file()
         assert Path("example/config/celery.py").is_file()
         assert not Path("example/config/routing.py").exists()
         assert Path("example/config/project_channels.py").is_file()
@@ -671,8 +684,13 @@ def test_project_init_creates_manifests_without_requiring_an_app():
         generated_common_settings = Path(
             "example/config/settings/generated/common.py"
         ).read_text(encoding="utf-8")
-        assert "BLOOMERP_CONFIG = BloomerpConfig()" in user_common_settings
-        assert "BLOOMERP_CONFIG = BloomerpConfig()" not in generated_common_settings
+        generated_manifest_settings = Path(
+            "example/config/settings/generated/project_manifest.py"
+        ).read_text(encoding="utf-8")
+        assert "BLOOMERP_CONFIG" not in user_common_settings
+        assert "from .project_manifest import BLOOMERP_CONFIG" in generated_common_settings
+        assert "BLOOMERP_PROJECT_MANIFEST" in generated_manifest_settings
+        assert "'login_identifier': 'username'" in generated_manifest_settings
         assert not Path("example/config/settings/base.py").exists()
 
 
@@ -734,6 +752,10 @@ python_version = "3.12"
 
 [django]
 installed_apps = ["generated_apps.project_app"]
+
+[bloomerp.auth.interactive]
+login_identifier = "email"
+signup_enabled = true
 ''',
             encoding="utf-8",
         )
@@ -762,6 +784,11 @@ installed_apps = ["generated_apps.project_app"]
         assert Path("managed-project/manage.py").is_file()
         assert Path("managed-project/.bloomerp/project.bloomerp.toml").is_file()
         assert Path("managed-project/.bloomerp/scaffold.lock").is_file()
+        generated_manifest_settings = Path(
+            "managed-project/config/settings/generated/project_manifest.py"
+        ).read_text(encoding="utf-8")
+        assert "'login_identifier': 'email'" in generated_manifest_settings
+        assert "'signup_enabled': True" in generated_manifest_settings
         assert not Path("managed-project/.bloomerp/state.toml").exists()
         assert not Path("managed-project/.env").exists()
         assert not Path("managed-project/.gitignore").exists()

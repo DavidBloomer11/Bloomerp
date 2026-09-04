@@ -1,7 +1,5 @@
-"""Project-owned settings shared by every environment. This file is never replaced."""
+"""Project-owned Django settings shared by every environment.
 
-from bloomerp.config import BloomerpConfig, BLOOMERP_USER_MODEL
-
-BLOOMERP_CONFIG = BloomerpConfig()
-
-AUTH_USER_MODEL = BLOOMERP_USER_MODEL
+Bloomerp project configuration belongs in .bloomerp/project.bloomerp.toml and
+is generated into config.settings.generated.project_manifest during sync.
+"""

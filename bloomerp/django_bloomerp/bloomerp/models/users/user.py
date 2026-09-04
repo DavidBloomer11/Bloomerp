@@ -153,3 +153,5 @@ class User(AbstractBloomerpUser):
         verbose_name_plural = _("Users")
         db_table = "auth_user"
         swappable = "AUTH_USER_MODEL"
+
+

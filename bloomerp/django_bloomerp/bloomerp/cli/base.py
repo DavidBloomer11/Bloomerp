@@ -2,6 +2,8 @@ import os
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from bloomerp.config.definition import BloomerpConfig
+
 DEFAULT_BLOOMERP_IO_URL = "http://127.0.0.1:8000"
 BLOOMERP_IO_URL = os.environ.get(
     "BLOOMERP_IO_URL",
@@ -41,6 +43,7 @@ class BloomerpProjectManifest(BaseModel):
     environment: BloomerpEnvironment
     runtime: BloomerpRuntime
     django: BloomerpDjango = Field(default_factory=BloomerpDjango)
+    bloomerp: BloomerpConfig = Field(default_factory=BloomerpConfig)
 
 
 class BloomerpAppDjango(BaseModel):

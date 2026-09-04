@@ -117,6 +117,14 @@ def test_project_sync_from_remote_imports_only_user_variable_names():
         "name": "Remote Example",
         "description": "Remote description",
         "bloomerp_version": "1.15.0",
+        "instance_config": {
+            "auth": {
+                "interactive": {
+                    "login_identifier": "email",
+                    "signup_enabled": True,
+                }
+            }
+        },
     }
     environment_response = Mock()
     environment_response.json.return_value = [
@@ -150,6 +158,12 @@ def test_project_sync_from_remote_imports_only_user_variable_names():
         )
         assert manifest["name"] == "Remote Example"
         assert manifest["runtime"]["bloomerp_version"] == "1.15.0"
+        assert manifest["bloomerp"]["auth"]["interactive"][
+            "login_identifier"
+        ] == "email"
+        assert manifest["bloomerp"]["auth"]["interactive"][
+            "signup_enabled"
+        ] is True
         assert manifest["environment"] == {
             "required": ["PROJECT_TOKEN"],
             "optional": ["REMOTE_SECRET", "SHARED_KEY"],
@@ -189,6 +203,9 @@ def test_project_sync_to_remote_runs_local_sync_before_metadata_patch():
 
         # 3. Verify the remote payload excludes environment values and app versions.
         assert result.exit_code == 0, result.output
+        manifest = tomllib.loads(
+            Path(".bloomerp/project.bloomerp.toml").read_text(encoding="utf-8")
+        )
         client.request.assert_called_once_with(
             "PATCH",
             "/api/projects/project-1/",
@@ -196,10 +213,8 @@ def test_project_sync_to_remote_runs_local_sync_before_metadata_patch():
                 "name": "Example",
                 "description": "Local project",
                 "bloomerp_version": "1.14.6",
+                "instance_config": manifest["bloomerp"],
             },
-        )
-        manifest = tomllib.loads(
-            Path(".bloomerp/project.bloomerp.toml").read_text(encoding="utf-8")
         )
         assert manifest["environment"]["required"] == [
             "APP_TOKEN",

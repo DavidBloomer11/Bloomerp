@@ -29,6 +29,7 @@ GENERATED_PATHS = (
     Path("config/settings/generated/common.py"),
     Path("config/settings/generated/local.py"),
     Path("config/settings/generated/production.py"),
+    Path("config/settings/generated/project_manifest.py"),
     Path("config/settings/generated/project_registry.py"),
 )
 USER_PATHS = (
@@ -60,6 +61,15 @@ def _render_generated_file(
         contents = contents.replace(
             "__PROJECT_INSTALLED_APPS__",
             pformat(manifest.django.installed_apps, width=88, sort_dicts=False),
+        )
+    elif relative_path == Path("config/settings/generated/project_manifest.py"):
+        contents = contents.replace(
+            "__PROJECT_MANIFEST__",
+            pformat(
+                manifest.model_dump(mode="json", exclude_none=True),
+                width=88,
+                sort_dicts=False,
+            ),
         )
     return contents
 
