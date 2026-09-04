@@ -130,7 +130,7 @@ def updated_pyproject_contents(path: Path, version: str) -> tuple[str, str]:
 
 def _environment_python(project_root: Path, explicit_python: Path | None) -> Path:
     if explicit_python is not None:
-        return explicit_python.expanduser().resolve()
+        return explicit_python.expanduser().absolute()
 
     active_environment = os.environ.get("VIRTUAL_ENV")
     if active_environment:
@@ -141,7 +141,7 @@ def _environment_python(project_root: Path, explicit_python: Path | None) -> Pat
         )
         for candidate in candidates:
             if candidate.is_file():
-                return candidate.resolve()
+                return candidate.absolute()
         raise click.ClickException(
             f"VIRTUAL_ENV does not contain a Python executable: {environment_root}"
         )
@@ -152,7 +152,7 @@ def _environment_python(project_root: Path, explicit_python: Path | None) -> Pat
     )
     for candidate in candidates:
         if candidate.is_file():
-            return candidate.resolve()
+            return candidate.absolute()
 
     raise click.ClickException(
         "No project Python environment found. Activate a virtual environment, "
@@ -171,7 +171,7 @@ def install_bloomerp(
 
     if explicit_python is not None and system:
         raise click.ClickException("--python and --system cannot be used together.")
-    python = Path(sys.executable).resolve() if system else _environment_python(
+    python = Path(sys.executable).absolute() if system else _environment_python(
         project_root,
         explicit_python,
     )
