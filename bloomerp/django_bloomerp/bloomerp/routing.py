@@ -1,8 +1,4 @@
-from django.urls import re_path
+from .router import router
 
-from . import consumers
 
-# TODO: Refactor this
-websocket_urlpatterns = [
-    re_path(r'^ws/notifications/$', consumers.NotificationsConsumer.as_asgi()),
-]
+websocket_urlpatterns = router.create_websocket_url_patterns()

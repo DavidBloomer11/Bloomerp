@@ -8,12 +8,11 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 
 django_asgi_application = get_asgi_application()
 
-from config.routing import websocket_urlpatterns
-
+from bloomerp.router import router
 
 application = ProtocolTypeRouter(
     {
         "http": django_asgi_application,
-        "websocket": AuthMiddlewareStack(URLRouter(websocket_urlpatterns)),
+        "websocket": AuthMiddlewareStack(URLRouter(router.create_websocket_url_patterns())),
     }
 )

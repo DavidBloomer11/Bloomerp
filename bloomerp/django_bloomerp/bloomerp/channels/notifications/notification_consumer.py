@@ -1,6 +1,9 @@
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
+from bloomerp.router import router
 
+
+@router.register(re_path=r"^ws/notifications/$", route_type="websocket")
 class NotificationsConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self) -> None:
         user = self.scope.get('user')
