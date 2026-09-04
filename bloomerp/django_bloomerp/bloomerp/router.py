@@ -160,7 +160,6 @@ class ViewType(Enum):
 @dataclass
 class BloomerpRoute:
     path: str
-    re_path: Optional[str]
     route_type: str
     name: str
     url_name: str
@@ -177,6 +176,7 @@ class BloomerpRoute:
     translatable: bool = True
     searchable: bool = True
     message_format_values: Optional[dict[str, object]] = None
+    re_path: Optional[str] = None
 
     def _translation_context(self, field: str) -> str:
         owner = self.owner_app_label or "bloomerp"

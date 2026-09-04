@@ -1,7 +1,7 @@
 from django.http import HttpResponse
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
-from bloomerp.router import BloomerpRouteRegistry, RouteType
+from bloomerp.router import BloomerpRoute, BloomerpRouteRegistry, RouteType, ViewType
 from bloomerp.tests.base import BloomerpChannelTestCase
 
 
@@ -18,6 +18,18 @@ class EchoConsumer(AsyncJsonWebsocketConsumer):
 
 
 class BloomerpWebsocketRouterTests(BloomerpChannelTestCase):
+    def test_route_constructor_remains_backwards_compatible(self):
+        route = BloomerpRoute(
+            "http/",
+            RouteType.APP,
+            "HTTP",
+            "http",
+            ViewType.FUNCTION,
+            http_view,
+        )
+
+        self.assertIsNone(route.re_path)
+
     def test_path_websocket_route_builds_a_channels_pattern(self):
         registry = BloomerpRouteRegistry()
         registry.register(path="ws/echo/", route_type="websocket")(EchoConsumer)
