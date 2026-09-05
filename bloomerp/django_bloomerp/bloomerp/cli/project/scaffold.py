@@ -7,7 +7,6 @@ import tomllib
 from datetime import UTC, datetime
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
-from pprint import pformat
 
 import click
 
@@ -29,8 +28,6 @@ GENERATED_PATHS = (
     Path("config/settings/generated/common.py"),
     Path("config/settings/generated/local.py"),
     Path("config/settings/generated/production.py"),
-    Path("config/settings/generated/project_manifest.py"),
-    Path("config/settings/generated/project_registry.py"),
 )
 USER_PATHS = (
     Path("config/project_channels.py"),
@@ -56,24 +53,7 @@ def _render_generated_file(
     relative_path: Path,
     manifest: BloomerpProjectManifest,
 ) -> str:
-    from .marketplace_sources import installed_apps
-    contents = (TEMPLATE_ROOT / relative_path).read_text(encoding="utf-8")
-    if relative_path == Path("config/settings/generated/project_registry.py"):
-        contents = contents.replace(
-            "__PROJECT_INSTALLED_APPS__",
-            pformat(installed_apps(manifest), width=88, sort_dicts=False),
-        )
-    elif relative_path == Path("config/settings/generated/project_manifest.py"):
-        contents = contents.replace(
-            "__PROJECT_MANIFEST__",
-            pformat(
-                manifest.model_dump(mode="json", exclude_none=True),
-                width=88,
-                # TOML groups scalars before tables; key order is not configuration.
-                sort_dicts=True,
-            ),
-        )
-    return contents
+    return (TEMPLATE_ROOT / relative_path).read_text(encoding="utf-8")
 
 
 def _render_scaffold(

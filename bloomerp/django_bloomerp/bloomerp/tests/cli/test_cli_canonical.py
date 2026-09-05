@@ -15,7 +15,7 @@ from bloomerp.cli.base import BloomerpProjectManifest
 from bloomerp.cli.toml import write_toml_model
 from bloomerp.cli.project.marketplace_sources import (
     excluded_local_apps, upload_manifest, validate_user_wheel, assert_no_overrides,
-    configure_sources, installed_apps, MarketplaceFinder,
+    configure_sources, installed_apps, MarketplaceFinder, locks_for, write_release_cache,
 )
 from bloomerp.cli.marketplace.manage import develop
 
@@ -45,6 +45,7 @@ def project(*, linked=True, selected=True):
         'runtime': {'bloomerp_version': '1.15.0'}, 'django': {'installed_apps': ['apps.widget.apps.WidgetConfig']},
         'extensions': [{'id': '11111111-1111-4111-8111-111111111111', 'version': '1.0.0'}] if selected else [],
         'apps': [lock] if selected else []})
+    write_release_cache([lock] if selected else [])
     write_toml_model(Path('.bloomerp/project.bloomerp.toml'), manifest)
     return manifest
 
@@ -54,7 +55,8 @@ def test_package_source_rules(linked, selected, excluded):
     with CliRunner().isolated_filesystem():
         manifest = project(linked=linked, selected=selected)
         assert bool(excluded_local_apps(manifest))
-        assert 'apps' not in upload_manifest(manifest)
+        assert upload_manifest(manifest)['apps'] == manifest.model_dump(mode='json', exclude_none=True)['apps']
+        assert 'extensions' not in upload_manifest(manifest)
         assert installed_apps(manifest) == ['apps.widget.apps.WidgetConfig']
 
 
@@ -70,7 +72,7 @@ def test_stale_lock_is_not_used_for_a_new_version():
     from bloomerp.cli.project.marketplace_sources import locks_for
     with CliRunner().isolated_filesystem():
         manifest = project()
-        manifest.extensions[0].version = '2.0.0'
+        manifest.apps[0].version = '2.0.0'
         assert locks_for(manifest) == []
 
 
@@ -143,7 +145,7 @@ def test_resolve_downloads_exact_release_and_preserves_declarations():
     from bloomerp.cli.marketplace.manage import resolve_manifest
     with CliRunner().isolated_filesystem():
         manifest = project()
-        lock = manifest.apps[0]
+        lock = locks_for(manifest)[0]
         stream = io.BytesIO()
         with zipfile.ZipFile(stream, 'w') as archive:
             archive.writestr('app.json', json.dumps(lock))
@@ -152,18 +154,19 @@ def test_resolve_downloads_exact_release_and_preserves_declarations():
         client.request.return_value.content = stream.getvalue()
         with patch('bloomerp.cli.marketplace.manage.BloomerpCliClient', return_value=client), patch('bloomerp.cli.marketplace.manage.subprocess.run') as install:
             resolved = resolve_manifest(manifest)
-        assert resolved.extensions == manifest.extensions
+        assert resolved.apps == manifest.apps
         assert client.request.call_args.kwargs['params'] == {'version': '1.0.0'}
         assert 'Bloomerp==1.15.0' in install.call_args.args[0]
         assert Path('.bloomerp/marketplace/' + lock['wheel_sha256'] + '/apps/widget/__init__.py').exists()
 
 
 def test_duplicate_marketplace_package_is_rejected_before_install():
-    from bloomerp.cli.base import BloomerpExtension
+    from bloomerp.cli.base import BloomerpProjectApp
     with CliRunner().isolated_filesystem():
         manifest = project()
-        manifest.extensions.append(BloomerpExtension(id='22222222-2222-4222-8222-222222222222', version='1.0.0'))
-        manifest.apps.append({**manifest.apps[0], 'app_slug': 'other', 'id': '22222222-2222-4222-8222-222222222222'})
+        manifest.apps.append(BloomerpProjectApp(id='22222222-2222-4222-8222-222222222222', version='1.0.0'))
+        lock = locks_for(manifest)[0]
+        write_release_cache([lock, {**lock, 'id': '22222222-2222-4222-8222-222222222222'}])
         with pytest.raises(click.ClickException, match='duplicate Python packages'):
             installed_apps(manifest)
 
@@ -200,12 +203,12 @@ def test_app_wheel_has_id_distribution_and_reproducible_bytes():
 
 def test_deploy_syncs_then_uploads_local_app_versions_before_capture():
     from unittest.mock import Mock
-    from bloomerp.cli.base import BloomerpExtension
+    from bloomerp.cli.base import BloomerpProjectApp
     from bloomerp.cli.project.deploy import deploy
     with CliRunner().isolated_filesystem():
         manifest = project(selected=False)
         app_id = '11111111-1111-4111-8111-111111111111'
-        manifest.extensions = [BloomerpExtension(id=app_id)]
+        manifest.apps = [BloomerpProjectApp(id=app_id)]
         events = []
         def sync(**kwargs):
             events.append('sync')
@@ -215,7 +218,7 @@ def test_deploy_syncs_then_uploads_local_app_versions_before_capture():
             return {'version': '1.0.0'}
         def upload_project(*args, **kwargs):
             events.append('capture')
-            assert manifest.extensions[0].version == '1.0.0'
+            assert manifest.apps[0].version == '1.0.0'
             return {'id': 'snapshot-1'}
         client = Mock()
         client.request.return_value.json.side_effect = [{'deployment_id': 'deployment-1'}, {'status': 'SUCCEEDED'}]
@@ -267,19 +270,21 @@ def test_scaffold_stays_current_after_nested_release_manifest_toml_round_trip():
     with CliRunner().isolated_filesystem():
         manifest = project()
         # API JSON can put a scalar after nested tables. TOML necessarily moves it.
-        manifest.apps[0]["manifest"] = {
+        lock = locks_for(manifest)[0]
+        lock["manifest"] = {
             "name": "widget",
             "django": {"app_config": "apps.widget.apps.WidgetConfig"},
             "routes": [{"url": "/test/", "name": "test", "description": "Test route"}],
             "description": "App description",
         }
+        write_release_cache([lock])
         synchronize_local_project(manifest)
         reloaded = get_project_manifest()
         assert reloaded.apps == manifest.apps
         assert_scaffold_current(Path.cwd(), reloaded)
-        before = Path("config/settings/generated/project_manifest.py").read_bytes()
+        before = Path("config/settings/generated/common.py").read_bytes()
         synchronize_local_project(reloaded)
-        assert Path("config/settings/generated/project_manifest.py").read_bytes() == before
+        assert Path("config/settings/generated/common.py").read_bytes() == before
 
 
 def test_production_sources_need_no_local_state_or_wheel_cache(monkeypatch):
@@ -304,3 +309,150 @@ def test_production_sources_still_reject_development_overrides(monkeypatch):
         monkeypatch.setenv('BLOOMERP_SETTINGS_ENV', 'production')
         with pytest.raises(RuntimeError, match='overrides cannot run in production'):
             configure_sources(Path.cwd())
+
+
+def test_schema_three_manifest_contains_only_app_selections():
+    with CliRunner().isolated_filesystem():
+        manifest = project()
+        data = manifest.model_dump(mode='json')
+        assert data['schema_version'] == 3
+        assert 'extensions' not in data
+        assert data['apps'] == [{'name': None, 'id': '11111111-1111-4111-8111-111111111111', 'version': '1.0.0'}]
+        assert locks_for(manifest)[0]['manifest']['django']['app_config'] == 'apps.widget.apps.WidgetConfig'
+
+
+def test_old_manifest_releases_move_to_local_cache():
+    from bloomerp.cli.utils import get_project_manifest
+    with CliRunner().isolated_filesystem():
+        manifest = project()
+        locks = locks_for(manifest)
+        data = manifest.model_dump(mode='json', exclude_none=True)
+        data.update(schema_version=2, extensions=data['apps'], apps=locks)
+        from bloomerp.cli.toml import _render_table
+        Path('.bloomerp/project.bloomerp.toml').write_text('\n'.join(_render_table(data)))
+        Path('.bloomerp/app-releases.json').unlink()
+        upgraded = get_project_manifest()
+        assert upgraded.model_dump(mode='json')['apps'] == manifest.model_dump(mode='json')['apps']
+        assert locks_for(upgraded) == locks
+
+
+def test_missing_release_cache_is_resolved_for_dependency():
+    from bloomerp.cli.project.marketplace_sources import ensure_release_cache
+    with CliRunner().isolated_filesystem():
+        manifest = project()
+        Path('.bloomerp/app-releases.json').unlink()
+        with patch('bloomerp.cli.marketplace.manage.resolve_manifest') as resolve:
+            ensure_release_cache(manifest)
+        resolve.assert_called_once_with(manifest)
+
+
+def test_schema_three_rejects_embedded_app_metadata():
+    from pydantic import ValidationError
+    with CliRunner().isolated_filesystem():
+        data = project().model_dump(mode='json')
+        data['apps'][0]['manifest'] = {'name': 'widget'}
+        with pytest.raises(ValidationError):
+            BloomerpProjectManifest.model_validate(data)
+
+
+def test_runtime_refuses_missing_dependency_cache():
+    with CliRunner().isolated_filesystem():
+        project()
+        Path('.bloomerp/app-releases.json').unlink()
+        with pytest.raises(RuntimeError, match='cache is missing'):
+            configure_sources(Path.cwd())
+
+
+def test_explicit_manifest_root_ignores_cwd_and_does_not_write_cache(tmp_path, monkeypatch):
+    from bloomerp.cli.utils import get_project_manifest
+    from bloomerp.cli.toml import _render_table
+    with CliRunner().isolated_filesystem():
+        manifest = project()
+        root = Path.cwd()
+        data = manifest.model_dump(mode='json', exclude_none=True)
+        data.update(schema_version=2, extensions=data['apps'], apps=locks_for(manifest))
+        (root / '.bloomerp/project.bloomerp.toml').write_text('\n'.join(_render_table(data)))
+        (root / '.bloomerp/app-releases.json').unlink()
+        (root / '.bloomerp/state.toml').unlink()
+        monkeypatch.chdir(tmp_path)
+        assert get_project_manifest(root) == manifest
+        assert not (root / '.bloomerp/app-releases.json').exists()
+        with pytest.raises(click.ClickException, match='Missing Bloomerp metadata'):
+            get_project_manifest(root / 'missing')
+        monkeypatch.undo()
+
+
+def test_local_source_selection_uses_explicit_root_from_another_cwd(tmp_path, monkeypatch):
+    with CliRunner().isolated_filesystem():
+        project()
+        root = Path.cwd()
+        before = list(sys.meta_path)
+        monkeypatch.chdir(tmp_path)
+        try:
+            configure_sources(root)
+            assert isinstance(sys.meta_path[0], MarketplaceFinder)
+        finally:
+            sys.meta_path[:] = before
+            monkeypatch.undo()
+
+
+@pytest.mark.parametrize('interactive', [False, True])
+@pytest.mark.parametrize('dependency', [False, True])
+def test_project_remove_app_removes_installed_app_and_survives_sync(interactive, dependency):
+    from bloomerp.cli.main import main
+    from bloomerp.cli.utils import get_project_manifest
+    from bloomerp.cli.project.sync import synchronize_local_project
+    from bloomerp.cli.project.marketplace_sources import local_source_dirs
+    with CliRunner().isolated_filesystem():
+        manifest = project()
+        if not dependency:
+            from bloomerp.cli.utils import get_project_state, write_project_state
+            state = get_project_state()
+            state.dependency_ids = []
+            write_project_state(state)
+        synchronize_local_project(manifest)
+        args = ['project', 'remove-app']
+        if not interactive:
+            args.append(str(manifest.apps[0].id))
+        result = CliRunner().invoke(main, args, input='1\n' if interactive else None)
+        assert result.exit_code == 0, result.output
+        manifest = get_project_manifest()
+        assert manifest.apps == []
+        assert manifest.django.installed_apps == []
+        assert local_source_dirs(manifest) == []
+        synchronize_local_project(manifest)
+        assert get_project_manifest().django.installed_apps == []
+        assert Path('apps/widget/__init__.py').exists()
+
+
+@pytest.mark.parametrize('interactive', [False, True])
+def test_project_add_app_supports_selector_and_records_name(interactive):
+    from unittest.mock import Mock
+    from bloomerp.cli.main import main
+    from bloomerp.cli.utils import get_project_manifest, get_project_state, write_project_state
+    with CliRunner().isolated_filesystem():
+        manifest = project(selected=False)
+        app_id = '11111111-1111-4111-8111-111111111111'
+        state = get_project_state()
+        state.excluded_app_ids = [app_id]
+        write_project_state(state)
+        app = {'id': app_id, 'name': 'Widget'}
+        client = Mock()
+        client.request.return_value.json.return_value = {'results': [app], 'next': None} if interactive else app
+        def resolve(value):
+            write_release_cache([{'id': app_id, 'version': '1.0.0', 'manifest': {'django': {'app_config': 'apps.widget.apps.WidgetConfig'}}}])
+            return value
+        args = ['project', 'add-app'] + ([] if interactive else [app_id, '--version', '1.0.0'])
+        with patch('bloomerp.cli.project.apps.BloomerpCliClient', return_value=client), patch('bloomerp.cli.marketplace.manage.resolve_manifest', side_effect=resolve):
+            result = CliRunner().invoke(main, args, input='1\n1.0.0\n' if interactive else None)
+        assert result.exit_code == 0, result.output
+        result_manifest = get_project_manifest()
+        assert result_manifest.apps[0].name == 'Widget'
+        assert result_manifest.django.installed_apps == ['apps.widget.apps.WidgetConfig']
+        assert get_project_state().excluded_app_ids == []
+
+
+def test_marketplace_no_longer_registers_add_and_remove():
+    from bloomerp.cli.marketplace import marketplace
+    assert 'add' not in marketplace.commands
+    assert 'remove' not in marketplace.commands

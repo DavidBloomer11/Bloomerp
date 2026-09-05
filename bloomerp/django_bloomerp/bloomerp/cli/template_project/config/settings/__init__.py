@@ -25,7 +25,5 @@ if _settings_environment == "local":
 else:
     from .production import *
 
-# A pulled generated artifact retains its database's authentication identity.
-from .generated.project_manifest import BLOOMERP_PROJECT_MANIFEST
-if BLOOMERP_PROJECT_MANIFEST.get("django", {}).get("auth_user_model"):
-    AUTH_USER_MODEL = BLOOMERP_PROJECT_MANIFEST["django"]["auth_user_model"]
+
+

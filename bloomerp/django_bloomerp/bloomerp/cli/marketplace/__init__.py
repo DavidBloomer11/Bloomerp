@@ -3,7 +3,7 @@ from __future__ import annotations
 import click
 
 from .search import search
-from .manage import add, remove, resolve, develop
+from .manage import resolve, develop
 
 
 @click.group()
@@ -16,5 +16,5 @@ marketplace.add_command(search)
 
 __all__ = ["marketplace"]
 
-for command in (add, remove, resolve, develop):
+for command in (resolve, develop):
     marketplace.add_command(command)

@@ -87,8 +87,11 @@ def synchronize_local_project(
     """Merge app declarations and synchronize the generated project scaffold."""
 
     project_root = _project_root()
+    manifest = manifest or get_project_manifest()
+    from .marketplace_sources import ensure_release_cache
+    ensure_release_cache(manifest)
     synchronized = _merge_app_environments(
-        manifest or get_project_manifest(),
+        manifest,
         project_root,
     )
     updated, created, backup_root = synchronize_scaffold(
@@ -118,6 +121,8 @@ def synchronize_project_from_remote(
         pull_project(client or BloomerpCliClient(), _linked_project_id(), force=force)
     payload = (client or BloomerpCliClient()).request("GET", f"{PROJECTS_ENDPOINT}{_linked_project_id()}/manifest/").json()
     manifest = BloomerpProjectManifest.model_validate(payload["manifest"])
+    from ..marketplace.manage import resolve_manifest
+    manifest = resolve_manifest(manifest)
     result = synchronize_local_project(manifest, force=force)
     state = get_project_state()
     state.manifest_revision = payload["revision"]
@@ -127,7 +132,7 @@ def synchronize_project_from_remote(
 
 def synchronize_project_to_remote(*, client=None, force=False) -> ProjectSyncResult:
     """Register local apps and synchronize declarations, without building code."""
-    from ..base import BloomerpExtension
+    from ..base import BloomerpProjectApp
     from ..app._utils import read_app_state, write_app_state
     from ..app.link import _create_app
     from ..utils import write_project_state
@@ -138,14 +143,14 @@ def synchronize_project_to_remote(*, client=None, force=False) -> ProjectSyncRes
     if not state.manifest_revision:
         raise click.ClickException("Pull the project manifest before pushing configuration.")
     manifest = get_project_manifest()
-    extensions = {str(item.id): item for item in manifest.extensions}
+    selections = {str(item.id): item for item in manifest.apps}
     for directory in local_source_dirs(manifest):
         app_state = read_app_state(directory)
         if not app_state.app_id:
             app_state.app_id = str(_create_app(api_client, directory)["id"])
             write_app_state(directory, app_state)
-        extensions.setdefault(app_state.app_id, BloomerpExtension(id=app_state.app_id))
-    manifest.extensions = list(extensions.values())
+        selections.setdefault(app_state.app_id, BloomerpProjectApp(id=app_state.app_id, name=read_app_manifest(directory).name))
+    manifest.apps = list(selections.values())
     result = synchronize_local_project(manifest, force=force)
     payload = api_client.request("POST", f"{PROJECTS_ENDPOINT}{project_id}/manifest/", json={
         "manifest": upload_manifest(result.manifest), "base_revision": state.manifest_revision,

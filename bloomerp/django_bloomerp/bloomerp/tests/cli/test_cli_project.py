@@ -528,9 +528,11 @@ def test_generated_project_production_runtime_entrypoints_load():
             encoding="utf-8",
         )
 
+        Path("example/.bloomerp/state.toml").unlink()
         environment = {
             **os.environ,
             "BLOOMERP_SETTINGS_ENV": "production",
+            "PYTHONPATH": str(Path("example").resolve()) + os.pathsep + os.environ.get("PYTHONPATH", ""),
             "BLOOMERP_PROJECT_ROOT": str(Path("example").resolve()),
             "DJANGO_SECRET_KEY": "test-secret",
             "DJANGO_ALLOWED_HOSTS": "example.test",
@@ -551,7 +553,7 @@ def test_generated_project_production_runtime_entrypoints_load():
                     "print(reverse('healthcheck'))"
                 ),
             ],
-            cwd=Path("example"),
+            cwd=Path.cwd(),
             env=environment,
             capture_output=True,
             text=True,
@@ -618,9 +620,9 @@ def test_project_init_creates_manifests_without_requiring_an_app():
         assert Path("example/.bloomerp/state.toml").read_text(encoding="utf-8") == ""
         assert Path("example/.bloomerp/scaffold.lock").is_file()
         assert Path("example/config/settings/generated/common.py").is_file()
-        assert Path(
+        assert not Path(
             "example/config/settings/generated/project_manifest.py"
-        ).is_file()
+        ).exists()
         assert Path("example/config/celery.py").is_file()
         assert not Path("example/config/routing.py").exists()
         assert Path("example/config/project_channels.py").is_file()
@@ -644,13 +646,9 @@ def test_project_init_creates_manifests_without_requiring_an_app():
         generated_common_settings = Path(
             "example/config/settings/generated/common.py"
         ).read_text(encoding="utf-8")
-        generated_manifest_settings = Path(
-            "example/config/settings/generated/project_manifest.py"
-        ).read_text(encoding="utf-8")
         assert "BLOOMERP_CONFIG" not in user_common_settings
-        assert "from .project_manifest import BLOOMERP_CONFIG" in generated_common_settings
-        assert "BLOOMERP_PROJECT_MANIFEST" in generated_manifest_settings
-        assert "'login_identifier': 'username'" in generated_manifest_settings
+        assert "get_project_manifest(BASE_DIR)" in generated_common_settings
+        assert "BLOOMERP_CONFIG = manifest.bloomerp" in generated_common_settings
         assert not Path("example/config/settings/base.py").exists()
 
 
@@ -685,10 +683,7 @@ def test_project_init_can_run_the_app_init_flow():
             Path("example/.bloomerp/project.bloomerp.toml").read_text(encoding="utf-8")
         )
         assert project_manifest["django"]["installed_apps"] == ["apps.inventory"]
-        settings = Path(
-            "example/config/settings/generated/project_registry.py"
-        ).read_text(encoding="utf-8")
-        assert "'apps.inventory'" in settings
+        assert not Path("example/config/settings/generated/project_registry.py").exists()
         assert Path("example/apps/__init__.py").is_file()
 
 
@@ -744,11 +739,10 @@ signup_enabled = true
         assert Path("managed-project/manage.py").is_file()
         assert Path("managed-project/.bloomerp/project.bloomerp.toml").is_file()
         assert Path("managed-project/.bloomerp/scaffold.lock").is_file()
-        generated_manifest_settings = Path(
-            "managed-project/config/settings/generated/project_manifest.py"
-        ).read_text(encoding="utf-8")
-        assert "'login_identifier': 'email'" in generated_manifest_settings
-        assert "'signup_enabled': True" in generated_manifest_settings
+        from bloomerp.cli.utils import get_project_manifest
+        manifest = get_project_manifest(Path("managed-project"))
+        assert manifest.bloomerp.auth.interactive.login_identifier == "email"
+        assert manifest.bloomerp.auth.interactive.signup_enabled is True
         assert not Path("managed-project/.bloomerp/state.toml").exists()
         assert not Path("managed-project/.env").exists()
         assert not Path("managed-project/.gitignore").exists()

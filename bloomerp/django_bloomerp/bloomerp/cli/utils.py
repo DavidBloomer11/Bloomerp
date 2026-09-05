@@ -28,7 +28,7 @@ def get_project_metadata_dir(start: Path | None = None) -> Path:
     )
 
 
-def _read_toml_model(path: Path, model_type):
+def _read_toml_model(path: Path, model_type, *, cache_releases: bool = True):
     try:
         data = tomllib.loads(path.read_text(encoding="utf-8"))
         if model_type is BloomerpProjectManifest and (data.get("schema_version") == 1 or "marketplace_extensions" in data):
@@ -45,6 +45,11 @@ def _read_toml_model(path: Path, model_type):
             data["extensions"] = extensions
             data["apps"] = [{**lock, "id": lock.get("app_id") or lock.get("marketplace_app_id")} for lock in locks]
             data["schema_version"] = 2
+        if cache_releases and model_type is BloomerpProjectManifest and data.get("schema_version", 2) == 2:
+            locks = data.get("apps", [])
+            if locks and all(isinstance(item, dict) and "manifest" in item for item in locks):
+                from .project.marketplace_sources import write_release_cache
+                write_release_cache(locks, path.parent)
         return model_type.model_validate(data)
     except FileNotFoundError as exc:
         raise click.ClickException(f"Missing Bloomerp metadata file: {path}") from exc
@@ -52,11 +57,13 @@ def _read_toml_model(path: Path, model_type):
         raise click.ClickException(f"Invalid Bloomerp metadata in {path}: {exc}") from exc
 
 
-def get_project_manifest() -> BloomerpProjectManifest:
-    """Return the manifest for the project containing the current directory."""
+def get_project_manifest(project_root: Path | None = None) -> BloomerpProjectManifest:
+    """Read an explicit project root without side effects, or discover the CLI workspace."""
     return _read_toml_model(
-        get_project_metadata_dir() / "project.bloomerp.toml",
+        (Path(project_root).expanduser().resolve() / ".bloomerp" if project_root is not None
+         else get_project_metadata_dir()) / "project.bloomerp.toml",
         BloomerpProjectManifest,
+        cache_releases=project_root is None,
     )
 
 

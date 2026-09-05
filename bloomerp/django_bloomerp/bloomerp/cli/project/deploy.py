@@ -29,7 +29,7 @@ def deploy(timeout: int) -> None:
     manifest = result.manifest
     versions = {read_app_state(directory).app_id: upload_app(directory, client=client)["version"]
                 for directory in local_source_dirs(manifest)}
-    for extension in manifest.extensions:
+    for extension in manifest.apps:
         if str(extension.id) in versions:
             extension.version = versions[str(extension.id)]
     write_project_manifest(manifest)

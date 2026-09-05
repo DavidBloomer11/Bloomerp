@@ -55,6 +55,8 @@ def pull_project(client, project_id, *, force=False):
                 generated = artifact
         if generated is None:
             raise click.ClickException("Export contains no generated artifact.")
+    from .marketplace_sources import write_release_cache
+    write_release_cache(payload.get("app_releases", payload["manifest"].get("apps", [])))
     # Never silently overwrite user edits. --force explicitly keeps a backup.
     for name, contents in user_files.items():
         target = root / name

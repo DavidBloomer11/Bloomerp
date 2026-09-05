@@ -9,7 +9,7 @@ import zipfile
 
 import click
 
-from ..base import BloomerpExtension
+from ..base import BloomerpProjectApp
 from ..client import BloomerpCliClient
 from ..utils import get_project_manifest, get_project_metadata_dir, get_project_state
 from ..project.marketplace_sources import cache_marketplace_wheel, excluded_local_apps, read_overrides, locks_for, app_package
@@ -20,7 +20,7 @@ def resolve_manifest(manifest):
     metadata = get_project_metadata_dir()
     locks, paths = [], []
     client = BloomerpCliClient()
-    for extension in manifest.extensions:
+    for extension in manifest.apps:
         if extension.version is None:
             continue
         response = client.request('GET', f'/api/apps/{extension.id}/download/',
@@ -41,7 +41,8 @@ def resolve_manifest(manifest):
             path.write_bytes(content)
             paths.append(str(path))
             locks.append(lock)
-    manifest = manifest.model_copy(update={'apps': locks})
+    from ..project.marketplace_sources import write_release_cache
+    write_release_cache(locks)
     from ..project.marketplace_sources import installed_apps
     installed_apps(manifest)  # Check package conflicts before installing.
     if paths:
@@ -55,42 +56,10 @@ def save_and_sync(manifest):
     synchronize_local_project(manifest)
 
 
-@click.command('add')
-@click.argument('app_id')
-@click.option('--version', required=True, help='Exact published version to install.')
-def add(app_id, version):
-    """Add an exact marketplace release to the project."""
-    manifest = get_project_manifest()
-    manifest.extensions = [item for item in manifest.extensions if str(item.id) != app_id] + [BloomerpExtension(id=app_id, version=version)]
-    from ..utils import write_project_state
-    state = get_project_state()
-    state.dependency_ids = sorted(set(state.dependency_ids) | {app_id})
-    resolved = resolve_manifest(manifest)
-    write_project_state(state)
-    save_and_sync(resolved)
-    click.echo(f'Added {app_id} {version}. Run bloomerp sync --to-remote to synchronize the selection.')
-
-
 @click.command('resolve')
 def resolve():
     """Download the exact releases declared in project.bloomerp.toml."""
     save_and_sync(resolve_manifest(get_project_manifest()))
-
-
-@click.command('remove')
-@click.argument('app_id')
-def remove(app_id):
-    """Remove a marketplace selection without deleting source code or database data."""
-    if app_id in read_overrides():
-        raise click.ClickException('Disable the local development override first.')
-    manifest = get_project_manifest()
-    manifest.extensions = [item for item in manifest.extensions if str(item.id) != app_id]
-    manifest = manifest.model_copy(update={'apps': [item for item in getattr(manifest, 'apps', []) if item['id'] != app_id]})
-    from ..utils import write_project_state
-    state = get_project_state()
-    state.dependency_ids = [value for value in state.dependency_ids if value != app_id]
-    write_project_state(state)
-    save_and_sync(manifest)
 
 
 @click.command('develop')

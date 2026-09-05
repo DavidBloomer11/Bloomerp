@@ -2,7 +2,7 @@ import os
 from typing import Literal
 from uuid import UUID
 
-from pydantic import AliasChoices, BaseModel, ConfigDict, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, model_validator
 
 from bloomerp.config.definition import BloomerpConfig
 
@@ -32,8 +32,10 @@ class BloomerpDjango(BaseModel):
     installed_apps: list[str] = Field(default_factory=list)
 
 
-class BloomerpExtension(BaseModel):
-    model_config = ConfigDict(extra="allow")
+class BloomerpProjectApp(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str | None = None
 
     id: UUID
     version: str | None = None
@@ -51,10 +53,22 @@ class BloomerpProjectManifest(BaseModel):
     runtime: BloomerpRuntime
     django: BloomerpDjango = Field(default_factory=BloomerpDjango)
     bloomerp: BloomerpConfig = Field(default_factory=BloomerpConfig)
-    extensions: list[BloomerpExtension] = Field(default_factory=list)
-    schema_version: Literal[2] = 2
+    schema_version: Literal[3] = 3
     project_files: dict[str, str] = Field(default_factory=dict)
-    apps: list[dict] = Field(default_factory=list)
+    apps: list[BloomerpProjectApp] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def upgrade_app_selections(cls, value):
+        if isinstance(value, dict) and value.get("schema_version", 2) == 2:
+            value = dict(value)
+            selections = value.pop("extensions", value.get("apps", []))
+            if not isinstance(selections, list) or any(not isinstance(item, dict) or "id" not in item for item in selections):
+                raise ValueError("App selections must be a list of objects with IDs.")
+            value["apps"] = [{"id": item["id"], "version": item.get("version"), "name": item.get("name")}
+                             for item in selections]
+            value["schema_version"] = 3
+        return value
 
 
 class BloomerpAppDjango(BaseModel):
@@ -111,6 +125,7 @@ class BloomerpProjectState(BaseModel):
     project_id:str = ""
     manifest_revision: str = ""
     dependency_ids: list[str] = Field(default_factory=list)
+    excluded_app_ids: list[str] = Field(default_factory=list)
     snapshot_id: str = ""
     generated_wheel_sha256: str = ""
     generated_wheel_filename: str = ""

@@ -6,7 +6,6 @@ import json
 import os
 from pathlib import Path, PurePosixPath
 import sys
-import tomllib
 import zipfile
 
 import click
@@ -24,19 +23,45 @@ def app_package(config):
     return config
 
 
-def locks_for(manifest):
-    data = manifest.model_dump(mode='json') if hasattr(manifest, 'model_dump') else manifest
-    selected = {str(item['id']): item.get('version') for item in data.get('extensions', [])}
-    if len(selected) != len(data.get('extensions', [])):
+def write_release_cache(locks, metadata=None):
+    metadata = metadata or get_project_metadata_dir()
+    (metadata / 'app-releases.json').write_text(json.dumps(locks, sort_keys=True))
+
+
+def locks_for(manifest, metadata=None):
+    from ..base import BloomerpProjectManifest
+    if not hasattr(manifest, 'model_dump'):
+        manifest = BloomerpProjectManifest.model_validate(manifest)
+    data = manifest.model_dump(mode='json')
+    selected = {str(item['id']): item.get('version') for item in data.get('apps', [])}
+    if len(selected) != len(data.get('apps', [])):
         raise click.ClickException('Each app must be declared once.')
-    locks = {str(item['id']): item for item in data.get('apps', [])}
-    return [locks[app_id] for app_id, version in selected.items()
-            if app_id in locks and locks[app_id]['version'] == version]
+    if not selected:
+        return []
+    cache = (metadata or get_project_metadata_dir()) / 'app-releases.json'
+    try:
+        locks = json.loads(cache.read_text()) if cache.is_file() else []
+        return [lock for lock in locks
+                if lock['id'] in selected and selected[lock['id']] == lock['version']]
+    except (ValueError, KeyError, TypeError) as exc:
+        raise click.ClickException('Invalid app release cache; run bloomerp marketplace resolve.') from exc
+
+
+def ensure_release_cache(manifest):
+    if not manifest.apps:
+        return
+    local_ids = {read_app_state(directory).app_id for directory in local_source_dirs(manifest)}
+    resolved = {lock['id'] for lock in locks_for(manifest)}
+    if any(item.version and str(item.id) not in local_ids and str(item.id) not in resolved
+           for item in manifest.apps):
+        from ..marketplace.manage import resolve_manifest
+        resolve_manifest(manifest)
 
 
 def local_source_dirs(manifest):
     from ..utils import get_project_state
-    dependencies = set(get_project_state().dependency_ids)
+    state = get_project_state()
+    dependencies = set(state.dependency_ids) | set(state.excluded_app_ids)
     return [directory for directory in find_app_dirs()
             if read_app_state(directory).app_id not in dependencies]
 
@@ -52,7 +77,6 @@ def project_apps(manifest):
 
 def upload_manifest(manifest):
     data = manifest.model_dump(mode='json', exclude_none=True)
-    data.pop('apps', None)  # Release metadata is derived by Project.get_manifest().
     root = get_project_metadata_dir().parent
     data['project_files'] = {name: (root / name).read_text(encoding='utf-8')
                             for name in ('pyproject.toml', 'README.md') if (root / name).is_file()}
@@ -140,14 +164,22 @@ def configure_sources(project_root):
             raise RuntimeError('Marketplace development overrides cannot run in production.')
         # Hosted releases install selected wheels and have no local CLI state.
         return
-    manifest = tomllib.loads(manifest_path.read_text())
-    locks = locks_for(manifest)
+    from ..utils import get_project_manifest, _read_toml_model
+    from ..base import BloomerpProjectState
+    manifest = get_project_manifest(Path(project_root))
+    if not manifest.apps:
+        return
+    locks = locks_for(manifest, metadata)
     if set(overrides) - {item['id'] for item in locks}:
         raise RuntimeError('Remove overrides for apps no longer selected in the marketplace.')
     # Read through CLI helpers so state file naming stays centralized.
-    from ..utils import get_project_state
-    dependencies = set(get_project_state().dependency_ids)
+    dependencies = set(_read_toml_model(metadata / "state.toml", BloomerpProjectState).dependency_ids)
     local_ids = {read_app_state(directory).app_id for directory in find_app_dirs(Path(project_root))}
+    resolved_ids = {lock['id'] for lock in locks}
+    for selection in manifest.apps:
+        app_id = str(selection.id)
+        if app_id not in resolved_ids and (app_id not in local_ids or app_id in dependencies):
+            raise RuntimeError('App release cache is missing; run bloomerp marketplace resolve.')
     sources = {}
     for lock in locks:
         if lock["id"] in local_ids and lock["id"] not in dependencies and lock["id"] not in overrides:

@@ -65,7 +65,7 @@ def read_app_manifest(app_dir: Path) -> BloomerpAppManifest:
 
 
 def app_state_path(app_dir: Path) -> Path:
-    return get_project_metadata_dir() / "apps" / f"{app_dir.name}.toml"
+    return get_project_metadata_dir(app_dir) / "apps" / f"{app_dir.name}.toml"
 
 
 def read_app_state(app_dir: Path) -> BloomerpAppState:

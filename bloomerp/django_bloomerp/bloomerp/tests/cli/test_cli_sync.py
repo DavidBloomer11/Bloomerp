@@ -136,7 +136,7 @@ def test_project_sync_to_remote_registers_local_app_without_uploading():
                 return Mock(json=Mock(return_value={"id": app_id}))
             assert endpoint == "/api/projects/project-1/manifest/"
             assert kwargs["json"]["base_revision"] == "revision-1"
-            assert kwargs["json"]["manifest"]["extensions"] == [{"id": app_id}]
+            assert kwargs["json"]["manifest"]["apps"] == [{"id": app_id, "name": "sample_app"}]
             return Mock(json=Mock(return_value={"manifest": kwargs["json"]["manifest"], "revision": "revision-2"}))
         client.request.side_effect = request
         with patch("bloomerp.cli.project.sync.BloomerpCliClient", return_value=client), patch("bloomerp.cli.project.sync.synchronize_scaffold", return_value=([], [], None)):
