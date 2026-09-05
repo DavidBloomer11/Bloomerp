@@ -1,6 +1,7 @@
 from tabnanny import verbose
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Count
 from django.utils import timezone
@@ -261,6 +262,16 @@ class Initiative(BloomerpModel):
             self.completed_at = timezone.now()
         elif not self.is_completed:
             self.completed_at = None
+
+        parent = self.parent
+        ancestor_ids = set()
+        while parent is not None:
+            if parent is self or parent.pk == self.pk or parent.pk in ancestor_ids:
+                raise ValidationError({
+                    "parent": _("An initiative cannot be its own parent or a descendant."),
+                })
+            ancestor_ids.add(parent.pk)
+            parent = parent.parent
 
         return super().clean()
 
