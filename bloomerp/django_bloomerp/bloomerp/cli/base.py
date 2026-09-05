@@ -16,6 +16,7 @@ BLOOMERP_IO_URL = os.environ.get(
 class BloomerpRuntime(BaseModel):
     model_config = ConfigDict(extra="allow")
 
+    dependencies: list[str] = Field(default_factory=list)
     bloomerp_version:str
     python_version:str="3.13"
 
@@ -53,8 +54,7 @@ class BloomerpProjectManifest(BaseModel):
     runtime: BloomerpRuntime
     django: BloomerpDjango = Field(default_factory=BloomerpDjango)
     bloomerp: BloomerpConfig = Field(default_factory=BloomerpConfig)
-    schema_version: Literal[3] = 3
-    project_files: dict[str, str] = Field(default_factory=dict)
+    schema_version: Literal[4] = 4
     apps: list[BloomerpProjectApp] = Field(default_factory=list)
 
     @model_validator(mode="before")
@@ -62,12 +62,26 @@ class BloomerpProjectManifest(BaseModel):
     def upgrade_app_selections(cls, value):
         if isinstance(value, dict) and value.get("schema_version", 2) == 2:
             value = dict(value)
+            derived = {item.get('manifest', {}).get('django', {}).get('app_config') for item in value.get('apps', []) if isinstance(item, dict)}
+            django = dict(value.get('django', {}))
+            django['installed_apps'] = [app for app in django.get('installed_apps', []) if app not in derived and app != 'project_app']
+            value['django'] = django
             selections = value.pop("extensions", value.get("apps", []))
             if not isinstance(selections, list) or any(not isinstance(item, dict) or "id" not in item for item in selections):
                 raise ValueError("App selections must be a list of objects with IDs.")
             value["apps"] = [{"id": item["id"], "version": item.get("version"), "name": item.get("name")}
                              for item in selections]
             value["schema_version"] = 3
+        if isinstance(value, dict) and value.get("schema_version") in {3, 4}:
+            value = dict(value)
+            files = value.pop("project_files", {})
+            if files and "dependencies" not in value.get("runtime", {}):
+                import tomllib
+                from packaging.requirements import Requirement
+                source = tomllib.loads(files.get("pyproject.toml", ""))
+                dependencies = source.get("project", {}).get("dependencies", [])
+                value["runtime"] = {**value["runtime"], "dependencies": [dep for dep in dependencies if Requirement(dep).name.lower() != "bloomerp"]}
+            value["schema_version"] = 4
         return value
 
 

@@ -389,6 +389,7 @@ def test_project_build_uses_clean_staging_directory_and_writes_dist(
             archive.writestr("config/__init__.py", "")
 
     run.side_effect = create_wheel
+    get_project_manifest.return_value.name = "example"
     runner = CliRunner()
 
     with runner.isolated_filesystem():
@@ -614,7 +615,7 @@ def test_project_init_creates_manifests_without_requiring_an_app():
         assert 'requires-python = ">=3.12,<3.14"' in Path(
             "example/pyproject.toml"
         ).read_text(encoding="utf-8")
-        assert 'include = ["apps*", "config*"]' in Path(
+        assert 'build-backend' not in Path(
             "example/pyproject.toml"
         ).read_text(encoding="utf-8")
         assert Path("example/.bloomerp/state.toml").read_text(encoding="utf-8") == ""
@@ -674,7 +675,7 @@ def test_project_init_can_run_the_app_init_flow():
             "description": "",
             "tagline": "",
             "environment": {"required": [], "optional": []},
-            "django": {"app_config": ""},
+            "django": {"app_config": "apps.inventory.apps.InventoryConfig"},
             "modules": [],
             "models": [],
             "routes": [],
@@ -682,7 +683,7 @@ def test_project_init_can_run_the_app_init_flow():
         project_manifest = tomllib.loads(
             Path("example/.bloomerp/project.bloomerp.toml").read_text(encoding="utf-8")
         )
-        assert project_manifest["django"]["installed_apps"] == ["apps.inventory"]
+        assert project_manifest["django"]["installed_apps"] == []
         assert not Path("example/config/settings/generated/project_registry.py").exists()
         assert Path("example/apps/__init__.py").is_file()
 

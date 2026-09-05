@@ -69,11 +69,6 @@ def _merge_app_environments(
             if package == app_package(lock["manifest"]["django"]["app_config"]) and read_app_state(directory).app_id != lock["id"]:
                 raise click.ClickException(f"Local app {directory.name} collides with another app package; link it explicitly.")
     return manifest.model_copy(update={
-        "django": manifest.django.model_copy(update={"installed_apps": list(dict.fromkeys([
-            *(["project_app"] if get_project_state().generated_wheel_filename else []),
-            *[lock["manifest"]["django"]["app_config"] for lock in locks_for(manifest)],
-            *[item.django.app_config for item in app_manifests if item.django.app_config],
-        ]))}),
         "environment": merge_environments(manifest.environment, *[app.environment for app in app_manifests]),
     })
 
@@ -83,11 +78,15 @@ def synchronize_local_project(
     manifest: BloomerpProjectManifest | None = None,
     *,
     force: bool = False,
+    from_manifest: bool = False,
 ) -> ProjectSyncResult:
     """Merge app declarations and synchronize the generated project scaffold."""
 
     project_root = _project_root()
     manifest = manifest or get_project_manifest()
+    from .metadata import read_local_metadata, write_local_metadata
+    if not from_manifest:
+        manifest = read_local_metadata(manifest, project_root)
     from .marketplace_sources import ensure_release_cache
     ensure_release_cache(manifest)
     synchronized = _merge_app_environments(
@@ -100,6 +99,8 @@ def synchronize_local_project(
         force=force,
     )
     write_project_manifest(synchronized)
+    if from_manifest or not (project_root / "pyproject.toml").exists():
+        write_local_metadata(synchronized, project_root)
     return ProjectSyncResult(
         manifest=synchronized,
         updated_scaffold_files=tuple(updated),
@@ -123,7 +124,7 @@ def synchronize_project_from_remote(
     manifest = BloomerpProjectManifest.model_validate(payload["manifest"])
     from ..marketplace.manage import resolve_manifest
     manifest = resolve_manifest(manifest)
-    result = synchronize_local_project(manifest, force=force)
+    result = synchronize_local_project(manifest, force=force, from_manifest=True)
     state = get_project_state()
     state.manifest_revision = payload["revision"]
     write_project_state(state)
@@ -158,7 +159,7 @@ def synchronize_project_to_remote(*, client=None, force=False) -> ProjectSyncRes
     state.manifest_revision = payload["revision"]
     write_project_state(state)
     # Persist the server's normalized declarations; local discovery supplies source AppConfigs.
-    return synchronize_local_project(BloomerpProjectManifest.model_validate(payload["manifest"]), force=force)
+    return synchronize_local_project(BloomerpProjectManifest.model_validate(payload["manifest"]), force=force, from_manifest=True)
 
 
 def echo_project_sync(result: ProjectSyncResult) -> None:

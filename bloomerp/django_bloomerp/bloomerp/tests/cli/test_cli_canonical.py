@@ -178,13 +178,9 @@ def test_owned_linked_app_uses_local_source_without_override():
         assert [path.name for path in local_source_dirs(manifest)] == ['widget']
 
 
-def test_manifest_round_trip_preserves_dotted_source_file_names():
-    from bloomerp.cli.utils import get_project_manifest
+def test_manifest_no_longer_contains_source_files():
     with CliRunner().isolated_filesystem():
-        manifest = project()
-        manifest.project_files = {'README.md': '# Project', 'pyproject.toml': '[project]\nname="example"\n'}
-        write_toml_model(Path('.bloomerp/project.bloomerp.toml'), manifest)
-        assert get_project_manifest() == manifest
+        assert 'project_files' not in project().model_dump()
 
 
 def test_app_wheel_has_id_distribution_and_reproducible_bytes():
@@ -254,13 +250,13 @@ def test_combined_sync_excludes_dependencies_from_app_metadata_sync():
         assert _selected_app_dirs(None) == []
 
 
-def test_local_sync_removes_stale_installed_app_declarations():
+def test_local_sync_preserves_explicit_installed_app_declarations():
     from bloomerp.cli.project.sync import synchronize_local_project
     with CliRunner().isolated_filesystem():
         manifest = project(selected=False)
         manifest.django.installed_apps.append('apps.removed.apps.RemovedConfig')
         result = synchronize_local_project(manifest)
-        assert result.manifest.django.installed_apps == ['apps.widget.apps.WidgetConfig']
+        assert 'apps.removed.apps.RemovedConfig' in result.manifest.django.installed_apps
 
 
 def test_scaffold_stays_current_after_nested_release_manifest_toml_round_trip():
@@ -315,7 +311,7 @@ def test_schema_three_manifest_contains_only_app_selections():
     with CliRunner().isolated_filesystem():
         manifest = project()
         data = manifest.model_dump(mode='json')
-        assert data['schema_version'] == 3
+        assert data['schema_version'] == 4
         assert 'extensions' not in data
         assert data['apps'] == [{'name': None, 'id': '11111111-1111-4111-8111-111111111111', 'version': '1.0.0'}]
         assert locks_for(manifest)[0]['manifest']['django']['app_config'] == 'apps.widget.apps.WidgetConfig'
@@ -448,7 +444,7 @@ def test_project_add_app_supports_selector_and_records_name(interactive):
         assert result.exit_code == 0, result.output
         result_manifest = get_project_manifest()
         assert result_manifest.apps[0].name == 'Widget'
-        assert result_manifest.django.installed_apps == ['apps.widget.apps.WidgetConfig']
+        assert installed_apps(result_manifest) == ['apps.widget.apps.WidgetConfig']
         assert get_project_state().excluded_app_ids == []
 
 
@@ -456,3 +452,63 @@ def test_marketplace_no_longer_registers_add_and_remove():
     from bloomerp.cli.marketplace import marketplace
     assert 'add' not in marketplace.commands
     assert 'remove' not in marketplace.commands
+
+
+def test_local_sync_copies_dependencies_readme_and_preserves_third_party_apps():
+    from bloomerp.cli.project.sync import synchronize_local_project
+    with CliRunner().isolated_filesystem():
+        manifest = project(selected=False)
+        manifest.django.installed_apps = ['django_filters']
+        Path('pyproject.toml').write_text('[project]\ndependencies=["Bloomerp==1.15.4", "django-filter>=24"]\n')
+        Path('README.md').write_text('# My project\n\nMarkdown description.\n')
+        result = synchronize_local_project(manifest).manifest
+        assert result.runtime.dependencies == ['django-filter>=24']
+        assert result.description == Path('README.md').read_text()
+        assert result.django.installed_apps == ['django_filters']
+        assert installed_apps(result) == ['django_filters', 'apps.widget.apps.WidgetConfig']
+        Path('pyproject.toml').write_text('[project]\ndependencies=[]\n')
+        assert synchronize_local_project(result).manifest.runtime.dependencies == []
+
+
+def test_remote_manifest_reconstructs_files_without_overwriting_dev_groups():
+    from bloomerp.cli.project.sync import synchronize_local_project
+    import tomllib
+    with CliRunner().isolated_filesystem():
+        manifest = project(selected=False)
+        manifest.description = '# Remote description\n'
+        manifest.runtime.dependencies = ['django-filter==24.3']
+        Path('pyproject.toml').write_text('[project]\nname="local"\ndependencies=["obsolete"]\n[dependency-groups]\ndev=["pytest"]\n')
+        Path('README.md').write_text('stale')
+        result = synchronize_local_project(manifest, from_manifest=True).manifest
+        assert result.description == manifest.description
+        data = tomllib.loads(Path('pyproject.toml').read_text())
+        assert data['project']['dependencies'] == [f'Bloomerp=={manifest.runtime.bloomerp_version}', 'django-filter==24.3']
+        assert data['dependency-groups']['dev'] == ['pytest']
+        assert Path('README.md').read_text() == manifest.description
+
+
+def test_unlinked_new_app_is_discovered_without_a_remote_id():
+    from bloomerp.cli.app.init import create_app
+    from bloomerp.cli.project.sync import synchronize_local_project
+    with CliRunner().isolated_filesystem():
+        manifest = project(selected=False)
+        create_app('new_app', Path.cwd())
+        result = synchronize_local_project(manifest).manifest
+        assert 'apps.new_app.apps.NewAppConfig' in installed_apps(result)
+        assert result.apps == []
+
+
+def test_project_build_ignores_user_backend_and_packaging_rules():
+    from bloomerp.cli.project.build import build_project_wheel
+    from bloomerp.cli.project.sync import synchronize_local_project
+    import tomllib
+    with CliRunner().isolated_filesystem():
+        manifest = project(selected=False)
+        Path('pyproject.toml').write_text('[project]\ndependencies=[]\n[build-system]\nbuild-backend="does.not.exist"\n')
+        synchronize_local_project(manifest)
+        wheel = build_project_wheel(Path('dist'))
+        with zipfile.ZipFile(wheel) as archive:
+            assert 'config/__init__.py' in archive.namelist()
+            assert not any(path.startswith('apps/') for path in archive.namelist())
+            metadata = archive.read(next(name for name in archive.namelist() if name.endswith('/METADATA'))).decode()
+            assert 'Requires-Dist:' not in metadata

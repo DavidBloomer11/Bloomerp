@@ -77,9 +77,6 @@ def project_apps(manifest):
 
 def upload_manifest(manifest):
     data = manifest.model_dump(mode='json', exclude_none=True)
-    root = get_project_metadata_dir().parent
-    data['project_files'] = {name: (root / name).read_text(encoding='utf-8')
-                            for name in ('pyproject.toml', 'README.md') if (root / name).is_file()}
     return data
 
 
@@ -88,8 +85,7 @@ def installed_apps(manifest):
     packages = [app_package(item['manifest']['django']['app_config']) for item in locks]
     if len(packages) != len(set(packages)):
         raise click.ClickException('Selected apps have duplicate Python packages.')
-    apps = list(dict.fromkeys([*manifest.django.installed_apps,
-                              *[item['manifest']['django']['app_config'] for item in locks]]))
+    apps = runtime_installed_apps(manifest, get_project_metadata_dir().parent)
     packages = [app_package(app) for app in apps]
     labels = [package.rsplit('.', 1)[-1] for package in packages]
     if len(packages) != len(set(packages)) or len(labels) != len(set(labels)):
@@ -203,3 +199,24 @@ def configure_sources(project_root):
         sources[package] = source
     if sources:
         sys.meta_path.insert(0, MarketplaceFinder(sources))
+
+
+def runtime_installed_apps(manifest, project_root):
+    """Resolve local apps without requiring a remote link."""
+    sources = list(manifest.django.installed_apps)
+    if os.environ.get('BLOOMERP_SETTINGS_ENV', 'local').lower() != 'local':
+        return sources
+    from ..base import BloomerpProjectState
+    metadata = Path(project_root) / '.bloomerp'
+    state_path = metadata / 'state.toml'
+    import tomllib
+    state = BloomerpProjectState.model_validate(tomllib.loads(state_path.read_text())) if state_path.is_file() else BloomerpProjectState()
+    excluded = set(state.dependency_ids) | set(state.excluded_app_ids)
+    if state.generated_wheel_filename:
+        sources.append('project_app')
+    for directory in find_app_dirs(Path(project_root)):
+        if read_app_state(directory).app_id not in excluded:
+            config = read_app_manifest(directory).django.app_config
+            sources.append(config or f'apps.{directory.name}')
+    sources.extend(lock['manifest']['django']['app_config'] for lock in locks_for(manifest, metadata))
+    return list(dict.fromkeys(sources))

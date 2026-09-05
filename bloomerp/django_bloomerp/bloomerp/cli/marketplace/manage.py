@@ -45,9 +45,9 @@ def resolve_manifest(manifest):
     write_release_cache(locks)
     from ..project.marketplace_sources import installed_apps
     installed_apps(manifest)  # Check package conflicts before installing.
-    if paths:
+    if paths or manifest.runtime.dependencies:
         installer = ['uv', 'pip', 'install', '--python', sys.executable] if shutil.which('uv') else [sys.executable, '-m', 'pip', 'install']
-        subprocess.run([*installer, f"Bloomerp=={manifest.runtime.bloomerp_version}", *paths], check=True)
+        subprocess.run([*installer, f"Bloomerp=={manifest.runtime.bloomerp_version}", *manifest.runtime.dependencies, *paths], check=True)
     return manifest
 
 

@@ -50,6 +50,20 @@ def _read_toml_model(path: Path, model_type, *, cache_releases: bool = True):
             if locks and all(isinstance(item, dict) and "manifest" in item for item in locks):
                 from .project.marketplace_sources import write_release_cache
                 write_release_cache(locks, path.parent)
+        if model_type is BloomerpProjectManifest and data.get('schema_version', 2) < 4:
+            derived = {'project_app'}
+            root = path.parent.parent
+            for app_path in (root / 'apps').glob('*/app.bloomerp.toml'):
+                app_data = tomllib.loads(app_path.read_text())
+                derived.update({f'apps.{app_path.parent.name}', app_data.get('django', {}).get('app_config', '')})
+            cache = path.parent / 'app-releases.json'
+            if cache.is_file():
+                import json
+                for release in json.loads(cache.read_text()):
+                    derived.add(release.get('manifest', {}).get('django', {}).get('app_config', ''))
+            django = dict(data.get('django', {}))
+            django['installed_apps'] = [app for app in django.get('installed_apps', []) if app not in derived]
+            data['django'] = django
         return model_type.model_validate(data)
     except FileNotFoundError as exc:
         raise click.ClickException(f"Missing Bloomerp metadata file: {path}") from exc

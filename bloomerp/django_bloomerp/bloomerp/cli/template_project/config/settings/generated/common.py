@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 from bloomerp.cli.utils import get_project_manifest
+from bloomerp.cli.project.marketplace_sources import runtime_installed_apps
 from bloomerp.config.settings import (
     BLOOMERP_APPS,
     BLOOMERP_AUTHENTICATION_BACKENDS,
@@ -29,7 +30,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "bloomerp",
-    *manifest.django.installed_apps
+    *runtime_installed_apps(manifest, BASE_DIR)
 ]
 
 
@@ -43,7 +44,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-INSTALLED_APPS += BLOOMERP_APPS
+INSTALLED_APPS = list(dict.fromkeys([*INSTALLED_APPS, *BLOOMERP_APPS]))
 MIDDLEWARE += BLOOMERP_MIDDLEWARE
 AUTHENTICATION_BACKENDS = BLOOMERP_AUTHENTICATION_BACKENDS
 AUTH_USER_MODEL = BLOOMERP_USER_MODEL

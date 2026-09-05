@@ -2,12 +2,11 @@ from __future__ import annotations
 
 import keyword
 import re
-import tomllib
 from pathlib import Path
 
 import click
 
-from ..base import BloomerpAppManifest, BloomerpProjectManifest
+from ..base import BloomerpAppManifest, BloomerpAppDjango
 from ..toml import write_toml_model
 
 
@@ -51,24 +50,6 @@ def _copy_app_template(target_dir: Path, replacements: dict[str, str]) -> None:
         )
 
 
-def _register_app_in_project(project_dir: Path, app_import_path: str) -> None:
-    from ..project.scaffold import synchronize_scaffold
-
-    manifest_path = project_dir / ".bloomerp" / "project.bloomerp.toml"
-    if not manifest_path.is_file():
-        return
-
-    manifest = BloomerpProjectManifest.model_validate(
-        tomllib.loads(manifest_path.read_text(encoding="utf-8"))
-    )
-    if app_import_path in manifest.django.installed_apps:
-        return
-
-    manifest.django.installed_apps.append(app_import_path)
-    synchronize_scaffold(project_dir, manifest)
-    write_toml_model(manifest_path, manifest)
-
-
 def create_app(name: str, parent_dir: Path) -> Path:
     app_name = normalize_app_name(name)
     app_import_path = f"apps.{app_name}"
@@ -92,9 +73,8 @@ def create_app(name: str, parent_dir: Path) -> Path:
     _copy_app_template(target_dir, replacements)
     write_toml_model(
         target_dir / "app.bloomerp.toml",
-        BloomerpAppManifest(name=app_name),
+        BloomerpAppManifest(name=app_name, django=BloomerpAppDjango(app_config=f"{app_import_path}.apps.{replacements['__APP_CLASS_NAME__']}")),
     )
-    _register_app_in_project(parent_dir, app_import_path)
     return target_dir
 
 

@@ -21,10 +21,6 @@ def get_project_root() -> Path:
 def build_project_wheel(output_dir: Path) -> Path:
     """Build the current project and copy its wheel into OUTPUT_DIR."""
     project_root = get_project_root()
-    pyproject_path = project_root / "pyproject.toml"
-    if not pyproject_path.is_file():
-        raise click.ClickException(f"Missing project build configuration: {pyproject_path}")
-
     manifest = get_project_manifest()
     assert_scaffold_current(project_root, manifest)
     from .marketplace_sources import assert_no_overrides, excluded_local_apps, validate_user_wheel
@@ -41,10 +37,11 @@ def build_project_wheel(output_dir: Path) -> Path:
     with tempfile.TemporaryDirectory(prefix="bloomerp-build-") as temporary_dir:
         staging_dir = Path(temporary_dir)
         source_root = staging_dir / "source"
-        shutil.copytree(project_root, source_root, ignore=shutil.ignore_patterns(
-            ".git", ".venv", ".bloomerp", "dist", "build", "*.egg-info", "__pycache__",
-        ))
-        shutil.rmtree(source_root / "apps", ignore_errors=True)
+        source_root.mkdir()
+        if (project_root / 'config').is_dir():
+            shutil.copytree(project_root / 'config', source_root / 'config', ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
+        from .metadata import write_build_config
+        write_build_config(manifest, source_root)
         command = [
             sys.executable,
             "-m",

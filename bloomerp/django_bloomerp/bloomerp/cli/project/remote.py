@@ -26,10 +26,7 @@ def pull_project(client, project_id, *, force=False):
             raise click.ClickException("Unsupported project export contract.")
         manifest = BloomerpProjectManifest.model_validate(payload["manifest"])
         wheels = []
-        user_files = dict(payload["manifest"].get("project_files", {}))
-        if set(user_files) - {"pyproject.toml", "README.md"}:
-            raise click.ClickException("Unsupported project source file in export.")
-        user_files = {name: content.encode("utf-8") for name, content in user_files.items()}
+        user_files = {}
         generated = None
         for artifact in payload["artifacts"]:
             name = artifact["filename"]
@@ -75,8 +72,13 @@ def pull_project(client, project_id, *, force=False):
         (wheel_dir / name).write_bytes(contents)
     installer = (["uv", "pip", "install", "--python", sys.executable] if shutil.which("uv")
                  else [sys.executable, "-m", "pip", "install"])
-    subprocess.run([*installer, "--reinstall" if shutil.which("uv") else "--force-reinstall",
-                    f"Bloomerp=={manifest.runtime.bloomerp_version}",
+    constraints = []
+    if payload.get("dependency_lock"):
+        lock_path = metadata / "requirements.lock"
+        lock_path.write_text(payload["dependency_lock"])
+        constraints = ["--constraint", str(lock_path)]
+    subprocess.run([*installer, *constraints, "--reinstall" if shutil.which("uv") else "--force-reinstall",
+                    f"Bloomerp=={manifest.runtime.bloomerp_version}", *manifest.runtime.dependencies,
                     *[str(wheel_dir / name) for name, _ in wheels]], check=True)
     for name, contents in user_files.items():
         target = root / name

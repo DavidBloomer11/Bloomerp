@@ -72,6 +72,13 @@ def remove_app(app_id):
         raise click.ClickException('This app is not selected in the project.')
     if app_id in read_overrides():
         raise click.ClickException('Disable the local development override first.')
+    from .marketplace_sources import locks_for
+    from ..app._utils import find_app_dirs, read_app_state, read_app_manifest
+    removed = {lock['manifest']['django']['app_config'] for lock in locks_for(manifest) if lock['id'] == app_id}
+    for directory in find_app_dirs():
+        if read_app_state(directory).app_id == app_id:
+            removed.update({read_app_manifest(directory).django.app_config, f'apps.{directory.name}'})
+    manifest.django.installed_apps = [app for app in manifest.django.installed_apps if app not in removed]
     manifest.apps = [item for item in manifest.apps if str(item.id) != app_id]
     state = get_project_state()
     state.dependency_ids = [item for item in state.dependency_ids if item != app_id]
