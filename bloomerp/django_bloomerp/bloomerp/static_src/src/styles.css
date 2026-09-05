@@ -187,11 +187,6 @@
   .dark .text-primary-950 { color: var(--color-primary-50); }
   .dark .text-dark { color: var(--color-zinc-100); }
 
-  /* Use the supplied light-on-dark brand mark in the dark theme. */
-  .dark #sidebar img[src*="bloomerp-background-trans.png"] {
-    content: url("/static/bloomerp/img/bloomerp-background-dark.png");
-  }
-
   .dark .text-slate-700 { color: var(--color-zinc-300); }
   .dark .layout-item__body .text-slate-800 { color: var(--color-primary-300); }
 

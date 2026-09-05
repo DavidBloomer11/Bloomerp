@@ -3781,6 +3781,16 @@
       border-width: 0px;
     }
   }
+  .dark\:block {
+    &:where(.dark, .dark *) {
+      display: block;
+    }
+  }
+  .dark\:hidden {
+    &:where(.dark, .dark *) {
+      display: none;
+    }
+  }
   .dark\:border-zinc-700 {
     &:where(.dark, .dark *) {
       border-color: var(--color-zinc-700);
@@ -3956,9 +3966,6 @@
   }
   .dark .text-dark {
     color: var(--color-zinc-100);
-  }
-  .dark #sidebar img[src*="bloomerp-background-trans.png"] {
-    content: url("/static/bloomerp/img/bloomerp-background-dark.png");
   }
   .dark .text-slate-700 {
     color: var(--color-zinc-300);
