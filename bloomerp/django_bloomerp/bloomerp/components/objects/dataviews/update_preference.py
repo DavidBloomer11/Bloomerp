@@ -2,7 +2,7 @@ from django.middleware.csrf import get_token
 from pydantic import ValidationError as PydanticValidationError
 
 from bloomerp.components.objects.dataviews.dataview import _get_accessible_application_fields, _get_dataview_options_form, _get_dataview_type_definition, _normalize_default_filters
-from bloomerp.dataviews.registry import DataviewType
+from bloomerp.dataviews.registry import DATAVIEW_REGISTRY
 from bloomerp.models import ApplicationField
 from bloomerp.models.users.user_list_view_preference import UserListViewPreference
 from bloomerp.permissions.definition import BloomerpPermission
@@ -14,6 +14,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
 import json
+
 
 def _change_data_view_field_visibility(
     request: HttpRequest,
@@ -104,7 +105,7 @@ def _render_display_options(
         "cotton/features/dataviews/display_options.html",
         {
             "content_type_id": content_type_id,
-            "view_types": [vt.value for vt in DataviewType],
+            "view_types": [vt.key for vt in DATAVIEW_REGISTRY.values()],
             "preference": preference,
             "fields": dataview_fields,
             "accessible_fields": _get_accessible_application_fields(dataview_fields),

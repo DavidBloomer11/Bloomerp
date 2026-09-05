@@ -18,7 +18,7 @@ from bloomerp.permissions.manager import UserPolicyManager
 from ..base import BaseDataviewRenderer, DataviewPagination, DataviewRenderState
 
 
-class GantDataviewRenderer(BaseDataviewRenderer):
+class GanttDataviewRenderer(BaseDataviewRenderer):
     """Render records as rows on a horizontally scaled Gantt timeline."""
 
     template_name = "cotton/features/dataviews/gant.html"
