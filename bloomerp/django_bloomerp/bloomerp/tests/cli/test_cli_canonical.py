@@ -258,3 +258,25 @@ def test_local_sync_removes_stale_installed_app_declarations():
         manifest.django.installed_apps.append('apps.removed.apps.RemovedConfig')
         result = synchronize_local_project(manifest)
         assert result.manifest.django.installed_apps == ['apps.widget.apps.WidgetConfig']
+
+
+def test_scaffold_stays_current_after_nested_release_manifest_toml_round_trip():
+    from bloomerp.cli.project.sync import synchronize_local_project
+    from bloomerp.cli.project.scaffold import assert_scaffold_current
+    from bloomerp.cli.utils import get_project_manifest
+    with CliRunner().isolated_filesystem():
+        manifest = project()
+        # API JSON can put a scalar after nested tables. TOML necessarily moves it.
+        manifest.apps[0]["manifest"] = {
+            "name": "widget",
+            "django": {"app_config": "apps.widget.apps.WidgetConfig"},
+            "routes": [{"url": "/test/", "name": "test", "description": "Test route"}],
+            "description": "App description",
+        }
+        synchronize_local_project(manifest)
+        reloaded = get_project_manifest()
+        assert reloaded.apps == manifest.apps
+        assert_scaffold_current(Path.cwd(), reloaded)
+        before = Path("config/settings/generated/project_manifest.py").read_bytes()
+        synchronize_local_project(reloaded)
+        assert Path("config/settings/generated/project_manifest.py").read_bytes() == before

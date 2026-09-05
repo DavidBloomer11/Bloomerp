@@ -69,7 +69,8 @@ def _render_generated_file(
             pformat(
                 manifest.model_dump(mode="json", exclude_none=True),
                 width=88,
-                sort_dicts=False,
+                # TOML groups scalars before tables; key order is not configuration.
+                sort_dicts=True,
             ),
         )
     return contents
