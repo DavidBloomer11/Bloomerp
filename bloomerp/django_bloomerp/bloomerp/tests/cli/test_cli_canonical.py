@@ -280,3 +280,27 @@ def test_scaffold_stays_current_after_nested_release_manifest_toml_round_trip():
         before = Path("config/settings/generated/project_manifest.py").read_bytes()
         synchronize_local_project(reloaded)
         assert Path("config/settings/generated/project_manifest.py").read_bytes() == before
+
+
+def test_production_sources_need_no_local_state_or_wheel_cache(monkeypatch):
+    with CliRunner().isolated_filesystem():
+        project()
+        Path('.bloomerp/state.toml').unlink()
+        import shutil
+        shutil.rmtree('.bloomerp/wheels')
+        monkeypatch.setenv('BLOOMERP_SETTINGS_ENV', 'production')
+        before = list(sys.meta_path)
+        configure_sources(Path.cwd())
+        assert sys.meta_path == before
+
+
+def test_production_sources_still_reject_development_overrides(monkeypatch):
+    with CliRunner().isolated_filesystem():
+        project()
+        Path('.bloomerp/state.toml').unlink()
+        Path('.bloomerp/marketplace-overrides.json').write_text(json.dumps({
+            '11111111-1111-4111-8111-111111111111': str(Path('apps/widget').resolve()),
+        }))
+        monkeypatch.setenv('BLOOMERP_SETTINGS_ENV', 'production')
+        with pytest.raises(RuntimeError, match='overrides cannot run in production'):
+            configure_sources(Path.cwd())

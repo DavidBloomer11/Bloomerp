@@ -134,11 +134,14 @@ def configure_sources(project_root):
     manifest_path = metadata / 'project.bloomerp.toml'
     if not manifest_path.is_file():
         return  # Hosted releases install only their selected artifacts.
+    overrides = read_overrides(metadata)
+    if os.environ.get('BLOOMERP_SETTINGS_ENV', 'local').lower() != 'local':
+        if overrides:
+            raise RuntimeError('Marketplace development overrides cannot run in production.')
+        # Hosted releases install selected wheels and have no local CLI state.
+        return
     manifest = tomllib.loads(manifest_path.read_text())
     locks = locks_for(manifest)
-    overrides = read_overrides(metadata)
-    if overrides and os.environ.get('BLOOMERP_SETTINGS_ENV', 'local') != 'local':
-        raise RuntimeError('Marketplace development overrides cannot run in production.')
     if set(overrides) - {item['id'] for item in locks}:
         raise RuntimeError('Remove overrides for apps no longer selected in the marketplace.')
     # Read through CLI helpers so state file naming stays centralized.
