@@ -98,7 +98,7 @@ DATAVIEW_REGISTRY.register(
     "pivot_table",
     DataviewTypeDefinition(
         key="pivot_table",
-        label=_("Pivot Table"),
+        label=_("Pivot"),
         description=_("Displays records in a pivot table."),
         icon="fa fa-table",
         renderer_cls=PivotTableDataviewRenderer,

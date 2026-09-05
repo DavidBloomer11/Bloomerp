@@ -132,7 +132,7 @@ def _build_data_view_query_state(
     if query:
         queryset = string_search_on_queryset(queryset, query)
 
-    definition = _get_dataview_type_definition(preference.view_type)
+    definition = DATAVIEW_REGISTRY.get(preference.view_type)
     if definition is None:
         return HttpResponse("Invalid view type", status=400)
 
@@ -469,7 +469,7 @@ def dataview(
     if isinstance(state, HttpResponse):
         return state
     
-    definition = _get_dataview_type_definition(state.preference.view_type)
+    definition = DATAVIEW_REGISTRY.get(state.preference.view_type)
     if definition is None:
         return HttpResponse("Invalid view type", status=400)
 
@@ -535,7 +535,7 @@ def dataview(
         'component_id': component_id,
         'component_args' : {**_get_component_args(request), **(component_args or {})},
         'object_actions' : _get_actions(state.queryset.model),
-        'view_types' : [vt.key for vt in DATAVIEW_REGISTRY.values()],
+        'view_types' : [vt for vt in DATAVIEW_REGISTRY.values()],
         'dataview_options_form': _get_dataview_options_form(
             state.preference,
             _get_accessible_application_fields(state.dataview_fields),
@@ -611,7 +611,7 @@ def dataview_action(request: HttpRequest, content_type_id: int, action: str) -> 
     if isinstance(state, HttpResponse):
         return state
 
-    definition = _get_dataview_type_definition(state.preference.view_type)
+    definition = DATAVIEW_REGISTRY.get(state.preference.view_type)
     if definition is None:
         return HttpResponse("Invalid view type", status=400)
 

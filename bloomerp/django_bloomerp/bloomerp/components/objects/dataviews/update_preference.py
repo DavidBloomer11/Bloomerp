@@ -1,7 +1,7 @@
 from django.middleware.csrf import get_token
 from pydantic import ValidationError as PydanticValidationError
 
-from bloomerp.components.objects.dataviews.dataview import _get_accessible_application_fields, _get_dataview_options_form, _get_dataview_type_definition, _normalize_default_filters
+from bloomerp.components.objects.dataviews.dataview import _get_accessible_application_fields, _get_dataview_options_form, _normalize_default_filters
 from bloomerp.dataviews.registry import DATAVIEW_REGISTRY
 from bloomerp.models import ApplicationField
 from bloomerp.models.users.user_list_view_preference import UserListViewPreference
@@ -25,7 +25,7 @@ def _change_data_view_field_visibility(
     try:
         field_id = int(post_data["toggle_field_id"])
         view_type = post_data.get("toggle_view_type", preference.view_type)
-        if _get_dataview_type_definition(view_type) is None:
+        if DATAVIEW_REGISTRY.get(view_type) is None:
             return HttpResponse("Invalid view type", status=400)
 
         permission_manager = UserPolicyManager(request.user)
@@ -57,7 +57,7 @@ def _change_data_view_options(
     if view_type != preference.view_type:
         return HttpResponse("Invalid options view type", status=400)
 
-    definition = _get_dataview_type_definition(view_type)
+    definition = DATAVIEW_REGISTRY.get(view_type)
     if definition is None:
         return HttpResponse("Invalid view type", status=400)
 
@@ -86,7 +86,7 @@ def _change_split_view(preference: UserListViewPreference, post_data) -> HttpRes
 
 def _change_data_view_type(preference: UserListViewPreference, post_data) -> HttpResponse | None:
     view_type = post_data["view_type"]
-    if _get_dataview_type_definition(view_type) is None:
+    if DATAVIEW_REGISTRY.get(view_type) is None:
         return HttpResponse("Invalid view type", status=400)
 
     preference.view_type = view_type
@@ -105,7 +105,7 @@ def _render_display_options(
         "cotton/features/dataviews/display_options.html",
         {
             "content_type_id": content_type_id,
-            "view_types": [vt.key for vt in DATAVIEW_REGISTRY.values()],
+            "view_types": [vt for vt in DATAVIEW_REGISTRY.values()],
             "preference": preference,
             "fields": dataview_fields,
             "accessible_fields": _get_accessible_application_fields(dataview_fields),
