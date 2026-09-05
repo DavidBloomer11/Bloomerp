@@ -1,3 +1,5 @@
+from django.core.exceptions import ValidationError
+
 from bloomerp.models.project_management import Initiative, InitiativeStatus, Todo
 from bloomerp.models.project_management.todo import TodoStatus
 from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
@@ -121,3 +123,29 @@ class TestInitiative(BaseBloomerpTestCaseWithModels):
 
         # 3. Check that the completed timestamp was cleared.
         self.assertIsNone(initiative.completed_at)
+
+    def test_initiative_rejects_self_as_parent(self):
+        """
+        Use case: A saved initiative is assigned to itself as its parent.
+        Expected result: The hierarchy validation rejects the self-reference.
+        """
+        initiative = Initiative.objects.create(name="Launch customer portal")
+
+        initiative.parent = initiative
+
+        with self.assertRaises(ValidationError):
+            initiative.save()
+
+    def test_initiative_rejects_descendant_as_parent(self):
+        """
+        Use case: A parent initiative is assigned one of its descendants as parent.
+        Expected result: The hierarchy validation rejects the cycle.
+        """
+        initiative = Initiative.objects.create(name="Launch customer portal")
+        child = Initiative.objects.create(name="Build portal", parent=initiative)
+        descendant = Initiative.objects.create(name="Design portal", parent=child)
+
+        initiative.parent = descendant
+
+        with self.assertRaises(ValidationError):
+            initiative.save()
