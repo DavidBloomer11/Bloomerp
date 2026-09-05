@@ -20,7 +20,7 @@ from ..base import (
     BloomerpRuntime,
 )
 from ..toml import write_toml_model
-from .scaffold_sync import synchronize_scaffold
+from .scaffold import synchronize_scaffold
 
 
 TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "template_project"

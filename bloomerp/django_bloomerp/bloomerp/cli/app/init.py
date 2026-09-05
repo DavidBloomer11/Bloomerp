@@ -52,7 +52,7 @@ def _copy_app_template(target_dir: Path, replacements: dict[str, str]) -> None:
 
 
 def _register_app_in_project(project_dir: Path, app_import_path: str) -> None:
-    from ..project.scaffold_sync import synchronize_scaffold
+    from ..project.scaffold import synchronize_scaffold
 
     manifest_path = project_dir / ".bloomerp" / "project.bloomerp.toml"
     if not manifest_path.is_file():

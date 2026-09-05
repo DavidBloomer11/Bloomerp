@@ -31,6 +31,20 @@ def get_project_metadata_dir(start: Path | None = None) -> Path:
 def _read_toml_model(path: Path, model_type):
     try:
         data = tomllib.loads(path.read_text(encoding="utf-8"))
+        if model_type is BloomerpProjectManifest and (data.get("schema_version") == 1 or "marketplace_extensions" in data):
+            locks = data.pop("marketplace_apps", [])
+            declarations = data.pop("marketplace_extensions", [])
+            by_slug = {lock["app_slug"]: lock for lock in locks}
+            extensions = []
+            for declaration in declarations:
+                lock = by_slug.get(declaration["slug"], {})
+                app_id = lock.get("app_id") or lock.get("marketplace_app_id")
+                if not app_id:
+                    raise click.ClickException("Pull the project with the previous CLI to resolve legacy app IDs before upgrading.")
+                extensions.append({"id": app_id, "version": declaration["version"]})
+            data["extensions"] = extensions
+            data["apps"] = [{**lock, "id": lock.get("app_id") or lock.get("marketplace_app_id")} for lock in locks]
+            data["schema_version"] = 2
         return model_type.model_validate(data)
     except FileNotFoundError as exc:
         raise click.ClickException(f"Missing Bloomerp metadata file: {path}") from exc

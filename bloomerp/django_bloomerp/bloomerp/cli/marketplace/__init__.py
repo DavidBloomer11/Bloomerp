@@ -4,6 +4,7 @@ import click
 
 from .search import search
 from .show import show
+from .manage import add, remove, resolve, develop
 
 
 @click.group()
@@ -15,3 +16,6 @@ marketplace.add_command(search)
 marketplace.add_command(show)
 
 __all__ = ["marketplace"]
+
+for command in (add, remove, resolve, develop):
+    marketplace.add_command(command)

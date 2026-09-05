@@ -3,7 +3,7 @@ import requests
 
 from ..base import BLOOMERP_IO_URL
 
-ENDPOINT = "/api/marketplace_apps/"
+ENDPOINT = "/api/apps/"
 
 @click.command()
 @click.argument("query", required=False)

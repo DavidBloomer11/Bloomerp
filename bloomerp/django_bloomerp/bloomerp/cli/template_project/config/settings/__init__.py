@@ -1,3 +1,7 @@
+from pathlib import Path
+from bloomerp.cli.project.marketplace_sources import configure_sources
+configure_sources(Path(__file__).resolve().parents[2])
+
 import os
 
 from .generated.common import *

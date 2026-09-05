@@ -1,6 +1,8 @@
 import os
+from typing import Literal
+from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
 from bloomerp.config.definition import BloomerpConfig
 
@@ -23,14 +25,19 @@ class BloomerpEnvironment(BaseModel):
     required:list[str] = Field(default_factory=list)
     optional:list[str] = Field(default_factory=list)
 
-class BloomerpDeploymentManifest(BaseModel):
-    server_location:str = "EU_CENTRAL"
-
 
 class BloomerpDjango(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     installed_apps: list[str] = Field(default_factory=list)
+
+
+class BloomerpExtension(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+    id: UUID
+    version: str | None = None
+
 
 class BloomerpProjectManifest(BaseModel):
     """
@@ -44,6 +51,10 @@ class BloomerpProjectManifest(BaseModel):
     runtime: BloomerpRuntime
     django: BloomerpDjango = Field(default_factory=BloomerpDjango)
     bloomerp: BloomerpConfig = Field(default_factory=BloomerpConfig)
+    extensions: list[BloomerpExtension] = Field(default_factory=list)
+    schema_version: Literal[2] = 2
+    project_files: dict[str, str] = Field(default_factory=dict)
+    apps: list[dict] = Field(default_factory=list)
 
 
 class BloomerpAppDjango(BaseModel):
@@ -93,11 +104,13 @@ class BloomerpAppManifest(BaseModel):
 
 
 class BloomerpAppState(BaseModel):
-    marketplace_app_id: str = ""
+    app_id: str = Field(default="", validation_alias=AliasChoices("app_id", "marketplace_app_id"))
 
 
 class BloomerpProjectState(BaseModel):
     project_id:str = ""
+    manifest_revision: str = ""
+    dependency_ids: list[str] = Field(default_factory=list)
     snapshot_id: str = ""
     generated_wheel_sha256: str = ""
     generated_wheel_filename: str = ""

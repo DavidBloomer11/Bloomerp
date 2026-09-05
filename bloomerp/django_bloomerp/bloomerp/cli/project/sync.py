@@ -15,7 +15,7 @@ from ..utils import (
     get_project_state,
     write_project_manifest,
 )
-from .scaffold_sync import synchronize_scaffold
+from .scaffold import synchronize_scaffold
 
 
 PROJECTS_ENDPOINT = "/api/projects/"
@@ -59,18 +59,24 @@ def _merge_app_environments(
     manifest: BloomerpProjectManifest,
     project_root: Path,
 ) -> BloomerpProjectManifest:
-    app_environments = [
-        read_app_manifest(app_dir).environment
-        for app_dir in find_app_dirs(project_root)
-    ]
-    return manifest.model_copy(
-        update={
-            "environment": merge_environments(
-                manifest.environment,
-                *app_environments,
-            )
-        }
-    )
+    from .marketplace_sources import local_source_dirs, locks_for, app_package
+    from ..app._utils import read_app_state
+    directories = local_source_dirs(manifest)
+    app_manifests = [read_app_manifest(directory) for directory in directories]
+    for directory, app_manifest in zip(directories, app_manifests):
+        package = app_package(app_manifest.django.app_config)
+        for lock in locks_for(manifest):
+            if package == app_package(lock["manifest"]["django"]["app_config"]) and read_app_state(directory).app_id != lock["id"]:
+                raise click.ClickException(f"Local app {directory.name} collides with another app package; link it explicitly.")
+    return manifest.model_copy(update={
+        "django": manifest.django.model_copy(update={"installed_apps": list(dict.fromkeys([
+            *(["project_app"] if get_project_state().generated_wheel_filename else []),
+            *[lock["manifest"]["django"]["app_config"] for lock in locks_for(manifest)],
+            *[item.django.app_config for item in app_manifests if item.django.app_config],
+        ]))}),
+        "environment": merge_environments(manifest.environment, *[app.environment for app in app_manifests]),
+    })
+
 
 
 def synchronize_local_project(
@@ -103,63 +109,51 @@ def synchronize_project_from_remote(
     *,
     client: BloomerpCliClient | None = None,
     force: bool = False,
+    artifacts: bool = False,
 ) -> ProjectSyncResult:
-    """Pull remote project metadata and user-managed environment names."""
-
-    project_id = _linked_project_id()
-    api_client = client or BloomerpCliClient()
-    from .remote import pull_project
-    manifest = pull_project(api_client, project_id, force=force)
-
-    environment_payload = api_client.request(
-        "GET",
-        f"{PROJECT_ENVIRONMENT_VARIABLES_ENDPOINT}?project={project_id}",
-    ).json()
-    remote_names = {
-        str(item["name"]).strip().upper()
-        for item in _response_results(environment_payload)
-        if item.get("name") and not item.get("is_platform_managed", False)
-    }
-    manifest = manifest.model_copy(
-        update={
-            "environment": manifest.environment.model_copy(
-                update={
-                    "optional": sorted(
-                        set(manifest.environment.optional)
-                        | (remote_names - set(manifest.environment.required))
-                    )
-                }
-            )
-        }
-    )
-    return synchronize_local_project(manifest, force=force)
-
-
-def synchronize_project_to_remote(
-    *,
-    client: BloomerpCliClient | None = None,
-    force: bool = False,
-) -> ProjectSyncResult:
-    """Synchronize locally, then push editable project metadata."""
-
-    project_id = _linked_project_id()
-    result = synchronize_local_project(force=force)
-    manifest = result.manifest
-    api_client = client or BloomerpCliClient()
-    api_client.request(
-        "PATCH",
-        f"{PROJECTS_ENDPOINT}{project_id}/",
-        json={
-            "name": manifest.name,
-            "description": manifest.description,
-            "bloomerp_version": manifest.runtime.bloomerp_version,
-            "instance_config": manifest.bloomerp.model_dump(
-                mode="json",
-                exclude_none=True,
-            ),
-        },
-    )
+    """Pull the model-generated manifest without creating a snapshot."""
+    from ..utils import write_project_state
+    if artifacts:
+        from .remote import pull_project
+        pull_project(client or BloomerpCliClient(), _linked_project_id(), force=force)
+    payload = (client or BloomerpCliClient()).request("GET", f"{PROJECTS_ENDPOINT}{_linked_project_id()}/manifest/").json()
+    manifest = BloomerpProjectManifest.model_validate(payload["manifest"])
+    result = synchronize_local_project(manifest, force=force)
+    state = get_project_state()
+    state.manifest_revision = payload["revision"]
+    write_project_state(state)
     return result
+
+
+def synchronize_project_to_remote(*, client=None, force=False) -> ProjectSyncResult:
+    """Register local apps and synchronize declarations, without building code."""
+    from ..base import BloomerpExtension
+    from ..app._utils import read_app_state, write_app_state
+    from ..app.link import _create_app
+    from ..utils import write_project_state
+    from .marketplace_sources import upload_manifest, local_source_dirs
+    project_id = _linked_project_id()
+    api_client = client or BloomerpCliClient()
+    state = get_project_state()
+    if not state.manifest_revision:
+        raise click.ClickException("Pull the project manifest before pushing configuration.")
+    manifest = get_project_manifest()
+    extensions = {str(item.id): item for item in manifest.extensions}
+    for directory in local_source_dirs(manifest):
+        app_state = read_app_state(directory)
+        if not app_state.app_id:
+            app_state.app_id = str(_create_app(api_client, directory)["id"])
+            write_app_state(directory, app_state)
+        extensions.setdefault(app_state.app_id, BloomerpExtension(id=app_state.app_id))
+    manifest.extensions = list(extensions.values())
+    result = synchronize_local_project(manifest, force=force)
+    payload = api_client.request("POST", f"{PROJECTS_ENDPOINT}{project_id}/manifest/", json={
+        "manifest": upload_manifest(result.manifest), "base_revision": state.manifest_revision,
+    }).json()
+    state.manifest_revision = payload["revision"]
+    write_project_state(state)
+    # Persist the server's normalized declarations; local discovery supplies source AppConfigs.
+    return synchronize_local_project(BloomerpProjectManifest.model_validate(payload["manifest"]), force=force)
 
 
 def echo_project_sync(result: ProjectSyncResult) -> None:
@@ -179,20 +173,23 @@ def echo_project_sync(result: ProjectSyncResult) -> None:
 @click.command("sync")
 @click.option("--from-remote", is_flag=True, help="Pull linked project metadata.")
 @click.option("--to-remote", is_flag=True, help="Push local metadata after syncing.")
+@click.option("--artifacts", is_flag=True, help="Also download the latest built artifacts with --from-remote.")
 @click.option(
     "--force",
     is_flag=True,
     help="Back up and replace locally modified generated scaffold files.",
 )
-def sync(from_remote: bool, to_remote: bool, force: bool) -> None:
+def sync(from_remote: bool, to_remote: bool, force: bool, artifacts: bool = False) -> None:
     """Synchronize the project manifest, app environment, and scaffold."""
 
+    if artifacts and not from_remote:
+        raise click.ClickException("--artifacts requires --from-remote.")
     if from_remote and to_remote:
         raise click.ClickException(
             "--from-remote and --to-remote cannot be used together."
         )
     if from_remote:
-        result = synchronize_project_from_remote(force=force)
+        result = synchronize_project_from_remote(force=force, artifacts=artifacts)
     elif to_remote:
         result = synchronize_project_to_remote(force=force)
     else:

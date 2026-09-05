@@ -56,6 +56,7 @@ def test_project_link_confirms_before_replacing_a_valid_link(client_type: Mock):
     client_type.return_value.request.side_effect = [
         linked_response,
         projects_response,
+        Mock(json=Mock(return_value={"revision": "revision-1"})),
     ]
     runner = CliRunner()
 
@@ -89,7 +90,7 @@ def test_project_link_lists_owned_projects_and_writes_selection(client_type: Moc
         {"id": "project-1", "name": "First", "domain_name": "first"},
         {"id": "project-2", "name": "Second", "domain_name": "second"},
     ]
-    client_type.return_value.request.return_value = response
+    client_type.return_value.request.side_effect = [response, Mock(json=Mock(return_value={"revision": "revision-1"}))]
     runner = CliRunner()
 
     with runner.isolated_filesystem():
@@ -109,9 +110,7 @@ def test_project_link_lists_owned_projects_and_writes_selection(client_type: Moc
         assert tomllib.loads(
             (project_root / ".bloomerp/state.toml").read_text(encoding="utf-8")
         ) ["project_id"] == "project-2"
-        client_type.return_value.request.assert_called_once_with(
-            "GET", "/api/projects/"
-        )
+        assert client_type.return_value.request.call_args_list == [call("GET", "/api/projects/"), call("GET", "/api/projects/project-2/manifest/")]
 
 
 @patch("bloomerp.cli.project.link.BloomerpCliClient")
@@ -129,7 +128,7 @@ def test_project_link_can_create_from_manifest_when_one_project_exists(
         "domain_name": "example",
     }
     client = client_type.return_value
-    client.request.side_effect = [projects_response, created_response]
+    client.request.side_effect = [projects_response, created_response, Mock(json=Mock(return_value={"revision": "revision-1"}))]
     client.session.return_value = {"user": {"id": 42}}
     runner = CliRunner()
 
@@ -177,6 +176,7 @@ server_location = "US_EAST"
                     "bloomerp_version": "1.2.3",
                 },
             ),
+            call("GET", "/api/projects/project-created/manifest/"),
         ]
 
 
@@ -293,7 +293,7 @@ def test_project_upload_requires_a_link_before_building():
 
 
 @patch("bloomerp.cli.project.upload.BloomerpCliClient")
-def test_project_upload_sends_manifest_and_existing_wheel(client_type: Mock):
+def test_project_upload_sends_revision_and_existing_wheel(client_type: Mock):
     response = Mock()
     response.json.return_value = {
         "id": "snapshot-1",
@@ -306,7 +306,7 @@ def test_project_upload_sends_manifest_and_existing_wheel(client_type: Mock):
     with runner.isolated_filesystem():
         Path(".bloomerp").mkdir()
         Path(".bloomerp/state.toml").write_text(
-            'project_id = "project-1"\n', encoding="utf-8"
+            'project_id = "project-1"\nmanifest_revision = "revision-1"\n', encoding="utf-8"
         )
         Path(".bloomerp/project.bloomerp.toml").write_text(
             """name = "Example"
@@ -323,7 +323,8 @@ python_version = "3.13"
             encoding="utf-8",
         )
         wheel = Path("example.whl")
-        wheel.write_bytes(b"wheel bytes")
+        with zipfile.ZipFile(wheel, "w") as archive:
+            archive.writestr("config/__init__.py", "")
 
         with patch("bloomerp.cli.project.remote.verify_generated_artifact"):
             result = runner.invoke(main, ["project", "upload", "--wheel", str(wheel)])
@@ -335,9 +336,7 @@ python_version = "3.13"
             "POST",
             "/api/projects/project-1/upload-from-cli/",
         )
-        assert json.loads(request.call_args.kwargs["data"]["manifest"])["name"] == (
-            "Example"
-        )
+        assert request.call_args.kwargs["data"] == {"base_revision": "revision-1"}
         assert request.call_args.kwargs["files"]["wheel"][0] == "example.whl"
         assert request.call_args.kwargs["timeout"] == 300
 
@@ -371,9 +370,8 @@ def test_project_build_wheel_contains_project_package_data():
         with zipfile.ZipFile(wheels[0]) as wheel:
             members = set(wheel.namelist())
 
-        assert "apps/inventory/app.bloomerp.toml" in members
-        assert "apps/inventory/templates/sample_detail_view.html" in members
-        assert "apps/inventory/static/inventory/app.js" in members
+        assert not any(name.startswith("apps/") for name in members)
+        assert "config/settings/common.py" in members
 
 
 @patch("bloomerp.cli.project.build.assert_scaffold_current")
@@ -387,7 +385,8 @@ def test_project_build_uses_clean_staging_directory_and_writes_dist(
     def create_wheel(command, check):
         assert check is True
         output_dir = Path(command[command.index("--outdir") + 1])
-        output_dir.joinpath("example-0.1.0-py3-none-any.whl").write_bytes(b"wheel")
+        with zipfile.ZipFile(output_dir / "example-0.1.0-py3-none-any.whl", "w") as archive:
+            archive.writestr("config/__init__.py", "")
 
     run.side_effect = create_wheel
     runner = CliRunner()
@@ -399,7 +398,7 @@ def test_project_build_uses_clean_staging_directory_and_writes_dist(
         result = runner.invoke(main, ["project", "build"])
 
         assert result.exit_code == 0
-        assert Path("dist/example-0.1.0-py3-none-any.whl").read_bytes() == b"wheel"
+        assert zipfile.is_zipfile("dist/example-0.1.0-py3-none-any.whl")
         assert "Built project wheel" in result.output
         assert_scaffold_current.assert_called_once()
 
@@ -429,7 +428,7 @@ def test_project_scaffold_sync_preserves_project_owned_files():
         previous_directory = Path.cwd()
         os.chdir(project_root)
         try:
-            result = runner.invoke(main, ["project", "scaffold-sync"])
+            result = runner.invoke(main, ["project", "sync"])
         finally:
             os.chdir(previous_directory)
 
@@ -457,9 +456,9 @@ def test_project_scaffold_sync_refuses_modified_generated_file_without_force():
         previous_directory = Path.cwd()
         os.chdir(project_root)
         try:
-            refused = runner.invoke(main, ["project", "scaffold-sync"])
+            refused = runner.invoke(main, ["project", "sync"])
             assert generated_settings.read_text(encoding="utf-8") == "CUSTOM = True\n"
-            forced = runner.invoke(main, ["project", "scaffold-sync", "--force"])
+            forced = runner.invoke(main, ["project", "sync", "--force"])
         finally:
             os.chdir(previous_directory)
 
@@ -477,46 +476,10 @@ def test_project_scaffold_sync_refuses_modified_generated_file_without_force():
         assert backups[0].read_text(encoding="utf-8") == "CUSTOM = True\n"
 
 
-def test_project_scaffold_sync_check_reports_current_and_stale_json():
-    runner = CliRunner()
-
-    with runner.isolated_filesystem():
-        init_result = runner.invoke(
-            main,
-            ["project", "init", "example"],
-            input="\nn\n",
-        )
-        assert init_result.exit_code == 0
-
-        project_root = Path("example").resolve()
-        previous_directory = Path.cwd()
-        os.chdir(project_root)
-        try:
-            current = runner.invoke(
-                main,
-                ["project", "scaffold-sync", "--check", "--output", "json"],
-            )
-            Path("config/settings/generated/common.py").write_text(
-                "CUSTOM = True\n",
-                encoding="utf-8",
-            )
-            stale = runner.invoke(
-                main,
-                ["project", "scaffold-sync", "--check", "--output", "json"],
-            )
-        finally:
-            os.chdir(previous_directory)
-
-        assert current.exit_code == 0
-        assert json.loads(current.output) == {
-            "contract_version": 1,
-            "drift": [],
-            "status": "current",
-        }
-        assert stale.exit_code == 1
-        stale_payload = json.loads(stale.output)
-        assert stale_payload["status"] == "stale"
-        assert "config/settings/generated/common.py" in stale_payload["drift"]
+def test_removed_scaffold_sync_command_is_unavailable():
+    result = CliRunner().invoke(main, ["project", "scaffold-sync"])
+    assert result.exit_code != 0
+    assert "No such command" in result.output
 
 
 def test_generated_project_passes_django_system_check():

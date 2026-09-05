@@ -69,7 +69,7 @@ def create_app(*, linked: bool = False) -> Path:
         state_dir = Path(".bloomerp/apps")
         state_dir.mkdir(parents=True, exist_ok=True)
         (state_dir / "sample_app.toml").write_text(
-            'marketplace_app_id = "app-1"\n',
+            'app_id = "app-1"\n',
             encoding="utf-8",
         )
     return app_dir
@@ -105,129 +105,46 @@ def test_project_sync_merges_app_environment_declarations():
         }
 
 
-def test_project_sync_from_remote_imports_only_user_variable_names():
-    """
-    Use case: A linked project pulls metadata and environment declarations.
-    Expected result: User variables become optional while platform variables stay out.
-    """
-    runner = CliRunner()
-    client = Mock()
-    project_response = Mock()
-    project_response.json.return_value = {
-        "name": "Remote Example",
-        "description": "Remote description",
-        "bloomerp_version": "1.15.0",
-        "instance_config": {
-            "auth": {
-                "interactive": {
-                    "login_identifier": "email",
-                    "signup_enabled": True,
-                }
-            }
-        },
-    }
-    environment_response = Mock()
-    environment_response.json.return_value = [
-        {"name": "REMOTE_SECRET", "value": "", "is_secret": True},
-        {"name": "PROJECT_TOKEN", "value": "", "is_secret": True},
-        {"name": "DJANGO_SECRET_KEY", "is_platform_managed": True},
-    ]
-    client.request.side_effect = [environment_response]
-
-    with runner.isolated_filesystem():
-        # 1. Create a linked local project.
+def test_project_sync_from_remote_reads_only_manifest():
+    from bloomerp.cli.utils import get_project_manifest, get_project_state
+    with CliRunner().isolated_filesystem():
         create_project(linked=True)
-
-        from bloomerp.cli.utils import get_project_manifest
-        from bloomerp.config import BloomerpConfig
-        remote_manifest = get_project_manifest().model_copy(update={
-            "name": "Remote Example", "description": "Remote description",
-            "runtime": get_project_manifest().runtime.model_copy(update={"bloomerp_version": "1.15.0"}),
-            "bloomerp": BloomerpConfig.model_validate(project_response.json.return_value["instance_config"]),
-        })
-        # 2. Pull remote state without writing real scaffold files.
-        with (
-            patch("bloomerp.cli.project.remote.pull_project", return_value=remote_manifest),
-            patch(
-                "bloomerp.cli.project.sync.BloomerpCliClient",
-                return_value=client,
-            ),
-            patch(
-                "bloomerp.cli.project.sync.synchronize_scaffold",
-                return_value=([], [], None),
-            ),
-        ):
-            result = runner.invoke(main, ["project", "sync", "--from-remote"])
-
-        # 3. Verify metadata and declaration ownership.
+        manifest = get_project_manifest().model_dump(mode="json")
+        manifest["name"] = "Remote Example"
+        manifest["environment"] = {"required": ["REMOTE_REQUIRED"], "optional": ["REMOTE_OPTIONAL"]}
+        client = Mock()
+        client.request.return_value.json.return_value = {"manifest": manifest, "revision": "revision-2"}
+        with patch("bloomerp.cli.project.sync.BloomerpCliClient", return_value=client), patch("bloomerp.cli.project.sync.synchronize_scaffold", return_value=([], [], None)):
+            result = CliRunner().invoke(main, ["project", "sync", "--from-remote"])
         assert result.exit_code == 0, result.output
-        manifest = tomllib.loads(
-            Path(".bloomerp/project.bloomerp.toml").read_text(encoding="utf-8")
-        )
-        assert manifest["name"] == "Remote Example"
-        assert manifest["runtime"]["bloomerp_version"] == "1.15.0"
-        assert manifest["bloomerp"]["auth"]["interactive"][
-            "login_identifier"
-        ] == "email"
-        assert manifest["bloomerp"]["auth"]["interactive"][
-            "signup_enabled"
-        ] is True
-        assert manifest["environment"] == {
-            "required": ["PROJECT_TOKEN"],
-            "optional": ["REMOTE_SECRET", "SHARED_KEY"],
-        }
-        assert client.request.call_args_list == [
-            call("GET", "/api/project_environment_variables/?project=project-1"),
-        ]
+        assert get_project_manifest().environment.required == ["REMOTE_REQUIRED"]
+        assert get_project_state().manifest_revision == "revision-2"
+        client.request.assert_called_once_with("GET", "/api/projects/project-1/manifest/")
 
 
-def test_project_sync_to_remote_runs_local_sync_before_metadata_patch():
-    """
-    Use case: A linked project pushes its locally declared metadata.
-    Expected result: Local environment aggregation precedes a narrow metadata PATCH.
-    """
-    runner = CliRunner()
-    client = Mock()
-    client.request.return_value = Mock()
-
-    with runner.isolated_filesystem():
-        # 1. Create linked project and app manifests.
+def test_project_sync_to_remote_registers_local_app_without_uploading():
+    from bloomerp.cli.utils import get_project_state
+    with CliRunner().isolated_filesystem():
         create_project(linked=True)
+        Path(".bloomerp/state.toml").write_text('project_id = "project-1"\nmanifest_revision = "revision-1"\n')
         create_app()
-
-        # 2. Push project metadata while isolating scaffold file behavior.
-        with (
-            patch(
-                "bloomerp.cli.project.sync.BloomerpCliClient",
-                return_value=client,
-            ),
-            patch(
-                "bloomerp.cli.project.sync.synchronize_scaffold",
-                return_value=([], [], None),
-            ),
-        ):
-            result = runner.invoke(main, ["project", "sync", "--to-remote"])
-
-        # 3. Verify the remote payload excludes environment values and app versions.
+        client = Mock()
+        client.session.return_value = {"user": {"id": 42}}
+        app_id = "11111111-1111-4111-8111-111111111111"
+        def request(method, endpoint, **kwargs):
+            if endpoint == "/api/apps/":
+                return Mock(json=Mock(return_value={"id": app_id}))
+            assert endpoint == "/api/projects/project-1/manifest/"
+            assert kwargs["json"]["base_revision"] == "revision-1"
+            assert kwargs["json"]["manifest"]["extensions"] == [{"id": app_id}]
+            return Mock(json=Mock(return_value={"manifest": kwargs["json"]["manifest"], "revision": "revision-2"}))
+        client.request.side_effect = request
+        with patch("bloomerp.cli.project.sync.BloomerpCliClient", return_value=client), patch("bloomerp.cli.project.sync.synchronize_scaffold", return_value=([], [], None)):
+            result = CliRunner().invoke(main, ["project", "sync", "--to-remote"])
         assert result.exit_code == 0, result.output
-        manifest = tomllib.loads(
-            Path(".bloomerp/project.bloomerp.toml").read_text(encoding="utf-8")
-        )
-        client.request.assert_called_once_with(
-            "PATCH",
-            "/api/projects/project-1/",
-            json={
-                "name": "Example",
-                "description": "Local project",
-                "bloomerp_version": "1.14.6",
-                "instance_config": manifest["bloomerp"],
-            },
-        )
-        assert manifest["environment"]["required"] == [
-            "APP_TOKEN",
-            "PROJECT_TOKEN",
-            "SHARED_KEY",
-        ]
+        assert get_project_state().manifest_revision == "revision-2"
+        assert get_project_state().snapshot_id == ""
+        assert client.request.call_count == 2
 
 
 def test_app_sync_from_remote_preserves_release_and_application_state():
@@ -311,7 +228,7 @@ def test_app_sync_to_remote_excludes_release_version():
         assert result.exit_code == 0, result.output
         client.request.assert_called_once_with(
             "PATCH",
-            "/api/marketplace_apps/app-1/",
+            "/api/apps/app-1/",
             json={
                 "name": "Sample App",
                 "description": "Local description",

@@ -11,22 +11,12 @@ from ._utils import read_app_manifest, read_app_state, resolve_app_dir
 from .build import build_app_wheel
 
 
-ENDPOINT = "/api/marketplace_apps/upload/"
+ENDPOINT = "/api/apps/upload/"
 
-@click.command()
-@click.argument("name", required=False)
-@click.option(
-    "--wheel",
-    "wheel_path",
-    type=click.Path(path_type=Path, exists=True, dir_okay=False),
-    help="Upload an existing app wheel instead of building one.",
-)
-def upload(name: str | None, wheel_path: Path | None) -> None:
-    """Build and upload a linked app version to Bloomerp.io."""
-
-    app_dir = resolve_app_dir(name)
+def upload_app(app_dir: Path, *, client=None, wheel_path=None) -> dict:
+    """Build/upload one immutable private or public app release."""
     state = read_app_state(app_dir)
-    if not state.marketplace_app_id:
+    if not state.app_id:
         raise click.ClickException(
             "This app is not linked. Run 'bloomerp app link' first."
         )
@@ -34,11 +24,11 @@ def upload(name: str | None, wheel_path: Path | None) -> None:
 
     def upload_wheel(path: Path) -> dict:
         with path.open("rb") as wheel_file:
-            response = BloomerpCliClient().request(
+            response = (client or BloomerpCliClient()).request(
                 "POST",
                 ENDPOINT,
                 data={
-                    "marketplace_app_id": state.marketplace_app_id,
+                    "app_id": state.app_id,
                     "manifest": json.dumps(manifest.model_dump(mode="json")),
                 },
                 files={
@@ -57,8 +47,13 @@ def upload(name: str | None, wheel_path: Path | None) -> None:
         with tempfile.TemporaryDirectory(prefix="bloomerp-app-upload-") as directory:
             payload = upload_wheel(build_app_wheel(app_dir, Path(directory)))
 
-    action = "Created" if payload.get("created", True) else "Reused"
-    click.echo(
-        f"{action} {manifest.name} {payload.get('version', manifest.version)} "
-        f"({payload['version_id']})."
-    )
+    return payload
+
+
+@click.command()
+@click.argument("name", required=False)
+@click.option("--wheel", "wheel_path", type=click.Path(path_type=Path, exists=True, dir_okay=False))
+def upload(name, wheel_path):
+    """Build and upload a linked app version."""
+    payload = upload_app(resolve_app_dir(name), wheel_path=wheel_path)
+    click.echo(f"Uploaded {payload['version']} ({payload['version_id']}).")

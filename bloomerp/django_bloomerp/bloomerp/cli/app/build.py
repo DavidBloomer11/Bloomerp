@@ -9,11 +9,13 @@ from pathlib import Path
 
 import click
 
-from ._utils import read_app_manifest
+from ._utils import read_app_manifest, read_app_state
 
 
 def build_app_wheel(app_dir: Path, output_dir: Path) -> Path:
     manifest = read_app_manifest(app_dir)
+    app_id = read_app_state(app_dir).app_id
+    distribution = "bloomerp-app-" + app_id.replace("-", "") if app_id else manifest.name.replace("_", "-")
     output_dir = output_dir.expanduser().resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -31,7 +33,7 @@ def build_app_wheel(app_dir: Path, output_dir: Path) -> Path:
             "\n".join(
                 [
                     "[project]",
-                    f"name = {json.dumps(manifest.name.replace('_', '-'))}",
+                    f"name = {json.dumps(distribution)}",
                     f"version = {json.dumps(manifest.version)}",
                     f"description = {json.dumps(manifest.description)}",
                     'requires-python = ">=3.12,<3.14"',
@@ -75,5 +77,12 @@ def build_app_wheel(app_dir: Path, output_dir: Path) -> Path:
                 f"Expected one app wheel, but found {len(wheels)}."
             )
         destination = output_dir / wheels[0].name
-        shutil.copy2(wheels[0], destination)
+        # Stable ZIP metadata makes an unchanged version reusable on subsequent deploys.
+        import zipfile
+        with zipfile.ZipFile(wheels[0]) as source, zipfile.ZipFile(destination, "w", zipfile.ZIP_DEFLATED) as target:
+            for name in sorted(source.namelist()):
+                info = zipfile.ZipInfo(name, date_time=(1980, 1, 1, 0, 0, 0))
+                info.compress_type = zipfile.ZIP_DEFLATED
+                info.external_attr = 0o644 << 16
+                target.writestr(info, source.read(name))
         return destination
