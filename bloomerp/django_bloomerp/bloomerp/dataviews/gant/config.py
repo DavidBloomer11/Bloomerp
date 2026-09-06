@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 class GanttDataView(BaseDataView):
     """A declarative Gantt dataview."""
 
-    view_type: Literal["gant"] = "gant"
+    view_type: Literal["gantt"] = "gantt"
     start_field: str
     end_field: str
     dependency_from_field: str | None = None
