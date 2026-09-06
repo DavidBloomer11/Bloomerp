@@ -177,6 +177,7 @@ class BloomerpRoute:
     searchable: bool = True
     message_format_values: Optional[dict[str, object]] = None
     re_path: Optional[str] = None
+    base_url_name: Optional[str] = None
 
     def _translation_context(self, field: str) -> str:
         owner = self.owner_app_label or "bloomerp"
@@ -608,6 +609,7 @@ class BloomerpRouteRegistry:
                     else not is_component and not is_api
                 )
                 return {
+                    "base_url_name": _url_name or _name or actual_url_name,
                     "name_message": _name or actual_name,
                     "description_message": _description,
                     "owner_app_label": owner_app.label if owner_app else None,
@@ -1018,6 +1020,11 @@ class BloomerpRouteRegistry:
                     template.get('message_format_values'),
                 ),
                 override=template['override'],
+                base_url_name=(
+                    template['url_name']
+                    or template['name']
+                    or actual_url_name_raw
+                ),
                 name_message=template['name'] or actual_name,
                 description_message=template['description'],
                 owner_app_label=owner_app.label if owner_app else None,

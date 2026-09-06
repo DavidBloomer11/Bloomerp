@@ -17,7 +17,7 @@ from playwright.sync_api import (
     sync_playwright,
 )
 
-from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
+from bloomerp.tests.base.core_test_case import BaseBloomerpTestCaseWithModels
 
 
 class BaseE2ETestCase(BaseBloomerpTestCaseWithModels, StaticLiveServerTestCase):

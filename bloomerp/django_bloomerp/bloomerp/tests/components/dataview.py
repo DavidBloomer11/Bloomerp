@@ -426,7 +426,7 @@ class TestDataView(BaseBloomerpTestCaseWithModels):
                 "kanban": [],
                 "card": [],
                 "calendar": [],
-                "gant": [],
+                "gantt": [],
                 "pivot_table": [],
             },
         )
@@ -887,7 +887,7 @@ class TestDataView(BaseBloomerpTestCaseWithModels):
                 "kanban": [1, 2, 3],
                 "card": [],
                 "calendar": [],
-                "gant": [],
+                "gantt": [],
                 "pivot_table": [],
             },
         )
@@ -1370,9 +1370,9 @@ class TestGantDataView(BaseBloomerpTestCaseWithModels):
                 "content_type_id":content_type.id
             }
         )
-        preference.view_type = "gant"
+        preference.view_type = "gantt"
         preference.options = {
-            "gant": {
+            "gantt": {
                 "start_field_id": start_field.id,
                 "end_field_id": end_field.id,
                 "dependency_from_field_id": dependency_field.id if with_dependency else None,
@@ -1382,7 +1382,7 @@ class TestGantDataView(BaseBloomerpTestCaseWithModels):
         }
         preference.display_fields = {
             **preference.display_fields,
-            "gant": [name_field.id],
+            "gantt": [name_field.id],
         }
         preference.save()
         return content_type, dependency_field

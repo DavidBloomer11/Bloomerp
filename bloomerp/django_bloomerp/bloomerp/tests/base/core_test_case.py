@@ -1,6 +1,3 @@
-from calendar import c
-from dataclasses import dataclass
-
 from django.http import HttpResponse
 from django.test import TransactionTestCase, modify_settings
 from django.test.utils import override_settings
@@ -352,14 +349,3 @@ class BaseBloomerpTestCaseWithModels(TransactionTestCase):
         return ContentType.objects.get_for_model(model)
         
     
-class BaseBloomerpModelTestCase(TransactionTestCase):
-    pass    
-
-class BaseBloomerpWidgetTestCase():
-    pass
-
-
-
-
-
-
