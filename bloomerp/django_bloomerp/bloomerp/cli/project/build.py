@@ -10,7 +10,7 @@ import click
 
 from bloomerp.cli.utils import get_project_manifest, get_project_metadata_dir
 
-from .scaffold_sync import assert_scaffold_current
+from .scaffold import assert_scaffold_current
 
 
 def get_project_root() -> Path:
@@ -21,11 +21,12 @@ def get_project_root() -> Path:
 def build_project_wheel(output_dir: Path) -> Path:
     """Build the current project and copy its wheel into OUTPUT_DIR."""
     project_root = get_project_root()
-    pyproject_path = project_root / "pyproject.toml"
-    if not pyproject_path.is_file():
-        raise click.ClickException(f"Missing project build configuration: {pyproject_path}")
+    manifest = get_project_manifest()
+    assert_scaffold_current(project_root, manifest)
+    from .marketplace_sources import assert_no_overrides, excluded_local_apps, validate_user_wheel
+    assert_no_overrides()
+    excluded = excluded_local_apps(manifest)
 
-    assert_scaffold_current(project_root, get_project_manifest())
 
     output_dir = output_dir.expanduser()
     if not output_dir.is_absolute():
@@ -35,6 +36,12 @@ def build_project_wheel(output_dir: Path) -> Path:
 
     with tempfile.TemporaryDirectory(prefix="bloomerp-build-") as temporary_dir:
         staging_dir = Path(temporary_dir)
+        source_root = staging_dir / "source"
+        source_root.mkdir()
+        if (project_root / 'config').is_dir():
+            shutil.copytree(project_root / 'config', source_root / 'config', ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
+        from .metadata import write_build_config
+        write_build_config(manifest, source_root)
         command = [
             sys.executable,
             "-m",
@@ -43,7 +50,7 @@ def build_project_wheel(output_dir: Path) -> Path:
             "--no-isolation",
             "--outdir",
             str(staging_dir),
-            str(project_root),
+            str(source_root),
         ]
         try:
             subprocess.run(command, check=True)
@@ -60,6 +67,7 @@ def build_project_wheel(output_dir: Path) -> Path:
                 f"Expected one wheel from the build, but found {len(wheels)}."
             )
 
+        validate_user_wheel(wheels[0], manifest)
         destination = output_dir / wheels[0].name
         shutil.copy2(wheels[0], destination)
 

@@ -7,7 +7,6 @@ import tomllib
 from datetime import UTC, datetime
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
-from pprint import pformat
 
 import click
 
@@ -29,8 +28,6 @@ GENERATED_PATHS = (
     Path("config/settings/generated/common.py"),
     Path("config/settings/generated/local.py"),
     Path("config/settings/generated/production.py"),
-    Path("config/settings/generated/project_manifest.py"),
-    Path("config/settings/generated/project_registry.py"),
 )
 USER_PATHS = (
     Path("config/project_channels.py"),
@@ -56,22 +53,7 @@ def _render_generated_file(
     relative_path: Path,
     manifest: BloomerpProjectManifest,
 ) -> str:
-    contents = (TEMPLATE_ROOT / relative_path).read_text(encoding="utf-8")
-    if relative_path == Path("config/settings/generated/project_registry.py"):
-        contents = contents.replace(
-            "__PROJECT_INSTALLED_APPS__",
-            pformat(manifest.django.installed_apps, width=88, sort_dicts=False),
-        )
-    elif relative_path == Path("config/settings/generated/project_manifest.py"):
-        contents = contents.replace(
-            "__PROJECT_MANIFEST__",
-            pformat(
-                manifest.model_dump(mode="json", exclude_none=True),
-                width=88,
-                sort_dicts=False,
-            ),
-        )
-    return contents
+    return (TEMPLATE_ROOT / relative_path).read_text(encoding="utf-8")
 
 
 def _render_scaffold(
@@ -240,88 +222,3 @@ def synchronize_scaffold(
     return updated, created_user_files, backup_root
 
 
-@click.command("scaffold-sync")
-@click.option(
-    "--force",
-    is_flag=True,
-    help="Back up and replace locally modified generated scaffold files.",
-)
-@click.option(
-    "--check",
-    is_flag=True,
-    help="Check scaffold freshness without changing files.",
-)
-@click.option(
-    "--output",
-    "output_format",
-    type=click.Choice(["text", "json"], case_sensitive=False),
-    default="text",
-    show_default=True,
-)
-def scaffold_sync(force: bool, check: bool, output_format: str) -> None:
-    """Deprecated compatibility command for scaffold-only synchronization."""
-
-    if output_format.lower() != "json":
-        click.echo("Deprecated: use 'bloomerp project sync' instead.", err=True)
-
-    if force and check:
-        raise click.ClickException("--force cannot be combined with --check.")
-
-    project_root = get_project_metadata_dir().parent
-    manifest = get_project_manifest()
-    if check:
-        drift = get_scaffold_drift(project_root, manifest)
-        if output_format.lower() == "json":
-            click.echo(
-                json.dumps(
-                    {
-                        "contract_version": 1,
-                        "status": "stale" if drift else "current",
-                        "drift": [path.as_posix() for path in drift],
-                    },
-                    sort_keys=True,
-                )
-            )
-            if drift:
-                raise click.exceptions.Exit(1)
-            return
-
-        if drift:
-            assert_scaffold_current(project_root, manifest)
-        click.echo("Project scaffold is current.")
-        return
-
-    updated, created_user_files, backup_root = synchronize_scaffold(
-        project_root,
-        manifest,
-        force=force,
-    )
-
-    if output_format.lower() == "json":
-        click.echo(
-            json.dumps(
-                {
-                    "contract_version": 1,
-                    "status": "synchronized",
-                    "updated": [path.as_posix() for path in updated],
-                    "created_user_files": [
-                        path.as_posix() for path in created_user_files
-                    ],
-                    "backup_root": str(backup_root) if backup_root else None,
-                },
-                sort_keys=True,
-            )
-        )
-        return
-
-    click.echo(
-        f"Scaffold synchronized: {len(updated)} generated file(s) updated, "
-        f"{len(created_user_files)} project-owned file(s) created."
-    )
-    if backup_root is not None:
-        click.echo(f"Previous generated files backed up to {backup_root}")
-    if (project_root / "config/settings/base.py").is_file():
-        click.echo(
-            "Legacy config/settings/base.py is not loaded by the new scaffold. "
-            "Move its custom values into config/settings/common.py."
-        )

@@ -25,23 +25,16 @@ def upload_project_wheel(wheel_path: Path) -> dict:
             "This project is not linked. Run 'bloomerp project link' first."
         )
 
-    from .remote import verify_generated_artifact
-    verify_generated_artifact()
-    manifest = get_project_manifest()
-    manifest = manifest.model_copy(deep=True)
-    generated_apps = getattr(manifest.django, "generated_apps", ["project_app"])
-    manifest.django.installed_apps = [app for app in manifest.django.installed_apps if app not in generated_apps]
-    project_files = {
-        name: (get_project_root() / name).read_text(encoding="utf-8")
-        for name in ("pyproject.toml", "README.md")
-        if (get_project_root() / name).is_file()
-    }
-    manifest = manifest.model_copy(update={"project_files": project_files})
+    from .marketplace_sources import assert_no_overrides, validate_user_wheel
+    assert_no_overrides()
+    if not state.manifest_revision:
+        raise click.ClickException("Sync the project before uploading.")
+    validate_user_wheel(wheel_path, get_project_manifest())
     with wheel_path.open("rb") as wheel_file:
         response = BloomerpCliClient().request(
             "POST",
             f"/api/projects/{state.project_id}/upload-from-cli/",
-            data={"manifest": json.dumps(manifest.model_dump(mode="json")), "base_snapshot_id": state.snapshot_id},
+            data={"base_revision": state.manifest_revision},
             files={
                 "wheel": (
                     wheel_path.name,

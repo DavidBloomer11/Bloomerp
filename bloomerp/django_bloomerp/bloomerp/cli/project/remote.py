@@ -22,14 +22,11 @@ def pull_project(client, project_id, *, force=False):
         if sum(i.file_size for i in archive.infolist()) > 300 * 1024 * 1024:
             raise click.ClickException("Project export exceeds 300 MiB.")
         payload = json.loads(archive.read("project.json"))
-        if payload.get("contract_version") != 1:
+        if payload.get("contract_version") != 2:
             raise click.ClickException("Unsupported project export contract.")
         manifest = BloomerpProjectManifest.model_validate(payload["manifest"])
         wheels = []
-        user_files = dict(payload["manifest"].get("project_files", {}))
-        if set(user_files) - {"pyproject.toml", "README.md"}:
-            raise click.ClickException("Unsupported project source file in export.")
-        user_files = {name: content.encode("utf-8") for name, content in user_files.items()}
+        user_files = {}
         generated = None
         for artifact in payload["artifacts"]:
             name = artifact["filename"]
@@ -55,11 +52,13 @@ def pull_project(client, project_id, *, force=False):
                 generated = artifact
         if generated is None:
             raise click.ClickException("Export contains no generated artifact.")
+    from .marketplace_sources import write_release_cache
+    write_release_cache(payload.get("app_releases", payload["manifest"].get("apps", [])))
     # Never silently overwrite user edits. --force explicitly keeps a backup.
     for name, contents in user_files.items():
         target = root / name
         if target.exists() and target.read_bytes() != contents:
-            from .scaffold_sync import TEMPLATE_ROOT
+            from .scaffold import TEMPLATE_ROOT
             template = TEMPLATE_ROOT / name
             untouched_template = template.is_file() and target.read_bytes() == template.read_bytes()
             if not force and not untouched_template:
@@ -73,8 +72,13 @@ def pull_project(client, project_id, *, force=False):
         (wheel_dir / name).write_bytes(contents)
     installer = (["uv", "pip", "install", "--python", sys.executable] if shutil.which("uv")
                  else [sys.executable, "-m", "pip", "install"])
-    subprocess.run([*installer, "--reinstall" if shutil.which("uv") else "--force-reinstall",
-                    f"Bloomerp=={manifest.runtime.bloomerp_version}",
+    constraints = []
+    if payload.get("dependency_lock"):
+        lock_path = metadata / "requirements.lock"
+        lock_path.write_text(payload["dependency_lock"])
+        constraints = ["--constraint", str(lock_path)]
+    subprocess.run([*installer, *constraints, "--reinstall" if shutil.which("uv") else "--force-reinstall",
+                    f"Bloomerp=={manifest.runtime.bloomerp_version}", *manifest.runtime.dependencies,
                     *[str(wheel_dir / name) for name, _ in wheels]], check=True)
     for name, contents in user_files.items():
         target = root / name
@@ -85,14 +89,7 @@ def pull_project(client, project_id, *, force=False):
     state.generated_wheel_filename = generated["filename"]
     state.generated_wheel_sha256 = generated["sha256"]
     write_project_state(state)
-    manifest.django.installed_apps = list(dict.fromkeys([
-        "project_app", *manifest.django.installed_apps, *payload["marketplace_apps"],
-    ]))
-    # Used by the scaffold; excluded from the user wheel's installed app declaration.
-    manifest.django = manifest.django.model_copy(update={
-        "generated_apps": ["project_app", *payload["marketplace_apps"]],
-        "auth_user_model": payload["auth_user_model"],
-    })
+    manifest.django = manifest.django.model_copy(update={"generated_apps": ["project_app"]})
     return manifest
 
 

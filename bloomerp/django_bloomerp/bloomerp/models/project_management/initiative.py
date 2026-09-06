@@ -1,6 +1,7 @@
 from tabnanny import verbose
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Count
 from django.utils import timezone
@@ -44,9 +45,10 @@ class Initiative(BloomerpModel):
                     title=gettext_noop("Details"),
                     columns=4,
                     items=[
-                        LayoutItem(id="name", colspan=2),
+                        LayoutItem(id="name", colspan=1),
                         LayoutItem(id="status", colspan=1),
                         LayoutItem(id="owner", colspan=1),
+                        LayoutItem(id="parent", colspan=1),
                         LayoutItem(id="description", colspan=4),
                     ],
                 ),
@@ -74,19 +76,20 @@ class Initiative(BloomerpModel):
                             id="todos",
                             colspan=1,
                             config={
-                                "inline_fields": ["title", "status"],
-                                # "behaviors" : BehaviorConfig(
-                                #     rules=[
-                                #         BehaviorRule(
-                                #             name="Set todo count based on inline fields",
-                                #             actions=[
-                                                
-                                #             ]
-                                # )]),     
+                                "inline_fields": ["title", "status"],     
                             },
                         ),
                     ]
                 ),
+                LayoutRow(
+                    title=gettext_noop("Sub Initiatives"),
+                    columns=1,
+                    items=[
+                        LayoutItem(id="sub_initiatives", colspan=1, config={
+                            "inline_fields": ["name", "status"],
+                        }),
+                    ],
+                )
                 ]
             )],
         ),
@@ -186,6 +189,15 @@ class Initiative(BloomerpModel):
         verbose_name=_("Labels"),
         help_text=_("Labels assigned to the initiative"),
     )
+    parent = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="sub_initiatives",
+        verbose_name=_("Parent Initiative"),
+        help_text=_("The parent initiative of this initiative"),
+    )
 
     @cached_property
     def todo_status_counts(self) -> dict[str, int]:
@@ -250,6 +262,16 @@ class Initiative(BloomerpModel):
             self.completed_at = timezone.now()
         elif not self.is_completed:
             self.completed_at = None
+
+        parent = self.parent
+        ancestor_ids = set()
+        while parent is not None:
+            if parent is self or parent.pk == self.pk or parent.pk in ancestor_ids:
+                raise ValidationError({
+                    "parent": _("An initiative cannot be its own parent or a descendant."),
+                })
+            ancestor_ids.add(parent.pk)
+            parent = parent.parent
 
         return super().clean()
 

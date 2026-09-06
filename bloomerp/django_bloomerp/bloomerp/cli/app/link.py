@@ -7,7 +7,7 @@ from ..client import BloomerpCliClient
 from ._utils import read_app_manifest, read_app_state, resolve_app_dir, write_app_state
 
 
-MARKETPLACE_APPS_ENDPOINT = "/api/marketplace_apps/"
+MARKETPLACE_APPS_ENDPOINT = "/api/apps/"
 
 
 def _apps_from_response(payload: object) -> list[dict]:
@@ -91,14 +91,14 @@ def link(name: str | None) -> None:
     app_dir = resolve_app_dir(name)
     client = BloomerpCliClient()
     state = read_app_state(app_dir)
-    if state.marketplace_app_id:
-        _confirm_relink(client, state.marketplace_app_id)
+    if state.app_id:
+        _confirm_relink(client, state.app_id)
 
     apps = _apps_from_response(client.request("GET", MARKETPLACE_APPS_ENDPOINT).json())
     manageable_apps = [app for app in apps if app.get("owner") is not None]
     selected = _select_app(manageable_apps) or _create_app(client, app_dir)
     write_app_state(
         app_dir,
-        BloomerpAppState(marketplace_app_id=str(selected["id"])),
+        BloomerpAppState(app_id=str(selected["id"])),
     )
     click.echo(f"Linked this app to {_app_description(selected)}.")

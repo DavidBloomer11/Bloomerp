@@ -26,7 +26,7 @@ def _render_table(data: dict[str, Any], prefix: tuple[str, ...] = ()) -> list[st
         )
 
     lines = [
-        f"{key} = {_format_value(value)}"
+        f"{json.dumps(key)} = {_format_value(value)}"
         for key, value in data.items()
         if not isinstance(value, dict) and not is_array_table(value)
     ]
@@ -36,14 +36,14 @@ def _render_table(data: dict[str, Any], prefix: tuple[str, ...] = ()) -> list[st
             continue
         if lines:
             lines.append("")
-        section = ".".join((*prefix, key))
+        section = ".".join(json.dumps(part) for part in (*prefix, key))
         lines.append(f"[{section}]")
         lines.extend(_render_table(value, (*prefix, key)))
 
     for key, value in data.items():
         if not is_array_table(value):
             continue
-        section = ".".join((*prefix, key))
+        section = ".".join(json.dumps(part) for part in (*prefix, key))
         for item in value:
             if lines:
                 lines.append("")

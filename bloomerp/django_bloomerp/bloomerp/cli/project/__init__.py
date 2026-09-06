@@ -4,6 +4,7 @@ import click
 
 
 from .add_env import add_env
+from .apps import add_app, remove_app
 from .build import build
 from .check import check
 from .deploy import deploy
@@ -12,7 +13,6 @@ from .link import link
 from .makemigrations import makemigrations
 from .migrate import migrate
 from .run import run
-from .scaffold_sync import scaffold_sync
 from .sync import sync
 from .upload import upload
 
@@ -31,7 +31,8 @@ project.add_command(migrate)
 project.add_command(run)
 project.add_command(sync)
 project.add_command(add_env)
-project.add_command(scaffold_sync)
+project.add_command(add_app)
+project.add_command(remove_app)
 project.add_command(upload)
 
 __all__ = ["project"]

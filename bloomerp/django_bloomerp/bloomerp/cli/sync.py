@@ -21,7 +21,12 @@ from .utils import get_project_state
 
 
 def _selected_app_dirs(name: str | None) -> list[Path]:
-    return [resolve_app_dir(name)] if name else find_app_dirs()
+    directories = [resolve_app_dir(name)] if name else find_app_dirs()
+    try:
+        dependencies = set(get_project_state().dependency_ids)
+    except click.ClickException:
+        dependencies = set()
+    return [directory for directory in directories if read_app_state(directory).app_id not in dependencies]
 
 
 def _project_is_linked() -> bool:
@@ -33,7 +38,7 @@ def _project_is_linked() -> bool:
 
 def _has_remote_link(app_dirs: list[Path]) -> bool:
     return _project_is_linked() or any(
-        read_app_state(app_dir).marketplace_app_id for app_dir in app_dirs
+        read_app_state(app_dir).app_id for app_dir in app_dirs
     )
 
 
@@ -74,7 +79,7 @@ def sync(
         else:
             click.echo("Skipped remote project sync because the project is not linked.")
         for app_dir in app_dirs:
-            if read_app_state(app_dir).marketplace_app_id:
+            if read_app_state(app_dir).app_id:
                 echo_app_sync(app_dir, synchronize_app_from_remote(app_dir))
             else:
                 click.echo(
@@ -83,7 +88,7 @@ def sync(
         return
 
     for app_dir in app_dirs:
-        if to_remote and read_app_state(app_dir).marketplace_app_id:
+        if to_remote and read_app_state(app_dir).app_id:
             manifest = synchronize_app_to_remote(app_dir)
         else:
             manifest = synchronize_local_app(app_dir)

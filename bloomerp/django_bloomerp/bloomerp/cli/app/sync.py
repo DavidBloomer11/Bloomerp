@@ -24,7 +24,7 @@ from ._utils import (
 )
 
 
-MARKETPLACE_APPS_ENDPOINT = "/api/marketplace_apps/"
+MARKETPLACE_APPS_ENDPOINT = "/api/apps/"
 REMOTE_APP_METADATA_FIELDS = ("description", "tagline")
 
 
@@ -115,7 +115,7 @@ def synchronize_local_app(app_dir: Path) -> BloomerpAppManifest:
 
 
 def _linked_app_id(app_dir: Path) -> str:
-    app_id = read_app_state(app_dir).marketplace_app_id
+    app_id = read_app_state(app_dir).app_id
     if not app_id:
         raise click.ClickException(
             f"App {app_dir.name!r} is not linked. Run 'bloomerp app link "

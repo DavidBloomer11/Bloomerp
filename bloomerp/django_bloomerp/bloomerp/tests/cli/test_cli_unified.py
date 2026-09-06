@@ -26,7 +26,7 @@ def export_bytes(*, corrupt=False, user_files=None):
         data = stream.getvalue()
         files["wheels/user-1.0.0-py3-none-any.whl"] = data
         artifacts.append({"filename": "user-1.0.0-py3-none-any.whl", "kind": "user", "sha256": hashlib.sha256(data).hexdigest()})
-    files["project.json"] = json.dumps({"contract_version": 1, "snapshot_id": "snapshot-1", "manifest": {"name": "Example", "description": "Test", "environment": {}, "runtime": {"bloomerp_version": "1.15.0", "python_version": "3.12"}}, "artifacts": artifacts, "auth_user_model": "project_app.User", "marketplace_apps": []})
+    files["project.json"] = json.dumps({"contract_version": 2, "snapshot_id": "snapshot-1", "manifest": {"name": "Example", "description": "Test", "environment": {}, "runtime": {"bloomerp_version": "1.15.0", "python_version": "3.12"}}, "artifacts": artifacts, "auth_user_model": "bloomerp.User", "apps": []})
     stream = io.BytesIO()
     with zipfile.ZipFile(stream, "w") as archive:
         for name, content in files.items():
@@ -46,8 +46,8 @@ def test_pull_pins_generated_artifact_and_restores_user_files():
         client.request.return_value.content = export_bytes(user_files={"apps/custom/models.py": "# user source"})
         manifest = pull_project(client, "project-1")
         assert get_project_state().snapshot_id == "snapshot-1"
-        assert manifest.django.installed_apps == ["project_app"]
-        assert manifest.django.auth_user_model == "project_app.User"
+        assert manifest.django.installed_apps == []
+        assert manifest.django.generated_apps == ["project_app"]
         assert Path("apps/custom/models.py").read_text() == "# user source"
         assert "Bloomerp==1.15.0" in install.call_args.args[0]
         verify_generated_artifact()
@@ -81,8 +81,9 @@ def test_pull_preserves_local_edits_until_explicit_force():
 def test_deploy_uses_uploaded_snapshot_and_reports_failure():
     with CliRunner().isolated_filesystem():
         initialize()
-        with (patch("bloomerp.cli.project.deploy.verify_generated_artifact"),
-              patch("bloomerp.cli.project.deploy.synchronize_local_project"),
+        from bloomerp.cli.base import BloomerpProjectManifest
+        manifest = BloomerpProjectManifest(name="Example", description="Test", environment={}, runtime={"bloomerp_version":"1.15.0"})
+        with (patch("bloomerp.cli.project.deploy.synchronize_project_to_remote", return_value=Mock(manifest=manifest)),
               patch("bloomerp.cli.project.deploy.build_project_wheel", return_value=Path("example.whl")),
               patch("bloomerp.cli.project.deploy.upload_project_wheel", return_value={"id": "uploaded-id"}),
               patch("bloomerp.cli.project.deploy.BloomerpCliClient") as client):

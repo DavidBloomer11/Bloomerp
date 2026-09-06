@@ -28,9 +28,42 @@ def get_project_metadata_dir(start: Path | None = None) -> Path:
     )
 
 
-def _read_toml_model(path: Path, model_type):
+def _read_toml_model(path: Path, model_type, *, cache_releases: bool = True):
     try:
         data = tomllib.loads(path.read_text(encoding="utf-8"))
+        if model_type is BloomerpProjectManifest and (data.get("schema_version") == 1 or "marketplace_extensions" in data):
+            locks = data.pop("marketplace_apps", [])
+            declarations = data.pop("marketplace_extensions", [])
+            by_slug = {lock["app_slug"]: lock for lock in locks}
+            extensions = []
+            for declaration in declarations:
+                lock = by_slug.get(declaration["slug"], {})
+                app_id = lock.get("app_id") or lock.get("marketplace_app_id")
+                if not app_id:
+                    raise click.ClickException("Pull the project with the previous CLI to resolve legacy app IDs before upgrading.")
+                extensions.append({"id": app_id, "version": declaration["version"]})
+            data["extensions"] = extensions
+            data["apps"] = [{**lock, "id": lock.get("app_id") or lock.get("marketplace_app_id")} for lock in locks]
+            data["schema_version"] = 2
+        if cache_releases and model_type is BloomerpProjectManifest and data.get("schema_version", 2) == 2:
+            locks = data.get("apps", [])
+            if locks and all(isinstance(item, dict) and "manifest" in item for item in locks):
+                from .project.marketplace_sources import write_release_cache
+                write_release_cache(locks, path.parent)
+        if model_type is BloomerpProjectManifest and data.get('schema_version', 2) < 4:
+            derived = {'project_app'}
+            root = path.parent.parent
+            for app_path in (root / 'apps').glob('*/app.bloomerp.toml'):
+                app_data = tomllib.loads(app_path.read_text())
+                derived.update({f'apps.{app_path.parent.name}', app_data.get('django', {}).get('app_config', '')})
+            cache = path.parent / 'app-releases.json'
+            if cache.is_file():
+                import json
+                for release in json.loads(cache.read_text()):
+                    derived.add(release.get('manifest', {}).get('django', {}).get('app_config', ''))
+            django = dict(data.get('django', {}))
+            django['installed_apps'] = [app for app in django.get('installed_apps', []) if app not in derived]
+            data['django'] = django
         return model_type.model_validate(data)
     except FileNotFoundError as exc:
         raise click.ClickException(f"Missing Bloomerp metadata file: {path}") from exc
@@ -38,11 +71,13 @@ def _read_toml_model(path: Path, model_type):
         raise click.ClickException(f"Invalid Bloomerp metadata in {path}: {exc}") from exc
 
 
-def get_project_manifest() -> BloomerpProjectManifest:
-    """Return the manifest for the project containing the current directory."""
+def get_project_manifest(project_root: Path | None = None) -> BloomerpProjectManifest:
+    """Read an explicit project root without side effects, or discover the CLI workspace."""
     return _read_toml_model(
-        get_project_metadata_dir() / "project.bloomerp.toml",
+        (Path(project_root).expanduser().resolve() / ".bloomerp" if project_root is not None
+         else get_project_metadata_dir()) / "project.bloomerp.toml",
         BloomerpProjectManifest,
+        cache_releases=project_root is None,
     )
 
 

@@ -133,5 +133,6 @@ def link() -> None:
     selected_project = _select_project(projects) or _create_project(client)
     selected_id = str(selected_project["id"])
 
-    write_project_state(BloomerpProjectState(project_id=selected_id))
+    revision = client.request("GET", f"{PROJECTS_ENDPOINT}{selected_id}/manifest/").json()["revision"]
+    write_project_state(BloomerpProjectState(project_id=selected_id, manifest_revision=revision))
     click.echo(f"Linked this project to {_project_description(selected_project)}.")

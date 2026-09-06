@@ -226,7 +226,7 @@ def test_app_link_selects_an_existing_marketplace_app():
     class FakeClient:
         def request(self, method, path, **kwargs):
             assert method == "GET"
-            assert path == "/api/marketplace_apps/"
+            assert path == "/api/apps/"
             return FakeResponse([remote_app])
 
     with runner.isolated_filesystem():
@@ -238,7 +238,7 @@ def test_app_link_selects_an_existing_marketplace_app():
         state = tomllib.loads(
             Path(".bloomerp/apps/sample_app.toml").read_text(encoding="utf-8")
         )
-        assert state["marketplace_app_id"] == remote_app["id"]
+        assert state["app_id"] == remote_app["id"]
 
 
 def test_app_link_can_create_a_private_marketplace_app():
@@ -300,7 +300,7 @@ def test_app_upload_uses_linked_marketplace_app_and_manifest():
         create_local_app()
         Path(".bloomerp/apps").mkdir()
         Path(".bloomerp/apps/sample_app.toml").write_text(
-            'marketplace_app_id = "72c02ab4-d5a7-4ee8-acd6-cce670a3babb"\n',
+            'app_id = "72c02ab4-d5a7-4ee8-acd6-cce670a3babb"\n',
             encoding="utf-8",
         )
         wheel = Path("sample_app-1.2.0-py3-none-any.whl")
@@ -314,8 +314,8 @@ def test_app_upload_uses_linked_marketplace_app_and_manifest():
     assert result.exit_code == 0, result.output
     method, path, kwargs = requests[0]
     assert method == "POST"
-    assert path == "/api/marketplace_apps/upload/"
-    assert kwargs["data"]["marketplace_app_id"] == (
+    assert path == "/api/apps/upload/"
+    assert kwargs["data"]["app_id"] == (
         "72c02ab4-d5a7-4ee8-acd6-cce670a3babb"
     )
     uploaded_manifest = json.loads(kwargs["data"]["manifest"])

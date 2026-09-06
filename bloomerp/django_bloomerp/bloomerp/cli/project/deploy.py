@@ -9,8 +9,7 @@ from bloomerp.cli.client import BloomerpCliClient
 from bloomerp.cli.utils import get_project_state
 from .build import build_project_wheel
 from .upload import upload_project_wheel
-from .remote import verify_generated_artifact
-from .sync import synchronize_local_project
+from .sync import synchronize_project_to_remote
 
 
 @click.command()
@@ -20,8 +19,21 @@ def deploy(timeout: int) -> None:
     state = get_project_state()
     if not state.project_id:
         raise click.ClickException("Run bloomerp project link first.")
-    verify_generated_artifact()
-    synchronize_local_project()
+    from .marketplace_sources import assert_no_overrides, local_source_dirs
+    from ..app._utils import read_app_state
+    from ..app.upload import upload_app
+    from ..utils import write_project_manifest
+    assert_no_overrides()
+    client = BloomerpCliClient()
+    result = synchronize_project_to_remote(client=client)
+    manifest = result.manifest
+    versions = {read_app_state(directory).app_id: upload_app(directory, client=client)["version"]
+                for directory in local_source_dirs(manifest)}
+    for extension in manifest.apps:
+        if str(extension.id) in versions:
+            extension.version = versions[str(extension.id)]
+    write_project_manifest(manifest)
+    synchronize_project_to_remote(client=client)
     with tempfile.TemporaryDirectory(prefix="bloomerp-deploy-") as directory:
         wheel = build_project_wheel(Path(directory))
         snapshot = upload_project_wheel(wheel)
