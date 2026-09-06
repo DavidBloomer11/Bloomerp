@@ -23,7 +23,28 @@ from bloomerp.utils.registry import BaseRegistry
 
 
 class DataviewRegistry(BaseRegistry[DataviewTypeDefinition]):
-    pass
+    def register(self, key: str, obj: DataviewTypeDefinition) -> None:
+        if any(definition.key == obj.key for definition in self.values()):
+            raise ValueError(f"Dataview key {obj.key!r} is already registered")
+        super().register(key, obj)
+
+    def get(self, key: str) -> DataviewTypeDefinition | None:
+        registered = super().get(key)
+        if registered is not None:
+            return registered
+        return next(
+            (definition for definition in self.values() if definition.key == key),
+            None,
+        )
+
+    def choices(self) -> list[tuple[str, str]]:
+        """Return model choices from the currently registered dataviews."""
+        return [(definition.key, definition.label) for definition in self.values()]
+
+
+def get_dataview_type_choices() -> list[tuple[str, str]]:
+    """Resolve dataview choices when Django evaluates the model field."""
+    return DATAVIEW_REGISTRY.choices()
 
 DATAVIEW_REGISTRY = DataviewRegistry(
     registry_item_class=DataviewTypeDefinition
@@ -106,7 +127,5 @@ DATAVIEW_REGISTRY.register(
         opts=PIVOT_TABLE_OPTIONS,
     )
 )
-
-
 
 

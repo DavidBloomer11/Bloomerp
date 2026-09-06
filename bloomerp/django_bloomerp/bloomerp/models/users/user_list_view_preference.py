@@ -11,7 +11,7 @@ from bloomerp.dataviews.card.config import CardDataView
 from bloomerp.dataviews.gant.config import GanttDataView
 from bloomerp.dataviews.kanban.config import KanbanDataView
 from bloomerp.dataviews.pivot_table.config import PivotTableDataView
-from bloomerp.dataviews.registry import DATAVIEW_REGISTRY
+from bloomerp.dataviews.registry import DATAVIEW_REGISTRY, get_dataview_type_choices
 from bloomerp.dataviews.table.config import TableDataView
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.models.definition import get_model_config
@@ -69,7 +69,7 @@ class UserListViewPreference(BaseViewPreference):
 
     view_type = models.CharField(
         max_length=50,
-        choices=[(view_type.key, view_type.label) for view_type in DATAVIEW_REGISTRY.values()],
+        choices=get_dataview_type_choices,
         default=DATAVIEW_REGISTRY.get("table").key,
         verbose_name=_("View Type"),
     )

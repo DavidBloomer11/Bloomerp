@@ -43,5 +43,7 @@ class BaseRegistry(Generic[RegistryItem]):
     
     def values(self) -> list[RegistryItem]:
         return list(self._registry.values())
-    
+
+    def items(self) -> list[tuple[str, RegistryItem]]:
+        return list(self._registry.items())
     

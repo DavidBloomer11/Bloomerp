@@ -23,7 +23,19 @@ from bloomerp.workspaces.text_tile.render import TextTileRenderer
 
 
 class TileTypeRegistry(BaseRegistry[TileTypeDefinition]):
-    pass
+    def choices(self) -> list[tuple[str, str]]:
+        """Return model choices from the currently registered tile types."""
+        return [(key, definition.name) for key, definition in self.items()]
+
+    def key_for_config(self, config: object) -> str:
+        """Return the registered key whose model accepts the supplied config."""
+        for key, definition in self.items():
+            if definition.model is not None and isinstance(config, definition.model):
+                return key
+
+        raise ValueError(
+            f"No registered tile type accepts config '{type(config).__name__}'."
+        )
 
 TILE_TYPE_REGISTRY = TileTypeRegistry(TileTypeDefinition)
 
@@ -95,8 +107,6 @@ TILE_TYPE_REGISTRY.register(
         render_cls=FormTileRenderer,
     )
 )
-
-
 
 
 
