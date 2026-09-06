@@ -1,8 +1,10 @@
-from typing import Optional
 from django.db import models
-from bloomerp.automation.defintion import WorkflowNodeType
-from bloomerp.automation.defintion import NodeTypeDefinition
-from bloomerp.automation.defintion import NodeSubTypeDefinition
+from bloomerp.automation.registry import (
+    WORKFLOW_NODE_REGISTRY,
+    WorkflowNodeDefinition,
+    workflow_node_sub_type_choices,
+    workflow_node_type_choices,
+)
 from bloomerp.automation.base_executor import NodeExecutionError
 from bloomerp.models.mixins.absolute_url_model_mixin import AbsoluteUrlModelMixin
 from bloomerp.models.mixins.user_stamp_model_mixin import UserStampModelMixin
@@ -40,15 +42,24 @@ class WorkflowNode(
     
     type = models.CharField(
         max_length=32,
-        choices=WorkflowNodeType.choices(),
+        choices=workflow_node_type_choices,
         help_text=_("The type of the workflow node."),
         verbose_name=_("Type"),
     )
     
-    config : dict = models.JSONField(
+    sub_type = models.CharField(
+        max_length=100,
+        choices=workflow_node_sub_type_choices,
+        db_index=True,
+        help_text=_("The registered subtype of the workflow node."),
+        verbose_name=_("Sub Type"),
+    )
+
+    parameters: dict = models.JSONField(
+        blank=True,
         default=dict,
-        help_text=_("The configuration for the workflow node."),
-        verbose_name=_("Config"),
+        help_text=_("The parameters for the workflow node."),
+        verbose_name=_("Parameters"),
     )
     
     # UI position fields
@@ -64,29 +75,17 @@ class WorkflowNode(
         )
 
     @property
-    def node_type(self) -> NodeTypeDefinition:
-        """Returns the NodeTypeDefinition for this node.
-
-        Returns:
-            NodeTypeDefinition: The definition of the node type.
-        """
-        return WorkflowNodeType[self.type].value
-    
-    @property
     def node_sub_type_id(self):
-        return self.config.get("sub_type")
+        return self.sub_type
     
     @property
-    def node_sub_type(self) -> Optional[NodeSubTypeDefinition]:
-        """Returns the NodeSubTypeDefinition for this node.
+    def node_sub_type(self) -> WorkflowNodeDefinition | None:
+        """Return the registered definition for this node.
 
         Returns:
-            Optional[NodeSubTypeDefinition]: The definition of the node sub-type, or None if not found.
+            WorkflowNodeDefinition: The registered node definition, when found.
         """
-        for sub_type in self.node_type.types:
-            if isinstance(sub_type, NodeSubTypeDefinition) and sub_type.id == self.node_sub_type_id:
-                return sub_type
-        return None
+        return WORKFLOW_NODE_REGISTRY.get(self.sub_type)
     
     def get_output_nodes(self) -> models.QuerySet["WorkflowNode"]:
         """Returns the output nodes connected to this node.
@@ -122,7 +121,7 @@ class WorkflowNode(
         sub_type = self.node_sub_type
         
         if sub_type and sub_type.executor_cls:
-            executor = sub_type.executor_cls(self.config)
+            executor = sub_type.executor_cls(self.parameters)
             output = executor.execute(trigger_data)
             return output
         
@@ -133,20 +132,28 @@ class WorkflowNode(
         super().clean()
         errors = {}
         
-        if self.type == WorkflowNodeType.TRIGGER.value.id:
+        if self.type == "TRIGGER":
             existing_triggers = WorkflowNode.objects.filter(
                 workflow=self.workflow,
-                type=WorkflowNodeType.TRIGGER.value.id
+                type="TRIGGER"
             ).exclude(id=self.id)
 
             if existing_triggers.exists():
                 errors["type"] = _(f"Only one trigger node is allowed per workflow. Workflow '{self.workflow.name}' already has a trigger.")
 
-        if not self.node_sub_type_id:
-            errors["config"] = _("Node subtype is required in config")
+        if not self.sub_type:
+            errors["sub_type"] = _("Node subtype is required")
         else:
-            if not self.node_sub_type:
-                errors["config"] = _(f"Node subtype of id '{self.node_sub_type_id}' does not exist.")
+            definition = self.node_sub_type
+            if definition is None:
+                errors["sub_type"] = _(
+                    f"Node subtype of id '{self.sub_type}' does not exist."
+                )
+            elif definition.type != self.type:
+                errors["sub_type"] = _(
+                    f"Node subtype '{self.sub_type}' belongs to type "
+                    f"'{definition.type}', not '{self.type}'."
+                )
                 
         # Raise if there are errors
         if errors:
@@ -166,9 +173,7 @@ class WorkflowNode(
         Returns:
             QuerySet["WorkflowNode"]: QuerySet of WorkflowNode objects matching the trigger subtype.
         """
-        return WorkflowNode.objects.filter(config__sub_type=trigger_subtype)
+        return WorkflowNode.objects.filter(sub_type=trigger_subtype)
 
     
     
-
-

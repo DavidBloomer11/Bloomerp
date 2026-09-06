@@ -358,8 +358,7 @@ class BaseBloomerpModelTestCase(TransactionTestCase):
 class BaseBloomerpWidgetTestCase():
     pass
 
-class BaseBloomerpComponentTestCase():
-    component = None
+
 
 
 

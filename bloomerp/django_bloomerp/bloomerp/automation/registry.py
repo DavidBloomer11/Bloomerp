@@ -1,8 +1,10 @@
-"""
-Registry for BloomERP automation nodes.
-"""
+"""Registry for BloomERP automation nodes."""
+
 from dataclasses import dataclass
 from typing import Literal, Optional, Type
+
+from django.utils.translation import gettext_lazy as _
+
 from bloomerp.automation.actions.call_api import CallApiExecutor
 from bloomerp.automation.actions.compute import ComputeExecutor
 from bloomerp.automation.actions.create_object import CreateObjectExecutor
@@ -31,17 +33,78 @@ from bloomerp.automation.triggers.on_schedule_trigger import ScheduleTrigger
 from bloomerp.utils.registry import BaseRegistry
 
 
-@dataclass
+WorkflowNodeType = Literal["ACTION", "FLOW", "TRIGGER"]
+
+WORKFLOW_NODE_TYPES: tuple[WorkflowNodeType, ...] = (
+    "TRIGGER",
+    "ACTION",
+    "FLOW",
+)
+
+WORKFLOW_NODE_TYPE_METADATA = {
+    "TRIGGER": {
+        "name": _("Trigger"),
+        "description": _("The trigger for a workflow"),
+    },
+    "ACTION": {
+        "name": _("Action"),
+        "description": _("An action to perform"),
+    },
+    "FLOW": {
+        "name": _("Flow"),
+        "description": _("A flow node to branch the workflow"),
+    },
+}
+
+
+@dataclass(frozen=True)
 class WorkflowNodeDefinition:
     id: str
-    type: Literal["ACTION", "FLOW", "TRIGGER"] # Optionally make this into it's own enum
+    type: WorkflowNodeType
     name: str
     description: str
     executor_cls: Optional[Type[BaseExecutor]] = None
     icon: Optional[str] = None
 
+
 class WorkflowNodeRegistry(BaseRegistry[WorkflowNodeDefinition]):
-    pass
+    def register(self, key: str, obj: WorkflowNodeDefinition) -> None:
+        if obj.type not in WORKFLOW_NODE_TYPES:
+            raise ValueError(f"Unsupported workflow node type {obj.type!r}")
+        if any(definition.id == obj.id for definition in self.values()):
+            raise ValueError(f"Workflow node ID {obj.id!r} is already registered")
+        super().register(key, obj)
+
+    def get(self, key: str) -> WorkflowNodeDefinition | None:
+        registered = super().get(key)
+        if registered is not None:
+            return registered
+        return next(
+            (definition for definition in self.values() if definition.id == key),
+            None,
+        )
+
+    def choices(self) -> list[tuple[str, str]]:
+        return [(definition.id, definition.name) for definition in self.values()]
+
+    def for_type(self, node_type: WorkflowNodeType) -> list[WorkflowNodeDefinition]:
+        return [
+            definition
+            for definition in self.values()
+            if definition.type == node_type
+        ]
+
+    def grouped(self, *, exclude_types: set[str] | None = None) -> list[dict]:
+        excluded = exclude_types or set()
+        return [
+            {
+                "id": node_type,
+                **WORKFLOW_NODE_TYPE_METADATA[node_type],
+                "nodes": self.for_type(node_type),
+            }
+            for node_type in WORKFLOW_NODE_TYPES
+            if node_type not in excluded
+        ]
 
 
 WORKFLOW_NODE_REGISTRY = WorkflowNodeRegistry(WorkflowNodeDefinition)
@@ -80,3 +143,14 @@ WORKFLOW_NODES = [
 for workflow_node in WORKFLOW_NODES:
     WORKFLOW_NODE_REGISTRY.register(workflow_node.id, workflow_node)
 
+
+def workflow_node_type_choices() -> list[tuple[str, str]]:
+    return [
+        (node_type, WORKFLOW_NODE_TYPE_METADATA[node_type]["name"])
+        for node_type in WORKFLOW_NODE_TYPES
+    ]
+
+
+def workflow_node_sub_type_choices() -> list[tuple[str, str]]:
+    """Return node choices lazily so extension registrations are included."""
+    return WORKFLOW_NODE_REGISTRY.choices()

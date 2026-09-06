@@ -3,16 +3,6 @@ from django.db import models
 from typing import Any
 
 
-def get_parameters_from_config(config: dict|None) -> dict:
-    """Utility function to extract parameters from a config dictionary."""
-    if config is None:
-        return {}
-    
-    parameters = config.get("parameters", {})
-    if isinstance(parameters, dict):
-        return parameters
-    return {}
-
 def field_type_for_django_field(field: models.Field) -> WorkflowValueType:
     if isinstance(field, (models.EmailField, models.CharField, models.TextField, models.SlugField, models.URLField)):
         return WorkflowValueType.STRING

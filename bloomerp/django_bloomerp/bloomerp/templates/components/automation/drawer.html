@@ -19,23 +19,23 @@
 </div>
 <div data-workflow-node-search-results>
     {% for node_type in node_types %}
-    <section class="pb-3" data-workflow-node-group data-workflow-node-group-name="{{ node_type.value.name|lower }}">
+    <section class="pb-3" data-workflow-node-group data-workflow-node-group-name="{{ node_type.name|lower }}">
         <div class="ml-4">
-            <c-ui.text.subtitle>{{ node_type.value.name }}</c-ui.text.subtitle>
-            <c-ui.text.muted class="mb-4">{{ node_type.value.description }}</c-ui.text.muted>
+            <c-ui.text.subtitle>{{ node_type.name }}</c-ui.text.subtitle>
+            <c-ui.text.muted class="mb-4">{{ node_type.description }}</c-ui.text.muted>
         </div>
         <ul>
-            {% for sub_type in node_type.value.types %}
+            {% for sub_type in node_type.nodes %}
             <li
                 class="border-l border-l-3 border-gray-200 py-3 hover:border-primary hover:bg-slate-50 cursor-pointer"
                 data-node-subtype-id="{{ sub_type.id }}"
                 data-node-subtype-name="{{ sub_type.name }}"
                 data-node-subtype-description="{{ sub_type.description }}"
                 data-node-subtype-icon="{{ sub_type.icon }}"
-                data-node-type-id="{{ node_type.value.id }}"
-                data-node-type-name="{{ node_type.value.name }}"
+                data-node-type-id="{{ node_type.id }}"
+                data-node-type-name="{{ node_type.name }}"
                 data-workflow-node-item
-                data-workflow-search-text="{{ node_type.value.name }} {{ sub_type.name }} {{ sub_type.description }}"
+                data-workflow-search-text="{{ node_type.name }} {{ sub_type.name }} {{ sub_type.description }}"
             >
                 <div class="flex items-center">
                     <div class="mx-4 text-slate-400 text-lg">

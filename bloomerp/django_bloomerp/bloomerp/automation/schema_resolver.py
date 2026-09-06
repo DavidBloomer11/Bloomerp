@@ -1,21 +1,16 @@
 from __future__ import annotations
 
-from bloomerp.automation.defintion import WorkflowNodeType
+from bloomerp.automation.registry import WORKFLOW_NODE_REGISTRY
 from bloomerp.automation.schema import WorkflowIOSchema, WorkflowValueField
 from bloomerp.models.automation.workflow_edge import WorkflowEdge
 from bloomerp.models.automation.workflow_node import WorkflowNode
 
 
 def _get_node_sub_type(node: WorkflowNode):
-    try:
-        node_type = WorkflowNodeType.from_id(node.type)
-    except ValueError:
+    definition = WORKFLOW_NODE_REGISTRY.get(node.sub_type)
+    if definition is None or definition.type != node.type:
         return None
-
-    for sub_type in node_type.value.types:
-        if node.node_sub_type_id == sub_type.id:
-            return sub_type
-    return None
+    return definition
 
 
 def _node_input_key(node: WorkflowNode) -> str:
@@ -116,4 +111,4 @@ def resolve_node_output_schema(
         return WorkflowIOSchema(value_type="any", label="Output")
 
     input_schema = resolve_node_input_schema(node, seen_node_ids.copy())
-    return sub_type.executor_cls.get_output_schema(node.config or {}, input_schema)
+    return sub_type.executor_cls.get_output_schema(node.parameters or {}, input_schema)

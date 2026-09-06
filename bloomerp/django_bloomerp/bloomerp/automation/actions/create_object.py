@@ -1,7 +1,7 @@
 import json
 
 from bloomerp.automation.schema import WorkflowIOSchema, WorkflowValueType, WorkflowInputRequirement, WorkflowValueField, WorkflowValueType
-from bloomerp.automation.utils import get_parameters_from_config, model_to_schema_field
+from bloomerp.automation.utils import model_to_schema_field
 from bloomerp.forms.base_content_type_form import BaseContentTypeForm
 from bloomerp.forms.model_form import bloomerp_modelform_factory
 from bloomerp.models.application_field import ApplicationField
@@ -80,7 +80,7 @@ class CreateObjectExecutor(BaseExecutor):
     # OK
     @classmethod
     def get_output_schema(cls, config = None, input_schema = None):
-        params = get_parameters_from_config(config)
+        params = config or {}
         
         # Get the content type ID
         content_type_id = params.get("content_type_id")

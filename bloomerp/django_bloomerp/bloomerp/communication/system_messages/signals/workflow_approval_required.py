@@ -12,7 +12,7 @@ def resolve(*, instance:WorkflowRunStep, **kwargs):
     from bloomerp.communication.registry import INBOX_FOLDER_REGISTRY
         
     node = instance.node
-    parameters = (node.config or {}).get("parameters")
+    parameters = node.parameters or {}
     
     approver_groups = parameters.get("approver_groups", [])
     approver_users = parameters.get("approver_users", [])

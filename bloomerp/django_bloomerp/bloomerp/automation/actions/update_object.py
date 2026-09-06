@@ -2,7 +2,7 @@ from django import forms
 
 from bloomerp.automation.base_executor import BaseExecutor
 from bloomerp.automation.schema import WorkflowIOSchema, WorkflowInputRequirement, WorkflowValueField, WorkflowValueType
-from bloomerp.automation.utils import get_parameters_from_config, model_to_schema_field
+from bloomerp.automation.utils import model_to_schema_field
 from bloomerp.forms.base_content_type_form import BaseContentTypeForm
 from bloomerp.forms.model_form import bloomerp_modelform_factory
 from bloomerp.widgets.code_editor_widget import CodeEditorWidget
@@ -60,7 +60,7 @@ class UpdateObjectExecutor(BaseExecutor):
     
     @classmethod
     def get_output_schema(cls, config = None, input_schema = None):
-        content_type_id = get_parameters_from_config(config).get("content_type_id")
+        content_type_id = (config or {}).get("content_type_id")
         content_type = ContentType.objects.get(id=content_type_id) if content_type_id else None
         
         STATUS = WorkflowValueField(

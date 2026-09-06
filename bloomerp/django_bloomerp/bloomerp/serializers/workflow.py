@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.db import transaction
 
+from bloomerp.automation.registry import WORKFLOW_NODE_REGISTRY
 from bloomerp.models.automation.workflow import Workflow
 from bloomerp.models.automation.workflow_edge import WorkflowEdge
 from bloomerp.models.automation.workflow_node import WorkflowNode
@@ -50,16 +51,32 @@ class WorkflowNodeSerializer(serializers.Serializer):
         allow_null=True,
         max_length=255,
     )
-    config = serializers.JSONField()
+    sub_type = serializers.CharField(max_length=100)
+    parameters = serializers.JSONField()
     pos_x = PositionIntegerField(required=False, allow_null=True, default=0)
     pos_y = PositionIntegerField(required=False, allow_null=True, default=0)
     
-    def validate_config(self, value):
+    def validate_parameters(self, value):
         if not isinstance(value, dict):
-            raise serializers.ValidationError("Node config must be an object.")
-        if not value.get("sub_type"):
-            raise serializers.ValidationError("Node config must include `sub_type`.")
+            raise serializers.ValidationError("Node parameters must be an object.")
         return value
+
+    def validate(self, attrs):
+        definition = WORKFLOW_NODE_REGISTRY.get(attrs.get("sub_type"))
+        if definition is None:
+            raise serializers.ValidationError(
+                {"sub_type": "Select a registered workflow node subtype."}
+            )
+        if definition.type != attrs.get("type"):
+            raise serializers.ValidationError(
+                {
+                    "sub_type": (
+                        f"Node subtype `{definition.id}` belongs to "
+                        f"`{definition.type}`, not `{attrs.get('type')}`."
+                    )
+                }
+            )
+        return attrs
 
 
 class WorkflowEdgeSerializer(serializers.Serializer):
@@ -153,7 +170,8 @@ class WorkflowSerializer(serializers.ModelSerializer):
                     "client_id": node_key_map[node.id],
                     "type": node.type,
                     "name": node.name,
-                    "config": node.config,
+                    "sub_type": node.sub_type,
+                    "parameters": node.parameters,
                     "pos_x": node.pos_x,
                     "pos_y": node.pos_y,
                 }
@@ -280,13 +298,11 @@ EXAMPLE_WORKFLOW_PAYLOAD = {
         {
             "client_id": "trigger-1",
             "type": "TRIGGER",
-            "config": {
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {
-                    "data": {
-                        "email": "new.user@example.com",
-                        "first_name": "Ava",
-                    },
+            "sub_type": "HUMAN_TRIGGER",
+            "parameters": {
+                "data": {
+                    "email": "new.user@example.com",
+                    "first_name": "Ava",
                 },
             },
             "pos_x": 120,
@@ -295,13 +311,11 @@ EXAMPLE_WORKFLOW_PAYLOAD = {
         {
             "client_id": "action-1",
             "type": "ACTION",
-            "config": {
-                "sub_type": "SEND_EMAIL",
-                "parameters": {
-                    "recipient": "new.user@example.com",
-                    "subject": "Welcome to Bloomerp",
-                    "body": "Hi Ava, thanks for signing up.",
-                },
+            "sub_type": "SEND_EMAIL",
+            "parameters": {
+                "recipient": "new.user@example.com",
+                "subject": "Welcome to Bloomerp",
+                "body": "Hi Ava, thanks for signing up.",
             },
             "pos_x": 420,
             "pos_y": 80,
@@ -325,7 +339,7 @@ workflow = serializer.save()
 
 update_payload = serializer.data
 update_payload["name"] = "Send updated welcome email"
-update_payload["nodes"][1]["config"]["subject"] = "Welcome aboard"
+update_payload["nodes"][1]["parameters"]["subject"] = "Welcome aboard"
 
 update_serializer = WorkflowSerializer(
     workflow,

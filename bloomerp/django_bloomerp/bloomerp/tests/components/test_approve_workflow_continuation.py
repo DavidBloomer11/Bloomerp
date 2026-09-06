@@ -24,10 +24,8 @@ class ApproveWorkflowContinuationTests(TestCase):
         self.approval_node = WorkflowNode.objects.create(
             workflow=self.workflow,
             type="ACTION",
-            config={
-                "sub_type": "HUMAN_IN_THE_LOOP",
-                "parameters": {},
-            },
+            sub_type="HUMAN_IN_THE_LOOP",
+            parameters={},
         )
         self.workflow_run = WorkflowRun.objects.create(workflow=self.workflow)
         WorkflowRunStep.objects.create(
@@ -58,11 +56,11 @@ class ApproveWorkflowContinuationTests(TestCase):
             )
 
     def set_approvers(self, *, users=None, groups=None):
-        self.approval_node.config["parameters"] = {
+        self.approval_node.parameters = {
             "approver_users": users or [],
             "approver_groups": groups or [],
         }
-        self.approval_node.save(update_fields=["config"])
+        self.approval_node.save(update_fields=["parameters"])
 
     def test_returns_403_when_user_has_no_approval_access(self):
         response = self.request_component()
