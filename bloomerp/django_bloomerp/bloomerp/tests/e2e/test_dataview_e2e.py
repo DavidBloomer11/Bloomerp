@@ -7,7 +7,7 @@ from django.db import models
 from django.urls import reverse
 from playwright.sync_api import Locator, Page, expect
 
-from bloomerp.dataviews.registry import DataviewType
+from bloomerp.dataviews.registry import DATAVIEW_REGISTRY
 from bloomerp.management.commands import save_application_fields
 from bloomerp.models import ApplicationField
 from bloomerp.models.users.user_list_view_preference import UserListViewPreference
@@ -318,7 +318,7 @@ class TestDataViewE2E:
         page = authenticated_dataview_page
 
         # 1. Switch to the pivot view and locate its native row-field selector.
-        change_view_type(DataviewType.PIVOT_TABLE, page)
+        change_view_type(DATAVIEW_REGISTRY.get("pivot_table"), page)
         display_menu = page.locator("div[role='menu']:visible").filter(
             has=page.locator("select[name='row_field_ids']")
         )

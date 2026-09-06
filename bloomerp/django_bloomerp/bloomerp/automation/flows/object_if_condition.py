@@ -3,7 +3,7 @@
 from bloomerp.automation.base_executor import BaseExecutor
 from bloomerp.automation.flows.if_condition import BranchStopped
 from bloomerp.automation.schema import WorkflowInputRequirement, WorkflowValueType
-from bloomerp.components.application_fields.filters import FILTERABLE_FIELD_TYPES
+from bloomerp.components.application_fields.filters import filterable_field_type_ids
 from bloomerp.field_types.lookups import Lookup
 from bloomerp.forms.base_content_type_form import BaseContentTypeForm
 from bloomerp.forms.base_workflow_node_form import BaseWorkflowNodeForm
@@ -42,13 +42,13 @@ class ObjectIfCondtionForm(BaseContentTypeForm):
         if content_type_set:
             content_type_id = self.initial.get("content_type_id") or self.data.get("content_type_id")
             self.fields["field"].widget = forms.Select(attrs={"class": "select w-full"}, choices=[
-                (field.id, field.title) for field in ApplicationField.objects.filter(content_type_id=content_type_id, field_type__in=FILTERABLE_FIELD_TYPES)
+                (field.id, field.title) for field in ApplicationField.objects.filter(content_type_id=content_type_id, field_type__in=filterable_field_type_ids())
             ])
         
         if content_type_set and field_set:
             field_id = self.initial.get("field") or self.data.get("field")
             application_field = _resolve_application_field(field_id, content_type_id)
-            lookup_choices = application_field.field_type_enum.value.lookups
+            lookup_choices = application_field.get_field_type().lookups
             self.fields["lookup"].widget = forms.Select(
                 attrs={"class": "select w-full"}, 
                 choices=[(lookup.value.id, lookup.value.display_name) for lookup in lookup_choices]
@@ -87,7 +87,7 @@ def _resolve_application_field(field_value, content_type_id):
         return ApplicationField.objects.get(id=field_value)
     
 def _resolve_lookup(lookup_id:str, application_field:ApplicationField) -> Lookup:
-    lookup_choices = application_field.field_type_enum.value.lookups
+    lookup_choices = application_field.get_field_type().lookups
     for lookup in lookup_choices:
         if lookup.value.id == lookup_id:
             return lookup

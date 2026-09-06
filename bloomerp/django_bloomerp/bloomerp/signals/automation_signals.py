@@ -10,7 +10,6 @@ from django.db import transaction
 from django.db.utils import OperationalError, ProgrammingError
 from django.db.models.signals import post_delete, post_save
 from django_celery_beat.models import CrontabSchedule, PeriodicTask
-from bloomerp.automation.defintion import WorkflowNodeType
 from bloomerp.models.automation.workflow import Workflow
 from bloomerp.models.automation.workflow_node import WorkflowNode
 from bloomerp.services.workflow_services import run_workflow
@@ -35,7 +34,7 @@ def _normalize_content_type_id(value) -> int | None:
 def _group_triggers_by_content_type(triggers: Iterable[WorkflowNode]) -> dict[int, list[WorkflowNode]]:
 	grouped: dict[int, list[WorkflowNode]] = defaultdict(list)
 	for trigger in triggers:
-		params = (trigger.config or {}).get("parameters", {})
+		params = trigger.parameters or {}
 		content_type_id = _normalize_content_type_id(params.get("content_type_id"))
 		if content_type_id is None:
 			continue
@@ -110,7 +109,7 @@ def _sync_schedule_task_for_workflow(workflow: Workflow) -> None:
 		_delete_schedule_task_for_workflow(workflow.id)
 		return
 
-	params = (trigger.config or {}).get("parameters", {})
+	params = trigger.parameters or {}
 	cron_kwargs = _parse_cronschedule(params.get("schedule"))
 	if cron_kwargs is None:
 		_delete_schedule_task_for_workflow(workflow.id)
@@ -159,14 +158,14 @@ def _delete_schedule_task_after_workflow_delete(sender, instance: Workflow, **kw
 
 
 def _sync_schedule_task_after_node_save(sender, instance: WorkflowNode, **kwargs) -> None:
-	if instance.type != WorkflowNodeType.TRIGGER.value.id:
+	if instance.type != "TRIGGER":
 		return
 
 	_sync_schedule_task_for_workflow_safe(instance.workflow)
 
 
 def _sync_schedule_task_after_node_delete(sender, instance: WorkflowNode, **kwargs) -> None:
-	if instance.type != WorkflowNodeType.TRIGGER.value.id:
+	if instance.type != "TRIGGER":
 		return
 
 	try:

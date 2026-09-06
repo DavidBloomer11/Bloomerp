@@ -6,7 +6,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.core.exceptions import FieldDoesNotExist
 from bloomerp.components.application_fields.filters import filters_init
-from bloomerp.dataviews.registry import DataviewType
+from bloomerp.dataviews.registry import DATAVIEW_REGISTRY
 from bloomerp.models.definition import (
     DataviewAction,
     DataviewActionContext,
@@ -132,7 +132,7 @@ def _build_data_view_query_state(
     if query:
         queryset = string_search_on_queryset(queryset, query)
 
-    definition = _get_dataview_type_definition(preference.view_type)
+    definition = DATAVIEW_REGISTRY.get(preference.view_type)
     if definition is None:
         return HttpResponse("Invalid view type", status=400)
 
@@ -247,15 +247,6 @@ def _get_actions(model:type[Model]) -> list[ObjectAction]:
     return []
 
 
-def _get_dataview_type_definition(
-    view_type: str,
-) -> DataviewTypeDefinition | None:
-    try:
-        return DataviewType.from_key(view_type)
-    except ValueError:
-        return None
-
-
 def _normalize_default_filters(raw_filters) -> dict[str, str | list[str]]:
     if not isinstance(raw_filters, dict):
         return {}
@@ -301,7 +292,7 @@ def _apply_default_filters_to_querydict(
 
 
 def _get_dataview_options_initial(preference: UserListViewPreference, view_type: str) -> dict:
-    definition = _get_dataview_type_definition(view_type)
+    definition = DATAVIEW_REGISTRY.get(view_type)
     if definition is None:
         return {}
 
@@ -315,7 +306,7 @@ def _get_dataview_options(preference: UserListViewPreference, view_type: str | N
     """Returns the data view options for a specific preference type
     """
     view_type = view_type or preference.view_type
-    definition = _get_dataview_type_definition(view_type)
+    definition = DATAVIEW_REGISTRY.get(view_type)
     if definition is None:
         return None
 
@@ -332,7 +323,7 @@ def _get_dataview_options_form(
     accessible_fields: list[ApplicationField],
     request: HttpRequest,
 ) -> forms.Form | None:
-    definition = _get_dataview_type_definition(preference.view_type)
+    definition = DATAVIEW_REGISTRY.get(preference.view_type)
     if definition is None or not definition.opts:
         return None
 
@@ -346,7 +337,7 @@ def _render_dataview_body(
     pagination: DataviewPagination,
     context: dict,
 ) -> str:
-    definition = _get_dataview_type_definition(state.preference.view_type)
+    definition = DATAVIEW_REGISTRY.get(state.preference.view_type)
     if definition is None:
         return ""
 
@@ -478,7 +469,7 @@ def dataview(
     if isinstance(state, HttpResponse):
         return state
     
-    definition = _get_dataview_type_definition(state.preference.view_type)
+    definition = DATAVIEW_REGISTRY.get(state.preference.view_type)
     if definition is None:
         return HttpResponse("Invalid view type", status=400)
 
@@ -544,7 +535,7 @@ def dataview(
         'component_id': component_id,
         'component_args' : {**_get_component_args(request), **(component_args or {})},
         'object_actions' : _get_actions(state.queryset.model),
-        'view_types' : [vt.value for vt in DataviewType],
+        'view_types' : [vt for vt in DATAVIEW_REGISTRY.values()],
         'dataview_options_form': _get_dataview_options_form(
             state.preference,
             _get_accessible_application_fields(state.dataview_fields),
@@ -620,7 +611,7 @@ def dataview_action(request: HttpRequest, content_type_id: int, action: str) -> 
     if isinstance(state, HttpResponse):
         return state
 
-    definition = _get_dataview_type_definition(state.preference.view_type)
+    definition = DATAVIEW_REGISTRY.get(state.preference.view_type)
     if definition is None:
         return HttpResponse("Invalid view type", status=400)
 

@@ -2,7 +2,6 @@ from django import forms
 
 from bloomerp.automation.base_executor import BaseExecutor
 from bloomerp.automation.schema import WorkflowIOSchema, WorkflowInputRequirement, WorkflowValueField, WorkflowValueType
-from bloomerp.automation.utils import get_parameters_from_config
 from bloomerp.automation.values import get_path_value
 
 class ExtractFieldConfigForm(forms.Form):
@@ -65,7 +64,7 @@ class ExtractFieldExecutor(BaseExecutor):
     
     @classmethod
     def accepts_input_schema(cls, incoming_schema, config = None):
-        params = get_parameters_from_config(config)
+        params = config or {}
         field_path = params.get("field_path")
         
         if field_path:
@@ -82,7 +81,7 @@ class ExtractFieldExecutor(BaseExecutor):
     
     @classmethod
     def get_output_schema(cls, config = None, input_schema = None):
-        params = get_parameters_from_config(config)
+        params = config or {}
         field_path = params.get("field_path")
         normalized_path = cls._normalize_field_path(field_path or "")
         

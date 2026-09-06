@@ -9,10 +9,10 @@ from bloomerp.communication.inbox_sources import (
 
 def resolve(*, instance:WorkflowRunStep, **kwargs):
     from bloomerp.models.communication.inbox.inbox_folder import InboxFolder
-    from bloomerp.communication.inbox_folder_definition import InboxFolderType
+    from bloomerp.communication.registry import INBOX_FOLDER_REGISTRY
         
     node = instance.node
-    parameters = (node.config or {}).get("parameters")
+    parameters = node.parameters or {}
     
     approver_groups = parameters.get("approver_groups", [])
     approver_users = parameters.get("approver_users", [])
@@ -32,7 +32,7 @@ def resolve(*, instance:WorkflowRunStep, **kwargs):
     
     return InboxFolder.get_folders_by_users_and_type(
         users=list(total_users),
-        folder_type=InboxFolderType.IN_APP_NOTIFICATIONS.value.key
+        folder_type=INBOX_FOLDER_REGISTRY.IN_APP_NOTIFICATIONS.key
     )
     
 def predicate(*, instance:WorkflowRunStep, created: bool, raw: bool = False, **kwargs,) -> bool:

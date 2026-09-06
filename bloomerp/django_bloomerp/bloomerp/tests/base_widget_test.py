@@ -1,0 +1,5 @@
+
+
+
+class BaseWidgetTestCase():
+    pass

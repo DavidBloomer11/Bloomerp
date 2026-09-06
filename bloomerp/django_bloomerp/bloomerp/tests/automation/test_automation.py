@@ -8,7 +8,6 @@ from django.test import TransactionTestCase
 from django_celery_beat.models import PeriodicTask
 from regex import F
 
-from bloomerp.automation.defintion import WorkflowNodeType
 from bloomerp.automation.flows import object_if_condition
 from bloomerp.automation.schema import WorkflowValueType
 from bloomerp.automation.schema_resolver import resolve_node_output_schema
@@ -96,30 +95,26 @@ class TestAutomation(TransactionTestCase):
         
         self.start_node = WorkflowNode.objects.create(
             workflow=self.workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {
+            sub_type="HUMAN_TRIGGER",
+            parameters={
                     "data": {
                         "first_name": "John",
                         "last_name": "Doe",
                         "age" : 20
                     }
-                }
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+                },
+            type="TRIGGER",
             created_by=self.user,
             updated_by=self.user,
         )
         
         self.end_node = WorkflowNode.objects.create(
             workflow=self.workflow,
-            config={
-                "sub_type": "CREATE_OBJECT",
-                "parameters": {
+            sub_type="CREATE_OBJECT",
+            parameters={
                     "content_type_id" : ContentType.objects.get_for_model(self.CustomerModel).id
-                }
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+                },
+            type="ACTION",
             created_by=self.user,
             updated_by=self.user,
         )
@@ -182,19 +177,15 @@ class TestAutomation(TransactionTestCase):
         workflow = Workflow.objects.create(name="Checkpoint workflow", enable_logging=True)
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {"run": True}},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"run": True}},
+            type="TRIGGER",
         )
         enrich = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "ENRICH_DATA",
-                "parameters": {"data": {"amount": 100}},
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            sub_type="ENRICH_DATA",
+            parameters={"data": {"amount": 100}},
+            type="ACTION",
         )
         workflow.connect_nodes(trigger, enrich)
 
@@ -224,19 +215,15 @@ class TestAutomation(TransactionTestCase):
         workflow = Workflow.objects.create(name="Resume workflow", enable_logging=True)
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {"run": True}},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"run": True}},
+            type="TRIGGER",
         )
         pause_node = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "ENRICH_DATA",
-                "parameters": {"data": {"proposal": "ready"}},
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            sub_type="ENRICH_DATA",
+            parameters={"data": {"proposal": "ready"}},
+            type="ACTION",
         )
         workflow.connect_nodes(trigger, pause_node)
 
@@ -248,11 +235,9 @@ class TestAutomation(TransactionTestCase):
 
             downstream = WorkflowNode.objects.create(
                 workflow=workflow,
-                config={
-                    "sub_type": "ENRICH_DATA",
-                    "parameters": {"data": {"approved": True}},
-                },
-                type=WorkflowNodeType.ACTION.value.id,
+                sub_type="ENRICH_DATA",
+                parameters={"data": {"approved": True}},
+                type="ACTION",
             )
             workflow.connect_nodes(pause_node, downstream)
 
@@ -270,19 +255,15 @@ class TestAutomation(TransactionTestCase):
         workflow = Workflow.objects.create(name="Async resume workflow", enable_logging=True)
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {"proposal": "ready"}},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"proposal": "ready"}},
+            type="TRIGGER",
         )
         pause_node = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "ENRICH_DATA",
-                "parameters": {"data": {}},
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            sub_type="ENRICH_DATA",
+            parameters={"data": {}},
+            type="ACTION",
         )
         workflow.connect_nodes(trigger, pause_node)
 
@@ -308,19 +289,15 @@ class TestAutomation(TransactionTestCase):
         workflow = Workflow.objects.create(name="Debug start workflow")
         WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {"trigger_ran": True}},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"trigger_ran": True}},
+            type="TRIGGER",
         )
         start_node = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "ENRICH_DATA",
-                "parameters": {"data": {"started_here": True}},
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            sub_type="ENRICH_DATA",
+            parameters={"data": {"started_here": True}},
+            type="ACTION",
         )
 
         workflow_run = run_workflow(
@@ -421,13 +398,11 @@ class TestAutomation(TransactionTestCase):
         )
         WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "ON_OBJECT_CREATE",
-                "parameters": {
+            sub_type="ON_OBJECT_CREATE",
+            parameters={
                     "content_type_id": ContentType.objects.get_for_model(self.EmployeeModel).id,
                 },
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            type="TRIGGER",
             created_by=self.user,
             updated_by=self.user,
         )
@@ -496,14 +471,12 @@ class TestAutomation(TransactionTestCase):
         )
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "SCHEDULE",
-                "parameters": {
+            sub_type="SCHEDULE",
+            parameters={
                     "schedule": "*/5 * * * *",
                     "timezone": "Europe/Brussels",
                 },
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            type="TRIGGER",
             created_by=self.user,
             updated_by=self.user,
         )
@@ -520,8 +493,8 @@ class TestAutomation(TransactionTestCase):
         task.refresh_from_db()
         self.assertFalse(task.enabled)
 
-        trigger.config["parameters"]["schedule"] = ""
-        trigger.save(update_fields=["config"])
+        trigger.parameters["schedule"] = ""
+        trigger.save(update_fields=["parameters"])
         self.assertFalse(
             PeriodicTask.objects.filter(name=f"bloomerp.workflow.schedule.{workflow.id}").exists()
         )
@@ -556,11 +529,9 @@ class TestAutomation(TransactionTestCase):
         )
         WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "ON_OBJECT_CREATE",
-                "parameters": {"content_type_id": content_type.id},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="ON_OBJECT_CREATE",
+            parameters={"content_type_id": content_type.id},
+            type="TRIGGER",
             created_by=self.user,
             updated_by=self.user,
         )
@@ -590,11 +561,9 @@ class TestAutomation(TransactionTestCase):
         )
         WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "ON_OBJECT_DELETE",
-                "parameters": {"content_type_id": content_type.id},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="ON_OBJECT_DELETE",
+            parameters={"content_type_id": content_type.id},
+            type="TRIGGER",
             created_by=self.user,
             updated_by=self.user,
         )
@@ -625,11 +594,9 @@ class TestAutomation(TransactionTestCase):
         )
         WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "ON_OBJECT_UPDATE",
-                "parameters": {"content_type_id": content_type.id},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="ON_OBJECT_UPDATE",
+            parameters={"content_type_id": content_type.id},
+            type="TRIGGER",
             created_by=self.user,
             updated_by=self.user,
         )
@@ -665,11 +632,9 @@ class TestAutomation(TransactionTestCase):
         )
         WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "ON_OBJECT_CREATE_OR_UPDATE",
-                "parameters": {"content_type_id": content_type.id},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="ON_OBJECT_CREATE_OR_UPDATE",
+            parameters={"content_type_id": content_type.id},
+            type="TRIGGER",
             created_by=self.user,
             updated_by=self.user,
         )
@@ -711,11 +676,9 @@ class TestAutomation(TransactionTestCase):
         )
         WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "ON_OBJECT_CREATE",
-                "parameters": {"content_type_id": content_type.id},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="ON_OBJECT_CREATE",
+            parameters={"content_type_id": content_type.id},
+            type="TRIGGER",
             created_by=self.user,
             updated_by=self.user,
         )
@@ -749,11 +712,9 @@ class TestAutomation(TransactionTestCase):
         )
         WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "ON_OBJECT_UPDATE",
-                "parameters": {"content_type_id": content_type.id},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="ON_OBJECT_UPDATE",
+            parameters={"content_type_id": content_type.id},
+            type="TRIGGER",
             created_by=self.user,
             updated_by=self.user,
         )
@@ -790,11 +751,9 @@ class TestAutomation(TransactionTestCase):
         )
         WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "ON_OBJECT_DELETE",
-                "parameters": {"content_type_id": content_type.id},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="ON_OBJECT_DELETE",
+            parameters={"content_type_id": content_type.id},
+            type="TRIGGER",
             created_by=self.user,
             updated_by=self.user,
         )
@@ -830,11 +789,9 @@ class TestAutomation(TransactionTestCase):
         )
         WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "ON_OBJECT_CREATE",
-                "parameters": {"content_type_id": content_type.id},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="ON_OBJECT_CREATE",
+            parameters={"content_type_id": content_type.id},
+            type="TRIGGER",
             created_by=self.user,
             updated_by=self.user,
         )
@@ -867,7 +824,7 @@ class TestAutomation(TransactionTestCase):
         """Tests the execution of a basic node"""
         data = self.start_node.execute({}) # Don't need to pass any data with human triggers
         
-        self.assertEqual(self.start_node.config.get("parameters").get("data"), data)
+        self.assertEqual(self.start_node.parameters.get("data"), data)
     
     # ---------------------------------------
     # Action: ENRICH
@@ -878,23 +835,19 @@ class TestAutomation(TransactionTestCase):
         )
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {"run": True}},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"run": True}},
+            type="TRIGGER",
         )
         enrich_action = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "ENRICH_DATA",
-                "parameters": {
+            sub_type="ENRICH_DATA",
+            parameters={
                     "data": {
                         "full_name": "John Doe"
                     }
                 },
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            type="ACTION",
         )
         WorkflowEdge.objects.create(from_node=trigger, to_node=enrich_action)
 
@@ -911,24 +864,20 @@ class TestAutomation(TransactionTestCase):
         )
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {"run": True}},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"run": True}},
+            type="TRIGGER",
         )
         enrich_action = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "ENRICH_DATA",
-                "parameters": {
+            sub_type="ENRICH_DATA",
+            parameters={
                     "data": {
                         "first_name": "Jane",
                         "full_name": "Jane Doe"
                     }
                 },
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            type="ACTION",
         )
         WorkflowEdge.objects.create(from_node=trigger, to_node=enrich_action)
 
@@ -952,21 +901,17 @@ class TestAutomation(TransactionTestCase):
         )
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {"run": True}},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"run": True}},
+            type="TRIGGER",
         )
         extract_action = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "EXTRACT_FIELD",
-                "parameters": {
+            sub_type="EXTRACT_FIELD",
+            parameters={
                     "field_path": "user"
                 },
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            type="ACTION",
         )
         WorkflowEdge.objects.create(from_node=trigger, to_node=extract_action)
 
@@ -987,21 +932,17 @@ class TestAutomation(TransactionTestCase):
         )
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {"run": True}},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"run": True}},
+            type="TRIGGER",
         )
         extract_action = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "EXTRACT_FIELD",
-                "parameters": {
+            sub_type="EXTRACT_FIELD",
+            parameters={
                     "field_path": "user"
                 },
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            type="ACTION",
         )
         WorkflowEdge.objects.create(from_node=trigger, to_node=extract_action)
 
@@ -1021,21 +962,17 @@ class TestAutomation(TransactionTestCase):
         )
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {"run": True}},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"run": True}},
+            type="TRIGGER",
         )
         extract_action = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "EXTRACT_FIELD",
-                "parameters": {
+            sub_type="EXTRACT_FIELD",
+            parameters={
                     "field_path": "user.profile.email"
                 },
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            type="ACTION",
         )
         WorkflowEdge.objects.create(from_node=trigger, to_node=extract_action)
 
@@ -1060,33 +997,27 @@ class TestAutomation(TransactionTestCase):
         # 3. Create the nodes
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {"run": True}},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"run": True}},
+            type="TRIGGER",
         )
         
         list_action = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "LIST_OBJECTS",
-                "parameters": {
+            sub_type="LIST_OBJECTS",
+            parameters={
                     "content_type_id": ContentType.objects.get_for_model(self.CustomerModel).id
                 },
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            type="ACTION",
         )
         
         extract_action = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "EXTRACT_FIELD",
-                "parameters": {
+            sub_type="EXTRACT_FIELD",
+            parameters={
                     "field_path": "queryset"
                 },
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            type="ACTION",
         )
         
         # 4. Connect the nodes
@@ -1110,26 +1041,22 @@ class TestAutomation(TransactionTestCase):
         )
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {
                     "first_name": "John",
                     "last_name": "Doe",
                     "age": 20,
                     "interests": ["sports", "music"] 
                 }},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            type="TRIGGER",
         )
         extract_action = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "EXTRACT_FIELD",
-                "parameters": {
+            sub_type="EXTRACT_FIELD",
+            parameters={
                     "field_path": "interests"
                 },
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            type="ACTION",
         )
         workflow.connect_nodes(trigger, extract_action)
         
@@ -1152,25 +1079,21 @@ class TestAutomation(TransactionTestCase):
         workflow = Workflow.objects.create(name="List Objects Test Workflow")
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {
+            sub_type="HUMAN_TRIGGER",
+            parameters={
                     "data" : {
                         "run": True
                     }    
                 },
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            type="TRIGGER",
         )
         list_action = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "LIST_OBJECTS",
-                "parameters": {
+            sub_type="LIST_OBJECTS",
+            parameters={
                     "content_type_id": ContentType.objects.get_for_model(self.CustomerModel).id
                 },
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            type="ACTION",
         )
         WorkflowEdge.objects.create(from_node=trigger, to_node=list_action)
 
@@ -1210,20 +1133,17 @@ class TestAutomation(TransactionTestCase):
         # 3. Add trigger
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {"run": True}},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"run": True}},
+            type="TRIGGER",
         )
         
         # 4. Create the action node
         action = WorkflowNode.objects.create(
             workflow=workflow,
-            type=WorkflowNodeType.ACTION.value.id,
-            config={
-                "sub_type" : "UPDATE_OBJECT",
-                "parameters": {
+            type="ACTION",
+            sub_type="UPDATE_OBJECT",
+            parameters={
                     "content_type_id": ContentType.objects.get_for_model(self.CustomerModel).id,
                     "object_id": str(customer.id),
                     "fields": {
@@ -1231,7 +1151,6 @@ class TestAutomation(TransactionTestCase):
                         "last_name": "{{ input.last_name }}",
                     }
                 }
-            }
         )
         
         # 5. Connect the nodes
@@ -1269,27 +1188,23 @@ class TestAutomation(TransactionTestCase):
         # 3. Add trigger
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {"run": True}},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"run": True}},
+            type="TRIGGER",
         )
         
         # 4. Create the action node
         action = WorkflowNode.objects.create(
             workflow=workflow,
-            type=WorkflowNodeType.ACTION.value.id,
-            config={
-                "sub_type" : "UPDATE_OBJECT",
-                "parameters": {
+            type="ACTION",
+            sub_type="UPDATE_OBJECT",
+            parameters={
                     "content_type_id": ContentType.objects.get_for_model(self.CustomerModel).id,
                     "object_id": str(customer.id),
                     "fields": {
                         "age": "{{ input.age }}",
                     }
                 }
-            }
         )
         
         # 5. Connect the nodes
@@ -1317,24 +1232,20 @@ class TestAutomation(TransactionTestCase):
         # 3. Add trigger
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {"run": True}},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"run": True}},
+            type="TRIGGER",
         )
         
         # 4. Create the action node
         action = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type" : "DELETE_OBJECT",
-                "parameters": {
+            sub_type="DELETE_OBJECT",
+            parameters={
                     "content_type_id": ContentType.objects.get_for_model(self.CustomerModel).id,
                     "object_id": str(customer.id),
-                }
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+                },
+            type="ACTION",
         )
         
         # 5. Connect the nodes
@@ -1363,28 +1274,24 @@ class TestAutomation(TransactionTestCase):
         # 2. Add trigger
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {"run": True}},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"run": True}},
+            type="TRIGGER",
         )
         
         # 3. Create the action node
         action = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type" : "CREATE_OBJECT",
-                "parameters": {
+            sub_type="CREATE_OBJECT",
+            parameters={
                     "content_type_id": ContentType.objects.get_for_model(self.CustomerModel).id,
                     "fields": {
                         "first_name": "Alice",
                         "last_name": "Smith",
                         "age": 30
                     }
-                }
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+                },
+            type="ACTION",
         )
         
         # 4. Connect the nodes
@@ -1403,28 +1310,24 @@ class TestAutomation(TransactionTestCase):
         # 2. Add trigger
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {"run": True}},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"run": True}},
+            type="TRIGGER",
         )
         
         # 3. Create the action node with resolved fields
         action = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type" : "CREATE_OBJECT",
-                "parameters": {
+            sub_type="CREATE_OBJECT",
+            parameters={
                     "content_type_id": ContentType.objects.get_for_model(self.CustomerModel).id,
                     "fields": {
                         "first_name": "{{ input.first_name }}",
                         "last_name": "{{ input.last_name }}",
                         "age": "{{ input.age }}"
                     }
-                }
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+                },
+            type="ACTION",
         )
         
         # 4. Connect the nodes
@@ -1454,19 +1357,16 @@ class TestAutomation(TransactionTestCase):
         # 3. Add trigger
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {"run": True}},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"run": True}},
+            type="TRIGGER",
         )
         
         # 4. Create the action node with a foreign key reference to the user
         action = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type" : "CREATE_OBJECT",
-                "parameters": {
+            sub_type="CREATE_OBJECT",
+            parameters={
                     "content_type_id": ContentType.objects.get_for_model(self.CustomerModel).id,
                     "fields": {
                         "first_name": "Alice",
@@ -1474,21 +1374,18 @@ class TestAutomation(TransactionTestCase):
                         "age": 30,
                         "created_by": user.id
                     }
-                }
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+                },
+            type="ACTION",
         )
         
         # 5. Add extract action to extract the created object
         extract_action = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "EXTRACT_FIELD",
-                "parameters": {
+            sub_type="EXTRACT_FIELD",
+            parameters={
                     "field_path": "instance.created_by.username"
                 },
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            type="ACTION",
         )
         
         # 5. Connect the nodes
@@ -1516,11 +1413,9 @@ class TestAutomation(TransactionTestCase):
         # 3. Add trigger
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {"run": True}},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"run": True}},
+            type="TRIGGER",
         )
         
         # 4. Create the action node
@@ -1529,13 +1424,11 @@ class TestAutomation(TransactionTestCase):
         
         action = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "SQL_QUERY",
-                "parameters": {
+            sub_type="SQL_QUERY",
+            parameters={
                     "query": query,
                 },
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            type="ACTION",
         )
         
         # 5. Connect the nodes
@@ -1558,23 +1451,19 @@ class TestAutomation(TransactionTestCase):
         # 2. Add trigger
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {"run": True}},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"run": True}},
+            type="TRIGGER",
         )
         
         # 3. Create the action node with an invalid query
         action = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "SQL_QUERY",
-                "parameters": {
+            sub_type="SQL_QUERY",
+            parameters={
                     "query": f"SELECT non_existing_field FROM non_existing_table",
                 },
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            type="ACTION",
         )
         
         # 4. Connect the nodes
@@ -1601,24 +1490,20 @@ class TestAutomation(TransactionTestCase):
         # 3. Add trigger
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {"run": True}},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"run": True}},
+            type="TRIGGER",
         )
         
         # 4. Create the action node
         action = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type" : "GET_OBJECT",
-                "parameters": {
+            sub_type="GET_OBJECT",
+            parameters={
                     "content_type_id": ContentType.objects.get_for_model(self.CustomerModel).id,
                     "object_id": str(customer.id),
-                }
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+                },
+            type="ACTION",
         )
         
         # 5. Connect the nodes
@@ -1644,24 +1529,20 @@ class TestAutomation(TransactionTestCase):
         # 3. Add trigger
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {"run": True}},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"run": True}},
+            type="TRIGGER",
         )
         
         # 4. Create the action node with object_id referring to the trigger context
         action = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type" : "GET_OBJECT",
-                "parameters": {
+            sub_type="GET_OBJECT",
+            parameters={
                     "content_type_id": ContentType.objects.get_for_model(self.CustomerModel).id,
                     "object_id": "{{ input.instance_id }}",
-                }
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+                },
+            type="ACTION",
         )
         
         # 5. Connect the nodes
@@ -1681,24 +1562,20 @@ class TestAutomation(TransactionTestCase):
         # 2. Add trigger
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {"run": True}},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"run": True}},
+            type="TRIGGER",
         )
         
         # 3. Create the action node with an invalid object_id
         action = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type" : "GET_OBJECT",
-                "parameters": {
+            sub_type="GET_OBJECT",
+            parameters={
                     "content_type_id": ContentType.objects.get_for_model(self.CustomerModel).id,
                     "object_id": "9999",  # Assuming this ID does not exist
-                }
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+                },
+            type="ACTION",
         )
         
         # 4. Connect the nodes
@@ -1721,23 +1598,19 @@ class TestAutomation(TransactionTestCase):
         # 2. Add trigger
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {"run": True}},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"run": True}},
+            type="TRIGGER",
         )
         
         # 3. Create the action node with a simple computation
         action = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type" : "COMPUTE",
-                "parameters": {
+            sub_type="COMPUTE",
+            parameters={
                     "expression": "{{ input.a }} + {{ input.b }}"
-                }
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+                },
+            type="ACTION",
         )
         
         # 4. Connect the nodes
@@ -1757,23 +1630,19 @@ class TestAutomation(TransactionTestCase):
         # 2. Add trigger
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {"run": True}},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"run": True}},
+            type="TRIGGER",
         )
         
         # 3. Create the action node with an expression that gets the first item from a list
         action = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type" : "COMPUTE",
-                "parameters": {
+            sub_type="COMPUTE",
+            parameters={
                     "expression": "{{ input.numbers }}[2]"
-                }
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+                },
+            type="ACTION",
         )
         
         # 4. Connect the nodes
@@ -1796,26 +1665,22 @@ class TestAutomation(TransactionTestCase):
         # 2. Add trigger
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {"run": True}},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"run": True}},
+            type="TRIGGER",
         )
         
         # 3. Create the action node with API call configuration
         action = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type" : "CALL_API",
-                "parameters": {
+            sub_type="CALL_API",
+            parameters={
                     "method": "GET",
                     "endpoint": "https://jsonplaceholder.typicode.com/todos/1",
                     "headers": {},
                     "payload": None,
-                }
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+                },
+            type="ACTION",
         )
         
         # 4. Connect the nodes
@@ -1840,26 +1705,22 @@ class TestAutomation(TransactionTestCase):
         # 2. Add trigger
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {"run": True}},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"run": True}},
+            type="TRIGGER",
         )
         
         # 3. Create the action node with an invalid URL
         action = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type" : "CALL_API",
-                "parameters": {
+            sub_type="CALL_API",
+            parameters={
                     "method": "GET",
                     "endpoint": "https://invalid.url",
                     "headers": {},
                     "payload": None,
-                }
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+                },
+            type="ACTION",
         )
         
         # 4. Connect the nodes
@@ -1881,27 +1742,23 @@ class TestAutomation(TransactionTestCase):
         self.end_node.delete()
         if_node = WorkflowNode.objects.create(
             workflow=self.workflow,
-            config={
-                "sub_type": "IF_CONDITION",
-                "parameters": {
+            sub_type="IF_CONDITION",
+            parameters={
                     "field": "age",
                     "operator": "exact",
                     "value": "20",
                 },
-            },
-            type=WorkflowNodeType.FLOW.value.id,
+            type="FLOW",
             created_by=self.user,
             updated_by=self.user,
         )
         create_node = WorkflowNode.objects.create(
             workflow=self.workflow,
-            config={
-                "sub_type": "CREATE_OBJECT",
-                "parameters": {
+            sub_type="CREATE_OBJECT",
+            parameters={
                     "content_type_id": ContentType.objects.get_for_model(self.CustomerModel).id
                 },
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            type="ACTION",
             created_by=self.user,
             updated_by=self.user,
         )
@@ -1920,27 +1777,23 @@ class TestAutomation(TransactionTestCase):
         self.end_node.delete()
         if_node = WorkflowNode.objects.create(
             workflow=self.workflow,
-            config={
-                "sub_type": "IF_CONDITION",
-                "parameters": {
+            sub_type="IF_CONDITION",
+            parameters={
                     "field": "age",
                     "operator": "exact",
                     "value": "99",
                 },
-            },
-            type=WorkflowNodeType.FLOW.value.id,
+            type="FLOW",
             created_by=self.user,
             updated_by=self.user,
         )
         create_node = WorkflowNode.objects.create(
             workflow=self.workflow,
-            config={
-                "sub_type": "CREATE_OBJECT",
-                "parameters": {
+            sub_type="CREATE_OBJECT",
+            parameters={
                     "content_type_id": ContentType.objects.get_for_model(self.CustomerModel).id
                 },
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            type="ACTION",
             created_by=self.user,
             updated_by=self.user,
         )
@@ -1967,42 +1820,36 @@ class TestAutomation(TransactionTestCase):
         workflow = Workflow.objects.create(name="If Condition Greater Than Test Workflow")
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {
+            sub_type="HUMAN_TRIGGER",
+            parameters={
                     "data": {
                         "first_name": "John",
                         "last_name": "Doe",
                         "age": 20,
                     },
                 },
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            type="TRIGGER",
         )
         
         if_node = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "IF_CONDITION",
-                "parameters": {
+            sub_type="IF_CONDITION",
+            parameters={
                     "field": "age",
                     "operator": "greater_than",
                     "value": "18",
                 },
-            },
-            type=WorkflowNodeType.FLOW.value.id,
+            type="FLOW",
             created_by=self.user,
             updated_by=self.user,
         )
         create_node = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "CREATE_OBJECT",
-                "parameters": {
+            sub_type="CREATE_OBJECT",
+            parameters={
                     "content_type_id": ContentType.objects.get_for_model(self.CustomerModel).id
                 },
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            type="ACTION",
             created_by=self.user,
             updated_by=self.user,
         )
@@ -2025,42 +1872,36 @@ class TestAutomation(TransactionTestCase):
         workflow = Workflow.objects.create(name="If Condition Less Than Test Workflow")
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {
+            sub_type="HUMAN_TRIGGER",
+            parameters={
                     "data": {
                         "first_name": "John",
                         "last_name": "Doe",
                         "age": 25,
                     },
                 },
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            type="TRIGGER",
         )
         
         if_node = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "IF_CONDITION",
-                "parameters": {
+            sub_type="IF_CONDITION",
+            parameters={
                     "field": "age",
                     "operator": "less_than",
                     "value": "30",
                 },
-            },
-            type=WorkflowNodeType.FLOW.value.id,
+            type="FLOW",
             created_by=self.user,
             updated_by=self.user,
         )
         create_node = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "CREATE_OBJECT",
-                "parameters": {
+            sub_type="CREATE_OBJECT",
+            parameters={
                     "content_type_id": ContentType.objects.get_for_model(self.CustomerModel).id
                 },
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            type="ACTION",
             created_by=self.user,
             updated_by=self.user,
         )
@@ -2083,42 +1924,36 @@ class TestAutomation(TransactionTestCase):
         workflow = Workflow.objects.create(name="If Condition Greater Than Or Equal Test Workflow")
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {
+            sub_type="HUMAN_TRIGGER",
+            parameters={
                     "data": {
                         "first_name": "John",
                         "last_name": "Doe",
                         "age": 18,
                     },
                 },
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            type="TRIGGER",
         )
         
         if_node = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "IF_CONDITION",
-                "parameters": {
+            sub_type="IF_CONDITION",
+            parameters={
                     "field": "age",
                     "operator": "greater_than_or_equal",
                     "value": "18",
                 },
-            },
-            type=WorkflowNodeType.FLOW.value.id,
+            type="FLOW",
             created_by=self.user,
             updated_by=self.user,
         )
         create_node = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "CREATE_OBJECT",
-                "parameters": {
+            sub_type="CREATE_OBJECT",
+            parameters={
                     "content_type_id": ContentType.objects.get_for_model(self.CustomerModel).id
                 },
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            type="ACTION",
             created_by=self.user,
             updated_by=self.user,
         )
@@ -2141,42 +1976,36 @@ class TestAutomation(TransactionTestCase):
         workflow = Workflow.objects.create(name="If Condition Less Than Or Equal Test Workflow")
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {
+            sub_type="HUMAN_TRIGGER",
+            parameters={
                     "data": {
                         "first_name": "John",
                         "last_name": "Doe",
                         "age": 30,
                     },
                 },
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            type="TRIGGER",
         )
         
         if_node = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "IF_CONDITION",
-                "parameters": {
+            sub_type="IF_CONDITION",
+            parameters={
                     "field": "age",
                     "operator": "less_than_or_equal",
                     "value": "30",
                 },
-            },
-            type=WorkflowNodeType.FLOW.value.id,
+            type="FLOW",
             created_by=self.user,
             updated_by=self.user,
         )
         create_node = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "CREATE_OBJECT",
-                "parameters": {
+            sub_type="CREATE_OBJECT",
+            parameters={
                     "content_type_id": ContentType.objects.get_for_model(self.CustomerModel).id
                 },
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            type="ACTION",
             created_by=self.user,
             updated_by=self.user,
         )
@@ -2199,42 +2028,36 @@ class TestAutomation(TransactionTestCase):
         workflow = Workflow.objects.create(name="If Condition Non-Numeric Test Workflow")
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {
+            sub_type="HUMAN_TRIGGER",
+            parameters={
                     "data": {
                         "first_name": "John",
                         "last_name": "Doe",
                         "age": 20,
                     },
                 },
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            type="TRIGGER",
         )
         
         if_node = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "IF_CONDITION",
-                "parameters": {
+            sub_type="IF_CONDITION",
+            parameters={
                     "field": "name",
                     "operator": "greater_than",
                     "value": "Alice",
                 },
-            },
-            type=WorkflowNodeType.FLOW.value.id,
+            type="FLOW",
             created_by=self.user,
             updated_by=self.user,
         )
         create_node = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "CREATE_OBJECT",
-                "parameters": {
+            sub_type="CREATE_OBJECT",
+            parameters={
                     "content_type_id": ContentType.objects.get_for_model(self.CustomerModel).id
                 },
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            type="ACTION",
             created_by=self.user,
             updated_by=self.user,
         )
@@ -2257,42 +2080,36 @@ class TestAutomation(TransactionTestCase):
         workflow = Workflow.objects.create(name="If Condition Float and Integer Test Workflow")
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {
+            sub_type="HUMAN_TRIGGER",
+            parameters={
                     "data": {
                         "first_name": "John",
                         "last_name": "Doe",
                         "age": 80,
                     },
                 },
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            type="TRIGGER",
         )
         
         if_node = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "IF_CONDITION",
-                "parameters": {
+            sub_type="IF_CONDITION",
+            parameters={
                     "field": "age",
                     "operator": "greater_than",
                     "value": 75.5,
                 },
-            },
-            type=WorkflowNodeType.FLOW.value.id,
+            type="FLOW",
             created_by=self.user,
             updated_by=self.user,
         )
         create_node = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "CREATE_OBJECT",
-                "parameters": {
+            sub_type="CREATE_OBJECT",
+            parameters={
                     "content_type_id": ContentType.objects.get_for_model(self.CustomerModel).id
                 },
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            type="ACTION",
             created_by=self.user,
             updated_by=self.user,
         )
@@ -2320,48 +2137,40 @@ class TestAutomation(TransactionTestCase):
         workflow = Workflow.objects.create(name="Test", enable_logging=True)
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {"run": True}},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"run": True}},
+            type="TRIGGER",
         )
 
         # 2. Create the list objects node
         list_objects_node = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "LIST_OBJECTS",
-                "parameters": {
+            sub_type="LIST_OBJECTS",
+            parameters={
                     "content_type_id": ContentType.objects.get_for_model(self.CustomerModel).id
                 },
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            type="ACTION",
         )
         workflow.connect_nodes(trigger, list_objects_node)
 
         # 3. Create the extract count node
         extract_count_node = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "EXTRACT_FIELD",
-                "parameters": {"field_path": "input.count"},
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            sub_type="EXTRACT_FIELD",
+            parameters={"field_path": "input.count"},
+            type="ACTION",
         )
 
         # 4. Create the if condition node
         if_condition_node = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "IF_CONDITION",
-                "parameters": {
+            sub_type="IF_CONDITION",
+            parameters={
                     "field": "input",
                     "operator": "greater_than",
                     "value": "0",
                 },
-            },
-            type=WorkflowNodeType.FLOW.value.id,
+            type="FLOW",
         )
         workflow.connect_nodes(list_objects_node, extract_count_node)
         workflow.connect_nodes(extract_count_node, if_condition_node)
@@ -2369,11 +2178,9 @@ class TestAutomation(TransactionTestCase):
         # 5. Create a pass-through node that accepts the primitive count
         downstream_node = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "WAIT",
-                "parameters": {"wait_time": 0},
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            sub_type="WAIT",
+            parameters={"wait_time": 0},
+            type="ACTION",
         )
         workflow.connect_nodes(if_condition_node, downstream_node)
 
@@ -2389,45 +2196,38 @@ class TestAutomation(TransactionTestCase):
         workflow = Workflow.objects.create(name="Merge branches workflow")
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {"run": True}},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"run": True}},
+            type="TRIGGER",
         )
         left_branch = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "ENRICH_DATA",
-                "parameters": {"data": {"left_value": "left"}},
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            sub_type="ENRICH_DATA",
+            parameters={"data": {"left_value": "left"}},
+            type="ACTION",
         )
         right_branch = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "ENRICH_DATA",
-                "parameters": {"data": {"right_value": "right"}},
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            sub_type="ENRICH_DATA",
+            parameters={"data": {"right_value": "right"}},
+            type="ACTION",
         )
         merge_node = WorkflowNode.objects.create(
             workflow=workflow,
-            config={"sub_type": "MERGE_BRANCHES", "parameters": {}},
-            type=WorkflowNodeType.FLOW.value.id,
+            sub_type="MERGE_BRANCHES",
+            parameters={},
+            type="FLOW",
         )
         tail_node = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "ENRICH_DATA",
-                "parameters": {
+            sub_type="ENRICH_DATA",
+            parameters={
                     "data": {
                         "left": f"{{{{ input.node_{left_branch.id}.left_value }}}}",
                         "right": f"{{{{ input.node_{right_branch.id}.right_value }}}}",
                     }
                 },
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            type="ACTION",
         )
 
         WorkflowEdge.objects.create(from_node=trigger, to_node=left_branch)
@@ -2454,9 +2254,8 @@ class TestAutomation(TransactionTestCase):
         workflow = Workflow.objects.create(name="Merge branches in loop workflow")
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {
+            sub_type="HUMAN_TRIGGER",
+            parameters={
                     "data": {
                         "records": [
                             {"value": "A"},
@@ -2464,40 +2263,36 @@ class TestAutomation(TransactionTestCase):
                         ]
                     }
                 },
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            type="TRIGGER",
         )
         for_each_node = WorkflowNode.objects.create(
             workflow=workflow,
-            config={"sub_type": "FOR_EACH", "parameters": {}},
-            type=WorkflowNodeType.FLOW.value.id,
+            sub_type="FOR_EACH",
+            parameters={},
+            type="FLOW",
         )
         left_branch = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "ENRICH_DATA",
-                "parameters": {"data": {"left_value": "{{ input.item.value }}-L"}},
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            sub_type="ENRICH_DATA",
+            parameters={"data": {"left_value": "{{ input.item.value }}-L"}},
+            type="ACTION",
         )
         right_branch = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "ENRICH_DATA",
-                "parameters": {"data": {"right_value": "{{ input.item.value }}-R"}},
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            sub_type="ENRICH_DATA",
+            parameters={"data": {"right_value": "{{ input.item.value }}-R"}},
+            type="ACTION",
         )
         merge_node = WorkflowNode.objects.create(
             workflow=workflow,
-            config={"sub_type": "MERGE_BRANCHES", "parameters": {}},
-            type=WorkflowNodeType.FLOW.value.id,
+            sub_type="MERGE_BRANCHES",
+            parameters={},
+            type="FLOW",
         )
         tail_node = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "ENRICH_DATA",
-                "parameters": {
+            sub_type="ENRICH_DATA",
+            parameters={
                     "data": {
                         "combined": (
                             f"{{{{ input.node_{left_branch.id}.left_value }}}}|"
@@ -2505,8 +2300,7 @@ class TestAutomation(TransactionTestCase):
                         ),
                     }
                 },
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            type="ACTION",
         )
 
         WorkflowEdge.objects.create(from_node=trigger, to_node=for_each_node)
@@ -2529,9 +2323,8 @@ class TestAutomation(TransactionTestCase):
         workflow = Workflow.objects.create(name="Merge branches with fanout workflow")
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {
+            sub_type="HUMAN_TRIGGER",
+            parameters={
                     "data": {
                         "records": [
                             {"value": "A"},
@@ -2539,35 +2332,30 @@ class TestAutomation(TransactionTestCase):
                         ]
                     }
                 },
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            type="TRIGGER",
         )
         extract_records = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "EXTRACT_FIELD",
-                "parameters": {"field_path": "records"},
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            sub_type="EXTRACT_FIELD",
+            parameters={"field_path": "records"},
+            type="ACTION",
         )
         for_each_node = WorkflowNode.objects.create(
             workflow=workflow,
-            config={"sub_type": "FOR_EACH", "parameters": {}},
-            type=WorkflowNodeType.FLOW.value.id,
+            sub_type="FOR_EACH",
+            parameters={},
+            type="FLOW",
         )
         merge_branch = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "MERGE_BRANCHES",
-                "parameters": {},
-            },
-            type=WorkflowNodeType.FLOW.value.id,
+            sub_type="MERGE_BRANCHES",
+            parameters={},
+            type="FLOW",
         )
         send_message = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "SEND_USER_INBOX_MESSAGE",
-                "parameters": {
+            sub_type="SEND_USER_MESSAGE",
+            parameters={
                     "user_id": str(self.user.id),
                     "message": (
                         f"{{{{ input.node_{trigger.id}.records.0.value }}}}|"
@@ -2575,8 +2363,7 @@ class TestAutomation(TransactionTestCase):
                     ),
                     "message_type": "success",
                 },
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            type="ACTION",
         )
 
         workflow.connect_nodes(trigger, extract_records)
@@ -2585,7 +2372,7 @@ class TestAutomation(TransactionTestCase):
         workflow.connect_nodes(trigger, merge_branch)
         workflow.connect_nodes(merge_branch, send_message)
 
-        with patch("bloomerp.automation.actions.send_user_inbox_message.publish_event") as send_message_mock:
+        with patch("bloomerp.automation.actions.send_user_message.publish_event") as send_message_mock:
             workflow_run = run_workflow(workflow, {})
 
         self.assertEqual(send_message_mock.call_count, 2)
@@ -2598,7 +2385,7 @@ class TestAutomation(TransactionTestCase):
         send_message_entries = [
             entry
             for entry in workflow_run.execution_trace
-            if entry["node_sub_type"] == "SEND_USER_INBOX_MESSAGE"
+            if entry["node_sub_type"] == "SEND_USER_MESSAGE"
         ]
         self.assertEqual(len(send_message_entries), 2)
         
@@ -2614,47 +2401,40 @@ class TestAutomation(TransactionTestCase):
         workflow = Workflow.objects.create(name="Object If Condition Test Workflow")
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {
                     "id": str(customer.id),
                     "first_name": customer.first_name,
                     "last_name": customer.last_name,
                     "age": customer.age,  
                 }},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            type="TRIGGER",
         )
         
         extract_action = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "EXTRACT_FIELD",
-                "parameters": {
+            sub_type="EXTRACT_FIELD",
+            parameters={
                     "field_path": "data"
                 },
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            type="ACTION",
         )
         
         object_if_condition = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "OBJECT_IF_CONDITION",
-                "parameters": {
+            sub_type="OBJECT_IF_CONDITION",
+            parameters={
                     "content_type_id": self.customer_content_type.id,
                     "field": self.customer_age_field.id,
                     "lookup": "equals",
                     "value": "20",
                 },
-            },
-            type=WorkflowNodeType.FLOW.value.id,
+            type="FLOW",
         )
         create_action = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "CREATE_OBJECT",
-                "parameters": {
+            sub_type="CREATE_OBJECT",
+            parameters={
                     "content_type_id": ContentType.objects.get_for_model(self.CustomerModel).id,
                     "data": {
                         "first_name": "Jane",
@@ -2662,8 +2442,7 @@ class TestAutomation(TransactionTestCase):
                         "age": 30,
                     }
                 },
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            type="ACTION",
         )
         
         workflow.connect_nodes(trigger, object_if_condition)
@@ -2682,47 +2461,40 @@ class TestAutomation(TransactionTestCase):
         workflow = Workflow.objects.create(name="Object If Condition Test Workflow")
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {
                     "id": str(customer.id),
                     "first_name": customer.first_name,
                     "last_name": customer.last_name,
                     "age": customer.age,  
                 }},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            type="TRIGGER",
         )
         
         extract_action = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "EXTRACT_FIELD",
-                "parameters": {
+            sub_type="EXTRACT_FIELD",
+            parameters={
                     "field_path": "data"
                 },
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            type="ACTION",
         )
         
         object_if_condition = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "OBJECT_IF_CONDITION",
-                "parameters": {
+            sub_type="OBJECT_IF_CONDITION",
+            parameters={
                     "content_type_id": self.customer_content_type.id,
                     "field": self.customer_age_field.id,
                     "lookup": "equals",
                     "value": "99",
                 },
-            },
-            type=WorkflowNodeType.FLOW.value.id,
+            type="FLOW",
         )
         create_action = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "CREATE_OBJECT",
-                "parameters": {
+            sub_type="CREATE_OBJECT",
+            parameters={
                     "content_type_id": ContentType.objects.get_for_model(self.CustomerModel).id,
                     "data": {
                         "first_name": "Jane",
@@ -2730,8 +2502,7 @@ class TestAutomation(TransactionTestCase):
                         "age": 30,
                     }
                 },
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            type="ACTION",
         )
         
         workflow.connect_nodes(trigger, object_if_condition)
@@ -2760,27 +2531,21 @@ class TestAutomation(TransactionTestCase):
         )
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {"proposal": "ready"}},
-            },
-            type=WorkflowNodeType.TRIGGER.value.id,
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"proposal": "ready"}},
+            type="TRIGGER",
         )
         approval = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_IN_THE_LOOP",
-                "parameters": {"message": "Create the payables?", "approvers": []},
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            sub_type="HUMAN_IN_THE_LOOP",
+            parameters={"message": "Create the payables?", "approvers": []},
+            type="ACTION",
         )
         downstream = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "ENRICH_DATA",
-                "parameters": {"data": {"approved": True}},
-            },
-            type=WorkflowNodeType.ACTION.value.id,
+            sub_type="ENRICH_DATA",
+            parameters={"data": {"approved": True}},
+            type="ACTION",
         )
         workflow.connect_nodes(trigger, approval)
         workflow.connect_nodes(approval, downstream)

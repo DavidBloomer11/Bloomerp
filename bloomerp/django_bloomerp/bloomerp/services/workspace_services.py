@@ -16,19 +16,19 @@ from bloomerp.workspaces.analytics_tile.model import AnalyticsTileConfig
 from bloomerp.workspaces.analytics_tile.utils import TileFieldType
 from bloomerp.workspaces.base import BaseTileConfig
 from bloomerp.workspaces.links_tile.model import Link, LinkTileConfig
-from bloomerp.workspaces.tiles import TileType
+from bloomerp.workspaces.registry import TILE_TYPE_REGISTRY
 from bloomerp.models.users import User
 from bloomerp.services.sectioned_layout_services import AvailableLayoutItem
 from django.db.models import Q
 from django.forms import Form
-from bloomerp.field_types.types import FieldType
+from bloomerp.field_types.registry import FIELD_TYPE_REGISTRY
 
 PRIMITIVE_FIELD_TYPE_MAP = {
-    TileFieldType.TEXT.value.key: FieldType.CHAR_FIELD,
-    TileFieldType.NUMERIC.value.key: FieldType.DECIMAL_FIELD,
-    TileFieldType.DATE.value.key: FieldType.DATE_FIELD,
-    TileFieldType.DATETIME.value.key: FieldType.DATE_TIME_FIELD,
-    TileFieldType.BOOL.value.key: FieldType.BOOLEAN_FIELD,
+    TileFieldType.TEXT.value.key: FIELD_TYPE_REGISTRY.CHAR_FIELD,
+    TileFieldType.NUMERIC.value.key: FIELD_TYPE_REGISTRY.DECIMAL_FIELD,
+    TileFieldType.DATE.value.key: FIELD_TYPE_REGISTRY.DATE_FIELD,
+    TileFieldType.DATETIME.value.key: FIELD_TYPE_REGISTRY.DATE_TIME_FIELD,
+    TileFieldType.BOOL.value.key: FIELD_TYPE_REGISTRY.BOOLEAN_FIELD,
 }
 
 
@@ -49,14 +49,7 @@ def resolve_tile_type_from_config(config: BaseTileConfig) -> str:
     Returns:
         str: the tile type
     """
-    for tile_type in TileType:
-        config_model = tile_type.value.model
-        if config_model is not None and isinstance(config, config_model):
-            return tile_type.name
-
-    raise ValueError(
-        f"No registered tile type accepts config '{type(config).__name__}'."
-    )
+    return TILE_TYPE_REGISTRY.key_for_config(config)
 
 
 def _serialize_default_tile_config(tile_config: BaseTileConfig) -> dict[str, Any]:
@@ -150,10 +143,14 @@ def render_tile_to_string(
         str: the html string
     """
     # 1. Get the tile type
-    tile_type = TileType.from_key(tile.type)
+    tile_type = TILE_TYPE_REGISTRY.get(tile.type)
+    if tile_type is None:
+        raise ValueError(f"Unknown tile type '{tile.type}'.")
+    if tile_type.model is None or tile_type.render_cls is None:
+        raise ValueError(f"Tile type '{tile.type}' cannot be rendered.")
 
     # 2. Get the config object
-    config = tile_type.value.model( 
+    config = tile_type.model(
         **tile.schema
     )
 
@@ -162,8 +159,8 @@ def render_tile_to_string(
 
     # 3. Get the render class. Saved canvases receive their persistence context;
     # previews call the renderer directly without a Tile instance.
-    render_kwargs = {"tile": tile} if tile_type == TileType.CANVAS_TILE else {}
-    return tile_type.value.render_cls.render(config=config, request=request, **render_kwargs)
+    render_kwargs = {"tile": tile} if tile.type == "CANVAS_TILE" else {}
+    return tile_type.render_cls.render(config=config, request=request, **render_kwargs)
 
 
 def _module_for_generated_tile(tile: Tile):
@@ -282,19 +279,18 @@ class WorkspaceManager:
         attrs = {}
         
         for tile in self.workspace.get_tiles():
-            match TileType.from_key(tile.type):
-                case TileType.ANALYTICS_TILE:
-                    config = AnalyticsTileConfig(**tile.schema)
+            if tile.type == "ANALYTICS_TILE":
+                config = AnalyticsTileConfig(**tile.schema)
             
-                    if not config.filters:
-                        continue
+                if not config.filters:
+                    continue
                     
-                    for filter_config in config.filters:
-                        match filter_config.type:
-                            case "text":
-                                field_type = FieldType.CHAR_FIELD
+                for filter_config in config.filters:
+                    match filter_config.type:
+                        case "text":
+                            field_type = FIELD_TYPE_REGISTRY.CHAR_FIELD
                                 
-                                attrs
+                            attrs
                                 
                 
         return type("FilterForm", (Form,), attrs)
@@ -312,19 +308,18 @@ class WorkspaceManager:
         # TODO: no collision management right now
         
         for tile in self.workspace.get_tiles():
-            match TileType.from_key(tile.type):
-                case TileType.ANALYTICS_TILE:
-                    config = AnalyticsTileConfig(**tile.schema)
+            if tile.type == "ANALYTICS_TILE":
+                config = AnalyticsTileConfig(**tile.schema)
             
-                    if not config.filters:
-                        continue
+                if not config.filters:
+                    continue
                     
-                    for filter_config in config.filters:
-                        result[filter_config.field] = WorkspaceFilter(
-                            field=filter_config.field,
-                            type=PRIMITIVE_FIELD_TYPE_MAP[filter_config.type].value.id,
-                            label=filter_config.field.replace("_", " ").title()
-                        )  
+                for filter_config in config.filters:
+                    result[filter_config.field] = WorkspaceFilter(
+                        field=filter_config.field,
+                        type=PRIMITIVE_FIELD_TYPE_MAP[filter_config.type].id,
+                        label=filter_config.field.replace("_", " ").title()
+                    )
         return result
 
 

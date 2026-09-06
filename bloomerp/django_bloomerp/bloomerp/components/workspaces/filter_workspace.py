@@ -3,7 +3,7 @@ from django.db.models import Q
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
 
-from bloomerp.field_types.types import FieldType
+from bloomerp.field_types import FIELD_TYPE_REGISTRY, FieldContext, FieldTypeDefinition
 from bloomerp.models.workspaces.workspace import Workspace
 from bloomerp.router import router
 from bloomerp.services.workspace_services import WorkspaceFilter, WorkspaceManager
@@ -70,8 +70,15 @@ def _render_hidden_lookup_widget(field_name: str, helper_text: str) -> str:
     )
 
 
-def _render_filter_value_widget(field: WorkspaceFilter, field_type: FieldType) -> str:
-    widget = field_type.value.get_widget_cls()(attrs=field_type.value.default_widget_args.copy())
+def _render_filter_value_widget(
+    field: WorkspaceFilter, field_type: FieldTypeDefinition
+) -> str:
+    context = FieldContext(attrs={"class": "input w-full"})
+    widget = (
+        field_type.widget_factory(context)
+        if field_type.widget_factory
+        else forms.TextInput(attrs=context.attrs)
+    )
     widget_choices = getattr(widget, "get_choices", lambda *_args, **_kwargs: [])()
 
     input_class = (
@@ -89,11 +96,16 @@ def _render_filter_value_widget(field: WorkspaceFilter, field_type: FieldType) -
     )
 
 
-def _render_workspace_filter_lookup_value(field: WorkspaceFilter, field_type: FieldType, lookup_id: str) -> str:
+def _render_workspace_filter_lookup_value(
+    field: WorkspaceFilter, field_type: FieldTypeDefinition, lookup_id: str
+) -> str:
     if lookup_id == "is_null":
         return _render_is_null_widget(field.field)
 
-    if field_type in {FieldType.BOOLEAN_FIELD, FieldType.NULL_BOOLEAN_FIELD}:
+    if field_type.id in {
+        FIELD_TYPE_REGISTRY.BOOLEAN_FIELD.id,
+        FIELD_TYPE_REGISTRY.NULL_BOOLEAN_FIELD.id,
+    }:
         return _render_boolean_widget(field.field)
 
     relative_date_helpers = {
@@ -159,13 +171,13 @@ def workspace_filters_lookup_operators(
     if field is None:
         return HttpResponse("Workspace filter field not found.", status=404)
     
-    field_type = FieldType.from_id(field.type)
+    field_type = FIELD_TYPE_REGISTRY.from_id(field.type)
     return render(
         request,
         "components/workspaces/filters/lookup_operators.html",
         {
             "filter_field": field,
-            "lookups": field_type.value.lookups,
+            "lookups": field_type.lookups,
         },
     )
 
@@ -186,8 +198,11 @@ def workspace_filters_value_input(
         return HttpResponse("Workspace filter field not found.", status=404)
 
     lookup_value = request.GET.get("lookup_value", "")
-    field_type = FieldType.from_id(field.type)
-    lookup_option = next((option for option in field_type.value.lookups if option.value.id == lookup_value), None)
+    field_type = FIELD_TYPE_REGISTRY.from_id(field.type)
+    lookup_option = next(
+        (option for option in field_type.lookups if option.value.id == lookup_value),
+        None,
+    )
 
     if not lookup_option:
         return HttpResponse("Invalid lookup operator.", status=400)

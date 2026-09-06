@@ -50,7 +50,7 @@ def approve_workflow_continuation(request: HttpRequest, workflow_run_id: str) ->
             content="Workflow run doesn't have a paused step"
         )
     
-    parameters:dict = (paused_step.node.config or {}).get("parameters", {})
+    parameters: dict = paused_step.node.parameters or {}
     approver_groups = parameters.get("approver_groups", [])
     approver_users = parameters.get("approver_users", [])
     

@@ -1,11 +1,10 @@
 from calendar import c
+from dataclasses import dataclass
 
 from django.http import HttpResponse
 from django.test import TransactionTestCase, modify_settings
 from django.test.utils import override_settings
 from django.db import models
-from django.apps import apps
-from django.db import connection
 from django.urls import clear_url_caches
 from channels.routing import URLRouter
 from channels.testing import WebsocketCommunicator
@@ -17,7 +16,9 @@ from bloomerp.model_fields.text_editor_field import TextEditorField
 from bloomerp.tests.utils.users import create_admin, create_normal_user
 from bloomerp.tests.utils.dynamic_models import create_test_models
 from bloomerp.tests.utils.names import FIRST_NAMES, LAST_NAMES
-
+from bloomerp.router import router
+from django.db import models
+from django.contrib.contenttypes.models import ContentType
 
 class BloomerpChannelTestCase(TransactionTestCase):
     """Base test case for websocket consumers registered with a route registry."""
@@ -343,18 +344,22 @@ class BaseBloomerpTestCaseWithModels(TransactionTestCase):
             name=name,
             planet=planet
         )
-
+    
+    def get_content_type_for_model(self, model:models.Model) -> ContentType:
+        """
+        Returns the content type for a particular model
+        """
+        return ContentType.objects.get_for_model(model)
+        
     
 class BaseBloomerpModelTestCase(TransactionTestCase):
     pass    
-
 
 class BaseBloomerpWidgetTestCase():
     pass
 
 
-class BaseBloomerpComponentTestCase():
-    pass
 
-class BaseBloomerpViewTestCase():
-    pass
+
+
+

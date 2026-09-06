@@ -4,8 +4,8 @@ from django import forms
 from django.contrib.contenttypes.models import ContentType
 from django.test import SimpleTestCase, TestCase
 
-from bloomerp.field_types.types import (
-    FieldType,
+from bloomerp.field_types import FIELD_TYPE_REGISTRY
+from bloomerp.field_types.builtins.display import (
     build_behavior_catalog_entry,
     get_behavior_form_field_kwargs,
 )
@@ -204,8 +204,8 @@ class BehaviorBuilderWidgetTest(SimpleTestCase):
         Expected result: The shared Behaviors option is available without the legacy on_change option.
         """
         # 1. Read display option identifiers from representative field types.
-        week_option_ids = [option.id for option in FieldType.WEEK_FIELD.value.field_display_options]
-        char_option_ids = [option.id for option in FieldType.CHAR_FIELD.value.field_display_options]
+        week_option_ids = [option.id for option in FIELD_TYPE_REGISTRY.WEEK_FIELD.display_options]
+        char_option_ids = [option.id for option in FIELD_TYPE_REGISTRY.CHAR_FIELD.display_options]
 
         # 2. Verify the shared option is exposed consistently.
         self.assertIn("behaviors", week_option_ids)
@@ -224,12 +224,12 @@ class BehaviorDisplayOptionDatabaseTest(TestCase):
         later_field = ApplicationField.objects.create(
             content_type=content_type,
             field="z_behavior_test",
-            field_type=FieldType.CHAR_FIELD.value.id,
+            field_type=FIELD_TYPE_REGISTRY.CHAR_FIELD.id,
         )
         earlier_field = ApplicationField.objects.create(
             content_type=content_type,
             field="a_behavior_test",
-            field_type=FieldType.CHAR_FIELD.value.id,
+            field_type=FIELD_TYPE_REGISTRY.CHAR_FIELD.id,
         )
 
         # 2. Build the widget using the database-backed catalog query.
@@ -242,7 +242,7 @@ class BehaviorDisplayOptionDatabaseTest(TestCase):
             if field["id"] in {str(earlier_field.pk), str(later_field.pk)}
         ]
         self.assertEqual(catalog_names, ["a_behavior_test", "z_behavior_test"])
-        self.assertEqual(widget.source_field["fieldType"], FieldType.CHAR_FIELD.value.id)
+        self.assertEqual(widget.source_field["fieldType"], FIELD_TYPE_REGISTRY.CHAR_FIELD.id)
 
 
 class BehaviorOneToManyCatalogTest(BaseBloomerpTestCaseWithModels):
@@ -265,14 +265,14 @@ class BehaviorOneToManyCatalogTest(BaseBloomerpTestCaseWithModels):
         )
 
         # 3. Verify action and condition definitions receive typed columns.
-        self.assertEqual(entry["fieldType"], FieldType.ONE_TO_MANY_FIELD.value.id)
+        self.assertEqual(entry["fieldType"], FIELD_TYPE_REGISTRY.ONE_TO_MANY_FIELD.id)
         self.assertEqual(
             [
                 (column["name"], column["fieldType"])
                 for column in entry["columns"]
             ],
             [
-                ("first_name", FieldType.CHAR_FIELD.value.id),
-                ("age", FieldType.INTEGER_FIELD.value.id),
+                ("first_name", FIELD_TYPE_REGISTRY.CHAR_FIELD.id),
+                ("age", FIELD_TYPE_REGISTRY.INTEGER_FIELD.id),
             ],
         )

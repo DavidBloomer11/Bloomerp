@@ -37,8 +37,8 @@ def run_workflow(request: HttpRequest, workflow_id: str) -> HttpResponse:
     
     # Extract initial data
     trigger=workflow.get_trigger()
-    sub_type = trigger.config.get("sub_type")
-    initial_data = trigger.config.get("parameters", {})
+    sub_type = trigger.sub_type
+    initial_data = trigger.parameters or {}
     
     form = RunWorkflowForm(
         data=request.POST if request.method == "POST" else None,

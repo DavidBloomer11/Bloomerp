@@ -8,7 +8,6 @@ from django.views.decorators.http import require_POST
 from bloomerp.models.workspaces.tile import Tile
 from bloomerp.router import router
 from bloomerp.workspaces.canvas_tile.model import CanvasTileConfig
-from bloomerp.workspaces.tiles import TileType
 
 
 def _parse_state(request: HttpRequest) -> dict[str, Any] | None:
@@ -37,7 +36,7 @@ def save_canvas_state(request: HttpRequest, pk, model: type[Tile]) -> HttpRespon
 
     # TODO: Check whether the user has access to a dashboard with this tile. For now, low risk so user.is_authenticated is enough.
     
-    if TileType.from_key(tile.type) != TileType.CANVAS_TILE:
+    if tile.type != "CANVAS_TILE":
         return JsonResponse({"detail": "Tile is not a canvas."}, status=400)
 
     state = _parse_state(request)

@@ -11,7 +11,7 @@ from bloomerp.dataviews.card.config import CardDataView
 from bloomerp.dataviews.gant.config import GanttDataView
 from bloomerp.dataviews.kanban.config import KanbanDataView
 from bloomerp.dataviews.pivot_table.config import PivotTableDataView
-from bloomerp.dataviews.registry import DataviewType
+from bloomerp.dataviews.registry import DATAVIEW_REGISTRY, get_dataview_type_choices
 from bloomerp.dataviews.table.config import TableDataView
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.models.definition import get_model_config
@@ -30,7 +30,7 @@ def get_default_display_fields() -> dict:
               Structure: {"table": [], "kanban": [], "calendar": []}
               Each list contains ApplicationField IDs in display order.
     """
-    return {view_type.value.key: [] for view_type in DataviewType}
+    return {view_type.key: [] for view_type in DATAVIEW_REGISTRY.values()}
 
 
 class UserListViewPreference(BaseViewPreference):
@@ -69,8 +69,8 @@ class UserListViewPreference(BaseViewPreference):
 
     view_type = models.CharField(
         max_length=50,
-        choices=DataviewType.choices(),
-        default=DataviewType.TABLE.value.key,
+        choices=get_dataview_type_choices,
+        default=DATAVIEW_REGISTRY.get("table").key,
         verbose_name=_("View Type"),
     )
     split_view_enabled = models.BooleanField(default=False, verbose_name=_("Split View Enabled"))
@@ -388,7 +388,7 @@ class UserListViewPreference(BaseViewPreference):
         Returns:
             bool: True if field visibility options should be shown, False otherwise.
         """
-        view_type_def = DataviewType.from_key(self.view_type)
+        view_type_def = DATAVIEW_REGISTRY.get(self.view_type)
         return view_type_def.requires_display_fields
     
     

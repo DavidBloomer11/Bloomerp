@@ -13,10 +13,10 @@ from bloomerp.communication.emails.actions import (
     _upsert_email_inbox_item_result,
 )
 from bloomerp.communication.emails.email_providers import (
-    EmailProvider,
     EmailProviderDefinition,
     EmailSyncMode,
 )
+from bloomerp.communication.emails.registry import EMAIL_PROVIDER_REGISTRY
 from bloomerp.communication.inbox_sources import (
     InboxSourceDelivery,
     InboxSourceExecutionResult,
@@ -31,18 +31,18 @@ SYNC_LOCK_MINUTES = 15
 
 
 def _account_sync_mode(email_account: EmailAccount) -> str | None:
-    provider = EmailProvider.from_key(email_account.provider)
+    provider = EMAIL_PROVIDER_REGISTRY.get(email_account.provider)
     if provider is None:
         return email_account.sync_mode or None
-    provider_definition: EmailProviderDefinition = provider.value
+    provider_definition: EmailProviderDefinition = provider
     return email_account.sync_mode or provider_definition.sync_capabilities.default_mode.value
 
 
 def _next_sync_at(email_account: EmailAccount) -> datetime.datetime:
-    provider = EmailProvider.from_key(email_account.provider)
+    provider = EMAIL_PROVIDER_REGISTRY.get(email_account.provider)
     interval_minutes = email_account.sync_interval_minutes
     if not interval_minutes and provider is not None:
-        interval_minutes = provider.value.sync_capabilities.default_poll_interval_minutes
+        interval_minutes = provider.sync_capabilities.default_poll_interval_minutes
     return timezone.now() + timedelta(minutes=interval_minutes or 5)
 
 
@@ -52,9 +52,9 @@ def resolve_email_folders(
     **kwargs,
 ) -> QuerySet[InboxFolder]:
     """Resolve email folders, optionally scoped to one account."""
-    from bloomerp.communication.inbox_folder_definition import InboxFolderType
+    from bloomerp.communication.registry import INBOX_FOLDER_REGISTRY
 
-    folders = InboxFolder.objects.filter(type=InboxFolderType.EMAIL.value.key)
+    folders = InboxFolder.objects.filter(type=INBOX_FOLDER_REGISTRY.EMAIL.key)
     if email_account_id is not None:
         folders = folders.filter(related_object_id=str(email_account_id))
     return folders

@@ -20,6 +20,12 @@ class BloomerpApp(AppConfig):
         return True
 
     def ready(self) -> None:
+        # Models are available now; populate built-ins before importing consumers
+        # that build catalogs from the registry at module scope.
+        from bloomerp.field_types.registry import load_builtin_field_types
+
+        load_builtin_field_types()
+
         from django.core.exceptions import ImproperlyConfigured
         from django.db.utils import OperationalError, ProgrammingError
         from bloomerp.config.settings import configure_bloomerp_allauth_settings

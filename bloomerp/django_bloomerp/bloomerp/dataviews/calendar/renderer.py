@@ -16,7 +16,7 @@ from bloomerp.permissions.definition import BloomerpPermission
 from bloomerp.permissions.manager import UserPolicyManager
 
 from ..base import BaseDataviewRenderer, DataviewRenderState
-from ..gant.renderer import GantDataviewRenderer
+from ..gant.renderer import GanttDataviewRenderer
 
 
 CALENDAR_PAGE_SIZE = 5
@@ -253,7 +253,7 @@ class CalendarDataviewRenderer(BaseDataviewRenderer):
         if not permission_manager.has_global_permission(state.model, BloomerpPermission.CHANGE):
             return HttpResponse("Permission denied", status=403)
         if any(
-            not GantDataviewRenderer._field_is_editable(fields_by_key[key])
+            not GanttDataviewRenderer._field_is_editable(fields_by_key[key])
             or not permission_manager.has_field_permission(fields_by_key[key], BloomerpPermission.CHANGE)
             for key in requested_field_keys
         ):
@@ -287,7 +287,7 @@ class CalendarDataviewRenderer(BaseDataviewRenderer):
                         setattr(
                             obj,
                             field.field,
-                            GantDataviewRenderer._stored_date_value(
+                            GanttDataviewRenderer._stored_date_value(
                                 update[key],
                                 field,
                                 is_end=is_end,
@@ -297,11 +297,11 @@ class CalendarDataviewRenderer(BaseDataviewRenderer):
                 except (OverflowError, TypeError, ValueError):
                     return HttpResponse("Invalid date value", status=400)
 
-                display_start = GantDataviewRenderer._as_datetime(
+                display_start = GanttDataviewRenderer._as_datetime(
                     getattr(obj, start_field.field, None)
                 )
                 display_end = (
-                    GantDataviewRenderer._as_datetime(
+                    GanttDataviewRenderer._as_datetime(
                         getattr(obj, end_field.field, None),
                         end_of_date=end_field.field_type == "DateField",
                     )
@@ -314,11 +314,11 @@ class CalendarDataviewRenderer(BaseDataviewRenderer):
             response_updates = []
             for obj, changed_fields in pending_saves:
                 obj.save(update_fields=changed_fields)
-                display_start = GantDataviewRenderer._as_datetime(
+                display_start = GanttDataviewRenderer._as_datetime(
                     getattr(obj, start_field.field, None)
                 )
                 display_end = (
-                    GantDataviewRenderer._as_datetime(
+                    GanttDataviewRenderer._as_datetime(
                         getattr(obj, end_field.field, None),
                         end_of_date=end_field.field_type == "DateField",
                     )
@@ -326,8 +326,8 @@ class CalendarDataviewRenderer(BaseDataviewRenderer):
                 )
                 response_updates.append({
                     "object_id": str(obj.pk),
-                    "start_ms": GantDataviewRenderer._to_milliseconds(display_start),
-                    "end_ms": GantDataviewRenderer._to_milliseconds(display_end),
+                    "start_ms": GanttDataviewRenderer._to_milliseconds(display_start),
+                    "end_ms": GanttDataviewRenderer._to_milliseconds(display_end),
                 })
 
         return JsonResponse({"status": "ok", "updates": response_updates})
@@ -464,8 +464,8 @@ class CalendarDataviewRenderer(BaseDataviewRenderer):
                 start_field,
                 end_field,
             )
-            start_datetime = GantDataviewRenderer._as_datetime(start_value)
-            end_datetime = GantDataviewRenderer._as_datetime(
+            start_datetime = GanttDataviewRenderer._as_datetime(start_value)
+            end_datetime = GanttDataviewRenderer._as_datetime(
                 end_value,
                 end_of_date=bool(end_field and end_field.field_type == "DateField"),
             )
@@ -489,8 +489,8 @@ class CalendarDataviewRenderer(BaseDataviewRenderer):
                 ),
                 "color_group": group_label,
                 "color_classes": color_by_group.get(group_label, CALENDAR_COLORS[0]),
-                "start_ms": GantDataviewRenderer._to_milliseconds(start_datetime),
-                "end_ms": GantDataviewRenderer._to_milliseconds(end_datetime),
+                "start_ms": GanttDataviewRenderer._to_milliseconds(start_datetime),
+                "end_ms": GanttDataviewRenderer._to_milliseconds(end_datetime),
                 "start_minute": start_value.minute if isinstance(start_value, datetime) else 0,
                 "duration_minutes": duration_minutes,
                 "can_edit_start": can_edit_start,
@@ -532,12 +532,12 @@ class CalendarDataviewRenderer(BaseDataviewRenderer):
         if not UserPolicyManager(self.state.request.user).has_access_to_object(obj, BloomerpPermission.CHANGE):
             return False, False
         can_edit_start = (
-            GantDataviewRenderer._field_is_editable(start_field)
+            GanttDataviewRenderer._field_is_editable(start_field)
             and UserPolicyManager(self.state.request.user).has_field_permission(start_field, BloomerpPermission.CHANGE)
         )
         can_edit_end = bool(
             end_field
-            and GantDataviewRenderer._field_is_editable(end_field)
+            and GanttDataviewRenderer._field_is_editable(end_field)
             and UserPolicyManager(self.state.request.user).has_field_permission(end_field, BloomerpPermission.CHANGE)
         )
         return can_edit_start, can_edit_end

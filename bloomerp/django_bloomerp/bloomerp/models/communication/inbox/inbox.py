@@ -40,7 +40,7 @@ class Inbox(BasePreference):
         **scope,
     ) -> "Inbox":
         """Create and select a default inbox with its standard folders."""
-        from bloomerp.communication.inbox_folder_definition import InboxFolderType
+        from bloomerp.communication.registry import INBOX_FOLDER_REGISTRY
         from bloomerp.models.communication.inbox.inbox_folder import InboxFolder
 
         with transaction.atomic():
@@ -53,10 +53,10 @@ class Inbox(BasePreference):
                 [
                     InboxFolder(
                         inbox=inbox,
-                        type=folder_type.value.key,
+                        type=folder_type.key,
                     )
-                    for folder_type in InboxFolderType
-                    if folder_type.value.is_default
+                    for folder_type in INBOX_FOLDER_REGISTRY.values()
+                    if folder_type.is_default
                 ]
             )
         return inbox

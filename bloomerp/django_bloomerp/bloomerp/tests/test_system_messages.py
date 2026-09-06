@@ -6,7 +6,6 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from bloomerp.automation.defintion import WorkflowNodeType
 from bloomerp.communication.inbox_folder_definition import InboxFolderType
 from bloomerp.communication.system_messages.base import SystemMessage
 from bloomerp.models.automation import Workflow, WorkflowNode, WorkflowRun, WorkflowRunStep
@@ -38,16 +37,18 @@ class WorkflowSystemMessageTests(TestCase):
         self.trigger = WorkflowNode.objects.create(
             workflow=self.workflow,
             name="Customer updated",
-            type=WorkflowNodeType.TRIGGER.value.id,
-            config={"sub_type": "HUMAN_TRIGGER", "parameters": {}},
+            type="TRIGGER",
+            sub_type="HUMAN_TRIGGER",
+            parameters={},
             pos_x=0,
             pos_y=0,
         )
         self.action = WorkflowNode.objects.create(
             workflow=self.workflow,
             name="Enrich customer",
-            type=WorkflowNodeType.ACTION.value.id,
-            config={"sub_type": "ENRICH_DATA", "parameters": {"data": {}}},
+            type="ACTION",
+            sub_type="ENRICH_DATA",
+            parameters={"data": {}},
             pos_x=300,
             pos_y=0,
         )

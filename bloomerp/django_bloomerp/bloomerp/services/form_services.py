@@ -4,9 +4,8 @@ from typing import Optional, Type
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import HttpRequest
-from django.http import QueryDict
 
-from bloomerp.field_types.types import FieldType
+from bloomerp.field_types.registry import FIELD_TYPE_REGISTRY
 from bloomerp.forms.model_form import BloomerpModelForm
 from bloomerp.forms.model_form import bloomerp_modelform_factory
 from bloomerp.models import ApplicationField
@@ -17,7 +16,6 @@ from bloomerp.models.forms.form_submission import FormSubmission
 
 from bloomerp.utils.json_serialization import make_json_safe
 from dataclasses import dataclass
-from django.forms import ModelForm
 from django.core.exceptions import FieldDoesNotExist
 
 @dataclass
@@ -150,7 +148,7 @@ class FormManager:
         return {
             field.field
             for field in self.layout_application_fields()
-            if field.get_field_type_enum().value.id == FieldType.ONE_TO_MANY_FIELD.value.id
+            if field.get_field_type().id == FIELD_TYPE_REGISTRY.ONE_TO_MANY_FIELD.id
         }
 
     def get_initial_form_data(self) -> dict:

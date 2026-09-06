@@ -27,11 +27,11 @@ from bloomerp.workspaces.analytics_tile.model import (
     options_form_factory,
 )
 from bloomerp.workspaces.analytics_tile.utils import get_primitive_field_icon
-from bloomerp.workspaces.base import BaseTileConfig
+from bloomerp.workspaces.base import BaseTileConfig, TileTypeDefinition
 from bloomerp.workspaces.dataview_tile.model import DataViewTileConfig
 from bloomerp.workspaces.links_tile.model import Link, LinkTileConfig
 from bloomerp.workspaces.text_tile.model import TextTileConfig
-from bloomerp.workspaces.tiles import TileType
+from bloomerp.workspaces.registry import TILE_TYPE_REGISTRY
 from django.views.generic import TemplateView
 from django import forms
 
@@ -156,19 +156,21 @@ class PreviewWorkspaceTile(TemplateView):
             CREATE_TILE_SESSION_KEY
         )
 
-    def get_tile_type(self) -> TileType:
+    def get_tile_type_key(self) -> str | None:
+        return self.get_orchestrator().get_session_data("tile_type")
+
+    def get_tile_type(self) -> TileTypeDefinition | None:
         """Returns the tile type definition"""
-        orchestrator = self.get_orchestrator()
-        tile_type_key = orchestrator.get_session_data("tile_type")
+        tile_type_key = self.get_tile_type_key()
         if not tile_type_key:
             return None
 
-        return TileType.from_key(tile_type_key)
+        return TILE_TYPE_REGISTRY.get(tile_type_key)
 
     def render_tile_preview(self, config:BaseTileConfig) -> str:
         """Renders the tile preview based on the current tile configuration in the session."""
         tile_type = self.get_tile_type()
-        render_cls = tile_type.value.render_cls
+        render_cls = tile_type.render_cls
         
         return render_cls.render(config, self.request)
 
@@ -213,24 +215,24 @@ class PreviewWorkspaceTile(TemplateView):
             self.request.GET.get("include_builder_section", True),
             True
         )
-        if self.get_tile_type().value.form_cls:
+        if self.get_tile_type().form_cls:
             form_kwargs = {"initial": config.model_dump()}
-            if self.get_tile_type() == TileType.DATAVIEW_TILE:
+            if self.get_tile_type_key() == "DATAVIEW_TILE":
                 form_kwargs["user"] = self.request.user
-            ctx["form"] = self.get_tile_type().value.form_cls(**form_kwargs)
+            ctx["form"] = self.get_tile_type().form_cls(**form_kwargs)
         
         return ctx
     
     def get_tile_builder_template(self):
         """Returns the appropriate tile builder template based on the tile type."""
-        match self.get_tile_type():
-            case TileType.ANALYTICS_TILE:
+        match self.get_tile_type_key():
+            case "ANALYTICS_TILE":
                 return "components/workspaces/tile_builders/analytics_tile_builder.html"
-            case TileType.LINKS_TILE:
+            case "LINKS_TILE":
                 return "components/workspaces/tile_builders/links_tile_builder.html"
-            case TileType.TEXT_TILE:
+            case "TEXT_TILE":
                 return "components/workspaces/tile_builders/text_tile_builder.html"
-            case TileType.CANVAS_TILE:
+            case "CANVAS_TILE":
                 return "components/workspaces/tile_builders/canvas_tile_builder.html"
             # case TileType.FORM_TILE:
             #     return "components/workspaces/tile_builders/form_tile_builder.html"
@@ -241,7 +243,7 @@ class PreviewWorkspaceTile(TemplateView):
         """
         Returns the tile config
         """
-        ModelCls = self.get_tile_type().value.model
+        ModelCls = self.get_tile_type().model
         config_dict = self.get_orchestrator().get_session_data("config")
         try:
             config = ModelCls(**config_dict)
@@ -255,8 +257,8 @@ class PreviewWorkspaceTile(TemplateView):
         config = self.get_config()
         orchestrator = self.get_orchestrator()
 
-        match self.get_tile_type():
-            case TileType.ANALYTICS_TILE:
+        match self.get_tile_type_key():
+            case "ANALYTICS_TILE":
                 tile_type_definition = AnalyticsTileType.from_key(config.type)
 
                 # Get the output table
@@ -313,7 +315,7 @@ class PreviewWorkspaceTile(TemplateView):
                 # Filter variables
                 extra_context["filter_variables"] = get_filters_from_query(output_table, config.query)
                 
-            case TileType.LINKS_TILE:
+            case "LINKS_TILE":
                 extra_context["link_builder_items"] = _build_link_builder_items(config.links)
                 extra_context["link_folder_options"] = _build_link_folder_options(config.links)
                 extra_context["link_route_suggestions"] = _get_link_route_suggestions()
@@ -341,7 +343,7 @@ class PreviewWorkspaceTile(TemplateView):
             return self.get(request, *args, **kwargs)
         
         try:
-            operation_def = tile_type.value.model.get_operation(operation)
+            operation_def = tile_type.model.get_operation(operation)
         except KeyError:
             kwargs["new_config"] = config
             kwargs["message"] = _("Operation does not exist")
@@ -353,7 +355,7 @@ class PreviewWorkspaceTile(TemplateView):
             
             if issubclass(operation_def.validation_model, forms.Form):
                 form_kwargs = {"data": request.POST, "files": request.FILES}
-                if tile_type == TileType.DATAVIEW_TILE:
+                if self.get_tile_type_key() == "DATAVIEW_TILE":
                     form_kwargs["user"] = request.user
                 data = operation_def.validation_model(**form_kwargs)
             else:

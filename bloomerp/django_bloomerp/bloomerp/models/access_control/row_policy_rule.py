@@ -6,14 +6,14 @@ from django.contrib.auth.models import Permission
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
 from bloomerp.models import ApplicationField
-from bloomerp.field_types.types import FieldType
+from bloomerp.field_types.registry import FieldTypeDefinition
 from bloomerp.models.mixins.absolute_url_model_mixin import AbsoluteUrlModelMixin
 from bloomerp.permissions.definition import RowPolicyRuleCondition, RowPolicyRuleContent
 from pydantic import ValidationError as PydanticValidationError
 
 ROW_POLICY_DISALLOWED_FIELD_TYPE_IDS = {
-    FieldType.ONE_TO_MANY_FIELD.id,
-    FieldType.PROPERTY.id,
+    "OneToManyField",
+    "Property",
 }
 
 class RowPolicyRule(AbsoluteUrlModelMixin, models.Model):
@@ -105,11 +105,11 @@ class RowPolicyRule(AbsoluteUrlModelMixin, models.Model):
         codename = permission
         return Permission.objects.filter(codename=codename, content_type=content_type).exists()
     
-    def _resolve_lookup(self, field_type, operator: str):
+    def _resolve_lookup(self, field_type:FieldTypeDefinition, operator: str):
         """Resolves a lookup by id, django representation, or alias."""
         if not operator or not field_type:
             return None
-
+        
         for lookup in field_type.lookups:
             if operator == lookup.value.id:
                 return lookup
@@ -214,7 +214,7 @@ class RowPolicyRule(AbsoluteUrlModelMixin, models.Model):
             if not application_field.content_type == self.content_type:
                 raise ValidationError("Content type of the application field does not match that of the field policy")
 
-            field_type = application_field.get_field_type_enum()
+            field_type = application_field.get_field_type()
             if not self._resolve_lookup(field_type, str(operator)):
                 raise ValidationError("Invalid operator")
 

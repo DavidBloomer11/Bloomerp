@@ -97,7 +97,8 @@ class BasePermissionCompiler(ABC, Generic[CompiledPermission]):
     ) -> Lookup | None:
         if not application_field or not operator:
             return None
-        field_type = application_field.get_field_type_enum()
+        field_type = application_field.get_field_type()
+        
         lookup = field_type.get_lookup_by_id(operator)
         if lookup is not None:
             return lookup

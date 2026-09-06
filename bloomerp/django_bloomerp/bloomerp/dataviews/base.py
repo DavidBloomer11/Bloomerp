@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any, Callable, Type
 
 from django import forms
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
@@ -323,6 +323,7 @@ class DataviewTypeDefinition:
     opts: list[PreferenceOption] = field(default_factory=list)
     requires_display_fields: bool = True
     model: type[BaseModel] | None = None
+    is_available:Callable[[Type[models.Model]], bool] = lambda model: True
 
     def create_opts_form(
         self,

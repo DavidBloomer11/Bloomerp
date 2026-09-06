@@ -1,7 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
 from django_countries.fields import Country, CountryField
 
-from bloomerp.field_types.types import FieldType
+from bloomerp.field_types import FIELD_TYPE_REGISTRY
 from bloomerp.forms.model_form import bloomerp_modelform_factory
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
@@ -40,8 +40,8 @@ class TestCountryField(BaseBloomerpTestCaseWithModels):
         # 2. Build the form field through the application-field lifecycle.
         form_field = application_field.get_form_field()
 
-        self.assertEqual(application_field.field_type, FieldType.COUNTRY_FIELD.id)
-        self.assertEqual(application_field.get_field_type_enum(), FieldType.COUNTRY_FIELD)
+        self.assertEqual(application_field.field_type, FIELD_TYPE_REGISTRY.COUNTRY_FIELD.id)
+        self.assertEqual(application_field.get_field_type(), FIELD_TYPE_REGISTRY.COUNTRY_FIELD)
         self.assertEqual(form_field.clean("NL"), "NL")
         self.assertGreater(sum(1 for _ in form_field.choices), 200)
 
@@ -75,7 +75,7 @@ class TestCountryField(BaseBloomerpTestCaseWithModels):
             content_type=ContentType.objects.get_for_model(self.CountryRecordModel),
             field="country",
         )
-        lookup = FieldType.COUNTRY_FIELD.get_lookup_by_id("equals")
+        lookup = FIELD_TYPE_REGISTRY.COUNTRY_FIELD.get_lookup_by_id("equals")
 
         # 2. Render the lookup value input.
         html = lookup.value.render(application_field)

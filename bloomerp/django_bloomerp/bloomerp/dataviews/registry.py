@@ -8,7 +8,7 @@ from bloomerp.dataviews.calendar.renderer import CalendarDataviewRenderer
 from bloomerp.dataviews.card.config import CARD_OPTIONS, CardDataView
 from bloomerp.dataviews.card.renderer import CardDataviewRenderer
 from bloomerp.dataviews.gant.config import GANTT_OPTIONS, GanttDataView
-from bloomerp.dataviews.gant.renderer import GantDataviewRenderer
+from bloomerp.dataviews.gant.renderer import GanttDataviewRenderer
 from bloomerp.dataviews.kanban.config import KANBAN_OPTIONS, KanbanDataView
 from bloomerp.dataviews.kanban.renderer import KanbanDataviewRenderer
 from bloomerp.dataviews.pivot_table.config import (
@@ -19,10 +19,40 @@ from bloomerp.dataviews.pivot_table.config import (
 from bloomerp.dataviews.pivot_table.renderer import PivotTableDataviewRenderer
 from bloomerp.dataviews.table.config import TABLE_OPTIONS, TableDataView
 from bloomerp.dataviews.table.renderer import TableDataviewRenderer
+from bloomerp.utils.registry import BaseRegistry
 
 
-class DataviewType(Enum):
-    TABLE = DataviewTypeDefinition(
+class DataviewRegistry(BaseRegistry[DataviewTypeDefinition]):
+    def register(self, key: str, obj: DataviewTypeDefinition) -> None:
+        if any(definition.key == obj.key for definition in self.values()):
+            raise ValueError(f"Dataview key {obj.key!r} is already registered")
+        super().register(key, obj)
+
+    def get(self, key: str) -> DataviewTypeDefinition | None:
+        registered = super().get(key)
+        if registered is not None:
+            return registered
+        return next(
+            (definition for definition in self.values() if definition.key == key),
+            None,
+        )
+
+    def choices(self) -> list[tuple[str, str]]:
+        """Return model choices from the currently registered dataviews."""
+        return [(definition.key, definition.label) for definition in self.values()]
+
+
+def get_dataview_type_choices() -> list[tuple[str, str]]:
+    """Resolve dataview choices when Django evaluates the model field."""
+    return DATAVIEW_REGISTRY.choices()
+
+DATAVIEW_REGISTRY = DataviewRegistry(
+    registry_item_class=DataviewTypeDefinition
+)
+
+DATAVIEW_REGISTRY.register(
+    "table",
+    DataviewTypeDefinition(
         key="table",
         label=_("Table"),
         description=_("Displays records in a sortable table."),
@@ -31,16 +61,24 @@ class DataviewType(Enum):
         config_cls=TableDataView,
         opts=TABLE_OPTIONS,
     )
-    KANBAN = DataviewTypeDefinition(
+)
+
+DATAVIEW_REGISTRY.register(
+    "kanban",
+    DataviewTypeDefinition(
         key="kanban",
         label=_("Kanban"),
-        description=_("Displays records as cards grouped into columns."),
-        icon="fa fa-table-columns",
+        description=_("Displays records in a kanban board."),
+        icon="fa fa-columns",
         renderer_cls=KanbanDataviewRenderer,
         config_cls=KanbanDataView,
         opts=KANBAN_OPTIONS,
     )
-    CARD = DataviewTypeDefinition(
+)
+
+DATAVIEW_REGISTRY.register(
+    "card",
+    DataviewTypeDefinition(
         key="card",
         label=_("Card"),
         description=_("Displays records in a card grid."),
@@ -49,51 +87,45 @@ class DataviewType(Enum):
         config_cls=CardDataView,
         opts=CARD_OPTIONS,
     )
-    CALENDAR = DataviewTypeDefinition(
+)
+
+DATAVIEW_REGISTRY.register(
+    "calendar",
+    DataviewTypeDefinition(
         key="calendar",
         label=_("Calendar"),
-        description=_(
-            "Displays records on a day, week, month, year, or list calendar."
-        ),
+        description=_("Displays records in a calendar view."),
         icon="fa fa-calendar",
         renderer_cls=CalendarDataviewRenderer,
         config_cls=CalendarDataView,
         opts=CALENDAR_OPTIONS,
     )
-    GANT = DataviewTypeDefinition(
-        key="gant",
+)
+
+DATAVIEW_REGISTRY.register(
+    "gantt",
+    DataviewTypeDefinition(
+        key="gantt",
         label=_("Gantt"),
-        description=_("Displays records as a timeline."),
+        description=_("Displays records in a Gantt chart."),
         icon="fa fa-chart-gantt",
-        renderer_cls=GantDataviewRenderer,
+        renderer_cls=GanttDataviewRenderer,
         config_cls=GanttDataView,
         opts=GANTT_OPTIONS,
     )
-    PIVOT_TABLE = DataviewTypeDefinition(
+)
+
+DATAVIEW_REGISTRY.register(
+    "pivot_table",
+    DataviewTypeDefinition(
         key="pivot_table",
         label=_("Pivot"),
-        description=_(
-            "Summarizes records across selected row, column, and value fields."
-        ),
-        icon="fa fa-table-cells",
+        description=_("Displays records in a pivot table."),
+        icon="fa fa-table",
         renderer_cls=PivotTableDataviewRenderer,
         config_cls=PivotTableDataView,
-        requires_display_fields=False,
-        model=PivotTableDataviewOptions,
         opts=PIVOT_TABLE_OPTIONS,
     )
+)
 
-    @classmethod
-    def choices(cls) -> list[tuple[str, str]]:
-        return [(item.value.key, item.value.label) for item in cls]
 
-    @classmethod
-    def values(cls) -> list[str]:
-        return [item.value.key for item in cls]
-
-    @classmethod
-    def from_key(cls, key: str) -> DataviewTypeDefinition:
-        for item in cls:
-            if item.value.key == key:
-                return item.value
-        raise ValueError(f"Unsupported dataview type: {key}")

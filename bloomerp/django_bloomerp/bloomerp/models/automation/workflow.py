@@ -7,7 +7,6 @@ from bloomerp.models.mixins.absolute_url_model_mixin import AbsoluteUrlModelMixi
 from bloomerp.models.mixins.user_stamp_model_mixin import UserStampModelMixin
 from bloomerp.models.mixins import TimestampModelMixin
 from django.utils.translation import gettext_lazy as _, gettext_noop
-from bloomerp.automation.defintion import WorkflowNodeType
 from bloomerp.workspaces.analytics_tile.model import AnalyticsTileConfig, AnalyticsTileType, FieldConfig
 
 if TYPE_CHECKING:
@@ -185,7 +184,7 @@ class Workflow(
         nodes: models.QuerySet["WorkflowNode"] = self.nodes.all()
 
         return nodes.filter(
-            type=WorkflowNodeType.TRIGGER.value.id
+            type="TRIGGER"
         ).first()
 
     def __str__(self) -> str:

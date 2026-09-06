@@ -1,12 +1,30 @@
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
 from bloomerp.models import ApplicationField
 from django.db import models
 from django import db
-from bloomerp.field_types.types import FieldType
+from bloomerp.field_types.registry import FIELD_TYPE_REGISTRY
 from bloomerp.permissions.manager import ensure_bloomerp_model_permissions
 from django.utils.encoding import force_str
+
+
+def get_registered_field_type_id(field) -> str:
+    """Recognize reverse relations and registered subclasses before Django fallback."""
+    if field.name == "files":
+        return FIELD_TYPE_REGISTRY.FILES_RELATION_FIELD.id
+    if field.auto_created and field.is_relation:
+        if field.one_to_many:
+            return FIELD_TYPE_REGISTRY.ONE_TO_MANY_FIELD.id
+        if field.one_to_one:
+            return FIELD_TYPE_REGISTRY.ONE_TO_ONE_FIELD.id
+        return FIELD_TYPE_REGISTRY.MANY_TO_MANY_FIELD.id
+
+    definition = FIELD_TYPE_REGISTRY.get_from_model_field_cls(type(field))
+    if definition is not None:
+        return definition.id
+    return field.get_internal_type()
+
 
 class Command(BaseCommand):
     help = 'Sync properties with @property decorator and fields in a Django model to ApplicationField'
@@ -91,22 +109,11 @@ class Command(BaseCommand):
                     field_list = []
                     fields = Model._meta.get_fields()
 
-                    
                     for field in fields:
                         try:
-                            # Try-catch block needed to filter out reverse relation fields
                             meta = {}
-                            registered_field_type = FieldType.from_model_field_cls(
-                                field.__class__
-                            )
-                            field_type = (
-                                registered_field_type.id
-                                if registered_field_type is not None
-                                else field.get_internal_type()
-                            )
-
-                            if field.name == "files":
-                                field_type = FieldType.FILES_RELATION_FIELD.id
+                            db_column = db_table = db_field_type = None
+                            field_type = get_registered_field_type_id(field)
 
                             # UUID-backed primary keys should not become selectable
                             # ApplicationFields for CRUD layouts or permissions.
@@ -157,7 +164,7 @@ class Command(BaseCommand):
                             #----------------------------------------------
                             # Processing status field
                             #----------------------------------------------
-                            if field_type == FieldType.STATUS_FIELD.id:
+                            if field_type == FIELD_TYPE_REGISTRY.STATUS_FIELD.id:
                                 try:
                                     meta['choices'] = serialize_choices(getattr(field, 'choices', []))
                                     meta['colored_choices'] = serialize_choices(getattr(field, 'colored_choices', []))
@@ -168,7 +175,7 @@ class Command(BaseCommand):
                             #----------------------------------------------
                             # Processing CharField
                             #----------------------------------------------
-                            if field_type == 'CharField':
+                            if field_type == FIELD_TYPE_REGISTRY.CHAR_FIELD.id:
                                 # Check if field has choices
                                 if hasattr(field, 'flatchoices'):
                                     meta['choices'] = serialize_choices(getattr(field, 'flatchoices', []))
@@ -184,8 +191,11 @@ class Command(BaseCommand):
                             }
                             field_list.append(field_info)
                             current_field_names.append(field.name)  # Track field name
-                        except:
-                            pass
+                        except Exception as exc:
+                            # Never interpret a failed inspection as a deleted field.
+                            raise CommandError(
+                                f"Could not inspect {Model._meta.label}.{field.name}: {exc}"
+                            ) from exc
 
                     content_type_id = ContentType.objects.get_for_model(Model).id
                     all_fields = property_list + field_list

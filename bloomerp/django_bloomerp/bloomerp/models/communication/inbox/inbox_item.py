@@ -4,7 +4,11 @@ from typing import Type
 from django.db import models
 from django.db.models import Q
 from django.http import HttpRequest
-from bloomerp.communication.inbox_folder_definition import InboxItemTypeDefinition, InboxFolderType
+from bloomerp.communication.inbox_folder_definition import InboxItemTypeDefinition
+from bloomerp.communication.registry import (
+    INBOX_FOLDER_REGISTRY,
+    inbox_item_type_choices,
+)
 from bloomerp.models import BloomerpModel
 from bloomerp.models.definition import ActivityLogSettings, BloomerpModelConfig
 
@@ -30,7 +34,7 @@ class InboxItem(BloomerpModel):
     
     item_type = models.CharField(
         max_length=50,
-        choices=[(i.value.item_type.key, i.value.item_type.name) for i in InboxFolderType if isinstance(i.value.item_type, InboxItemTypeDefinition)],
+        choices=inbox_item_type_choices,
         verbose_name=_("Item Type"),
     )
     
@@ -110,7 +114,7 @@ class InboxItem(BloomerpModel):
         Returns:
             InboxItemTypeDefinition: The definition of the inbox item type.
         """
-        return InboxFolderType.get_item_type_by_key(self.item_type)
+        return INBOX_FOLDER_REGISTRY.get_item_type_by_key(self.item_type)
     
     @property
     def icon(self) -> str:

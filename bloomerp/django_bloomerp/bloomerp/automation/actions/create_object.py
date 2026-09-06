@@ -1,8 +1,7 @@
 import json
 
-from django.forms import modelform_factory
 from bloomerp.automation.schema import WorkflowIOSchema, WorkflowValueType, WorkflowInputRequirement, WorkflowValueField, WorkflowValueType
-from bloomerp.automation.utils import get_parameters_from_config, model_to_schema_field
+from bloomerp.automation.utils import model_to_schema_field
 from bloomerp.forms.base_content_type_form import BaseContentTypeForm
 from bloomerp.forms.model_form import bloomerp_modelform_factory
 from bloomerp.models.application_field import ApplicationField
@@ -42,7 +41,7 @@ def _build_default_data(content_type_id: int) -> dict[str, object | None]:
     
     
     for field in fields:
-        if not field.get_field_type_enum().value.allow_in_model:
+        if not field.get_field_type().allow_in_model:
             continue
 
         form_field = field.get_form_field()
@@ -81,7 +80,7 @@ class CreateObjectExecutor(BaseExecutor):
     # OK
     @classmethod
     def get_output_schema(cls, config = None, input_schema = None):
-        params = get_parameters_from_config(config)
+        params = config or {}
         
         # Get the content type ID
         content_type_id = params.get("content_type_id")

@@ -9,7 +9,7 @@ from email.utils import getaddresses
 from typing import TYPE_CHECKING
 
 from bloomerp.communication.emails.base_adapter import EmailAttachment
-from bloomerp.communication.emails.email_providers import EmailProvider
+from bloomerp.communication.emails.registry import EMAIL_PROVIDER_REGISTRY
 from bloomerp.communication.utils.permissions import accessible_inbox_folders
 from bloomerp.router import router
 from bloomerp.utils.requests import render_message
@@ -95,11 +95,11 @@ def _send_new_email(request: HttpRequest, inbox_folder: "InboxFolder", email_acc
             errors=errors,
         )
 
-    provider = EmailProvider.from_key(email_account.provider)
+    provider = EMAIL_PROVIDER_REGISTRY.get(email_account.provider)
     if provider is None:
         return render_message(request, _("This email account has an unsupported provider."), "error")
 
-    adapter = provider.value.adapter_class(email_account)
+    adapter = provider.adapter_class(email_account)
     try:
         adapter.send_email(
             to=form_data["to"],

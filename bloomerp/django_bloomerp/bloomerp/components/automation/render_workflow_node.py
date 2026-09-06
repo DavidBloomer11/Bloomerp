@@ -1,5 +1,5 @@
 from bloomerp.automation.base_executor import BaseExecutor
-from bloomerp.automation.defintion import WorkflowNodeType
+from bloomerp.automation.registry import WORKFLOW_NODE_REGISTRY
 from bloomerp.models.automation.workflow_node import WorkflowNode
 from bloomerp.router import router
 from bloomerp.widgets.code_editor_widget import CodeEditorWidget
@@ -22,14 +22,10 @@ class WorkflowConfigJSONForm(forms.Form):
 
 
 def _get_node_sub_type(node_type: str | None, node_sub_type: str | None):
-    try:
-        node = WorkflowNodeType.from_id(node_type)
-    except ValueError:
+    definition = WORKFLOW_NODE_REGISTRY.get(node_sub_type)
+    if definition is None or definition.type != node_type:
         return None
-    for sub_type in node.value.types:
-        if node_sub_type == sub_type.id:
-            return sub_type
-    return None
+    return definition
 
 
 def _executor_input_requirement(executor_cls: BaseExecutor, config: dict) -> WorkflowInputRequirement:
@@ -49,14 +45,17 @@ def _workflow_node_schema_context(
 
     input_requirement = _executor_input_requirement(
         selected_sub_type.executor_cls,
-        workflow_node.config or {},
+        workflow_node.parameters or {},
     )
     incoming_schema = resolve_node_input_schema(workflow_node)
     output_schema = resolve_node_output_schema(workflow_node)
     output_paths = flatten_schema_fields(output_schema)
     
     # Check whether input is okay
-    accepts_input = selected_sub_type.executor_cls.accepts_input_schema(incoming_schema, workflow_node.config)
+    accepts_input = selected_sub_type.executor_cls.accepts_input_schema(
+        incoming_schema,
+        workflow_node.parameters,
+    )
     
     # Build the form
     edit_mode = request.GET.get("edit_mode", "form")
@@ -64,8 +63,7 @@ def _workflow_node_schema_context(
         edit_mode = "form"
     
     # Regular form
-    config = workflow_node.config or {}
-    parameters = config.get("parameters", {})
+    parameters = workflow_node.parameters or {}
     regular_form = selected_sub_type.executor_cls.get_config_form(initial=parameters)
     for field in regular_form.fields:
         if field not in parameters:

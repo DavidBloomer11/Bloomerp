@@ -1,4 +1,5 @@
-from bloomerp.communication.inbox_folder_definition import InboxFolderType, InboxFolderTypeDefinition
+from bloomerp.communication.inbox_folder_definition import InboxFolderTypeDefinition
+from bloomerp.communication.registry import INBOX_FOLDER_REGISTRY
 from bloomerp.models.communication.inbox.inbox import Inbox
 from bloomerp.models.communication.inbox.inbox_folder import InboxFolder
 from bloomerp.communication.utils.permissions import manageable_inboxes
@@ -36,11 +37,11 @@ class AddInboxFolder(WizardMixin, BaseBloomerpView, TemplateView):
         if not folder_type_key:
             raise ValueError("Folder type not set in session data")
         
-        folder_type : InboxFolderType = InboxFolderType.from_key(folder_type_key)
+        folder_type = INBOX_FOLDER_REGISTRY.get(folder_type_key)
         if not folder_type:
             raise ValueError(f"Invalid folder type key: {folder_type_key}")
         
-        return folder_type.value
+        return folder_type
     
     def get_step(self, step):
         if step == 0:
@@ -51,12 +52,12 @@ class AddInboxFolder(WizardMixin, BaseBloomerpView, TemplateView):
                 context_func=lambda _,__,___: {
                     "items" : [
                         {
-                            "icon": i.value.icon,
-                            "name": i.value.name,
-                            "description": i.value.description,
-                            "value": i.value.key,
+                            "icon": folder_type.icon,
+                            "name": folder_type.name,
+                            "description": folder_type.description,
+                            "value": folder_type.key,
                         }
-                        for i in InboxFolderType
+                        for folder_type in INBOX_FOLDER_REGISTRY.values()
                     ],
                     "name" : "folder_type",
                 },

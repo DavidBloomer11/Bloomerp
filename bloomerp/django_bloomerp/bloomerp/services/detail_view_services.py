@@ -1,12 +1,5 @@
-from bloomerp.models import FieldLayout, LayoutItem, LayoutRow
-from bloomerp.models import ApplicationField
-from django.db.models import Model
-from bloomerp.models import AbstractBloomerpUser
-from django.contrib.contenttypes.models import ContentType
-from bloomerp.field_types.types import FieldType
 from django.utils.translation import gettext_lazy as _
 from bloomerp.router import router
-from bloomerp.services.sectioned_layout_services import create_default_layout
 
 
 # Default Folder Policy
@@ -374,43 +367,7 @@ def get_router_detail_tabs(model: type[Model]) -> list[dict]:
 
 
 
-def get_default_layout(content_type:ContentType, user:AbstractBloomerpUser) -> FieldLayout:
-    """Generates a default layout for a particular user
 
-    Args:
-        model (Model | AbstractBloomerpUser): the given model
-        user (AbstractBloomerpUser): the user object
-
-    Returns:
-        FieldLayout: default sectioned layout
-    """
-    # 1. Get the fields
-    fields = ApplicationField.objects.filter(
-        content_type=content_type,
-    )
-    
-    # TODO
-    # 2. Check which fields the user has access to
-    
-    # Get the model
-    model = content_type.model_class()
-    if model:
-        return create_default_layout(model)
-
-    else:
-        items = [
-            LayoutItem(id=application_field.pk, colspan=1)
-            for application_field in fields.exclude(field_type=FieldType.PROPERTY.value)
-        ]
-        return FieldLayout(
-            rows=[
-                LayoutRow(
-                    title=str(_("Details")),
-                    items=items,
-                    columns=2
-                )
-            ]
-        )
         
         
 

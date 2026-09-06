@@ -4,7 +4,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
 from django.urls import reverse
 from bloomerp.models import Workflow, WorkflowEdge, WorkflowNode, User
-from bloomerp.automation.defintion import WorkflowNodeType
 from bloomerp.automation.schema_resolver import resolve_node_input_schema
 from django.core.exceptions import ValidationError
 
@@ -20,15 +19,13 @@ class TestAutomationModels(TestCase):
 
         self.start_node = WorkflowNode.objects.create(
             workflow=self.workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {
+            sub_type="HUMAN_TRIGGER",
+            parameters={
                     "data": {
                         "first_name": "John",
                         "last_name": "Doe"
                     }
-                }
-            },
+                },
             type="TRIGGER",
             created_by=self.user,
             updated_by=self.user
@@ -38,10 +35,8 @@ class TestAutomationModels(TestCase):
             created_by=self.user,
             updated_by=self.user,
             workflow=self.workflow,
-            config={
-                "sub_type": "CREATE_OBJECT",
-                "parameters": {}
-            },
+            sub_type="CREATE_OBJECT",
+            parameters={},
             type="ACTION",
         )
         
@@ -49,10 +44,8 @@ class TestAutomationModels(TestCase):
             created_by=self.user,
             updated_by=self.user,
             workflow=self.workflow,
-            config={
-                "sub_type" : "CREATE_OBJECT",
-                "parameters" : {}
-            },
+            sub_type="CREATE_OBJECT",
+            parameters={},
             type="ACTION",
         )
 
@@ -60,10 +53,8 @@ class TestAutomationModels(TestCase):
             created_by=self.user,
             updated_by=self.user,
             workflow=self.workflow,
-            config={
-                "sub_type" : "SEND_EMAIL",
-                "parameters" : {}
-            },
+            sub_type="SEND_EMAIL",
+            parameters={},
             type="ACTION",
         )
     
@@ -100,10 +91,8 @@ class TestAutomationModels(TestCase):
         with self.assertRaises(ValidationError):
             WorkflowNode.objects.create(
                 workflow=self.workflow,
-                config={
-                    "sub_type": "HUMAN_TRIGGER",
-                    "parameters": {}
-                },
+                sub_type="HUMAN_TRIGGER",
+                parameters={},
                 type="TRIGGER",
                 created_by=self.user,
                 updated_by=self.user
@@ -141,10 +130,8 @@ class TestAutomationModels(TestCase):
                     "id": self.start_node.id,
                     "client_id": "node-1",
                     "type": "TRIGGER",
-                    "config": {
-                        "sub_type": "HUMAN_TRIGGER",
-                        "parameters": {"data": {"d": "d"}},
-                    },
+                    "sub_type": "HUMAN_TRIGGER",
+                    "parameters": {"data": {"d": "d"}},
                     "pos_x": 129,
                     "pos_y": 192,
                 },
@@ -152,28 +139,24 @@ class TestAutomationModels(TestCase):
                     "id": self.end_node.id,
                     "client_id": "node-2",
                     "type": "ACTION",
-                    "config": {
-                        "sub_type": "SEND_EMAIL",
-                        "parameters": {
+                    "sub_type": "SEND_EMAIL",
+                    "parameters": {
                             "recipient": "David",
                             "subject": "Dubrik",
                             "body": "You",
                         },
-                    },
                     "pos_x": 596,
                     "pos_y": 293,
                 },
                 {
                     "client_id": "node-3",
                     "type": "ACTION",
-                    "config": {
-                        "sub_type": "SEND_EMAIL",
-                        "parameters": {
+                    "sub_type": "SEND_EMAIL",
+                    "parameters": {
                             "recipient": "David",
                             "subject": "Second",
                             "body": "Still here",
                         },
-                    },
                     "pos_x": 596,
                     "pos_y": 100,
                 },
@@ -218,10 +201,8 @@ class TestAutomationModels(TestCase):
                     "id": self.start_node.id,
                     "client_id": "node-1",
                     "type": "TRIGGER",
-                    "config": {
-                        "sub_type": "HUMAN_TRIGGER",
-                        "parameters": {"data": {"d": "d"}},
-                    },
+                    "sub_type": "HUMAN_TRIGGER",
+                    "parameters": {"data": {"d": "d"}},
                     "pos_x": None,
                     "pos_y": "",
                 },
@@ -229,14 +210,12 @@ class TestAutomationModels(TestCase):
                     "id": self.end_node.id,
                     "client_id": "node-2",
                     "type": "ACTION",
-                    "config": {
-                        "sub_type": "SEND_EMAIL",
-                        "parameters": {
+                    "sub_type": "SEND_EMAIL",
+                    "parameters": {
                             "recipient": "David",
                             "subject": "Dubrik",
                             "body": "You",
                         },
-                    },
                     "pos_x": "not-ready",
                 },
             ],
@@ -268,31 +247,28 @@ class TestAutomationModels(TestCase):
                 {
                     "client_id": f"node-{self.start_node.id}",
                     "type": "TRIGGER",
-                    "config": {
-                        "sub_type": "HUMAN_TRIGGER",
-                        "parameters": {"data": {"d": "d"}},
-                    },
+                    "sub_type": "HUMAN_TRIGGER",
+                    "parameters": {"data": {"d": "d"}},
                     "pos_x": 129,
                     "pos_y": 192,
                 },
                 {
                     "client_id": f"node-{self.end_node.id}",
                     "type": "FLOW",
-                    "config": {
-                        "sub_type": "FILTER_OBJECTS",
-                        "parameters": {
+                    "sub_type": "FILTER_OBJECTS",
+                    "parameters": {
                             "field": "status",
                             "operator": "exact",
                             "value": "active",
                         },
-                    },
                     "pos_x": 500,
                     "pos_y": 192,
                 },
                 {
                     "client_id": "node-new-for-each",
                     "type": "FLOW",
-                    "config": {"sub_type": "FOR_EACH", "parameters": {}},
+                    "sub_type": "FOR_EACH",
+                    "parameters": {},
                     "pos_x": 774,
                     "pos_y": 192,
                 },
@@ -334,14 +310,12 @@ class TestAutomationModels(TestCase):
         self.client.force_login(self.user)
         if_node = WorkflowNode.objects.create(
             workflow=self.workflow,
-            config={
-                "sub_type": "IF_CONDITION",
-                "parameters": {
+            sub_type="IF_CONDITION",
+            parameters={
                     "field": "status",
                     "operator": "exact",
                     "value": "active",
                 },
-            },
             type="FLOW",
             created_by=self.user,
             updated_by=self.user,
@@ -363,14 +337,12 @@ class TestAutomationModels(TestCase):
         self.client.force_login(self.user)
         if_node = WorkflowNode.objects.create(
             workflow=self.workflow,
-            config={
-                "sub_type": "IF_CONDITION",
-                "parameters": {
+            sub_type="IF_CONDITION",
+            parameters={
                     "field": "status",
                     "operator": "exact",
                     "value": "{{ input.status }}",
                 },
-            },
             type="FLOW",
             created_by=self.user,
             updated_by=self.user,
@@ -396,10 +368,8 @@ class TestAutomationModels(TestCase):
         content_type = ContentType.objects.get_for_model(User)
         list_node = WorkflowNode.objects.create(
             workflow=self.workflow,
-            config={
-                "sub_type": "LIST_OBJECTS",
-                "parameters": {"content_type_id": content_type.id},
-            },
+            sub_type="LIST_OBJECTS",
+            parameters={"content_type_id": content_type.id},
             type="ACTION",
             created_by=self.user,
             updated_by=self.user,
@@ -421,10 +391,8 @@ class TestAutomationModels(TestCase):
         content_type = ContentType.objects.get_for_model(User)
         list_node = WorkflowNode.objects.create(
             workflow=self.workflow,
-            config={
-                "sub_type": "LIST_OBJECTS",
-                "parameters": {"content_type_id": content_type.id},
-            },
+            sub_type="LIST_OBJECTS",
+            parameters={"content_type_id": content_type.id},
             type="ACTION",
             created_by=self.user,
             updated_by=self.user,
@@ -445,31 +413,28 @@ class TestAutomationModels(TestCase):
         content_type = ContentType.objects.get_for_model(User)
         list_node = WorkflowNode.objects.create(
             workflow=self.workflow,
-            config={
-                "sub_type": "LIST_OBJECTS",
-                "parameters": {"content_type_id": content_type.id},
-            },
+            sub_type="LIST_OBJECTS",
+            parameters={"content_type_id": content_type.id},
             type="ACTION",
             created_by=self.user,
             updated_by=self.user,
         )
         filter_node = WorkflowNode.objects.create(
             workflow=self.workflow,
-            config={
-                "sub_type": "FILTER_OBJECTS",
-                "parameters": {
+            sub_type="FILTER_OBJECTS",
+            parameters={
                     "field": "is_active",
                     "operator": "truthy",
                     "value": "",
                 },
-            },
             type="FLOW",
             created_by=self.user,
             updated_by=self.user,
         )
         for_each_node = WorkflowNode.objects.create(
             workflow=self.workflow,
-            config={"sub_type": "FOR_EACH", "parameters": {}},
+            sub_type="FOR_EACH",
+            parameters={},
             type="FLOW",
             created_by=self.user,
             updated_by=self.user,
@@ -504,10 +469,8 @@ class TestAutomationModels(TestCase):
                 created_by=self.user,
                 updated_by=self.user,
                 type="ACTION",
-                config={
-                    "sub_type" : "DOES_NOT_EXIST",
-                    "parameters" : {}
-                }
+                sub_type="DOES_NOT_EXIST",
+                parameters={}
             )
 
 
@@ -517,20 +480,16 @@ class TestWorkflowSaveDraftClientIds(TestCase):
         self.workflow = Workflow.objects.create(name="Draft Client Workflow")
         self.start_node = WorkflowNode.objects.create(
             workflow=self.workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {"d": "d"}},
-            },
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"d": "d"}},
             type="TRIGGER",
             created_by=self.user,
             updated_by=self.user,
         )
         self.action_node = WorkflowNode.objects.create(
             workflow=self.workflow,
-            config={
-                "sub_type": "CREATE_OBJECT",
-                "parameters": {},
-            },
+            sub_type="CREATE_OBJECT",
+            parameters={},
             type="ACTION",
             created_by=self.user,
             updated_by=self.user,
@@ -551,10 +510,8 @@ class TestWorkflowSaveDraftClientIds(TestCase):
                     "id": self.start_node.id,
                     "client_id": "node-1",
                     "type": "TRIGGER",
-                    "config": {
-                        "sub_type": "HUMAN_TRIGGER",
-                        "parameters": {"data": {"d": "d"}},
-                    },
+                    "sub_type": "HUMAN_TRIGGER",
+                    "parameters": {"data": {"d": "d"}},
                     "pos_x": 129,
                     "pos_y": 192,
                 },
@@ -562,17 +519,16 @@ class TestWorkflowSaveDraftClientIds(TestCase):
                     "id": self.action_node.id,
                     "client_id": "node-2",
                     "type": "ACTION",
-                    "config": {
-                        "sub_type": "CREATE_OBJECT",
-                        "parameters": {},
-                    },
+                    "sub_type": "CREATE_OBJECT",
+                    "parameters": {},
                     "pos_x": 500,
                     "pos_y": 192,
                 },
                 {
                     "client_id": "draft-7",
                     "type": "FLOW",
-                    "config": {"sub_type": "FOR_EACH", "parameters": {}},
+                    "sub_type": "FOR_EACH",
+                    "parameters": {},
                     "pos_x": 774,
                     "pos_y": 192,
                 },
@@ -617,37 +573,32 @@ class TestWorkflowMultiInputSchema(TestCase):
         workflow = Workflow.objects.create(name="Merge schema workflow")
         trigger = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "HUMAN_TRIGGER",
-                "parameters": {"data": {"run": True}},
-            },
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"run": True}},
             type="TRIGGER",
             created_by=user,
             updated_by=user,
         )
         left_node = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "ENRICH_DATA",
-                "parameters": {"data": {"left_value": "left"}},
-            },
+            sub_type="ENRICH_DATA",
+            parameters={"data": {"left_value": "left"}},
             type="ACTION",
             created_by=user,
             updated_by=user,
         )
         right_node = WorkflowNode.objects.create(
             workflow=workflow,
-            config={
-                "sub_type": "ENRICH_DATA",
-                "parameters": {"data": {"right_value": "right"}},
-            },
+            sub_type="ENRICH_DATA",
+            parameters={"data": {"right_value": "right"}},
             type="ACTION",
             created_by=user,
             updated_by=user,
         )
         merge_node = WorkflowNode.objects.create(
             workflow=workflow,
-            config={"sub_type": "MERGE_BRANCHES", "parameters": {}},
+            sub_type="MERGE_BRANCHES",
+            parameters={},
             type="FLOW",
             created_by=user,
             updated_by=user,

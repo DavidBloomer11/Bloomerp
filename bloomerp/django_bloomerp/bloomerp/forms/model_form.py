@@ -4,10 +4,11 @@ from dataclasses import dataclass
 from typing import Any, Type
 
 from django import forms
-from django.core.exceptions import ValidationError
+from django.core.exceptions import FieldDoesNotExist, ValidationError
 from django.db import transaction
 from django.db.models import Model, QuerySet
 from django.utils.datastructures import MultiValueDict
+from django.db import models
 
 from bloomerp.form_fields.one_to_many_field import (
     OneToManyCleanedData,
@@ -67,14 +68,10 @@ def get_model_form_application_fields(
     if not exclude_auto_managed:
         return fields.order_by("field")
 
-    included_ids = [
-        application_field.pk
-        for application_field in fields
-        if application_field.field not in AUTO_MANAGED_MODEL_FORM_FIELD_NAMES
-        or application_field.get_field_type_enum().value.editable_without_form_field
-    ]
-    return ApplicationField.get_for_model(model_cls).filter(
-        pk__in=included_ids,
+    # Use the same lifecycle policy as form construction. Files remain available
+    # because their registered form factory owns editing and persistence.
+    return fields.exclude(
+        field__in=READ_ONLY_AUTO_MANAGED_MODEL_FORM_FIELD_NAMES,
     ).order_by("field")
 
 
@@ -288,6 +285,34 @@ class BloomerpModelForm(forms.ModelForm):
         return form
 
 
+def _django_saves_field(model_field) -> bool:
+    """Whether an editable Django field belongs in ModelForm.Meta.fields."""
+    return bool(
+        model_field is not None
+        and model_field.editable
+        and (model_field.concrete or model_field.many_to_many)
+    )
+
+
+def _build_registered_form_field(application_field: ApplicationField) -> forms.Field:
+    """Render display-only fields when neither Django nor a factory supplies a form."""
+    from bloomerp.field_types.utils.form_field_factories import (
+        build_form_field,
+        build_widget,
+    )
+
+    form_field = build_form_field(application_field)
+    if form_field is not None:
+        return form_field
+
+    return forms.Field(
+        required=False,
+        label=application_field.title,
+        widget=build_widget(application_field),
+        disabled=True,
+    )
+
+
 def bloomerp_modelform_factory(
     model_cls: Type[Model],
     fields: list[str] | str = "__all__",
@@ -304,57 +329,29 @@ def bloomerp_modelform_factory(
     read_only_field_names: set[str] = set()
 
     for application_field in application_fields:
-        field_type = application_field.get_field_type_enum().value
-        form_field = application_field.get_form_field()
-        is_read_only_auto_managed = (
-            application_field.field
-            in READ_ONLY_AUTO_MANAGED_MODEL_FORM_FIELD_NAMES
-        )
-
+        field_name = application_field.field
         try:
             model_field = application_field._get_model_field()
-        except Exception:
+        except FieldDoesNotExist:
             model_field = None
 
-        is_model_form_field = bool(
-            not is_read_only_auto_managed
-            and field_type.allow_in_model
-            and model_field is not None
-            and model_field.editable
-            and (model_field.concrete or model_field.many_to_many)
+        managed_by_application = (
+            field_name in READ_ONLY_AUTO_MANAGED_MODEL_FORM_FIELD_NAMES
         )
-        if is_model_form_field:
-            model_field_names.append(application_field.field)
+        form_field = _build_registered_form_field(application_field)
 
-        if (
-            form_field is None
-            and field_type.editable_without_form_field
-            and not is_read_only_auto_managed
-        ):
-            form_field_class = field_type.form_field_cls or forms.Field
-            form_field_kwargs = {
-                "required": False,
-                "label": application_field.title,
-                "widget": application_field.get_widget(),
-            }
-            if issubclass(form_field_class, OneToManyField):
-                form_field_kwargs["application_field"] = application_field
-            form_field = form_field_class(**form_field_kwargs)
-        elif form_field is None:
-            form_field = forms.Field(
-                required=False,
-                label=application_field.title,
-                widget=application_field.get_widget(),
-                disabled=True,
-            )
-            read_only_field_names.add(application_field.field)
+        # Lifecycle-managed values remain visible, but ignore submitted changes.
+        if managed_by_application or form_field.disabled:
+            form_field.disabled = True
+            read_only_field_names.add(field_name)
 
-        if is_read_only_auto_managed:
-            read_only_field_names.add(application_field.field)
-
-        if not is_model_form_field:
-            non_model_field_names.add(application_field.field)
-        declared_form_fields[application_field.field] = form_field
+        # Meta.fields identifies values Django saves. Reverse relations and
+        # virtual fields instead use BloomERP's structured-value persistence.
+        if not managed_by_application and _django_saves_field(model_field):
+            model_field_names.append(field_name)
+        else:
+            non_model_field_names.add(field_name)
+        declared_form_fields[field_name] = form_field
 
     meta_class = type("Meta", (), {"model": model_cls, "fields": model_field_names})
 
@@ -370,8 +367,10 @@ def bloomerp_modelform_factory(
 
         if instance is None or instance._state.adding:
             return
-        for field_name in self.bloomerp_non_model_field_names:            
-            value = getattr(instance, field_name, None) or getattr(instance, f"{field_name}_set", None)
+        for field_name in self.bloomerp_non_model_field_names:
+            value = getattr(instance, field_name, None) or getattr(
+                instance, f"{field_name}_set", None
+            )
             if hasattr(value, "all"):
                 value = list(value.all())
             self.initial[field_name] = value

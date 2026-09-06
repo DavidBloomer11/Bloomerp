@@ -8,7 +8,7 @@ def resolve_system_message_folders(
     user_ids: list[int | str],
     **kwargs,
 ):
-    from bloomerp.communication.inbox_folder_definition import InboxFolderType
+    from bloomerp.communication.registry import INBOX_FOLDER_REGISTRY
     from bloomerp.models.communication.inbox.inbox_folder import InboxFolder
 
     return InboxFolder.objects.filter(
@@ -16,7 +16,7 @@ def resolve_system_message_folders(
         | Q(inbox__shared_with_users__id__in=user_ids)
         | Q(inbox__shared_with_groups__user__id__in=user_ids),
         inbox__source_object__isnull=True,
-        type=InboxFolderType.IN_APP_NOTIFICATIONS.value.key,
+        type=INBOX_FOLDER_REGISTRY.IN_APP_NOTIFICATIONS.key,
     ).distinct()
 
 

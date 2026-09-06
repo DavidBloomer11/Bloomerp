@@ -6,7 +6,7 @@ from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
 
-from bloomerp.field_types.types import FieldType
+from bloomerp.field_types.registry import FIELD_TYPE_REGISTRY
 from bloomerp.models import ApplicationField
 from bloomerp.permissions.definition import AccessRule, RowPolicyRuleContent
 from bloomerp.permissions.manager import UserPolicyManager
@@ -105,7 +105,7 @@ def _get_preview_columns(content_type: ContentType, field_policies: dict) -> lis
             {
                 "field": application_field,
                 "title": application_field.title,
-                "is_field_type": FieldType.template_context(application_field.field_type),
+                "is_field_type": FIELD_TYPE_REGISTRY.template_context(application_field.get_field_type()),
                 "tooltip_text": _format_permission_tooltip(permission_codenames),
             }
         )

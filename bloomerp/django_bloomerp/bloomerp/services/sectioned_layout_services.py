@@ -7,7 +7,7 @@ from django import forms
 from django.forms import BoundField
 from django.db.models import Model
 
-from bloomerp.field_types.types import FieldType
+from bloomerp.field_types.registry import FIELD_TYPE_REGISTRY
 from bloomerp.models import FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.permissions.manager import UserPolicyManager
@@ -311,13 +311,13 @@ def get_available_layout_fields(*, content_type: ContentType, user, layout_kind:
         if not permission_manager.has_field_permission(field, permission_str):
             continue
 
-        field_type = field.get_field_type_enum().value
+        field_type = field.get_field_type()
 
         available.append(
             {
                 "id": field.pk,
                 "title": field.title,
-                "description": field_type.display_name,
+                "description": field_type.label,
                 "icon": field_type.icon,
                 "is_required": get_application_field_is_required(field),
             }
@@ -425,7 +425,7 @@ def create_default_layout(
         items = [
             LayoutItem(id=application_field.pk, colspan=1)
             for application_field in application_fields
-            if application_field.field_type_enum != FieldType.ONE_TO_MANY_FIELD
+            if application_field.get_field_type() != FIELD_TYPE_REGISTRY.ONE_TO_MANY_FIELD
             and application_field.field not in [
                 "id", 
                 "pk", 

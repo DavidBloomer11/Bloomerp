@@ -3,7 +3,8 @@ from typing import Type
 
 from django.db import models
 from django.db.models import Q
-from bloomerp.communication.inbox_folder_definition import InboxFolderType, InboxFolderTypeDefinition
+from bloomerp.communication.inbox_folder_definition import InboxFolderTypeDefinition
+from bloomerp.communication.registry import INBOX_FOLDER_REGISTRY, inbox_folder_choices
 from bloomerp.models import BloomerpModel
 from bloomerp.models.communication.inbox.inbox_item import InboxItem
 from bloomerp.models.users.user import AbstractBloomerpUser
@@ -24,7 +25,7 @@ class InboxFolder(BloomerpModel):
     )
     type = models.CharField(
         max_length=50,
-        choices=InboxFolderType.choices(),
+        choices=inbox_folder_choices,
         verbose_name=_("Type"),
     )
     related_object_id = models.CharField(
@@ -71,9 +72,12 @@ class InboxFolder(BloomerpModel):
     
     def inbox_folder_type(self) -> InboxFolderTypeDefinition:
         """
-        Returns the InboxFolderType enum value corresponding to the folder's type.
+        Returns the registered definition corresponding to the folder's type.
         """
-        return InboxFolderType.from_key(self.type).value
+        folder_type = INBOX_FOLDER_REGISTRY.get(self.type)
+        if folder_type is None:
+            raise ValueError(f"Unsupported inbox folder type: {self.type}")
+        return folder_type
     
     def query_items(self, query_params: dict) -> QuerySet[InboxItem]:
         """
@@ -117,7 +121,7 @@ class InboxFolder(BloomerpModel):
     @staticmethod
     def get_folders_by_users_and_type(
         users: list[AbstractBloomerpUser] | list[int] | int | AbstractBloomerpUser,
-        folder_type: InboxFolderType | str,
+        folder_type: InboxFolderTypeDefinition | str,
     ) -> QuerySet["InboxFolder"]:
         """
         Returns a queryset of InboxFolder instances for the given users and folder type.
@@ -141,5 +145,9 @@ class InboxFolder(BloomerpModel):
             | Q(inbox__shared_with_users__id__in=user_ids)
             | Q(inbox__shared_with_groups__user__id__in=user_ids),
             inbox__source_object__isnull=True,
-            type=folder_type.value.key if isinstance(folder_type, InboxFolderType) else folder_type,
+            type=(
+                folder_type.key
+                if isinstance(folder_type, InboxFolderTypeDefinition)
+                else folder_type
+            ),
         ).distinct()

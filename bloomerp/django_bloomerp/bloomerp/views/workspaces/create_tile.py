@@ -9,7 +9,7 @@ from bloomerp.services.sql_services import SqlExecutor
 from bloomerp.views.base import BaseBloomerpView
 from bloomerp.views.mixins.conditional_staff_required_mixin import ConditionalStaffRequiredMixin
 from bloomerp.views.mixins.wizard_mixin import BaseStateOrchestrator, WizardMixin, WizardStep
-from bloomerp.workspaces.tiles import TileType
+from bloomerp.workspaces.registry import TILE_TYPE_REGISTRY
 from bloomerp.models.workspaces.tile import Tile
 from bloomerp.router import router
 from bloomerp.views.mixins.htmx_mixin import HtmxMixin
@@ -41,20 +41,20 @@ def ctx_0(request, view, orchestrator: BaseStateOrchestrator):
         "selected_tile_type": selected_tile_type or "",
         "tiles": [
             {
-                "key": tile_type.name,
-                "name": tile_type.value.name,
-                "description": tile_type.value.description,
-                "icon": tile_type.value.icon,
-                "selected": selected_tile_type == tile_type.name,
+                "key": key,
+                "name": tile_type.name,
+                "description": tile_type.description,
+                "icon": tile_type.icon,
+                "selected": selected_tile_type == key,
             }
-            for tile_type in TileType
+            for key, tile_type in TILE_TYPE_REGISTRY.items()
         ]
     }
 
 
 def pcs_0(request: HttpRequest, view, orchestrator: BaseStateOrchestrator):
     tile_type = request.POST.get("tile_type")
-    if tile_type not in TileType.__members__:
+    if TILE_TYPE_REGISTRY.get(tile_type) is None:
         return WizardError(
             message=_("Please select a tile type to continue."),
             title=_("Selection required"),
@@ -129,7 +129,7 @@ def pcs_analytics_builder(request: HttpRequest, view, orchestrator: BaseStateOrc
 
 
 def ctx_type_config(request, view, orchestrator: BaseStateOrchestrator):
-    tile_type = TileType.from_key(orchestrator.get_session_data("tile_type")).value
+    tile_type = TILE_TYPE_REGISTRY.get(orchestrator.get_session_data("tile_type"))
 
     if tile_type.form_cls:
         form = tile_type.form_cls()
@@ -178,7 +178,8 @@ class CreateTileView(WizardMixin, BaseBloomerpView, TemplateView):
     session_key = CREATE_TILE_SESSION_KEY
     
     def get_step(self, step: int) -> WizardStep | None:
-        tile_type = TileType.from_key(self.orchestrator.get_session_data("tile_type"))
+        tile_type_key = self.orchestrator.get_session_data("tile_type")
+        tile_type = TILE_TYPE_REGISTRY.get(tile_type_key)
 
         if step == 0:
             return WizardStep(
@@ -193,7 +194,7 @@ class CreateTileView(WizardMixin, BaseBloomerpView, TemplateView):
             return None
 
         if step == 1:
-            if tile_type == TileType.ANALYTICS_TILE:
+            if tile_type_key == "ANALYTICS_TILE":
                 return WizardStep(
                     name=_("Select query"),
                     template_name="views/workspaces/create_tile_wizard/create_tile_select_query.html",
@@ -205,7 +206,7 @@ class CreateTileView(WizardMixin, BaseBloomerpView, TemplateView):
             return BUILDER_STEP
 
         if step == 2:
-            if tile_type == TileType.ANALYTICS_TILE:
+            if tile_type_key == "ANALYTICS_TILE":
                 return BUILDER_STEP
         
         return None

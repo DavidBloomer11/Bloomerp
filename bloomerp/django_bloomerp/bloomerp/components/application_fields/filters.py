@@ -6,11 +6,28 @@ from django.shortcuts import render
 from bloomerp.models.application_field import ApplicationField
 from django.contrib.contenttypes.models import ContentType
 from bloomerp.router import router
-from bloomerp.field_types.types import FieldType
+from bloomerp.field_types.registry import load_builtin_field_types
 
-FILTERABLE_FIELD_TYPES = [
-    field_type.value.id for field_type in FieldType if len(field_type.value.lookups) > 0
-]
+FIELD_TYPE_REGISTRY = load_builtin_field_types()
+
+def filterable_field_type_ids() -> list[str]:
+    """Include types registered by extensions after this module was imported."""
+    return [definition.id for definition in FIELD_TYPE_REGISTRY.values() if definition.lookups]
+
+
+def related_field_type_ids() -> list[str]:
+    return [
+        definition.id for definition in FIELD_TYPE_REGISTRY.values()
+        if definition.model_field_cls is None and definition.lookups
+    ]
+
+
+EXPANDABLE_FIELD_TYPE_IDS = {
+    FIELD_TYPE_REGISTRY.FOREIGN_KEY.id,
+    FIELD_TYPE_REGISTRY.MANY_TO_MANY_FIELD.id,
+    FIELD_TYPE_REGISTRY.ONE_TO_ONE_FIELD.id,
+    FIELD_TYPE_REGISTRY.ONE_TO_MANY_FIELD.id,
+}
 
 
 def _get_related_model(application_field: ApplicationField):
@@ -71,15 +88,10 @@ def filters_init(request:HttpRequest, content_type_id:int) -> HttpResponse:
 
     if not application_field_id:
         application_fields = ApplicationField.get_for_content_type_id(content_type_id).filter(
-            field_type__in=FILTERABLE_FIELD_TYPES
+            field_type__in=filterable_field_type_ids()
         )
-        related_field_type_ids = [
-            field_type.value.id
-            for field_type in FieldType
-            if not field_type.value.allow_in_model and field_type.value.lookups
-        ]
-        model_fields = application_fields.exclude(field_type__in=related_field_type_ids)
-        related_fields = application_fields.filter(field_type__in=related_field_type_ids)
+        model_fields = application_fields.exclude(field_type__in=related_field_type_ids())
+        related_fields = application_fields.filter(field_type__in=related_field_type_ids())
     else:
         application_fields = None
         selected_application_field = ApplicationField.objects.get(id=application_field_id)
@@ -131,7 +143,7 @@ def filters_lookup_operators(
         base_application_field_id = request.GET.get("base_application_field_id", None)
         
         # Get the field type
-        field_type = application_field.get_field_type_enum()
+        field_type = application_field.get_field_type()
         
         return render(
             request,
@@ -174,7 +186,7 @@ def value_input(
         field_path = request.GET.get("field_path", None)
         base_application_field_id = request.GET.get("base_application_field_id", None)
         
-        field_type = application_field.get_field_type_enum()
+        field_type = application_field.get_field_type()
         
         # Get the lookup value
         lookup_option = None
@@ -193,7 +205,7 @@ def value_input(
                 return HttpResponse("Related model not found.", status=400)
             related_content_type_id = ContentType.objects.get_for_model(related_model).id
             related_fields = ApplicationField.get_for_content_type_id(related_content_type_id).filter(
-                field_type__in=FILTERABLE_FIELD_TYPES
+                field_type__in=filterable_field_type_ids()
             )
 
             return render(
@@ -208,9 +220,9 @@ def value_input(
                 }
             )
         
-        lookup = application_field.get_field_type_enum().get_lookup_by_id(lookup_value).value
-        
-        return HttpResponse(lookup.render(application_field, name_override=field_path))
+        return HttpResponse(
+            lookup_option.value.render(application_field, name_override=field_path)
+        )
         
     except ApplicationField.DoesNotExist:
         return HttpResponse("Application field not found.", status=404)
@@ -233,15 +245,8 @@ def related_fields(
     path_prefix = request.GET.get("path_prefix", "")
 
     application_fields = ApplicationField.get_for_content_type_id(content_type_id).filter(
-        field_type__in=FILTERABLE_FIELD_TYPES
+        field_type__in=filterable_field_type_ids()
     )
-
-    expandable_field_types = {
-        FieldType.FOREIGN_KEY.id,
-        FieldType.MANY_TO_MANY_FIELD.id,
-        FieldType.ONE_TO_ONE_FIELD.id,
-        FieldType.ONE_TO_MANY_FIELD.id,
-    }
 
     return render(
         request,
@@ -250,7 +255,7 @@ def related_fields(
             "application_fields": _prepare_related_fields(application_fields),
             "level": level,
             "path_prefix": path_prefix,
-            "expandable_field_types": expandable_field_types,
+            "expandable_field_types": EXPANDABLE_FIELD_TYPE_IDS,
         }
     )
     

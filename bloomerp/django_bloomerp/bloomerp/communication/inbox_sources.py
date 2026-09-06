@@ -146,7 +146,9 @@ class InboxSourceRegistry:
 
     _sources: ClassVar[dict[str, RegisteredInboxSource]] = {}
     _defaults_loaded: ClassVar[bool] = False
+    _loaded_default_sources: ClassVar[set[tuple[str, str]]] = set()
     _signals_connected: ClassVar[bool] = False
+    _connected_signal_sources: ClassVar[set[str]] = set()
 
     @classmethod
     def register(
@@ -184,19 +186,19 @@ class InboxSourceRegistry:
 
     @classmethod
     def load_defaults(cls) -> None:
-        if cls._defaults_loaded:
-            return
+        from bloomerp.communication.registry import INBOX_FOLDER_REGISTRY
 
-        from bloomerp.communication.inbox_folder_definition import InboxFolderType
-
-        for folder_type in InboxFolderType:
-            definition = folder_type.value
+        for definition in INBOX_FOLDER_REGISTRY.values():
             for source in definition.default_sources or ():
+                source_identity = (definition.key, source.key)
+                if source_identity in cls._loaded_default_sources:
+                    continue
                 cls.register(
                     folder_type=definition.key,
                     source=source,
-                    origin=f"InboxFolderType.{folder_type.name}",
+                    origin=f"InboxFolderRegistry.{definition.key}",
                 )
+                cls._loaded_default_sources.add(source_identity)
 
         cls._defaults_loaded = True
 
@@ -238,12 +240,11 @@ class InboxSourceRegistry:
 
     @classmethod
     def connect_signals(cls) -> None:
-        if cls._signals_connected:
-            return
-
         for registered in cls.all():
             source = registered.source
             if not isinstance(source, InboxSignalSource):
+                continue
+            if source.key in cls._connected_signal_sources:
                 continue
 
             signal = _resolve_signal(source)
@@ -253,6 +254,7 @@ class InboxSourceRegistry:
                 dispatch_uid=source.dispatch_uid,
                 weak=False,
             )
+            cls._connected_signal_sources.add(source.key)
 
         cls._signals_connected = True
 
@@ -261,7 +263,9 @@ class InboxSourceRegistry:
         """Clear registry state. Intended for isolated tests."""
         cls._sources.clear()
         cls._defaults_loaded = False
+        cls._loaded_default_sources.clear()
         cls._signals_connected = False
+        cls._connected_signal_sources.clear()
 
 
 def _resolve_signal(source: InboxSignalSource) -> "Signal":

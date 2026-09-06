@@ -10,9 +10,8 @@ class BaseExecutor:
     input_requirement = WorkflowInputRequirement(value_type="any")
     output_schema = WorkflowIOSchema(value_type="any")
 
-    def __init__(self, config: dict):
-        self.raw_config : dict = config or {}
-        self.config : dict = self.raw_config.get("parameters") or {}
+    def __init__(self, parameters: dict):
+        self.config: dict = parameters or {}
 
     def resolve_config(self, input_data: dict) -> dict:
         return resolve_parameters(self.config, input_data)

@@ -72,7 +72,7 @@ class ObjectCrudTrigger(BaseTrigger):
         config: dict | None = None,
         input_schema: WorkflowIOSchema | None = None,
     ) -> WorkflowIOSchema:
-        content_type_id = (config or {}).get("parameters", {}).get("content_type_id")
+        content_type_id = (config or {}).get("content_type_id")
         if not content_type_id:
             return cls.output_schema
 
@@ -103,4 +103,3 @@ class ObjectCrudTrigger(BaseTrigger):
                 )
             ],
         )
-

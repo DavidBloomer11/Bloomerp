@@ -1,21 +1,15 @@
 from bloomerp.models.access_control.policy import Policy
 from rest_framework import serializers
 from django.contrib.auth.models import Permission
-from bloomerp.models.access_control.row_policy_rule import RowPolicyRule, RowPolicyRuleContent
+from bloomerp.models.access_control.row_policy_rule import ROW_POLICY_DISALLOWED_FIELD_TYPE_IDS, RowPolicyRule, RowPolicyRuleContent
 from bloomerp.models.access_control.row_policy import RowPolicy
 from bloomerp.models.access_control.field_policy import FieldPolicy
 from bloomerp.models.application_field import ApplicationField
-from bloomerp.field_types.types import FieldType
 from django.db import transaction
 from django.contrib.contenttypes.models import ContentType
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from pydantic import ValidationError as PydanticValidationError
-
-ROW_POLICY_DISALLOWED_FIELD_TYPE_IDS = {
-    FieldType.ONE_TO_MANY_FIELD.id,
-    FieldType.PROPERTY.id,
-}
 
 
 @extend_schema_field(OpenApiTypes.STR)

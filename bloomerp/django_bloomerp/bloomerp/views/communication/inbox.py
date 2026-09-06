@@ -1,6 +1,7 @@
 import json
 
-from bloomerp.communication.inbox_folder_definition import INBOX_ITEM_RENDER_TARGET, INBOX_ITEMS_TARGET, INBOX_MESSAGE_TARGET, InboxFolderType
+from bloomerp.communication.inbox_folder_definition import INBOX_ITEM_RENDER_TARGET, INBOX_ITEMS_TARGET, INBOX_MESSAGE_TARGET
+from bloomerp.communication.registry import INBOX_FOLDER_REGISTRY
 from bloomerp.models.communication.inbox.inbox import Inbox
 from bloomerp.models.communication.inbox.user_inbox_preference import UserInboxPreference
 from bloomerp.services.preference_services import PreferenceManager
@@ -26,7 +27,11 @@ class InboxView(BaseBloomerpView, TemplateView):
             force_create=False,
         )
         inbox_preference = self.get_inbox_preference(inbox)
-        ctx["inbox_types"] = [i.value for i in InboxFolderType if not i.value.source_model]
+        ctx["inbox_types"] = [
+            folder_type
+            for folder_type in INBOX_FOLDER_REGISTRY.values()
+            if not folder_type.source_model
+        ]
         ctx["inbox"] = inbox
         ctx["inbox_preference"] = inbox_preference
         ctx["can_manage_inbox"] = bool(

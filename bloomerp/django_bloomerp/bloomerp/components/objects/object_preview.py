@@ -6,7 +6,6 @@ from bloomerp.models.users.user_object_layout_preference import UserObjectLayout
 from bloomerp.permissions.definition import BloomerpPermission
 from bloomerp.permissions.manager import UserPolicyManager
 from bloomerp.router import router
-from bloomerp.services.detail_view_services import get_default_layout
 from bloomerp.services.preference_services import PreferenceManager
 from bloomerp.services.sectioned_layout_services import resolve_detail_layout_rows
 
@@ -56,17 +55,6 @@ def object_preview(request: HttpRequest, content_type_id: int, object_id: str) -
             user=request.user,
         )
     }
-
-    if not any(row.get("items") for row in layout["rows"]):
-        preference.layout = get_default_layout(content_type=content_type, user=request.user).model_dump()
-        preference.save(update_fields=["layout"])
-        layout = {
-            "rows": resolve_detail_layout_rows(
-                layout=preference.layout_obj,
-                content_type=content_type,
-                user=request.user,
-            )
-        }
 
     context = {
         "object": obj,

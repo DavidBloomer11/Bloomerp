@@ -11,8 +11,9 @@ interface SavedWorkflowNode {
     id: number;
     client_id: string;
     type: string;
+    sub_type: string;
     name?: string | null;
-    config: WorkflowNodeConfig;
+    parameters: Record<string, any>;
     pos_x: number;
     pos_y: number;
 }
@@ -29,11 +30,6 @@ interface SavedWorkflow {
     name?: string;
     nodes?: SavedWorkflowNode[];
     edges?: SavedWorkflowEdge[];
-}
-
-interface WorkflowNodeConfig {
-    sub_type?: string;
-    parameters?: Record<string, any>;
 }
 
 interface WorkflowNodeDefinition {
@@ -155,8 +151,7 @@ function getConnectionInfoFromElement(connectionElement: Element): {
     };
 }
 
-function createConfigSummary(config?: WorkflowNodeConfig): string {
-    const parameters = config?.parameters || {};
+function createConfigSummary(parameters: Record<string, any> = {}): string {
     const entries = Object.entries(parameters).filter(([key]) => key !== 'csrfmiddlewaretoken');
     if (!entries.length) return '<span class="workflow-node-empty-config">No config yet</span>';
 
@@ -175,7 +170,7 @@ function createNodeHtml(
     nodeSubType: string,
     nodeId: number,
     definition?: Partial<WorkflowNodeDefinition>,
-    config?: WorkflowNodeConfig,
+    parameters?: Record<string, any>,
     workflowNodeId?: number,
     nodeName?: string | null,
 ): string {
@@ -195,7 +190,7 @@ function createNodeHtml(
                 </div>
             </div>
             <div class="node-body">
-                <div class="workflow-node-config">${createConfigSummary(config)}</div>
+                <div class="workflow-node-config">${createConfigSummary(parameters)}</div>
             </div>
         </div>
     `;
@@ -348,7 +343,7 @@ export default class Workflow extends BaseComponent {
 
         for (const node of workflow.nodes || []) {
             const drawflowId = parseDrawflowClientId(String(node.client_id)) || node.id;
-            const nodeSubType = node.config?.sub_type || '';
+            const nodeSubType = node.sub_type || '';
             const definition = this.getNodeDefinition(node.type, nodeSubType);
             const nodeData = {
                 workflowNodeId: node.id,
@@ -356,7 +351,7 @@ export default class Workflow extends BaseComponent {
                 nodeSubType,
                 nodeName: node.name || '',
                 nodeDefinition: definition,
-                config: node.config || { sub_type: nodeSubType, parameters: {} },
+                parameters: node.parameters || {},
             };
             const inputs = node.type === 'TRIGGER' ? 0 : 1;
             
@@ -368,7 +363,7 @@ export default class Workflow extends BaseComponent {
                 toCanvasPosition(node.pos_y, WORKFLOW_CANVAS_OFFSET_Y),
                 `${node.type}-${drawflowId}`,
                 nodeData,
-                createNodeHtml(node.type, nodeSubType, drawflowId, definition, nodeData.config, node.id, node.name),
+                createNodeHtml(node.type, nodeSubType, drawflowId, definition, nodeData.parameters, node.id, node.name),
                 false
             ));
 
@@ -1046,10 +1041,8 @@ export default class Workflow extends BaseComponent {
                 client_id: clientIdByDrawflowId.get(drawflowId) || buildWorkflowClientId(drawflowId),
                 type: node.data?.nodeType || node.name,
                 name: node.data?.nodeName || null,
-                config: {
-                    sub_type: node.data?.nodeSubType,
-                    parameters: node.data?.config?.parameters || {},
-                },
+                sub_type: node.data?.nodeSubType,
+                parameters: node.data?.parameters || {},
                 pos_x: toStoredPosition(node.pos_x, WORKFLOW_CANVAS_OFFSET_X),
                 pos_y: toStoredPosition(node.pos_y, WORKFLOW_CANVAS_OFFSET_Y),
             })),
@@ -1205,10 +1198,7 @@ export default class Workflow extends BaseComponent {
         const coordinates = this.getViewportCenterCoordinates();
         let numberOfInputs = 1;
         const definition = this.getNodeDefinition(nodeType, nodeSubType);
-        const config = {
-            sub_type: nodeSubType,
-            parameters: {},
-        };
+        const parameters = {};
 
         if (nodeType==='TRIGGER') {
             numberOfInputs=0
@@ -1226,9 +1216,9 @@ export default class Workflow extends BaseComponent {
                 nodeSubType,
                 nodeDefinition: definition,
                 nodeName: '',
-                config,
+                parameters,
             },
-            createNodeHtml(nodeType, nodeSubType, this.nodeId, definition, config),
+            createNodeHtml(nodeType, nodeSubType, this.nodeId, definition, parameters),
             false
         );
                 
@@ -1507,14 +1497,9 @@ export default class Workflow extends BaseComponent {
 
         const parameters = this.formToParameters(form);
         if (!parameters) return null;
-        const config = {
-            sub_type: nodeData.data?.nodeSubType,
-            parameters,
-        };
-
         const updatedData = {
             ...nodeData.data,
-            config,
+            parameters,
         };
         this.drawflow.updateNodeDataFromId(drawflowNodeId, updatedData);
         this.refreshNodeCard(drawflowNodeId, updatedData);
@@ -1563,7 +1548,7 @@ export default class Workflow extends BaseComponent {
             nodeData.nodeSubType,
             nodeId,
             definition,
-            nodeData.config,
+            nodeData.parameters,
             nodeData.workflowNodeId,
             nodeData.nodeName,
         );

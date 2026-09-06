@@ -13,9 +13,9 @@ from django.urls import reverse
 
 from bloomerp.components.objects.dataviews.dataview import (
     _apply_default_filters_to_querydict,
-    _get_dataview_type_definition,
     _normalize_default_filters,
 )
+from bloomerp.dataviews.registry import DATAVIEW_REGISTRY
 from bloomerp.models import ApplicationField
 from bloomerp.models.users.user_list_view_preference import UserListViewPreference
 from bloomerp.permissions.definition import BloomerpPermission
@@ -123,7 +123,7 @@ def _editable_fields(
 def _filter_querydict(request: HttpRequest, preference: UserListViewPreference):
     querydict = request.GET.copy()
     reserved_keys = set(RESERVED_BULK_QUERY_KEYS)
-    definition = _get_dataview_type_definition(preference.view_type)
+    definition = DATAVIEW_REGISTRY.get(preference.view_type)
     if definition is not None:
         reserved_keys |= definition.renderer_cls.get_reserved_query_params()
 

@@ -43,7 +43,7 @@ class HumanTrigger(BaseTrigger):
 
     @classmethod
     def get_output_schema(cls, config=None, input_schema=None):
-        data = (config or {}).get("parameters", {}).get("data")
+        data = (config or {}).get("data")
         if data is None:
             return WorkflowIOSchema(
                 value_type=WorkflowValueType.NONE,

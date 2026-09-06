@@ -9,9 +9,9 @@ from django.utils.translation import gettext_lazy as _
 
 
 def get_tile_type_choices():
-    from bloomerp.workspaces.tiles import TileType
+    from bloomerp.workspaces.registry import TILE_TYPE_REGISTRY
 
-    return [(tile.name, tile.value.name) for tile in TileType]
+    return TILE_TYPE_REGISTRY.choices()
 
 class Tile(BloomerpModel):
     """
