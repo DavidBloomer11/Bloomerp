@@ -38,9 +38,9 @@ class ApplicationFieldLayoutFormMixin(LayoutFormMixin, ABC):
     )
     def edit_url_extractor_func(self, item: LayoutItem) -> str | None:
         application_field = self.get_application_field(item)
-        if not application_field.get_field_type_enum().value.field_display_options:
+        if not application_field.get_field_type().display_options:
             return None
-
+        
         layout_object = self.get_layout_object()
         query = urlencode(
             {

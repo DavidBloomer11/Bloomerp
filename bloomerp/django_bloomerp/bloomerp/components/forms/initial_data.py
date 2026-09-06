@@ -19,7 +19,7 @@ from bloomerp.services.sectioned_layout_services import (
 
 def _field_type_id(application_field: ApplicationField) -> str:
     try:
-        return application_field.get_field_type_enum().value.id
+        return application_field.get_field_type().id
     except (FieldDoesNotExist, ValueError):
         return application_field.field_type
 

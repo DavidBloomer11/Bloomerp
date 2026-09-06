@@ -21,7 +21,7 @@ import uuid
 from bloomerp.models import Bookmark, AbstractBloomerpUser, ApplicationField
 import uuid
 from django.template.loader import render_to_string
-from bloomerp.field_types.types import FieldType
+from bloomerp.field_types.registry import FIELD_TYPE_REGISTRY
 from bloomerp.config.settings import BLOOMERP_LANGUAGES
 from bloomerp.services.sectioned_layout_services import (
     build_crud_layout_field_context,
@@ -335,14 +335,14 @@ def render_dataview_value(
     """
     # Get the value of the field
     try:
-        value = application_field.field_type_enum.value.dataview_value_func(application_field, object)
+        value = application_field.get_field_type().render_value(application_field, object)
     except Exception:
         value = None
     
     return {
         "value": value,
         "object": object,
-        "is_field_type": FieldType.template_context(application_field.field_type),
+        "is_field_type": FIELD_TYPE_REGISTRY.template_context(application_field.get_field_type()),
         "application_field_id" : application_field.id,
         "row_index" : row_index,
         "column_index" : column_index,
@@ -351,34 +351,6 @@ def render_dataview_value(
         "split_view_enabled": split_view_enabled,
         "value_content_type_id": application_field.related_model_id,
     }
-
-
-@register.inclusion_tag('inclusion_tags/layout_field.html')
-def render_detail_view_value(
-        object: Model, 
-        application_field: ApplicationField, 
-        user: AbstractBloomerpUser,
-        can_view:bool=False,
-        can_edit:bool=False,
-        colspan:int=1,
-        ):
-    """Renders a detail view value
-
-    Args:
-        object (Model): the object
-        application_field (ApplicationField): the application field
-        user (AbstractBloomerpUser): the user
-
-    Returns:
-        html: the rendered html
-    """
-    context = build_crud_layout_field_context(
-        application_field=application_field,
-        value=get_object_field_value(obj=object, application_field=application_field),
-        can_edit=can_edit,
-    )
-    context["colspan"] = colspan
-    return context
 
 
 @register.inclusion_tag('inclusion_tags/object_preview_value.html')

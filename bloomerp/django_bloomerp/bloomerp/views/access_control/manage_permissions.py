@@ -9,18 +9,14 @@ from django_htmx.http import HttpResponseClientRedirect
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
 
-from bloomerp.field_types.types import FieldType
-from bloomerp.models.access_control.row_policy_rule import RowPolicyRuleContent
+from bloomerp.models.access_control.row_policy_rule import ROW_POLICY_DISALLOWED_FIELD_TYPE_IDS, RowPolicyRuleContent
 from bloomerp.models.access_control.policy import Policy
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.router import router
 from bloomerp.serializers.access_control import PolicySerializer
 from bloomerp.views.base import BaseBloomerpView
-from bloomerp.views.mixins.conditional_staff_required_mixin import ConditionalStaffRequiredMixin
-from bloomerp.views.mixins.htmx_mixin import HtmxMixin
 from bloomerp.views.mixins.wizard_mixin import BaseStateOrchestrator, WizardMixin, WizardStep
 from bloomerp.views.mixins.wizard_mixin import WizardError
-from django.contrib.auth.mixins import UserPassesTestMixin
 from pydantic import ValidationError as PydanticValidationError
 
 GLOBAL_PERMISSIONS_KEY = "global_permissions"
@@ -30,10 +26,7 @@ FIELD_POLICY_NAME_KEY = "field_policy_name"
 FIELD_POLICIES_KEY = "field_policies"
 POLICY_NAME_KEY = "policy_name"
 POLICY_DESCRIPTION_KEY = "policy_description"
-ROW_POLICY_DISALLOWED_FIELD_TYPE_IDS = {
-    FieldType.ONE_TO_MANY_FIELD.id,
-    FieldType.PROPERTY.id,
-}
+
 
 
 def _content_type_for_model(model: type[Model]) -> ContentType:

@@ -21,14 +21,14 @@ from bloomerp.models.users import User
 from bloomerp.services.sectioned_layout_services import AvailableLayoutItem
 from django.db.models import Q
 from django.forms import Form
-from bloomerp.field_types.types import FieldType
+from bloomerp.field_types.registry import FIELD_TYPE_REGISTRY
 
 PRIMITIVE_FIELD_TYPE_MAP = {
-    TileFieldType.TEXT.value.key: FieldType.CHAR_FIELD,
-    TileFieldType.NUMERIC.value.key: FieldType.DECIMAL_FIELD,
-    TileFieldType.DATE.value.key: FieldType.DATE_FIELD,
-    TileFieldType.DATETIME.value.key: FieldType.DATE_TIME_FIELD,
-    TileFieldType.BOOL.value.key: FieldType.BOOLEAN_FIELD,
+    TileFieldType.TEXT.value.key: FIELD_TYPE_REGISTRY.CHAR_FIELD,
+    TileFieldType.NUMERIC.value.key: FIELD_TYPE_REGISTRY.DECIMAL_FIELD,
+    TileFieldType.DATE.value.key: FIELD_TYPE_REGISTRY.DATE_FIELD,
+    TileFieldType.DATETIME.value.key: FIELD_TYPE_REGISTRY.DATE_TIME_FIELD,
+    TileFieldType.BOOL.value.key: FIELD_TYPE_REGISTRY.BOOLEAN_FIELD,
 }
 
 
@@ -292,7 +292,7 @@ class WorkspaceManager:
                     for filter_config in config.filters:
                         match filter_config.type:
                             case "text":
-                                field_type = FieldType.CHAR_FIELD
+                                field_type = FIELD_TYPE_REGISTRY.CHAR_FIELD
                                 
                                 attrs
                                 
@@ -322,7 +322,7 @@ class WorkspaceManager:
                     for filter_config in config.filters:
                         result[filter_config.field] = WorkspaceFilter(
                             field=filter_config.field,
-                            type=PRIMITIVE_FIELD_TYPE_MAP[filter_config.type].value.id,
+                            type=PRIMITIVE_FIELD_TYPE_MAP[filter_config.type].id,
                             label=filter_config.field.replace("_", " ").title()
                         )  
         return result

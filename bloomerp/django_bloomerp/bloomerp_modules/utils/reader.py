@@ -9,7 +9,7 @@ import yaml
 from django.db import models
 from django.db.models import Model
 
-from bloomerp.field_types.types import FieldType, FieldTypeDefinition
+from bloomerp.field_types.registry import load_builtin_field_types, FieldTypeDefinition
 from bloomerp.models import FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.definition import BloomerpModelConfig
 from bloomerp.modules.definition import ModuleConfig, module_registry
@@ -17,7 +17,7 @@ from bloomerp.modules.definition import BaseConfig
 
 
 def _get_field_type_definition(field_type: str) -> FieldTypeDefinition:
-    field_definition = FieldType.from_id(field_type).value
+    field_definition = load_builtin_field_types().from_id(field_type)
     if not field_definition.allow_in_model:
         raise ValueError(f"Field type '{field_type}' is not allowed for model creation.")
     if field_definition.model_field_cls is None:
@@ -168,7 +168,11 @@ def create_model_from_config(
     for field_config in model_config.fields:
         field_definition = _get_field_type_definition(field_config.type)
         field_class = field_definition.model_field_cls
-        default_opts = dict(field_definition.default_model_field_args)
+        default_opts = (
+            dict(field_definition.construction.defaults)
+            if field_definition.construction is not None
+            else {}
+        )
         validator_functions = _get_validator_functions(field_config)
 
         field_opts = {

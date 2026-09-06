@@ -5,6 +5,7 @@ from typing import Any, Mapping
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
+from bloomerp.field_types.registry import FIELD_TYPE_REGISTRY
 from bloomerp.models import ApplicationField
 from bloomerp.models import FieldLayout
 
@@ -74,8 +75,8 @@ def _get_layout_one_to_many_application_fields(
             if application_field is None or application_field.pk in seen:
                 continue
 
-            field_type = application_field.get_field_type_enum().value
-            if field_type.id != "OneToManyField":
+            field_type = application_field.get_field_type()
+            if field_type.id != FIELD_TYPE_REGISTRY.ONE_TO_MANY_FIELD.id:
                 continue
 
             one_to_many_fields.append(application_field)

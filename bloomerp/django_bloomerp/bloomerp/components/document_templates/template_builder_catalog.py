@@ -38,11 +38,11 @@ def document_template_builder_catalog(request: HttpRequest) -> HttpResponse:
         )
         
         for field in fields:
-            field_type = field.get_field_type_enum()
+            field_type = field.get_field_type()
             variables.append({
                 "content_type_label": content_type.name.title(),
                 "label": field.title,
-                "field_type_label": field_type.display_name,
+                "field_type_label": field_type.label,
                 "icon": field_type.icon,
                 "token": f"{root_name}.{field.field}",
                 "injection_methods": FIELD_TYPE_TEMPLATE_INJECTIONS.get(field_type.id, []),

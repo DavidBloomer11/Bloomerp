@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 from django.urls import reverse
 
-from bloomerp.field_types.types import FieldTypeDefinition
+from bloomerp.field_types.registry import FieldTypeDefinition
 from bloomerp.models import ApplicationField
 from bloomerp.models.definition import FieldLayout, LayoutItem
 from bloomerp.models.forms.form import Form
@@ -35,7 +35,7 @@ class LayoutConfigTarget:
 
 
 def _layout_field_catalog(target: LayoutConfigTarget) -> list[dict[str, object]]:
-    from bloomerp.field_types.types import build_behavior_catalog_entry
+    from bloomerp.field_types.builtins.display import build_behavior_catalog_entry
 
     ordered_items = [
         item
@@ -69,7 +69,7 @@ def create_form(
 ) -> type[DjangoForm]:
     attrs = {
         option.id: option.build_form_field(application_field)
-        for option in field_type.field_display_options
+        for option in field_type.display_options
     }
     if target is not None:
         field_catalog = _layout_field_catalog(target)
@@ -135,13 +135,13 @@ def _save_item_config(layout_object: ContentLayoutModelMixin, application_field:
 def _build_initial_config(field_type: FieldTypeDefinition, config: dict) -> dict:
     return {
         option.id: config.get(option.id, option.default)
-        for option in field_type.field_display_options
+        for option in field_type.display_options
     }
 
 
 def _merge_cleaned_config(field_type: FieldTypeDefinition, current_config: dict, cleaned_data: dict) -> dict:
     next_config = dict(current_config)
-    for option in field_type.field_display_options:
+    for option in field_type.display_options:
         value = cleaned_data.get(option.id)
         if value in (None, "", []):
             next_config.pop(option.id, None)
@@ -193,8 +193,8 @@ def field_display_options(request: HttpRequest, application_field_id: int):
     if not _user_can_configure_field(request, target, application_field):
         return HttpResponse("Permission denied", status=403)
 
-    field_type = application_field.get_field_type_enum().value
-    if not field_type.field_display_options:
+    field_type = application_field.get_field_type()
+    if not field_type.display_options:
         return HttpResponse("This field does not have display options.")
 
     form_class = create_form(field_type, application_field, target=target)

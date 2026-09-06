@@ -1,9 +1,6 @@
-from typing import Any, Dict
-
 from django.http import HttpRequest, HttpResponse
 from bloomerp.router import router
 from bloomerp.services.activity_log_services import ActivityLogManager
-from bloomerp.views.generic.detail.base import BaseBloomerpDetailView
 from django.apps import apps
 from django.shortcuts import render
 from django.utils.translation import gettext as _
@@ -15,7 +12,6 @@ from django.utils.translation import gettext as _
 def activity_log(request:HttpRequest) -> HttpResponse:
     object_id = request.GET.get("object_id")
     content_type_id = request.GET.get("content_type_id")
-    context: dict[str, Any] = {}
     
     # Get content type and model class
     try:

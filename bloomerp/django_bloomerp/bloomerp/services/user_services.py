@@ -1,6 +1,7 @@
 """
 All rights reserved. 
 """
+from bloomerp.field_types.registry import FIELD_TYPE_REGISTRY
 from bloomerp.models.application_field import ApplicationField
 from bloomerp.models.users.user_list_view_preference import UserListViewPreference
 from django.contrib.contenttypes.models import ContentType
@@ -10,7 +11,6 @@ from dataclasses import dataclass
 
 from bloomerp.permissions.definition import BloomerpPermission
 from bloomerp.permissions.manager import UserPolicyManager
-from bloomerp.field_types.types import FieldType
 from bloomerp.services.preference_services import PreferenceManager
 
 AUTO_MANAGED_FIELD_NAMES = {
@@ -75,7 +75,7 @@ def get_data_view_fields(preference: UserListViewPreference, view_type: str = No
         BloomerpPermission.VIEW
     ).exclude(
         field_type__in=[
-            FieldType.ONE_TO_MANY_FIELD.value.id,
+            FIELD_TYPE_REGISTRY.ONE_TO_MANY_FIELD.id,
         ]
     )
     

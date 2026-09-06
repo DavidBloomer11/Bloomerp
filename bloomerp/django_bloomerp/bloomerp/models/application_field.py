@@ -8,7 +8,11 @@ from django.db.models.query import QuerySet
 from typing import Any, Optional, Type
 from django.utils.encoding import force_str
 from django.utils.translation import gettext, gettext_lazy as _
-from bloomerp.field_types.types import FieldType
+from bloomerp.field_types.registry import (
+    field_type_choices,
+    FieldTypeDefinition,
+    load_builtin_field_types,
+)
 
 class ApplicationField(models.Model):
     """
@@ -39,7 +43,7 @@ class ApplicationField(models.Model):
     )
     field_type = models.CharField(
         max_length=100, 
-        choices=FieldType.choices(),
+        choices=field_type_choices,
         help_text=_("The type of the field."),
         verbose_name=_("Field Type"),
         )
@@ -84,41 +88,15 @@ class ApplicationField(models.Model):
         return self.content_type.__str__() + " | " + str(self.field)
 
 
-    def get_field_type_enum(self) -> FieldType:
-        """Returns the FieldType enum for this application field."""
-        declared_field_type = None
-        try:
-            declared_field_type = FieldType.from_id(self.field_type)
-        except ValueError:
-            declared_field_type = None
-
+    def get_field_type(self) -> FieldTypeDefinition:
+        """Returns the FieldTypeDefinition for this application field."""
+        registry = load_builtin_field_types()
         try:
             model_field = self._get_model_field()
         except FieldDoesNotExist:
-            if declared_field_type is None:
-                raise
-            return declared_field_type
+            model_field = None
 
-        model_backed_field_type = FieldType.from_model_field_cls(model_field.__class__)
-
-        if (
-            model_backed_field_type is not None
-            and model_backed_field_type.model_field_cls == model_field.__class__
-            and (
-                declared_field_type is None
-                or declared_field_type.model_field_cls != model_field.__class__
-            )
-        ):
-            return model_backed_field_type
-
-        if declared_field_type is not None:
-            return declared_field_type
-
-        if model_backed_field_type is not None:
-            return model_backed_field_type
-
-        raise ValueError(f"Unknown field type: {self.field_type}")
-
+        return registry.resolve(self.field_type, model_field)
 
     def get_for_model(model:models.Model) -> QuerySet['ApplicationField']:
         """Returns application fields for a specific model"""
@@ -229,7 +207,7 @@ class ApplicationField(models.Model):
             return getattr(self._get_model_field(), "related_model", None)
         except FieldDoesNotExist:
             return None
-        return None
+        
 
     def _get_model_field(self) -> models.Field:
         """Resolve the concrete Django model field for this application field.
@@ -246,63 +224,23 @@ class ApplicationField(models.Model):
                 return model_cls._meta.pk
             raise
     
-    def get_form_field(self) -> forms.Field:
-        """Returns the form field object for this application field
+    def get_form_field(self) -> forms.Field | None:
+        """Build the registered form, including virtual fields without Django forms."""
+        from bloomerp.field_types.utils.form_field_factories import build_form_field
 
-        Returns:
-            forms.Field: the form field object
-        """
-        try:
-            model_field = self._get_model_field()
-        except FieldDoesNotExist:
-            return None
+        return build_form_field(self)
 
-        if not hasattr(model_field, "formfield"):
-            return None
-        
-        field_type = self.get_field_type_enum().value
-        
-        # If a custom form field class is defined, use it
-        if field_type.form_field_cls:
-            # Get the form field with custom class, but let Django handle kwargs
-            form_field = model_field.formfield(form_class=field_type.form_field_cls)
-        else:
-            # Use Django's default formfield conversion
-            form_field = model_field.formfield()
-        
-        if form_field is None:
-            return None
+    def get_form_field_cls(self) -> Type[forms.Field] | None:
+        """Return the effective form class, or None for display-only fields."""
+        form_field = self.get_form_field()
+        return type(form_field) if form_field is not None else None
 
-        if field_type.widget_cls:
-            form_field.widget = self.get_widget()
-
-        return form_field
-    
-    def get_form_field_cls(self) -> Type[forms.Field]:
-        """Returns the form class for this application field
-
-        Returns:
-            Type[forms.Field]: the form class for this model
-        """
-        field_type = self.get_field_type_enum().value
-        return field_type.form_field_cls
-           
     def get_widget(self, layout_config: dict[str, Any] | None = None) -> forms.Widget:
-        """Retursn the widget for this application field
+        """Build a fresh registered widget, falling back to the form's widget."""
+        from bloomerp.field_types.utils.form_field_factories import build_widget
 
-        Returns:
-            forms.Widget: the widget object
-        """
-        field_type = self.get_field_type_enum().value
-        return field_type.build_widget(self, layout_config=layout_config)
-    
+        return build_widget(self, layout_config=layout_config)
+
     @property
     def icon(self):
-        return self.get_field_type_enum().value.icon
-        
-        
-    @property
-    def field_type_enum(self):
-        return self.get_field_type_enum()
-    
-    
+        return self.get_field_type().icon

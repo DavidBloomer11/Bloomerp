@@ -9,7 +9,7 @@ from typing import Any
 import yaml
 from django.core.management.base import BaseCommand
 
-from bloomerp.field_types.types import FieldType
+from bloomerp.field_types.registry import FIELD_TYPE_REGISTRY
 
 
 @dataclass
@@ -119,7 +119,7 @@ class Command(BaseCommand):
         context: str,
     ) -> None:
         try:
-            field_definition = FieldType.from_id(field_type).value
+            field_definition = FIELD_TYPE_REGISTRY.from_id(field_type)
         except ValueError as exc:
             issues.append(ValidationIssue(module_id, f"{context} has unknown type '{field_type}': {exc}"))
             return

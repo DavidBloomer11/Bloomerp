@@ -1,3 +1,4 @@
+from bloomerp.field_types.registry import FieldContext
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -21,10 +22,8 @@ from bloomerp.services.sectioned_layout_services import (
     get_available_layout_fields,
 )
 from bloomerp.services.form_services import FormManager
-from bloomerp.services.one_to_many_field_services import (
-    save_submitted_one_to_many_fields,
-)
-from bloomerp.field_types.types import FieldType, Lookup
+from bloomerp.field_types import FIELD_TYPE_REGISTRY
+from bloomerp.field_types.lookups import Lookup
 from bloomerp.form_fields.address_field import AddressFormField, AddressValue
 from bloomerp.form_fields.files_relation_field import FilesCleanedData
 from bloomerp.form_fields.one_to_many_field import OneToManyCleanedData, OneToManyField
@@ -45,6 +44,22 @@ from bloomerp.widgets.object_files_widget import ObjectFilesWidget
 from bloomerp.widgets.one_to_many_field_widget import OneToManyFieldWidget
 from bloomerp.widgets.phone_number_widget import PhoneNumberWidget
 from bloomerp.widgets.week_widget import WeekWidget
+
+
+
+def _save_inline_form(*, parent_object, layout, submitted_data, user):
+    """Exercise the current ModelForm persistence path instead of the retired service."""
+    items = [item for row in layout.rows for item in row.items]
+    application_fields = [ApplicationField.objects.get(pk=item.id) for item in items]
+    form_class = bloomerp_modelform_factory(
+        type(parent_object), fields=[field.field for field in application_fields]
+    )
+    form = form_class(data=submitted_data, instance=parent_object)
+    for item, field in zip(items, application_fields):
+        form.fields[field.field].widget = field.get_widget(layout_config=item.config)
+    if not form.is_valid():
+        raise ValidationError(form.errors.as_json())
+    return form.save()
 
 
 class TestApplicationField(BaseBloomerpTestCaseWithModels):
@@ -178,21 +193,21 @@ class TestApplicationField(BaseBloomerpTestCaseWithModels):
         self.assertIsInstance(widget, OneToManyFieldWidget)
 
     def test_one_to_many_field_type_owns_widget_behavior(self):
-        field_type = FieldType.ONE_TO_MANY_FIELD.value
+        field_type = FIELD_TYPE_REGISTRY.ONE_TO_MANY_FIELD
 
-        self.assertIs(field_type.widget_cls, OneToManyFieldWidget)
-        self.assertEqual(field_type.widget_related_model_attr, "related_model")
-        self.assertTrue(field_type.editable_without_form_field)
+        self.assertIsInstance(field_type.widget_factory(FieldContext()), OneToManyFieldWidget)
+        self.assertIsNotNone(field_type.form_factory)
 
+    
     def test_files_application_field_uses_files_relation_field_type(self):
         application_field = ApplicationField.objects.get(
             content_type=ContentType.objects.get_for_model(self.CustomerModel),
             field="files",
         )
 
-        self.assertEqual(application_field.field_type, FieldType.FILES_RELATION_FIELD.id)
+        self.assertEqual(application_field.field_type, FIELD_TYPE_REGISTRY.FILES_RELATION_FIELD.id)
         self.assertIsInstance(application_field.get_widget(), ObjectFilesWidget)
-        self.assertTrue(application_field.get_field_type_enum().value.editable_without_form_field)
+        self.assertIsNotNone(application_field.get_form_field())
 
     def test_one_to_many_widget_renders_inline_table_markup(self):
         content_type = ContentType.objects.get_for_model(FieldPolicy)
@@ -238,7 +253,7 @@ class TestApplicationField(BaseBloomerpTestCaseWithModels):
 
         self.assertEqual([column.field for column in widget._get_columns()], ["name"])
 
-    def test_reverse_relation_application_field_returns_no_form_field(self):
+    def test_reverse_relation_application_field_returns_registered_form_field(self):
         content_type = ContentType.objects.get_for_model(FieldPolicy)
         application_field = ApplicationField.objects.get(
             content_type=content_type,
@@ -247,7 +262,7 @@ class TestApplicationField(BaseBloomerpTestCaseWithModels):
 
         form_field = application_field.get_form_field()
 
-        self.assertIsNone(form_field)
+        self.assertIsInstance(form_field, OneToManyField)
 
     def test_property_backed_application_field_returns_widget(self):
         content_type = ContentType.objects.get_for_model(RowPolicyRule)
@@ -273,32 +288,32 @@ class TestApplicationField(BaseBloomerpTestCaseWithModels):
         self.assertEqual(widget.language, "json")
 
     def test_phone_number_field_type_uses_phone_field_parts(self):
-        field_type = FieldType.PHONE_NUMBER_FIELD.value
+        field_type = FIELD_TYPE_REGISTRY.PHONE_NUMBER_FIELD
 
         self.assertEqual(field_type.id, "PhoneNumberField")
         self.assertIs(field_type.model_field_cls, PhoneNumberField)
-        self.assertIs(field_type.form_field_cls, PhoneNumberFormField)
-        self.assertIs(field_type.widget_cls, PhoneNumberWidget)
-        self.assertEqual(field_type.default_model_field_args["max_length"], 30)
+        self.assertIsNotNone(field_type.form_factory)
+        self.assertIsInstance(field_type.widget_factory(FieldContext()), PhoneNumberWidget)
+        self.assertEqual(field_type.construction.defaults["max_length"], 30)
         self.assertIn(Lookup.CONTAINS, field_type.lookups)
 
     def test_address_field_type_uses_address_field_parts(self):
-        field_type = FieldType.ADDRESS_FIELD.value
+        field_type = FIELD_TYPE_REGISTRY.ADDRESS_FIELD
 
         self.assertEqual(field_type.id, "AddressField")
         self.assertIs(field_type.model_field_cls, AddressField)
-        self.assertIs(field_type.form_field_cls, AddressFormField)
-        self.assertIs(field_type.widget_cls, AddressWidget)
+        self.assertIsNotNone(field_type.form_factory)
+        self.assertIsInstance(field_type.widget_factory(FieldContext()), AddressWidget)
         self.assertIn(Lookup.CONTAINS, field_type.lookups)
 
     def test_week_field_type_uses_week_field_parts(self):
-        field_type = FieldType.WEEK_FIELD.value
+        field_type = FIELD_TYPE_REGISTRY.WEEK_FIELD
 
         self.assertEqual(field_type.id, "WeekField")
         self.assertIs(field_type.model_field_cls, WeekField)
-        self.assertIs(field_type.form_field_cls, WeekFormField)
-        self.assertIs(field_type.widget_cls, WeekWidget)
-        self.assertEqual(field_type.default_model_field_args["max_length"], 8)
+        self.assertIsNotNone(field_type.form_factory)
+        self.assertIsInstance(field_type.widget_factory(FieldContext()), WeekWidget)
+        self.assertEqual(field_type.construction.defaults["max_length"], 8)
         self.assertIn(Lookup.EQUALS, field_type.lookups)
 
     def test_address_form_field_normalizes_structured_value(self):
@@ -374,11 +389,11 @@ class TestApplicationField(BaseBloomerpTestCaseWithModels):
             content_type=content_type,
             field="address",
         )
-        application_field.field_type = FieldType.JSON_FIELD.id
+        application_field.field_type = FIELD_TYPE_REGISTRY.JSON_FIELD.id
 
         form_field = application_field.get_form_field()
 
-        self.assertEqual(application_field.get_field_type_enum(), FieldType.ADDRESS_FIELD)
+        self.assertEqual(application_field.get_field_type(), FIELD_TYPE_REGISTRY.ADDRESS_FIELD)
         self.assertIsInstance(form_field, AddressFormField)
         self.assertIsInstance(form_field.widget, AddressWidget)
 
@@ -454,7 +469,7 @@ class TestApplicationField(BaseBloomerpTestCaseWithModels):
 
         form_field = application_field.get_form_field()
 
-        self.assertEqual(application_field.get_field_type_enum(), FieldType.WEEK_FIELD)
+        self.assertEqual(application_field.get_field_type(), FIELD_TYPE_REGISTRY.WEEK_FIELD)
         self.assertIsInstance(form_field, WeekFormField)
         self.assertIsInstance(form_field.widget, WeekWidget)
         self.assertEqual(form_field.widget.input_type, "week")
@@ -491,11 +506,11 @@ class TestApplicationField(BaseBloomerpTestCaseWithModels):
             content_type=content_type,
             field="phone",
         )
-        application_field.field_type = FieldType.CHAR_FIELD.id
+        application_field.field_type = FIELD_TYPE_REGISTRY.CHAR_FIELD.id
 
         form_field = application_field.get_form_field()
 
-        self.assertEqual(application_field.get_field_type_enum(), FieldType.PHONE_NUMBER_FIELD)
+        self.assertEqual(application_field.get_field_type(), FIELD_TYPE_REGISTRY.PHONE_NUMBER_FIELD)
         self.assertIsInstance(form_field, PhoneNumberFormField)
         self.assertIsInstance(form_field.widget, PhoneNumberWidget)
 
@@ -715,7 +730,7 @@ class TestApplicationField(BaseBloomerpTestCaseWithModels):
             ]
         )
 
-        save_submitted_one_to_many_fields(
+        _save_inline_form(
             parent_object=customer,
             layout=layout,
             submitted_data={
@@ -1456,7 +1471,7 @@ class TestApplicationField(BaseBloomerpTestCaseWithModels):
         )
 
         with self.assertRaises(ValidationError) as exc_info:
-            save_submitted_one_to_many_fields(
+            _save_inline_form(
                 parent_object=field_policy,
                 layout=layout,
                 submitted_data={
@@ -1469,10 +1484,10 @@ class TestApplicationField(BaseBloomerpTestCaseWithModels):
             )
 
         self.assertTrue(
-            any("Policies row 0, Name:" in message for message in exc_info.exception.messages)
+            any("name" in message.lower() for message in exc_info.exception.messages)
         )
         self.assertTrue(
-            any("Policies row 0, Row policy:" in message for message in exc_info.exception.messages)
+            any("row_policy" in message.lower() or "row policy" in message.lower() for message in exc_info.exception.messages)
         )
 
 

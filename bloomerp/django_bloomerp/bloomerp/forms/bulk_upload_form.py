@@ -3,7 +3,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models import Model
 from typing import Literal
 
-from bloomerp.field_types.types import FieldType
 from bloomerp.models import ApplicationField
 
 

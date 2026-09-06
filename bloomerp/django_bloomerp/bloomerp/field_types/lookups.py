@@ -75,19 +75,19 @@ def _sql_is_null(value: Any) -> str:
 # Widget functions
 # ---------------------
 def _equals_widget(application_field: "ApplicationField") -> forms.Widget:
-    from bloomerp.field_types.types import FieldType
-    match application_field.field_type_enum:
-        case FieldType.BOOLEAN_FIELD:
+    from bloomerp.field_types.registry import FIELD_TYPE_REGISTRY
+    match application_field.get_field_type():
+        case FIELD_TYPE_REGISTRY.BOOLEAN_FIELD:
             return forms.Select(choices=[("true", "True"), ("false", "False")], attrs={"class": "select w-full"})
-        case FieldType.FOREIGN_KEY | FieldType.ONE_TO_ONE_FIELD:
+        case FIELD_TYPE_REGISTRY.FOREIGN_KEY | FIELD_TYPE_REGISTRY.ONE_TO_ONE_FIELD:
             return ForeignFieldWidget(model=application_field.related_model.model_class(), attrs={"class": "input w-full"})
-        case FieldType.MANY_TO_MANY_FIELD:
+        case FIELD_TYPE_REGISTRY.MANY_TO_MANY_FIELD:
             return ForeignFieldWidget(model=application_field.related_model.model_class(), attrs={"class": "input w-full", "is_m2m": True})
-        case FieldType.DATE_FIELD:
+        case FIELD_TYPE_REGISTRY.DATE_FIELD:
             return forms.DateInput(attrs={"class": "input w-full", "type": "date"})
-        case FieldType.DATE_TIME_FIELD:
+        case FIELD_TYPE_REGISTRY.DATE_TIME_FIELD:
             return forms.DateTimeInput(attrs={"class": "input w-full", "type": "datetime-local"})
-        case FieldType.COUNTRY_FIELD:
+        case FIELD_TYPE_REGISTRY.COUNTRY_FIELD:
             form_field = application_field.get_form_field()
             form_field.widget.attrs.update({"class": "select w-full"})
             return form_field.widget
@@ -95,9 +95,9 @@ def _equals_widget(application_field: "ApplicationField") -> forms.Widget:
             return forms.TextInput(attrs={"class": "input w-full"})
 
 def _in_widget(application_field: "ApplicationField") -> forms.Widget:
-    from bloomerp.field_types.types import FieldType
-    match application_field.field_type_enum:
-        case FieldType.FOREIGN_KEY | FieldType.MANY_TO_MANY_FIELD:
+    from bloomerp.field_types.registry import FIELD_TYPE_REGISTRY
+    match application_field.get_field_type():
+        case FIELD_TYPE_REGISTRY.FOREIGN_KEY | FIELD_TYPE_REGISTRY.MANY_TO_MANY_FIELD:
             return ForeignFieldWidget(model=application_field.related_model.model_class(), attrs={"class": "input w-full", "is_m2m":True})
         case _:
             return forms.TextInput(attrs={"class": "input w-full", "placeholder": "Enter comma-separated values"})
@@ -274,7 +274,7 @@ def _relation_filter_class(
     if related_model is None:
         return {}
 
-    if application_field.get_field_type_enum().value.id == "ManyToManyField":
+    if application_field.get_field_type().id == "ManyToManyField":
         filter_cls = django_filters.ModelMultipleChoiceFilter
         kwargs = {
             "queryset": related_model.objects.all(),
@@ -300,7 +300,7 @@ def _relation_filter_class(
 
 
 def _is_relation_choice_field(application_field: "ApplicationField") -> bool:
-    return application_field.get_field_type_enum().value.id in {
+    return application_field.get_field_type().id in {
         "ForeignKey",
         "OneToOneField",
         "UserField",

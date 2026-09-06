@@ -1,3 +1,4 @@
+from bloomerp.field_types.registry import FieldTypeDefinition
 from datetime import date, datetime, time
 from decimal import Decimal
 from unittest.mock import patch
@@ -7,7 +8,7 @@ from django.db import models
 from django.utils import timezone
 from django_countries.fields import CountryField
 
-from bloomerp.field_types.types import FieldType
+from bloomerp.field_types import FIELD_TYPE_REGISTRY
 from bloomerp.model_fields.week_field import WeekField
 from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 from bloomerp.tests.utils.dynamic_models import create_test_models
@@ -107,7 +108,7 @@ class TestFilterUtil(BaseBloomerpTestCaseWithModels):
         filtered_qs = filter_model(self.PrimaryModel, filters)
         self.assertCountEqual(filtered_qs.values_list("id", flat=True), expected_ids)
 
-    def expected_filter_names(self, field_name: str, field_type: FieldType) -> set[str]:
+    def expected_filter_names(self, field_name: str, field_type: FieldTypeDefinition) -> set[str]:
         names = set()
         for lookup in field_type.lookups:
             if not lookup.value.filter_class_funcs:
@@ -120,21 +121,21 @@ class TestFilterUtil(BaseBloomerpTestCaseWithModels):
         FilterSet = dynamic_filterset_factory(self.PrimaryModel)
 
         field_expectations = {
-            "char_field": FieldType.CHAR_FIELD,
-            "text_field": FieldType.TEXT_FIELD,
-            "integer_field": FieldType.INTEGER_FIELD,
-            "decimal_field": FieldType.DECIMAL_FIELD,
-            "date_field": FieldType.DATE_FIELD,
-            "datetime_field": FieldType.DATE_TIME_FIELD,
-            "time_field": FieldType.TIME_FIELD,
-            "boolean_field": FieldType.BOOLEAN_FIELD,
-            "uuid_field": FieldType.UUID_FIELD,
-            "week_field": FieldType.WEEK_FIELD,
-            "country_field": FieldType.COUNTRY_FIELD,
-            "foreign_key_field": FieldType.FOREIGN_KEY,
-            "one_to_one_field": FieldType.ONE_TO_ONE_FIELD,
-            "many_to_many_field": FieldType.MANY_TO_MANY_FIELD,
-            "lines": FieldType.ONE_TO_MANY_FIELD,
+            "char_field": FIELD_TYPE_REGISTRY.CHAR_FIELD,
+            "text_field": FIELD_TYPE_REGISTRY.TEXT_FIELD,
+            "integer_field": FIELD_TYPE_REGISTRY.INTEGER_FIELD,
+            "decimal_field": FIELD_TYPE_REGISTRY.DECIMAL_FIELD,
+            "date_field": FIELD_TYPE_REGISTRY.DATE_FIELD,
+            "datetime_field": FIELD_TYPE_REGISTRY.DATE_TIME_FIELD,
+            "time_field": FIELD_TYPE_REGISTRY.TIME_FIELD,
+            "boolean_field": FIELD_TYPE_REGISTRY.BOOLEAN_FIELD,
+            "uuid_field": FIELD_TYPE_REGISTRY.UUID_FIELD,
+            "week_field": FIELD_TYPE_REGISTRY.WEEK_FIELD,
+            "country_field": FIELD_TYPE_REGISTRY.COUNTRY_FIELD,
+            "foreign_key_field": FIELD_TYPE_REGISTRY.FOREIGN_KEY,
+            "one_to_one_field": FIELD_TYPE_REGISTRY.ONE_TO_ONE_FIELD,
+            "many_to_many_field": FIELD_TYPE_REGISTRY.MANY_TO_MANY_FIELD,
+            "lines": FIELD_TYPE_REGISTRY.ONE_TO_MANY_FIELD,
         }
 
         for field_name, field_type in field_expectations.items():

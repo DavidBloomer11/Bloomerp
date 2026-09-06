@@ -1,7 +1,5 @@
 from typing import Generic, TypeVar
 
-from numpy import isin
-
 RegistryItem = TypeVar("RegistryItem")
 
 # Note: adding dataview re
@@ -27,8 +25,21 @@ class BaseRegistry(Generic[RegistryItem]):
     
         self._registry[key] = obj
 
+    def unregister(self, key: str) -> RegistryItem:
+        try:
+            return self._registry.pop(key)
+        except KeyError as error:
+            raise KeyError(f"No item registered with key {key!r}") from error
+
     def get(self, key: str) -> RegistryItem | None:
         return self._registry.get(key)
+
+    def __getattr__(self, key: str) -> RegistryItem:
+        """Allows you to access registry items as attributes by their key."""
+        try:
+            return self._registry[key]
+        except KeyError as error:
+            raise AttributeError(f"{type(self).__name__!s} has no attribute {key!r}") from error
     
     def values(self) -> list[RegistryItem]:
         return list(self._registry.values())

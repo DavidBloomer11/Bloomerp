@@ -1,6 +1,5 @@
 import json
 
-from django.forms import modelform_factory
 from bloomerp.automation.schema import WorkflowIOSchema, WorkflowValueType, WorkflowInputRequirement, WorkflowValueField, WorkflowValueType
 from bloomerp.automation.utils import get_parameters_from_config, model_to_schema_field
 from bloomerp.forms.base_content_type_form import BaseContentTypeForm
@@ -42,7 +41,7 @@ def _build_default_data(content_type_id: int) -> dict[str, object | None]:
     
     
     for field in fields:
-        if not field.get_field_type_enum().value.allow_in_model:
+        if not field.get_field_type().allow_in_model:
             continue
 
         form_field = field.get_form_field()

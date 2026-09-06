@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from bloomerp.models import ApplicationField
 
 @dataclass
-class FieldOption:
+class FieldConstructionOption:
     id: str
     label: str
     primitive_input_type: Literal['text', 'number', 'bool', 'list', 'model', 'choices', 'callable']
@@ -24,7 +24,7 @@ class FieldOption:
         return hash(self.id)
 
 
-NULL_FIELD_OPTION = FieldOption(
+NULL_FIELD_OPTION = FieldConstructionOption(
     id="null",
     label="Nullable",
     primitive_input_type="bool",
@@ -32,7 +32,8 @@ NULL_FIELD_OPTION = FieldOption(
     default_value=True,
     python_type=bool,
 )
-BLANK_FIELD_OPTION = FieldOption(
+
+BLANK_FIELD_OPTION = FieldConstructionOption(
     id="blank",
     label="Allow Empty Input",
     primitive_input_type="bool",
@@ -40,7 +41,8 @@ BLANK_FIELD_OPTION = FieldOption(
     default_value=True,
     python_type=bool,
 )
-UNIQUE_FIELD_OPTION = FieldOption(
+
+UNIQUE_FIELD_OPTION = FieldConstructionOption(
     id="unique",
     label="Unique",
     primitive_input_type="bool",
@@ -48,7 +50,8 @@ UNIQUE_FIELD_OPTION = FieldOption(
     default_value=False,
     python_type=bool,
 )
-DB_INDEX_FIELD_OPTION = FieldOption(
+
+DB_INDEX_FIELD_OPTION = FieldConstructionOption(
     id="db_index",
     label="Indexed",
     primitive_input_type="bool",
@@ -56,14 +59,16 @@ DB_INDEX_FIELD_OPTION = FieldOption(
     default_value=False,
     python_type=bool,
 )
-DEFAULT_FIELD_OPTION = FieldOption(
+
+DEFAULT_FIELD_OPTION = FieldConstructionOption(
     id="default",
     label="Default Value",
     primitive_input_type="text",
     description="Default value used when no value is provided.",
     python_type=Any,
 )
-HELP_TEXT_FIELD_OPTION = FieldOption(
+
+HELP_TEXT_FIELD_OPTION = FieldConstructionOption(
     id="help_text",
     label="Help Text",
     primitive_input_type="text",
@@ -71,7 +76,8 @@ HELP_TEXT_FIELD_OPTION = FieldOption(
     default_value="",
     python_type=str,
 )
-MAX_LENGTH_FIELD_OPTION = FieldOption(
+
+MAX_LENGTH_FIELD_OPTION = FieldConstructionOption(
     id="max_length",
     label="Maximum Length",
     primitive_input_type="number",
@@ -79,7 +85,8 @@ MAX_LENGTH_FIELD_OPTION = FieldOption(
     required=True,
     python_type=int,
 )
-MAX_DIGITS_FIELD_OPTION = FieldOption(
+
+MAX_DIGITS_FIELD_OPTION = FieldConstructionOption(
     id="max_digits",
     label="Max Digits",
     primitive_input_type="number",
@@ -87,7 +94,8 @@ MAX_DIGITS_FIELD_OPTION = FieldOption(
     required=True,
     python_type=int,
 )
-DECIMAL_PLACES_FIELD_OPTION = FieldOption(
+
+DECIMAL_PLACES_FIELD_OPTION = FieldConstructionOption(
     id="decimal_places",
     label="Decimal Places",
     primitive_input_type="number",
@@ -95,7 +103,8 @@ DECIMAL_PLACES_FIELD_OPTION = FieldOption(
     required=True,
     python_type=int,
 )
-UPLOAD_TO_FIELD_OPTION = FieldOption(
+
+UPLOAD_TO_FIELD_OPTION = FieldConstructionOption(
     id="upload_to",
     label="Upload Folder",
     primitive_input_type="text",
@@ -103,7 +112,8 @@ UPLOAD_TO_FIELD_OPTION = FieldOption(
     default_value="",
     python_type=str,
 )
-AUTO_NOW_FIELD_OPTION = FieldOption(
+
+AUTO_NOW_FIELD_OPTION = FieldConstructionOption(
     id="auto_now",
     label="Auto Update On Save",
     primitive_input_type="bool",
@@ -112,7 +122,8 @@ AUTO_NOW_FIELD_OPTION = FieldOption(
     mutually_exclusive_with=["auto_now_add"],
     python_type=bool,
 )
-AUTO_NOW_ADD_FIELD_OPTION = FieldOption(
+
+AUTO_NOW_ADD_FIELD_OPTION = FieldConstructionOption(
     id="auto_now_add",
     label="Auto Set On Create",
     primitive_input_type="bool",
@@ -121,21 +132,24 @@ AUTO_NOW_ADD_FIELD_OPTION = FieldOption(
     mutually_exclusive_with=["auto_now"],
     python_type=bool,
 )
-RELATED_NAME_FIELD_OPTION = FieldOption(
+
+RELATED_NAME_FIELD_OPTION = FieldConstructionOption(
     id="related_name",
     label="Reverse Relation Name",
     primitive_input_type="text",
     description="Optional related_name used on the reverse side of relationships.",
     python_type=str,
 )
-VERBOSE_NAME_FIELD_OPTION = FieldOption(
+
+VERBOSE_NAME_FIELD_OPTION = FieldConstructionOption(
     id="verbose_name",
     label="Label",
     primitive_input_type="text",
     description="Human-readable name shown as the field label in forms and admin.",
     python_type=str,
 )
-TO_FIELD_OPTION = FieldOption(
+
+TO_FIELD_OPTION = FieldConstructionOption(
     id="to",
     label="Related Model",
     primitive_input_type="model",
@@ -143,7 +157,8 @@ TO_FIELD_OPTION = FieldOption(
     required=True,
     python_type=type[models.Model] | str,
 )
-ON_DELETE_FIELD_OPTION = FieldOption(
+
+ON_DELETE_FIELD_OPTION = FieldConstructionOption(
     id="on_delete",
     label="On Delete Behaviour",
     primitive_input_type="choices",
@@ -153,7 +168,8 @@ ON_DELETE_FIELD_OPTION = FieldOption(
     choices=["CASCADE", "PROTECT", "SET_NULL", "SET_DEFAULT", "DO_NOTHING"],
     python_type=Callable[..., Any],
 )
-CHOICES_FIELD_OPTION = FieldOption(
+
+CHOICES_FIELD_OPTION = FieldConstructionOption(
     id="choices",
     label="Choices",
     primitive_input_type="choices",
@@ -162,7 +178,8 @@ CHOICES_FIELD_OPTION = FieldOption(
     default_value=[],
     python_type=list[tuple[Any, Any]],
 )
-PROPERTY_EXPRESSION = FieldOption(
+
+PROPERTY_EXPRESSION = FieldConstructionOption(
     id="property_expression",
     label="Property Expression",
     primitive_input_type="text",
@@ -181,15 +198,18 @@ COMMON_FIELD_OPTIONS = [
     DEFAULT_FIELD_OPTION,
     HELP_TEXT_FIELD_OPTION,
 ]
+
 COMMON_TEXT_FIELD_OPTIONS = [
     *COMMON_FIELD_OPTIONS,
     MAX_LENGTH_FIELD_OPTION,
 ]
+
 COMMON_CHOICE_FIELD_OPTIONS = [
     *COMMON_FIELD_OPTIONS,
     CHOICES_FIELD_OPTION,
     MAX_LENGTH_FIELD_OPTION,
 ]
+
 COMMON_RELATION_FIELD_OPTIONS = [
     TO_FIELD_OPTION,
     VERBOSE_NAME_FIELD_OPTION,

@@ -53,7 +53,7 @@ def dynamic_filterset_factory(model: type[Model], filters:dict[str, str]=None) -
     initiated_fields = set()
     
     for field in application_fields:
-        field_type = field.get_field_type_enum().value
+        field_type = field.get_field_type()
         if not field_type.allow_in_model and field_type.id != "OneToManyField":
             continue
         
