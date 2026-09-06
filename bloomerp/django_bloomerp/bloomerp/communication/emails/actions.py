@@ -9,7 +9,8 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 
 from bloomerp.communication.emails.base_adapter import BloomerpEmail, EmailAttachment
-from bloomerp.communication.emails.email_providers import EmailProvider, EmailProviderDefinition
+from bloomerp.communication.emails.email_providers import EmailProviderDefinition
+from bloomerp.communication.emails.registry import EMAIL_PROVIDER_REGISTRY
 from bloomerp.models.communication.email_account import EmailAccount
 
 if TYPE_CHECKING:
@@ -22,10 +23,10 @@ DEFAULT_MAILBOX = "INBOX"
 
 
 def _resolve_provider(email_account: EmailAccount) -> EmailProviderDefinition:
-    provider = EmailProvider.from_key(email_account.provider)
+    provider = EMAIL_PROVIDER_REGISTRY.get(email_account.provider)
     if provider is None:
         raise ValueError(f"Unsupported email provider: {email_account.provider}")
-    return provider.value
+    return provider
 
 
 def _resolve_email_adapter_for_account(email_account: EmailAccount) -> "BaseEmailAdapter":
@@ -224,12 +225,12 @@ def _query_local_email_items(
     filters: dict[str, str] | None,
     folder: "InboxFolder",
 ) -> QuerySet["InboxItem"]:
-    from bloomerp.communication.inbox_folder_definition import InboxFolderType
+    from bloomerp.communication.registry import INBOX_FOLDER_REGISTRY
     from bloomerp.models.communication.inbox.inbox_item import InboxItem
 
     queryset = InboxItem.objects.filter(
         folder=folder,
-        item_type=InboxFolderType.EMAIL.value.item_type.key,
+        item_type=INBOX_FOLDER_REGISTRY.EMAIL.item_type.key,
     )
 
     search_string = (filters or {}).get("q")
@@ -264,7 +265,7 @@ def _upsert_email_inbox_item_result(
     email: BloomerpEmail,
     folder: "InboxFolder",
 ) -> tuple["InboxItem", bool]:
-    from bloomerp.communication.inbox_folder_definition import InboxFolderType
+    from bloomerp.communication.registry import INBOX_FOLDER_REGISTRY
     from bloomerp.models.communication.inbox.inbox_item import InboxItem
 
     related_item_id = (
@@ -276,7 +277,7 @@ def _upsert_email_inbox_item_result(
 
     with transaction.atomic():
         inbox_item, created = InboxItem.objects.get_or_create(
-            item_type=InboxFolderType.EMAIL.value.item_type.key,
+            item_type=INBOX_FOLDER_REGISTRY.EMAIL.item_type.key,
             folder=folder,
             related_item_id=related_item_id,
             defaults={"title": email.subject or "(No subject)"},

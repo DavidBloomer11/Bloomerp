@@ -1,9 +1,11 @@
 from django.http import HttpRequest, HttpResponse
+from bloomerp.permissions.definition import BloomerpPermission
 from bloomerp.router import router
 from bloomerp.services.activity_log_services import ActivityLogManager
 from django.apps import apps
 from django.shortcuts import render
 from django.utils.translation import gettext as _
+from bloomerp.permissions.manager import UserPolicyManager
 
 @router.register(
     path="components/activity-log/",
@@ -26,9 +28,14 @@ def activity_log(request:HttpRequest) -> HttpResponse:
     if not ActivityLogManager.should_record_change(model_class):
         return HttpResponse(_("Activity logging is not enabled for this model."), status=400)
     
-    
     if not object_id or not content_type_id:
         return HttpResponse(_("Missing object ID or content type ID"), status=400)
+    
+    if not UserPolicyManager(request.user).has_access_to_object(
+        object_instance,
+        BloomerpPermission.VIEW
+    ):
+        return HttpResponse("No access to object", status=403)
     
     manager = ActivityLogManager(object_instance)
     

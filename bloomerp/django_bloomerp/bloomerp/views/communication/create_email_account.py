@@ -8,7 +8,8 @@ from django.views.generic import TemplateView
 
 from bloomerp.communication.emails.actions import get_mailboxes_for_account
 from bloomerp.communication.utils.crypto import encrypt_email_secret
-from bloomerp.communication.emails.email_providers import EmailProvider
+from bloomerp.communication.emails.email_providers import EmailProviderDefinition
+from bloomerp.communication.emails.registry import EMAIL_PROVIDER_REGISTRY
 from bloomerp.models.communication import EmailAccount
 from bloomerp.permissions.definition import BloomerpPermission
 from bloomerp.permissions.manager import UserPolicyManager
@@ -47,11 +48,15 @@ class EmailAccountSettingsForm(forms.ModelForm):
             "oauth_scopes": forms.Textarea(attrs={"rows": 2}),
         }
 
-    def __init__(self, *args, provider: EmailProvider | str, **kwargs):
+    def __init__(self, *args, provider: EmailProviderDefinition | str, **kwargs):
         super().__init__(*args, **kwargs)
-        self.provider = provider if isinstance(provider, EmailProvider) else EmailProvider.from_key(provider)
+        self.provider = (
+            provider
+            if isinstance(provider, EmailProviderDefinition)
+            else EMAIL_PROVIDER_REGISTRY.get(provider)
+        )
         if self.provider is not None:
-            self.instance.provider = self.provider.value.key
+            self.instance.provider = self.provider.key
         self._apply_field_styles()
         self._apply_provider_fields()
 
@@ -70,8 +75,8 @@ class EmailAccountSettingsForm(forms.ModelForm):
             self.fields.clear()
             return
 
-        allowed_fields = self.provider.value.fields
-        required_fields = set(self.provider.value.required_fields)
+        allowed_fields = self.provider.fields
+        required_fields = set(self.provider.required_fields)
         for field_name in required_fields:
             if field_name in self.fields:
                 self.fields[field_name].required = True
@@ -94,19 +99,19 @@ def get_provider_context(request: HttpRequest, view, orchestrator: BaseStateOrch
         "selected_provider": selected_provider,
         "providers": [
             {
-                "key": provider.value.key,
-                "name": provider.value.name,
-                "description": provider.value.description,
-                "icon": provider.value.icon,
-                "selected": selected_provider == provider.value.key,
+                "key": provider.key,
+                "name": provider.name,
+                "description": provider.description,
+                "icon": provider.icon,
+                "selected": selected_provider == provider.key,
             }
-            for provider in EmailProvider
+            for provider in EMAIL_PROVIDER_REGISTRY.values()
         ],
     }
 
 
 def process_provider(request: HttpRequest, view, orchestrator: BaseStateOrchestrator):
-    provider = EmailProvider.from_key(request.POST.get(PROVIDER_SESSION_KEY))
+    provider = EMAIL_PROVIDER_REGISTRY.get(request.POST.get(PROVIDER_SESSION_KEY))
     if provider is None:
         return WizardError(
             message=_("Please select an email provider to continue."),
@@ -114,7 +119,7 @@ def process_provider(request: HttpRequest, view, orchestrator: BaseStateOrchestr
             step=0,
         )
 
-    orchestrator.set_session_data(PROVIDER_SESSION_KEY, provider.value.key)
+    orchestrator.set_session_data(PROVIDER_SESSION_KEY, provider.key)
 
 
 def _get_settings_initial(orchestrator: BaseStateOrchestrator) -> dict:
@@ -123,10 +128,12 @@ def _get_settings_initial(orchestrator: BaseStateOrchestrator) -> dict:
 
 
 def get_settings_context(request: HttpRequest, view, orchestrator: BaseStateOrchestrator):
-    provider = EmailProvider.from_key(orchestrator.get_session_data(PROVIDER_SESSION_KEY))
+    provider = EMAIL_PROVIDER_REGISTRY.get(
+        orchestrator.get_session_data(PROVIDER_SESSION_KEY)
+    )
     initial = {}
     if provider is not None:
-        initial.update(provider.value.initial)
+        initial.update(provider.initial)
     initial.update(_get_settings_initial(orchestrator))
     form = EmailAccountSettingsForm(
         provider=provider,
@@ -134,14 +141,16 @@ def get_settings_context(request: HttpRequest, view, orchestrator: BaseStateOrch
     )
     return {
         "form": form,
-        "provider": provider.value.key if provider else "",
-        "provider_label": provider.value.name if provider else "",
-        "provider_definition": provider.value if provider else None,
+        "provider": provider.key if provider else "",
+        "provider_label": provider.name if provider else "",
+        "provider_definition": provider,
     }
 
 
 def process_settings(request: HttpRequest, view, orchestrator: BaseStateOrchestrator):
-    provider = EmailProvider.from_key(orchestrator.get_session_data(PROVIDER_SESSION_KEY))
+    provider = EMAIL_PROVIDER_REGISTRY.get(
+        orchestrator.get_session_data(PROVIDER_SESSION_KEY)
+    )
     if provider is None:
         return WizardError(
             message=_("Please select an email provider first."),
@@ -192,7 +201,13 @@ class CreateEmailAccountView(WizardMixin, BaseBloomerpView, TemplateView):
         )
 
     def normalize_step_index(self, step: int) -> int:
-        if step > 0 and EmailProvider.from_key(self.orchestrator.get_session_data(PROVIDER_SESSION_KEY)) is None:
+        if (
+            step > 0
+            and EMAIL_PROVIDER_REGISTRY.get(
+                self.orchestrator.get_session_data(PROVIDER_SESSION_KEY)
+            )
+            is None
+        ):
             return 0
         return super().normalize_step_index(step)
 
@@ -225,7 +240,7 @@ class CreateEmailAccountView(WizardMixin, BaseBloomerpView, TemplateView):
 
     def done(self):
         payload = self.orchestrator.get_all_session_data()
-        provider = EmailProvider.from_key(payload.get(PROVIDER_SESSION_KEY))
+        provider = EMAIL_PROVIDER_REGISTRY.get(payload.get(PROVIDER_SESSION_KEY))
         settings = payload.get(SETTINGS_SESSION_KEY) or {}
 
         if provider is None or not isinstance(settings, dict):
@@ -238,7 +253,7 @@ class CreateEmailAccountView(WizardMixin, BaseBloomerpView, TemplateView):
         try:
             with transaction.atomic():
                 email_account = EmailAccount(
-                    provider=provider.value.key,
+                    provider=provider.key,
                     status=EmailAccount.Status.ACTIVE,
                     created_by=self.request.user,
                     updated_by=self.request.user,

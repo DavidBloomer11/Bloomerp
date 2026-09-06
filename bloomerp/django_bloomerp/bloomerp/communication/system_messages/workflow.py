@@ -230,7 +230,7 @@ def resolve_workflow_notification_folders(
     workflow_run_id: str,
     **kwargs,
 ) -> QuerySet:
-    from bloomerp.communication.inbox_folder_definition import InboxFolderType
+    from bloomerp.communication.registry import INBOX_FOLDER_REGISTRY
     from bloomerp.models.automation.workflow_run import WorkflowRun
     from bloomerp.models.communication.inbox.inbox_folder import InboxFolder
 
@@ -246,7 +246,7 @@ def resolve_workflow_notification_folders(
         | Q(inbox__shared_with_users__id=recipient_id)
         | Q(inbox__shared_with_groups__user__id=recipient_id),
         inbox__source_object__isnull=True,
-        type=InboxFolderType.IN_APP_NOTIFICATIONS.value.key,
+        type=INBOX_FOLDER_REGISTRY.IN_APP_NOTIFICATIONS.key,
     ).distinct()
 
 

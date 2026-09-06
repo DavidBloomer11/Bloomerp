@@ -56,7 +56,7 @@ def resolve_form_submission_folders(*, instance, **kwargs):
     Returns:
         _type_: _description_
     """
-    from bloomerp.communication.inbox_folder_definition import InboxFolderType
+    from bloomerp.communication.registry import INBOX_FOLDER_REGISTRY
     from bloomerp.models.communication.inbox.inbox_folder import InboxFolder
 
     recipient_id = instance.form.created_by_id
@@ -65,7 +65,7 @@ def resolve_form_submission_folders(*, instance, **kwargs):
 
     folders = InboxFolder.get_folders_by_users_and_type(
         users=recipient_id,
-        folder_type=InboxFolderType.IN_APP_NOTIFICATIONS.value.key
+        folder_type=INBOX_FOLDER_REGISTRY.IN_APP_NOTIFICATIONS.key
     )
     return folders
     

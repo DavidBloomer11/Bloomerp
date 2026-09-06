@@ -5,7 +5,11 @@ from django.utils import timezone
 
 from bloomerp.communication.utils.crypto import encrypt_email_secret
 from bloomerp.communication.utils.crypto import decrypt_email_secret
-from bloomerp.communication.emails.email_providers import EmailProvider, EmailSyncMode
+from bloomerp.communication.emails.email_providers import EmailSyncMode
+from bloomerp.communication.emails.registry import (
+    EMAIL_PROVIDER_REGISTRY,
+    email_provider_choices,
+)
 from bloomerp.models.definition import FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.definition import ApiSettings, BloomerpModelConfig, DetailViewSettings
 from bloomerp.models import BloomerpModel
@@ -106,8 +110,8 @@ class EmailAccount(BloomerpModel):
     )
     provider = models.CharField(
         max_length=32,
-        choices=EmailProvider.choices(),
-        default=EmailProvider.IMAP.value.key,
+        choices=email_provider_choices,
+        default="imap",
         verbose_name=_("Provider"),
     )
     status = models.CharField(
@@ -282,11 +286,11 @@ class EmailAccount(BloomerpModel):
         super().save(*args, **kwargs)
 
     def apply_provider_sync_defaults(self) -> None:
-        provider = EmailProvider.from_key(self.provider)
+        provider = EMAIL_PROVIDER_REGISTRY.get(self.provider)
         if provider is None:
             return
 
-        sync_capabilities = provider.value.sync_capabilities
+        sync_capabilities = provider.sync_capabilities
         if not self.sync_mode:
             self.sync_mode = sync_capabilities.default_mode.value
         if not self.sync_interval_minutes:
@@ -336,23 +340,23 @@ class EmailAccount(BloomerpModel):
 
     def clean(self):
         super().clean()
-        provider = EmailProvider.from_key(self.provider)
+        provider = EMAIL_PROVIDER_REGISTRY.get(self.provider)
         if provider is None:
             raise ValidationError({"provider": "Select a valid email provider."})
 
         errors = {}
-        for field_name in provider.value.required_fields:
+        for field_name in provider.required_fields:
             value = getattr(self, field_name, None)
             if value in (None, "", []):
-                errors[field_name] = f"This field is required for {provider.value.name}."
+                errors[field_name] = f"This field is required for {provider.name}."
 
-        sync_mode = self.sync_mode or provider.value.sync_capabilities.default_mode.value
+        sync_mode = self.sync_mode or provider.sync_capabilities.default_mode.value
         supported_modes = [
             supported_mode.value
-            for supported_mode in provider.value.sync_capabilities.supported_modes
+            for supported_mode in provider.sync_capabilities.supported_modes
         ]
         if sync_mode not in supported_modes:
-            errors["sync_mode"] = f"{provider.value.name} does not support this synchronization mode."
+            errors["sync_mode"] = f"{provider.name} does not support this synchronization mode."
 
         if errors:
             raise ValidationError(errors)

@@ -97,7 +97,7 @@ class SystemMessage(BaseTypeDefinition):
         folder: "InboxFolder",
         data: dict,
     ) -> "InboxItem":
-        from bloomerp.communication.inbox_folder_definition import InboxFolderType
+        from bloomerp.communication.registry import INBOX_FOLDER_REGISTRY
         from bloomerp.models.communication.inbox.inbox_item import InboxItem
 
         definition = cls.get_definition(message_type)
@@ -109,7 +109,7 @@ class SystemMessage(BaseTypeDefinition):
 
         return InboxItem.objects.create(
             folder=folder,
-            item_type=InboxFolderType.IN_APP_NOTIFICATIONS.value.item_type.key,
+            item_type=INBOX_FOLDER_REGISTRY.IN_APP_NOTIFICATIONS.item_type.key,
             actor=SYSTEM_MESSAGE_ACTOR,
             title=item_data.title,
             snippet=item_data.snippet,

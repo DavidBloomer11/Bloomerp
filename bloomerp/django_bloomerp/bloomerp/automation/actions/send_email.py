@@ -1,4 +1,5 @@
-from bloomerp.communication.emails.email_providers import EmailProvider, EmailProviderDefinition
+from bloomerp.communication.emails.email_providers import EmailProviderDefinition
+from bloomerp.communication.emails.registry import EMAIL_PROVIDER_REGISTRY
 from bloomerp.models.communication.email_account import EmailAccount
 from bloomerp.widgets.foreign_field_widget import ForeignFieldWidget
 
@@ -83,7 +84,11 @@ class SendEmailExecutor(BaseExecutor):
         
         # Get the email account
         email_account = EmailAccount.objects.get(id=from_email)
-        provider : EmailProviderDefinition = EmailProvider.from_key(email_account.provider).value
+        provider: EmailProviderDefinition | None = EMAIL_PROVIDER_REGISTRY.get(
+            email_account.provider
+        )
+        if provider is None:
+            raise ValueError(f"Unsupported email provider: {email_account.provider}")
         adapter = provider.adapter_class(
             email_account
         )
@@ -107,4 +112,3 @@ class SendEmailExecutor(BaseExecutor):
                 "status": "sent",
             },
         }
-

@@ -7,10 +7,16 @@ class ActivityLogComponentTestCase(BaseBloomerpComponentTest):
     
     def get_request_setups(self):
         content_type = self.get_content_type_for_model(Todo)
+        title_1 = "A very cool todo"
+        title_2 = "Some other cool todo"
+        
         obj = Todo.objects.create(
-            name="Todo"
+            title=title_1
         )
-        get_args = {
+        obj.title = title_2
+        
+        obj.save()
+        query_params = {
             "content_type_id" : content_type.id,
             "object_id" : obj.id
         }
@@ -20,9 +26,13 @@ class ActivityLogComponentTestCase(BaseBloomerpComponentTest):
                 name="Authorized User",
                 method="GET",
                 user=self.admin_user,
-                get_args=get_args,
+                query_params=query_params,
                 expected=ExpectedResult(
                     status_code=200,
+                    response_validators=[
+                        self.contains_text(title_1),
+                        self.contains_text(title_2)
+                    ]
                 )
                 
             ),
@@ -30,7 +40,7 @@ class ActivityLogComponentTestCase(BaseBloomerpComponentTest):
                 name="Unauthorized user",
                 method="GET",
                 user=self.normal_user,
-                get_args=get_args,
+                query_params=query_params,
                 expected=ExpectedResult(
                     status_code=403
                 )

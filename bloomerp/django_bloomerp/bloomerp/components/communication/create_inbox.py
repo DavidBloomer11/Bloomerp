@@ -6,7 +6,7 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django_htmx.http import HttpResponseClientRedirect
 
-from bloomerp.communication.inbox_folder_definition import InboxFolderType
+from bloomerp.communication.registry import INBOX_FOLDER_REGISTRY
 from bloomerp.models.communication.inbox.inbox import Inbox
 from bloomerp.models.communication.inbox.inbox_folder import InboxFolder
 from bloomerp.models.communication.inbox.user_inbox_preference import UserInboxPreference
@@ -37,12 +37,12 @@ def _default_inbox_name(request: HttpRequest) -> str:
 
 def _create_default_folders(inbox: Inbox) -> list[InboxFolder]:
     folders: list[InboxFolder] = []
-    for folder_type in InboxFolderType:
-        if folder_type.value.is_default:
+    for folder_type in INBOX_FOLDER_REGISTRY.values():
+        if folder_type.is_default:
             folders.append(
                 InboxFolder.objects.create(
                     inbox=inbox,
-                    type=folder_type.value.key,
+                    type=folder_type.key,
                 )
             )
     return folders
