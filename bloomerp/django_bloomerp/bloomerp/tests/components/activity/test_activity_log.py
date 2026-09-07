@@ -1,5 +1,5 @@
 from bloomerp.models.project_management.todo import Todo
-from bloomerp.tests.base_component_test import BaseBloomerpComponentTest, ExpectedResult, RequestSetup
+from bloomerp.tests.base import BaseBloomerpComponentTest, ExpectedResult, RequestSetup
 
 
 class ActivityLogComponentTestCase(BaseBloomerpComponentTest):

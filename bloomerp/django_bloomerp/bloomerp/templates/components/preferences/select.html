@@ -1,0 +1,76 @@
+{% load bloomerp %}
+
+<div
+    class="max-h-80 overflow-y-auto"
+    bloomerp-component="select-preference"
+    data-model-name="{{ model }}"
+    data-select-preference-url="{% url 'components_select_preference' model=model %}"
+    data-new-preference-url="{% url 'components_new_preference' model=model %}"
+    data-share-preference-url="{% url 'components_share_preference' model_name=model preference_id='REPLACE_WITH_ID' %}"
+    data-delete-preference-url="{% url 'components_delete_preference' model=model preference_id='REPLACE_WITH_ID' %}"
+    data-model-verbose-name="{{ model_verbose_name }}"
+>
+    {% for preference in preferences %}
+        {% can_manage_preference_object request.user preference as can_manage %}
+
+        <div class="flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-gray-50" data-preference-row>
+            <button
+                type="button"
+                class="min-w-0 flex-1 truncate text-left text-sm font-medium text-gray-800"
+                data-select-preference="{{ preference.id }}"
+            >
+                {{ preference.effective_preference.name }}
+            </button>
+
+            {% if preference.selected and preference.user_id == request.user.id %}
+                <span class="text-xs font-medium text-primary-700">Selected</span>
+            {% endif %}
+            
+            {% if can_manage %}
+                <button type="button" class="btn btn-ghost btn-xs" data-rename-preference="{{ preference.id }}" aria-label="Rename preference">
+                    <i class="fa fa-pen"></i>
+                </button>
+                <button type="button" class="btn btn-ghost btn-xs" data-share-preference="{{ preference.id }}" aria-label="Share preference">
+                    <i class="fa fa-share-nodes"></i>
+                </button>
+                <button type="button" class="btn btn-ghost btn-xs text-danger" data-delete-preference="{{ preference.id }}" aria-label="Delete preference">
+                    <i class="fa fa-trash"></i>
+                </button>
+            {% endif %}
+        </div>
+    {% empty %}
+        <div class="px-4 py-3 text-sm text-gray-500">
+            No preferences available yet.
+        </div>
+    {% endfor %}
+</div>
+
+
+<div class="border-t border-gray-200 px-4 py-3">
+    <div class="mb-2 text-xs font-medium uppercase tracking-wide text-gray-500">
+        New {{ model_verbose_name }}
+    </div>
+
+    <form 
+        class="flex items-center gap-2" 
+        hx-post="{% url 'components_new_preference' model=model %}"
+        hx-tigger="submit"
+        hx-target="this"
+        >
+        {% csrf_token %}
+        {% for key, value in scope.items %}
+            <input type="hidden" name="{{ key }}" value="{{ value }}">
+        {% endfor %}
+        <input
+            type="text"
+            name="name"
+            class="input input-sm w-full"
+            placeholder="Preference name"
+            maxlength="255"
+            value=""
+        >
+        <button type="submit" class="btn btn-primary btn-sm shrink-0">
+            Save
+        </button>
+    </form>
+</div>

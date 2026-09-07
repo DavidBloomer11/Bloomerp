@@ -15,7 +15,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from bloomerp.modules.misc import MiscModule
-from bloomerp.components.files import _get_folder_display_name
+from bloomerp.components.files.browser import _get_folder_display_name
 
 class TestFilesComponent(BaseBloomerpTestCaseWithModels):
     auto_create_customers = False

@@ -6,7 +6,7 @@ from bloomerp.models import ContentType, User
 from django.urls import reverse
 
 from ..base import BaseBloomerpTestCaseWithModels
-from bloomerp.components.global_search import _resolve_module, global_search
+from bloomerp.components.search.global_search import _resolve_module, global_search
 from bs4 import BeautifulSoup
 from bloomerp.models import Policy, RowPolicy, FieldPolicy, RowPolicyRule
 from bloomerp.models import ApplicationField
@@ -67,7 +67,7 @@ class SearchResultsTests(BaseBloomerpTestCaseWithModels):
         request = self.get_request(">clientes")
         with (
             patch(
-                "bloomerp.components.global_search.router.get_routes",
+                "bloomerp.components.search.global_search.router.get_routes",
                 return_value=[route],
             ),
             patch("bloomerp.router.pgettext", side_effect=translate_route),
@@ -87,10 +87,10 @@ class SearchResultsTests(BaseBloomerpTestCaseWithModels):
         )
 
         with (
-            patch("bloomerp.components.global_search._ensure_module_registry_models"),
-            patch("bloomerp.components.global_search.module_registry.get", return_value=None),
+            patch("bloomerp.components.search.global_search._ensure_module_registry_models"),
+            patch("bloomerp.components.search.global_search.module_registry.get", return_value=None),
             patch(
-                "bloomerp.components.global_search.module_registry.get_all",
+                "bloomerp.components.search.global_search.module_registry.get_all",
                 return_value={"users": module},
             ),
             patch(

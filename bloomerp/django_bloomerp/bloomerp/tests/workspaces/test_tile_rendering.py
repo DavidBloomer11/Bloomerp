@@ -374,7 +374,7 @@ class WorkspaceTileRenderingTests(BaseBloomerpTestCaseWithModels):
 
     def test_text_tile_editor_has_valid_htmx_update_expression(self):
         html = render_to_string(
-            "components/workspaces/tile_builders/text_tile_builder.html",
+            "components/workspaces/tiles/builders/text.html",
             {"config": TextTileConfig(markdown="<p>Initial content</p>")},
         )
         soup = BeautifulSoup(html, "html.parser")

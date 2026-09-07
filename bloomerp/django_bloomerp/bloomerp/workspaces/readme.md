@@ -134,7 +134,7 @@ If you want to add a new top-level workspace tile type, the normal path is:
 3. Add a renderer that extends `BaseTileRenderer`.
 4. If the tile is interactive, add operation models and handlers through `get_operation()`.
 5. Register the tile family in `tiles.py`.
-6. Add or reuse a builder template in `components/workspaces/tile_builders/`.
+6. Add or reuse a builder template in `components/workspaces/tiles/builders/`.
 7. Update `PreviewWorkspaceTile.get_tile_builder_template()` if the tile needs a custom builder.
 8. Update the create-tile wizard if the tile needs extra setup steps before the builder.
 

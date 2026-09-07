@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 from django.template.loader import render_to_string
 from django.test import SimpleTestCase
 
-from bloomerp.components.workspaces.preview_workspace_tile import (
+from bloomerp.components.workspaces.tiles.preview import (
     _build_link_builder_items,
     _build_link_folder_options,
     _get_link_route_suggestions,
@@ -207,7 +207,7 @@ class LinksTileBuilderHelperTests(SimpleTestCase):
         }
 
         # 2. Render the complete builder template.
-        html = render_to_string("components/workspaces/tile_builders/links_tile_builder.html", context)
+        html = render_to_string("components/workspaces/tiles/builders/links.html", context)
 
         # 3. Verify suggestions, nesting operations, and edit controls are present.
         self.assertIn('value="/customers/"', html)
@@ -232,7 +232,7 @@ class LinksTileBuilderHelperTests(SimpleTestCase):
             "add_folder_icon_picker": _render_link_icon_picker("add_folder_icon"),
         }
 
-        html = render_to_string("components/workspaces/tile_builders/links_tile_builder.html", context)
+        html = render_to_string("components/workspaces/tiles/builders/links.html", context)
         htmx_expressions = [
             element["hx-vars"]
             for element in BeautifulSoup(html, "html.parser").find_all(attrs={"hx-vars": True})
@@ -273,8 +273,8 @@ class LinksTileBuilderHelperTests(SimpleTestCase):
         self.assertEqual(items[0]["children"][0]["children"][0]["path"], [0, 0, 0])
         self.assertEqual(folders, [{"name": "Sales", "path": [0]}, {"name": "— Reports", "path": [0, 0]}])
 
-    @patch("bloomerp.components.workspaces.preview_workspace_tile.reverse")
-    @patch("bloomerp.components.workspaces.preview_workspace_tile.router.get_routes")
+    @patch("bloomerp.components.workspaces.tiles.preview.reverse")
+    @patch("bloomerp.components.workspaces.tiles.preview.router.get_routes")
     def test_route_suggestions_exclude_non_navigable_routes(self, get_routes, reverse):
         """
         Use case: The URL input offers application route suggestions.

@@ -125,50 +125,6 @@ export class DataTable extends BaseDataViewComponent {
                         console.error('Error loading update object form:', error);
                     });
                 }
-            },
-            {
-                label: 'Edit Cell',
-                icon: 'fa-solid fa-edit',
-                onClick: async () => {
-                    if (!this.currentCell) return;
-                    
-                    htmx.ajax(
-                        'get', 
-                        `/components/dataview_edit_field/${this.currentCell.applicationFieldId}/${this.currentCell.objectId}/`, 
-                        {
-                            target: this.currentCell.element,
-                            swap: 'innerHTML',
-                            push: 'false',
-                        }
-                    ).then(() => {
-                        // After the HTML is swapped into the cell, focus the first
-                        // input/textarea/select we can find and select its contents.
-                        const el = this.currentCell?.element as HTMLElement | undefined | null;
-                        const focusInput = () => {
-                            if (!el) return;
-                            const input = el.querySelector('input, textarea, select') as (HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null);
-                            if (!input) return;
-                            try {
-                                input.focus();
-                                // Select text for inputs/textareas where supported
-                                if ((input as HTMLInputElement).select) {
-                                    try { (input as HTMLInputElement).select(); } catch {}
-                                }
-                            } catch (err) {
-                                // ignore focus errors
-                            }
-                        };
-
-                        // HTMX promise generally resolves after swap, but use a
-                        // microtask fallback to ensure DOM is updated in all cases.
-                        requestAnimationFrame(() => {
-                            focusInput();
-                        });
-                    }).catch((error) => {
-                        console.error('Error loading edit form:', error);
-                    });
-
-                },
             }
         ]);
 

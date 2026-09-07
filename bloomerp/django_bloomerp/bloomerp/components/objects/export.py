@@ -30,7 +30,7 @@ def _get(request: HttpRequest, content_type: ContentType, form: BloomerpBulkForm
 
     return render(
         request,
-        "components/bulk_actions/bulk_template_form.html",
+        "components/objects/dataviews/bulk_upload_form.html",
         {
             "form": form,
             "content_type_id": content_type.id,
