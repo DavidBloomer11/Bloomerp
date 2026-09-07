@@ -7,10 +7,10 @@ from bloomerp.tests.base import (
 )
 
 
-class TestManageAccessControlForModelViewPolicyListClassView(BloomerpModelViewTestCase):
-    """Tests class `ManageAccessControlForModelView` from `bloomerp/views/access_control/policy_list.py`."""
+class TestManageAccessControlForModelView(BloomerpModelViewTestCase):
+    """Tests class `ManageAccessControlForModelView` from `bloomerp/views/access_control/manage_permissions.py`."""
 
-    view_name = 'cost_centers_manageaccesscontrolformodelview'
+    view_name = 'Create Policy for {model}'
     model = None
 
     def get_request_setups(self) -> list[RequestSetup]:
