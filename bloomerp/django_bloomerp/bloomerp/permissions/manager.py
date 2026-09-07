@@ -842,7 +842,7 @@ class PolicyManager:
 
     @classmethod
     @transaction.atomic
-    def create_policy(
+    def _create_policy(
         cls,
         model_or_content_type: Type[models.Model] | models.Model | ContentType,
         field_permissions: dict[
@@ -958,8 +958,17 @@ class PolicyManager:
     def create_policy(
         cls,
         model_or_content_type: Type[models.Model] | models.Model | ContentType,
-        access_rule:AccessRule,
+        access_rule: AccessRule | None = None,
         global_permissions: Optional[list[str] | list[BloomerpPermission] | str | BloomerpPermission] = None,
+        *,
+        rule: AccessRule | None = None,
+        field_permissions: Optional[
+            dict[
+                str | ApplicationField,
+                list[str] | list[BloomerpPermission] | str | BloomerpPermission,
+            ]
+        ] = None,
+        row_permissions: Optional[list[RowPolicyRuleContent]] = None,
     ) -> Policy:
         """Provides a simple interface to create a particular policy
 
@@ -973,10 +982,27 @@ class PolicyManager:
         Returns:
             Policy: The created policy instance
         """
-        return cls.create_policy(
+        selected_rule = rule or access_rule
+        if rule is not None and access_rule is not None:
+            raise TypeError("Pass either access_rule or rule, not both")
+        if selected_rule is not None:
+            if field_permissions is not None or row_permissions is not None:
+                raise TypeError(
+                    "AccessRule cannot be combined with field_permissions or "
+                    "row_permissions"
+                )
+            field_permissions = selected_rule.field_permissions
+            row_permissions = selected_rule.row_permissions
+
+        if field_permissions is None or row_permissions is None:
+            raise TypeError(
+                "Pass an AccessRule or both field_permissions and row_permissions"
+            )
+
+        return cls._create_policy(
             model_or_content_type,
-            field_permissions=access_rule.field_permissions,
-            row_permissions=access_rule.row_permissions,
+            field_permissions=field_permissions,
+            row_permissions=row_permissions,
             global_permissions=global_permissions,
         )
     

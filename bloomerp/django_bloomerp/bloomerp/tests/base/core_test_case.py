@@ -1,0 +1,353 @@
+from django.http import HttpResponse
+from django.test import TransactionTestCase, modify_settings
+from django.test.utils import override_settings
+from django.db import models
+from django.urls import clear_url_caches
+from channels.routing import URLRouter
+from channels.testing import WebsocketCommunicator
+import re
+import tempfile
+from bloomerp.management.commands import save_application_fields
+from bloomerp.model_fields.file_field import BloomerpFileField
+from bloomerp.model_fields.text_editor_field import TextEditorField
+from bloomerp.model_fields.user_field import UserField
+from bloomerp.tests.utils.users import create_admin, create_normal_user
+from bloomerp.tests.utils.dynamic_models import create_test_models
+from bloomerp.tests.utils.names import FIRST_NAMES, LAST_NAMES
+from bloomerp.router import router
+from django.db import models
+from django.contrib.contenttypes.models import ContentType
+
+class BloomerpChannelTestCase(TransactionTestCase):
+    """Base test case for websocket consumers registered with a route registry."""
+
+    def websocket_application(self, registry):
+        return URLRouter(registry.create_websocket_url_patterns())
+
+    def websocket_communicator(self, registry, path: str):
+        return WebsocketCommunicator(self.websocket_application(registry), path)
+
+@modify_settings(INSTALLED_APPS={'remove': 'bloomerp_modules'})
+class BaseBloomerpTestCaseWithModels(TransactionTestCase):
+    auto_create_customers = True
+    auto_create_users = True
+    use_bloomerp_base = True
+    create_foreign_models = False
+    
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        
+        if cls.create_foreign_models:
+            foreign_models = create_test_models(
+                app_label="bloomerp",
+                model_defs={
+                    "CustomerType": {
+                        "name": models.CharField(max_length=100),
+                        "__str__": lambda self: self.name,
+                    },
+                    "Planet" : {
+                        "name" : models.CharField(max_length=100),
+                        "__str__" : lambda self: self.name
+                    },
+                    "Country" : {
+                        "name"  : models.CharField(max_length=100),
+                        "planet" : models.ForeignKey(to="Planet", on_delete=models.CASCADE, related_name="countries"),
+                        "__str__" : lambda self: self.name
+                    },
+                },
+                use_bloomerp_base=cls.use_bloomerp_base
+            )
+             
+            cls.CountryModel = foreign_models["Country"]
+            cls.PlanetModel = foreign_models["Planet"]
+            cls.CustomerTypeModel = foreign_models["CustomerType"]
+            
+        customer_def = {
+            "first_name": models.CharField(max_length=100),
+            "last_name": models.CharField(max_length=100),
+            "age" : models.IntegerField(max_length=3),
+            "picture" : BloomerpFileField(blank=True, null=True),
+            "date_joined" : models.DateField(blank=True, null=True),
+            "description": TextEditorField(blank=True, null=True),
+            "user_account" : UserField(blank=True, null=True, on_delete=models.SET_NULL),
+            "__str__" : lambda self: f"{self.first_name} {self.last_name}",
+        }
+        
+        if cls.create_foreign_models:
+            customer_def["country"] = models.ForeignKey(
+                to=cls.CountryModel, 
+                blank=True, 
+                null=True,
+                on_delete=models.SET_NULL,
+                related_name="customers"
+                )
+            customer_def["customer_type"] = models.ForeignKey(
+                to=cls.CustomerTypeModel,
+                blank=True,
+                null=True,
+                on_delete=models.SET_NULL,
+                related_name="customers",
+            )
+        
+        cls.CustomerModel = create_test_models(
+            app_label="bloomerp",
+            model_defs={
+                "Customer": customer_def
+            },
+            use_bloomerp_base=cls.use_bloomerp_base,
+        )["Customer"]
+
+        # Collect dynamically created test models
+        _test_models = [cls.CustomerModel]
+        if cls.create_foreign_models:
+            _test_models.extend([
+                cls.CountryModel,
+                cls.PlanetModel,
+                cls.CustomerTypeModel,
+            ])
+
+        # Register dynamic models in the module registry and router, then
+        # reload the bloomerp URL patterns so that get_absolute_url() works.
+        cls._register_dynamic_model_routes(_test_models)
+
+    @classmethod
+    def _register_dynamic_model_routes(cls, test_models: list) -> None:
+        """
+        Register routes for dynamically created test models.
+
+        After models are created in ``setUpClass`` they are unknown to the
+        router (which already ran ``models="__all__"`` expansion at import
+        time).  This helper:
+
+        1. Re-scans the module registry so test models are mapped to modules.
+        2. Uses the stored route templates in the router to create equivalent
+           routes for each new model.
+        3. Appends the resulting URL patterns to ``bloomerp.urls.urlpatterns``
+           and clears Django's URL resolver cache so the test client can
+           resolve those URLs.
+        """
+        from bloomerp.modules.definition import module_registry
+        from bloomerp.router import router
+        import bloomerp.urls as bloomerp_urls
+
+        # Re-scan so model→module mappings include the new test models
+        module_registry._register_models_from_apps()
+
+        # Register router routes for each test model
+        for model in test_models:
+            router.register_routes_for_model(model)
+
+        # Append new URL patterns to bloomerp.urls.urlpatterns so they are
+        # picked up by Django's URL resolver after clearing its cache.
+        existing_names = {
+            p.name
+            for p in bloomerp_urls.urlpatterns
+            if hasattr(p, 'name') and p.name
+        }
+        for route in router.routes:
+            if route.model not in test_models:
+                continue
+            if route.url_name in existing_names:
+                continue
+            pattern = router.build_url_pattern(route)
+            bloomerp_urls.urlpatterns.append(pattern)
+            existing_names.add(route.url_name)
+
+        clear_url_caches()
+        
+    def setUp(self):
+        super().setUp()
+        self._media_tempdir = tempfile.TemporaryDirectory()
+        self._media_override = override_settings(MEDIA_ROOT=self._media_tempdir.name)
+        self._media_override.enable()
+        # Create application fields
+        save_application_fields.Command().handle(suppress_output=True)
+        
+        # Create users
+        if self.auto_create_users:
+            self.admin_user = create_admin()
+            self.normal_user = create_normal_user()
+            # Log in as admin by default so test client requests are authenticated
+        
+        if self.create_foreign_models:
+            for name in ["Retail", "Business"]:
+                self.CustomerTypeModel.objects.create(name=name)
+
+            for i in ["Earth", "Mars"]:
+                self.PlanetModel.objects.create(
+                    name=i
+                )
+            
+            for i in ["Belgium", "Netherlands", "Brazil"]:
+                self.CountryModel.objects.create(
+                    name=i,
+                    planet=self.PlanetModel.objects.filter(name="Earth").first()
+                )
+                
+            for i in ["Helvetia", "Aresia"]:
+                self.CountryModel.objects.create(
+                    name=i,
+                    planet=self.PlanetModel.objects.filter(name="Mars").first()
+                )
+            
+        # Create customer objects
+        if self.auto_create_customers:
+            for i in range(10):
+                self.CustomerModel.objects.create(
+                    first_name = FIRST_NAMES[i],
+                    last_name = LAST_NAMES[i],
+                    age = 20 + i
+                )
+        elif hasattr(self, "get_object") and not self.CustomerModel.objects.exists():
+            self.CustomerModel.objects.create(
+                first_name=FIRST_NAMES[0],
+                last_name=LAST_NAMES[0],
+                age=20,
+            )
+        
+        
+        # Call extended setup
+        self.extendedSetup()
+
+    def tearDown(self):
+        try:
+            super().tearDown()
+        finally:
+            media_override = getattr(self, "_media_override", None)
+            if media_override is not None:
+                media_override.disable()
+                self._media_override = None
+
+            media_tempdir = getattr(self, "_media_tempdir", None)
+            if media_tempdir is not None:
+                media_tempdir.cleanup()
+                self._media_tempdir = None
+    
+    def extendedSetup(self):
+        pass
+        
+    def assertContains(self, response, text, *args, **kwargs):
+        if isinstance(response, (bytes, str)):
+            wrapper = HttpResponse(response)
+            return super().assertContains(wrapper, text, *args, **kwargs)
+        return super().assertContains(response, text, *args, **kwargs)
+
+    def assertNotContains(self, response, text, *args, **kwargs):
+        if isinstance(response, (bytes, str)):
+            wrapper = HttpResponse(response)
+            return super().assertNotContains(wrapper, text, *args, **kwargs)
+        return super().assertNotContains(response, text, *args, **kwargs)
+
+    def get_response_text(self, response) -> str:
+        if isinstance(response, bytes):
+            return response.decode("utf-8", errors="replace")
+        if isinstance(response, str):
+            return response
+        content = getattr(response, "content", b"")
+        charset = getattr(response, "charset", "utf-8") or "utf-8"
+        return content.decode(charset, errors="replace")
+
+    def get_compact_response_preview(self, response, limit: int = 1200) -> str:
+        response_text = self.get_response_text(response)
+        compact = re.sub(r"\s+", " ", response_text).strip()
+        if len(compact) <= limit:
+            return compact
+        return f"{compact[:limit]}... [truncated {len(compact) - limit} chars]"
+
+    def assertResponseContains(self, response, text, msg=None, preview_chars: int = 0):
+        response_text = self.get_response_text(response)
+        text = str(text)
+        if text in response_text:
+            return
+        status_code = getattr(response, "status_code", "unknown")
+        message = (
+            f"Response did not contain {text!r}.\n"
+            f"Status: {status_code}\n"
+            f"Response length: {len(response_text)} chars"
+        )
+        if preview_chars:
+            message = f"{message}\nResponse preview: {self.get_compact_response_preview(response, preview_chars)}"
+        self.fail(
+            msg or message
+        )
+
+    def assertResponseNotContains(self, response, text, msg=None, preview_chars: int = 0):
+        response_text = self.get_response_text(response)
+        text = str(text)
+        if text not in response_text:
+            return
+        status_code = getattr(response, "status_code", "unknown")
+        message = (
+            f"Response unexpectedly contained {text!r}.\n"
+            f"Status: {status_code}\n"
+            f"Response length: {len(response_text)} chars"
+        )
+        if preview_chars:
+            message = f"{message}\nResponse preview: {self.get_compact_response_preview(response, preview_chars)}"
+        self.fail(
+            msg or message
+        )
+
+    # -----------------------------
+    # Create helper methods for test models
+    # -----------------------------
+    def create_planet(self, name:str) -> models.Model:
+        """Helper method to create planets
+
+        Args:
+            name (str): the name of the planet
+
+        Returns:
+            Planet: the created planet object
+        """
+        if not self.create_foreign_models:
+            raise Exception("Foreign models not enabled for this test case")
+        
+        return self.PlanetModel.objects.create(
+            name=name
+        )
+        
+    def create_customer(self, first_name:str, last_name:str, age:int, **kwargs) -> models.Model:
+        """Helper method to create customers
+
+        Args:
+            first_name (str): the first name of the customer
+            last_name (str): the last name of the customer
+            age (int): the age of the customer
+
+        Returns:
+            Customer: the created customer object
+        """
+        return self.CustomerModel.objects.create(
+            first_name=first_name,
+            last_name=last_name,
+            age=age,
+            **kwargs
+        )
+    
+    def create_country(self, name:str, planet=None) -> models.Model:
+        """Helper method to create countries
+
+        Args:
+            name (str): the name of the country
+            planet (Planet, optional): the planet the country is located on. Defaults to None.
+
+        Returns:
+            Country: the created country object
+        """
+        if not self.create_foreign_models:
+            raise Exception("Foreign models not enabled for this test case")
+        
+        return self.CountryModel.objects.create(
+            name=name,
+            planet=planet
+        )
+    
+    def get_content_type_for_model(self, model:models.Model) -> ContentType:
+        """
+        Returns the content type for a particular model
+        """
+        return ContentType.objects.get_for_model(model)
+        
+    

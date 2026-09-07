@@ -1,3 +1,5 @@
+# Refactor into users/test_user_create_view
+
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType

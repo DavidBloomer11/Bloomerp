@@ -27,6 +27,9 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+.coverage
+coverage.json
+htmlcov/
 
 # Django
 *.log

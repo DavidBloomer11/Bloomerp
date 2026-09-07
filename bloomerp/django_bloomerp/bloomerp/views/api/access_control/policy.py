@@ -65,7 +65,7 @@ class PolicyViewSet(BaseModelApiView):
     route_type="api_model",
     models=Policy,
 )
-class PolicyListAPIView(PolicyViewSet):
+class PolicyListApiView(PolicyViewSet):
     actions = {
         "get": "list",
         "post": "create",
@@ -77,7 +77,7 @@ class PolicyListAPIView(PolicyViewSet):
     route_type="api_detail",
     models=Policy,
 )
-class PolicyDetailAPIView(PolicyViewSet):
+class PolicyDetailApiView(PolicyViewSet):
     actions = {
         "get": "retrieve",
         "put": "update",

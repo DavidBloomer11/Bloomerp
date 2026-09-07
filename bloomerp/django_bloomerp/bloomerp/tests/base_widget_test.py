@@ -1,5 +1,5 @@
+"""Compatibility imports for the former widget-test module."""
 
+from bloomerp.tests.base import BaseBloomerpWidgetTestCase, BloomerpWidgetTestCase
 
-
-class BaseWidgetTestCase():
-    pass
+__all__ = ["BaseBloomerpWidgetTestCase", "BloomerpWidgetTestCase"]
