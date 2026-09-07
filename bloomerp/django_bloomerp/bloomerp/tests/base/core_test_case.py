@@ -10,6 +10,7 @@ import tempfile
 from bloomerp.management.commands import save_application_fields
 from bloomerp.model_fields.file_field import BloomerpFileField
 from bloomerp.model_fields.text_editor_field import TextEditorField
+from bloomerp.model_fields.user_field import UserField
 from bloomerp.tests.utils.users import create_admin, create_normal_user
 from bloomerp.tests.utils.dynamic_models import create_test_models
 from bloomerp.tests.utils.names import FIRST_NAMES, LAST_NAMES
@@ -69,7 +70,8 @@ class BaseBloomerpTestCaseWithModels(TransactionTestCase):
             "picture" : BloomerpFileField(blank=True, null=True),
             "date_joined" : models.DateField(blank=True, null=True),
             "description": TextEditorField(blank=True, null=True),
-            "__str__" : lambda self: f"{self.first_name} {self.last_name}"
+            "user_account" : UserField(blank=True, null=True, on_delete=models.SET_NULL),
+            "__str__" : lambda self: f"{self.first_name} {self.last_name}",
         }
         
         if cls.create_foreign_models:

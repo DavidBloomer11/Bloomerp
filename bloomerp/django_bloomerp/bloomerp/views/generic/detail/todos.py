@@ -9,7 +9,8 @@ from django.contrib.contenttypes.models import ContentType
     route_type="detail",
     name="Todos",
     description="Todos related to a specific object",
-    exclude_models=[Todo, Initiative]
+    exclude_models=[Todo, Initiative],
+    url_name="todos"
 )
 class ObjectTodosView(BaseBloomerpDetailView):
     """

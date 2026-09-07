@@ -96,6 +96,31 @@ class GenerateTestCasesCommandTests(SimpleTestCase):
         self.assertIn("BloomerpDetailViewTestCase", submit_case.content)
         self.assertIn("view_name = 'submit'", submit_case.content)
         self.assertIn("model = Form", submit_case.content)
+        self.assertIn("    ExpectedResult,", submit_case.content)
+        self.assertIn("    RequestSetup,", submit_case.content)
+        self.assertIn("    ModelRequestSetup,", submit_case.content)
+        self.assertIn(
+            "def get_request_setups(self) -> list[RequestSetup]:",
+            submit_case.content,
+        )
+
+    def test_component_skeleton_imports_request_scenario_classes(self):
+        """
+        Use case: A developer implements a generated component test.
+        Expected result: The request setup and expected-result classes are imported.
+        """
+        # 1. Render a representative component skeleton.
+        content = self.command._render_request_test(
+            base_class="BloomerpComponentTestCase",
+            class_name="TestExampleComponent",
+            view_name="components_example",
+        )
+
+        # 2. Confirm all classes needed for request scenarios are ready to use.
+        self.assertIn("    BloomerpComponentTestCase,", content)
+        self.assertIn("    ExpectedResult,", content)
+        self.assertIn("    RequestSetup,", content)
+        self.assertIn("def get_request_setups(self) -> list[RequestSetup]:", content)
 
     def test_registry_ownership_is_inferred_from_implementations(self):
         """

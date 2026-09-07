@@ -12,7 +12,10 @@ from bloomerp.tests.base.model_test_case import (
 )
 from bloomerp.tests.base.request_test_case_mixin import (
     ExpectedResult,
+    ModelRequestSetup,
+    ModuleRequestSetup,
     RequestSetup,
+    RequestPreparation,
     RequestTestCaseMixin,
     ResponseValidator,
 )
@@ -51,6 +54,9 @@ __all__ = [
     "BloomerpWidgetTestCase",
     "BloomerpWorkflowNodeTestCase",
     "ExpectedResult",
+    "ModelRequestSetup",
+    "ModuleRequestSetup",
+    "RequestPreparation",
     "RequestSetup",
     "RequestTestCaseMixin",
     "ResponseValidator",

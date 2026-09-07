@@ -566,11 +566,29 @@ class Command(BaseCommand):
         imports: list[tuple[str, str]] | None = None,
         attributes: list[tuple[str, str]] | None = None,
     ) -> str:
+        specialized_request_setup_class = {
+            "BloomerpDetailViewTestCase": "ModelRequestSetup",
+            "BloomerpModelViewTestCase": "ModelRequestSetup",
+            "BloomerpModuleViewTestCase": "ModuleRequestSetup",
+        }.get(base_class)
         import_lines = [
             f"from {import_path} import {imported_name}"
             for import_path, imported_name in imports or []
         ]
-        import_lines.append(f"from bloomerp.tests.base import {base_class}")
+        import_lines.extend(
+            [
+                "from bloomerp.tests.base import (",
+                f"    {base_class},",
+                "    ExpectedResult,",
+                "    RequestSetup,",
+                *(
+                    [f"    {specialized_request_setup_class},"]
+                    if specialized_request_setup_class
+                    else []
+                ),
+                ")",
+            ]
+        )
         attribute_lines = [f"    view_name = {view_name!r}"]
         attribute_lines.extend(
             f"    {attribute_name} = {attribute_value}"
@@ -585,7 +603,7 @@ class Command(BaseCommand):
                 f"class {class_name}({base_class}):",
                 *attribute_lines,
                 "",
-                "    def get_request_setups(self):",
+                "    def get_request_setups(self) -> list[RequestSetup]:",
                 "        # Add only the route scenarios this callable needs.",
                 "        return []",
                 "",

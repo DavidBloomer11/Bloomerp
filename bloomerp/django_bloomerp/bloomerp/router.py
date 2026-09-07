@@ -243,10 +243,22 @@ class BloomerpRoute:
 # ------------------------
 # Helper functions
 # ------------------------
-def _retrieve_models(models:list[Model], exclude_models:list[Model], route_type: RouteType) -> list[Model]:
+def _resolve_model_selector(selector):
+    """Evaluate a deferred model selector without calling model classes."""
+    if callable(selector) and not (
+        isinstance(selector, type) and issubclass(selector, Model)
+    ):
+        return selector()
+    return selector
+
+
+def _retrieve_models(models, exclude_models, route_type: RouteType) -> list[Model]:
     """Retrieves the used models from the parameters"""
     if route_type in [RouteType.APP, RouteType.MODULE, RouteType.API]:
         return [None]  # App routes don't need models
+
+    models = _resolve_model_selector(models)
+    exclude_models = _resolve_model_selector(exclude_models)
     
     if not models and not exclude_models:
         return [None]
@@ -1058,6 +1070,7 @@ class BloomerpRouteRegistry:
         return False
 
     def _model_matches_selector(self, model: Model, selector) -> bool:
+        selector = _resolve_model_selector(selector)
         if not selector:
             return False
 

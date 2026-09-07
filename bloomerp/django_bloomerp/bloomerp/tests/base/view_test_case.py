@@ -4,7 +4,12 @@ from django.urls import reverse
 from bloomerp.modules.definition import module_registry
 from bloomerp.router import RouteType, router
 from bloomerp.tests.base.core_test_case import BaseBloomerpTestCaseWithModels
-from bloomerp.tests.base.request_test_case_mixin import RequestTestCaseMixin
+from bloomerp.tests.base.request_test_case_mixin import (
+    ModelRequestSetup,
+    ModuleRequestSetup,
+    RequestSetup,
+    RequestTestCaseMixin,
+)
 
 
 class BloomerpViewTestCase(RequestTestCaseMixin, BaseBloomerpTestCaseWithModels):
@@ -15,28 +20,30 @@ class BloomerpViewTestCase(RequestTestCaseMixin, BaseBloomerpTestCaseWithModels)
     model: type[Model] | None = None
     module = None
 
-    def get_test_case_module(self):
+    def get_test_case_module(self, module=None):
         """Resolve a configured module object or registry ID."""
-        if isinstance(self.module, str):
-            module = module_registry.get(self.module)
-            if module is None:
+        selected_module = self.module if module is None else module
+        if isinstance(selected_module, str):
+            resolved_module = module_registry.get(selected_module)
+            if resolved_module is None:
                 raise AssertionError(
-                    f"Module {self.module!r} is not registered"
+                    f"Module {selected_module!r} is not registered"
                 )
-            return module
-        return self.module
+            return resolved_module
+        return selected_module
 
-    def get_route(self, view_name: str | None = None):
+    def get_route(self, view_name: str | None = None, *, model=None, module=None):
         """Resolve the concrete route for this test's model/module context."""
         selected_view_name = view_name or self.view_name
-        selected_module = self.get_test_case_module()
+        selected_model = self.model if model is None else model
+        selected_module = self.get_test_case_module(module)
         candidates = [
             route
             for route in router.get_routes_by_type(self.route_type)
             if selected_view_name in {route.base_url_name, route.url_name}
             and (
-                self.model is None
-                or route.model is self.model
+                selected_model is None
+                or route.model is selected_model
             )
             and (selected_module is None or route.module == selected_module)
         ]
@@ -47,9 +54,16 @@ class BloomerpViewTestCase(RequestTestCaseMixin, BaseBloomerpTestCaseWithModels)
             )
         return candidates[0]
 
-    def get_endpoint(self, view_name: str, kwargs: dict | None) -> str:
+    def get_endpoint(
+        self,
+        view_name: str,
+        kwargs: dict | None,
+        setup: RequestSetup | None = None,
+    ) -> str:
         """Reverse the concrete route selected by the test context."""
-        route = self.get_route(view_name)
+        model = setup.model if isinstance(setup, ModelRequestSetup) else None
+        module = setup.module if isinstance(setup, ModuleRequestSetup) else None
+        route = self.get_route(view_name, model=model, module=module)
         return reverse(viewname=route.url_name, kwargs=kwargs)
 
     def test_route_registration(self) -> None:

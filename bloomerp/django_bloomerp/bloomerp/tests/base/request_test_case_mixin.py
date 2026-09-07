@@ -2,11 +2,16 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Literal
 
 from django.contrib.auth.base_user import AbstractBaseUser
+from django.db import transaction
+from django.db.models import Model
 from django.http import HttpResponse
 from django.urls import reverse
 
+from bloomerp.modules.definition import ModuleConfig
+
 
 ResponseValidator = Callable[[HttpResponse], bool]
+RequestPreparation = Callable[["RequestTestCaseMixin", "RequestSetup"], None]
 
 
 @dataclass
@@ -35,6 +40,21 @@ class RequestSetup:
     content_type: str | None = None
     follow: bool = False
     view_name: str | None = None
+    prepare: RequestPreparation | None = None
+
+
+@dataclass(kw_only=True)
+class ModelRequestSetup(RequestSetup):
+    """A request scenario that overrides the test case's model route context."""
+
+    model: type[Model]
+
+
+@dataclass(kw_only=True)
+class ModuleRequestSetup(RequestSetup):
+    """A request scenario that overrides the test case's module route context."""
+
+    module: ModuleConfig | str
 
 
 class RequestTestCaseMixin:
@@ -42,7 +62,12 @@ class RequestTestCaseMixin:
 
     view_name: str | None = None
 
-    def get_endpoint(self, view_name: str, kwargs: dict | None) -> str:
+    def get_endpoint(
+        self,
+        view_name: str,
+        kwargs: dict | None,
+        setup: RequestSetup | None = None,
+    ) -> str:
         """Resolve a scenario's endpoint."""
         return reverse(viewname=view_name, kwargs=kwargs)
 
@@ -62,15 +87,28 @@ class RequestTestCaseMixin:
         # 2. Execute every scenario against its selected route.
         for index, setup in enumerate(self.get_request_setups(), start=1):
             scenario_name = setup.name or f"request setup {index}"
-            selected_view_name = setup.view_name or self.view_name
+            with self.subTest(name=scenario_name):
+                self._run_request_setup(setup, scenario_name)
+
+    def _run_request_setup(self, setup: RequestSetup, scenario_name: str) -> None:
+        """Execute one isolated request scenario."""
+        selected_view_name = setup.view_name or self.view_name
+        with transaction.atomic():
             try:
+                if setup.prepare:
+                    setup.prepare(self, setup)
+
                 if setup.user:
                     self.client.force_login(setup.user)
                 else:
                     self.client.logout()
 
                 request_kwargs = {
-                    "path": self.get_endpoint(selected_view_name, setup.view_kwargs),
+                    "path": self.get_endpoint(
+                        selected_view_name,
+                        setup.view_kwargs,
+                        setup,
+                    ),
                     "data": setup.data,
                     "query_params": setup.query_params,
                     "headers": setup.headers,
@@ -87,7 +125,8 @@ class RequestTestCaseMixin:
                 self.assertEqual(
                     response.status_code,
                     setup.expected.status_code,
-                    f"Unexpected status code for {scenario_name}: {setup.description or ''}",
+                    f"Unexpected status code for {scenario_name}: "
+                    f"{setup.description or ''}",
                 )
 
                 validators = setup.expected.response_validators
@@ -96,11 +135,12 @@ class RequestTestCaseMixin:
                 for validator in validators or []:
                     self.assertTrue(
                         validator(response),
-                        f"Response validator {self._validator_name(validator)} failed "
-                        f"for {scenario_name}: {setup.description or ''}",
+                        f"Response validator {self._validator_name(validator)} "
+                        f"failed for {scenario_name}: {setup.description or ''}",
                     )
             finally:
                 self.client.logout()
+                transaction.set_rollback(True)
 
     @staticmethod
     def _named_validator(name: str, validator: ResponseValidator) -> ResponseValidator:

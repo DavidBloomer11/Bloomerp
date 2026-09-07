@@ -190,8 +190,9 @@ class CreateUserForObjectForm(forms.Form):
 @router.register(
     path="create-user-for-object",
     name="Create User for Object",
+    url_name="create_user_for_object",
     route_type="detail",
-    models=models_with_user_field(),
+    models=models_with_user_field,
 )
 class CreateUserView(BaseBloomerpDetailView):
     template_name = "views/generic/detail/create_user_for_object.html"
