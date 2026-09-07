@@ -13,6 +13,10 @@ from bloomerp.field_types.registry import (
     FieldTypeDefinition,
     load_builtin_field_types,
 )
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from bloomerp.filters.lookups import LookupDefinition
 
 class ApplicationField(models.Model):
     """
@@ -244,3 +248,6 @@ class ApplicationField(models.Model):
     @property
     def icon(self):
         return self.get_field_type().icon
+    
+    def get_lookups(self) -> list["LookupDefinition"]:
+        pass

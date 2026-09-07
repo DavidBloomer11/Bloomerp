@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 
 from bloomerp.widgets.address_widget import ADDRESS_COMPONENTS, AddressWidget
 from bloomerp.widgets.foreign_field_widget import ForeignFieldWidget
-from django.db.models import BooleanField, Count, DateField, DateTimeField, DecimalField, DurationField, Field, FloatField, IntegerField, QuerySet, TimeField, UUIDField
+from django.db.models import Q, BooleanField, Count, DateField, DateTimeField, DecimalField, DurationField, Field, FloatField, IntegerField, QuerySet, TimeField, UUIDField
 from django.conf import settings
 from django.utils import timezone
 
@@ -1090,3 +1090,8 @@ TEXT_LOOKUPS = [
     Lookup.IS_NULL,
     Lookup.NOT_EQUALS,
 ]
+
+
+
+    
+    
