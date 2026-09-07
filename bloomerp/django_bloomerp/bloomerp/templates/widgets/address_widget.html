@@ -1,4 +1,8 @@
-<div bloomerp-component="address-field-widget">
+<div
+    bloomerp-component="address-field-widget"
+    data-filter-value-provider
+    data-field-name="{{ widget.name }}"
+>
     <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
         {% for field in widget.address_fields %}
             <div class="{% if field.key == 'street_1' or field.key == 'street_2' %}md:col-span-2{% endif %}">

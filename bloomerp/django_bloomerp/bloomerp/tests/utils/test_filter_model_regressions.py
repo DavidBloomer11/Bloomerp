@@ -113,6 +113,15 @@ class TestFilterModelRegressions(BaseBloomerpTestCaseWithModels):
         self.assert_filtered_ids(self.EventModel, {"is_active__exact": "true"}, [active.id])
         self.assert_filtered_ids(self.EventModel, {"is_active__exact": "false"}, [inactive.id])
 
+    def test_unknown_filter_field_is_ignored(self):
+        event = self.create_event(date(2026, 5, 18))
+
+        self.assert_filtered_ids(
+            self.EventModel,
+            {"address_0__contains": "Brussels"},
+            [event.id],
+        )
+
     def test_level_five_relationship_nesting(self):
         ceo = self.EmployeeModel.objects.create(name="CEO")
         level_1 = self.EmployeeModel.objects.create(name="Level 1", manager=ceo)

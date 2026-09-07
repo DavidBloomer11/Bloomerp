@@ -9,6 +9,7 @@ from django.utils import timezone
 from django_countries.fields import CountryField
 
 from bloomerp.field_types import FIELD_TYPE_REGISTRY
+from bloomerp.model_fields.address_field import AddressField
 from bloomerp.model_fields.week_field import WeekField
 from bloomerp.tests.base import BaseBloomerpTestCaseWithModels
 from bloomerp.tests.utils.dynamic_models import create_test_models
@@ -43,6 +44,7 @@ class TestFilterUtil(BaseBloomerpTestCaseWithModels):
                     "uuid_field": models.UUIDField(default=uuid.uuid4, null=True, blank=True),
                     "week_field": WeekField(null=True, blank=True),
                     "country_field": CountryField(null=True, blank=True),
+                    "address_field": AddressField(null=True, blank=True),
                     "foreign_key_field": models.ForeignKey(
                         "FilterTag",
                         on_delete=models.SET_NULL,
@@ -100,6 +102,7 @@ class TestFilterUtil(BaseBloomerpTestCaseWithModels):
             "boolean_field": True,
             "week_field": "2026-W21",
             "country_field": "NL",
+            "address_field": None,
         }
         defaults.update(kwargs)
         return self.PrimaryModel.objects.create(**defaults)
@@ -132,6 +135,7 @@ class TestFilterUtil(BaseBloomerpTestCaseWithModels):
             "uuid_field": FIELD_TYPE_REGISTRY.UUID_FIELD,
             "week_field": FIELD_TYPE_REGISTRY.WEEK_FIELD,
             "country_field": FIELD_TYPE_REGISTRY.COUNTRY_FIELD,
+            "address_field": FIELD_TYPE_REGISTRY.ADDRESS_FIELD,
             "foreign_key_field": FIELD_TYPE_REGISTRY.FOREIGN_KEY,
             "one_to_one_field": FIELD_TYPE_REGISTRY.ONE_TO_ONE_FIELD,
             "many_to_many_field": FIELD_TYPE_REGISTRY.MANY_TO_MANY_FIELD,
@@ -181,6 +185,51 @@ class TestFilterUtil(BaseBloomerpTestCaseWithModels):
         self.assert_filtered_ids(
             {"country_field__not_equals": "NL"},
             [belgium.id, germany.id],
+        )
+
+    def test_address_contains_filters_structured_components(self):
+        brussels = self.create_primary(
+            address_field={
+                "street_1": "Main Street 1",
+                "postal_code": "1000",
+                "city": "Brussels",
+                "country": "BE",
+            }
+        )
+        self.create_primary(
+            address_field={
+                "street_1": "Main Street 2",
+                "postal_code": "9000",
+                "city": "Ghent",
+                "country": "BE",
+            }
+        )
+        self.create_primary(
+            address_field={
+                "street_1": "Main Street 3",
+                "postal_code": "1012",
+                "city": "Amsterdam",
+                "country": "NL",
+            }
+        )
+
+        self.assert_filtered_ids(
+            {
+                "address_field__contains": (
+                    '{"city":"bruss","country":"be"}'
+                )
+            },
+            [brussels.id],
+        )
+
+    def test_address_contains_rejects_invalid_json(self):
+        self.create_primary(
+            address_field={"city": "Brussels", "country": "BE"}
+        )
+
+        self.assert_filtered_ids(
+            {"address_field__contains": "not-json"},
+            [],
         )
 
     def test_numeric_lookup_filters_use_declared_aliases(self):

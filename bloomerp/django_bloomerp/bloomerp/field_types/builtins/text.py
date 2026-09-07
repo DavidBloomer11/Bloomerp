@@ -102,7 +102,7 @@ ADDRESS_FIELD = FieldTypeDefinition(
     icon="fa-solid fa-location-dot",
     model_field_cls=AddressField,
     label="Address Field",
-    lookups=tuple([Lookup.ADDRESS_FIELD_LOOKUP]),
+    lookups=(Lookup.ADDRESS_CONTAINS,),
     construction=FieldConstruction(
         options=(NULL_FIELD_OPTION, BLANK_FIELD_OPTION, HELP_TEXT_FIELD_OPTION)
     ),

@@ -50,3 +50,9 @@ class TestAddressWidget(SimpleTestCase):
             value,
             ["Main street 1", "", "1000", "Brussels", "", "BE"],
         )
+
+    def test_render_marks_widget_as_filter_value_provider(self):
+        html = AddressWidget().render("office_address", None)
+
+        self.assertIn("data-filter-value-provider", html)
+        self.assertIn('data-field-name="office_address"', html)

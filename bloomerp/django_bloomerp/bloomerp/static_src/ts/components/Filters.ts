@@ -619,18 +619,22 @@ export default class FilterContainer extends BaseComponent {
      * Returns the filters as a list of FilterEntry objects.
      */
     public getFilters(): FilterEntry[] {
-        const filters: FilterEntry[] = [];
-
         const valueSection = this.getValueInputSection();
         if (!valueSection) {
-            return filters;
+            return [];
         }
+
+        const filters = this.getWidgetValueProviderFilters(valueSection);
 
         const fields = valueSection.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
             'input[name], select[name], textarea[name]'
         );
 
         fields.forEach((field) => {
+            if (field.closest('[data-filter-value-provider]')) {
+                return;
+            }
+
             const name = field.getAttribute('name');
             if (!name) {
                 return;
@@ -686,52 +690,59 @@ export default class FilterContainer extends BaseComponent {
             filters.push(new FilterEntry({ field: name, applicationFieldId, operator, value }));
         });
 
-        if (filters.length === 0) {
-            const widgetFilter = this.getCustomWidgetFilter(valueSection);
-            if (widgetFilter) {
-                filters.push(widgetFilter);
-            }
-        }
-
         return filters;
     }
 
 
-    private getCustomWidgetFilter(valueSection: HTMLElement): FilterEntry | null {
-        const widgetElement = valueSection.querySelector<HTMLElement>("[bloomerp-component='foreign-field-widget']");
-        if (!widgetElement) {
-            return null;
-        }
+    private getWidgetValueProviderFilters(valueSection: HTMLElement): FilterEntry[] {
+        const filters: FilterEntry[] = [];
+        const providers = valueSection.querySelectorAll<HTMLElement>(
+            '[data-filter-value-provider][data-field-name]',
+        );
 
-        const fieldName = widgetElement.dataset.fieldName || "";
-        if (!fieldName) {
-            return null;
-        }
+        providers.forEach((provider) => {
+            const fieldName = provider.dataset.fieldName || "";
+            const widget = getComponent(provider) as { getValue?: () => unknown } | null;
+            if (!fieldName || !widget?.getValue) {
+                return;
+            }
 
-        const widget = getComponent(widgetElement) as { getValue?: () => unknown } | null;
-        const rawValue = widget?.getValue ? widget.getValue() : widgetElement.dataset.value || null;
-        const value = Array.isArray(rawValue)
-            ? rawValue.map((item) => String(item)).filter((item) => item !== "")
-            : rawValue === null || rawValue === undefined || String(rawValue) === ""
-                ? null
-                : String(rawValue);
+            const value = this.serializeWidgetFilterValue(widget.getValue());
+            if (value === null || (Array.isArray(value) && value.length === 0)) {
+                return;
+            }
 
-        if (value === null || (Array.isArray(value) && value.length === 0)) {
-            return null;
-        }
+            const operatorSelect = this.findOperatorForField(provider);
+            const selectedOption = operatorSelect?.selectedOptions[0];
+            const djangoLookup = selectedOption?.getAttribute('data-lookup-django') || '';
+            const operator = operatorSelect ? (djangoLookup || operatorSelect.value) : null;
 
-        const operatorSelect = this.findOperatorForField(widgetElement);
-        const selectedOption = operatorSelect?.selectedOptions[0];
-        const djangoLookup = selectedOption?.getAttribute('data-lookup-django') || '';
-        const operator = operatorSelect ? (djangoLookup || operatorSelect.value) : null;
-        const applicationFieldId = this.findApplicationFieldIdForField(widgetElement);
-
-        return new FilterEntry({
-            field: fieldName,
-            applicationFieldId,
-            operator,
-            value,
+            filters.push(new FilterEntry({
+                field: fieldName,
+                applicationFieldId: this.findApplicationFieldIdForField(provider),
+                operator,
+                value,
+            }));
         });
+
+        return filters;
+    }
+
+    private serializeWidgetFilterValue(value: unknown): string | string[] | null {
+        if (value === null || value === undefined) {
+            return null;
+        }
+
+        if (Array.isArray(value)) {
+            return value.map(String).filter((item) => item !== "");
+        }
+
+        if (typeof value === "object") {
+            return JSON.stringify(value);
+        }
+
+        const serialized = String(value);
+        return serialized === "" ? null : serialized;
     }
 
 
@@ -1027,17 +1038,19 @@ export default class FilterContainer extends BaseComponent {
             return;
         }
 
-        const customWidget = valueSection.querySelector<HTMLElement>("[bloomerp-component='foreign-field-widget']");
-        if (customWidget) {
-            const widget = getComponent(customWidget) as { setValue?: (value: unknown) => void } | null;
-            widget?.setValue?.(value);
-        }
+        const valueProviders = valueSection.querySelectorAll<HTMLElement>(
+            '[data-filter-value-provider][data-field-name]',
+        );
+        valueProviders.forEach((provider) => {
+            const widget = getComponent(provider) as { setValue?: (value: unknown) => void } | null;
+            widget?.setValue?.(this.deserializeWidgetFilterValue(value));
+        });
 
         const fields = Array.from(
             valueSection.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
                 'input[name], select[name], textarea[name]'
             )
-        );
+        ).filter((field) => !field.closest('[data-filter-value-provider]'));
 
         if (fields.length === 0) {
             return;
@@ -1070,6 +1083,23 @@ export default class FilterContainer extends BaseComponent {
 
             field.value = values[0] || '';
         });
+    }
+
+    private deserializeWidgetFilterValue(value: string | string[]): unknown {
+        if (Array.isArray(value)) {
+            return value;
+        }
+
+        const trimmed = value.trim();
+        if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) {
+            return value;
+        }
+
+        try {
+            return JSON.parse(trimmed);
+        } catch (_error) {
+            return value;
+        }
     }
 
     // TODO: Technical debt
