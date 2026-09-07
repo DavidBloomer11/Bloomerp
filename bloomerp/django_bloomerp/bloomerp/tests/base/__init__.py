@@ -3,7 +3,11 @@ from bloomerp.tests.base.core_test_case import (
     BaseBloomerpTestCaseWithModels,
     BloomerpChannelTestCase,
 )
-from bloomerp.tests.base.e2e_test_case import BloomerpE2ETestCase
+from bloomerp.tests.base.e2e_test_case import (
+    BloomerpE2ETestCase,
+    E2EAction,
+    E2ERequestSetup,
+)
 from bloomerp.tests.base.dataview_test_case import BloomerpDataviewTestCase
 from bloomerp.tests.base.model_field_test_case import BloomerpModelFieldTestCase
 from bloomerp.tests.base.model_test_case import (
@@ -46,6 +50,8 @@ __all__ = [
     "BloomerpDataviewTestCase",
     "BloomerpDetailViewTestCase",
     "BloomerpE2ETestCase",
+    "E2EAction",
+    "E2ERequestSetup",
     "BloomerpModelFieldTestCase",
     "BloomerpModelTestCase",
     "BloomerpModelViewTestCase",

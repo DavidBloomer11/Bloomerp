@@ -24,11 +24,11 @@ class RequestSetupIsolationTests(RequestTestCaseMixin, TransactionTestCase):
     view_name = "prepared_request"
 
     def get_request_setups(self) -> list[RequestSetup]:
-        def create_marker(test_case, setup):
+        def create_marker(setup):
             get_user_model().objects.create(username="scenario-marker")
 
-        def assert_marker_was_rolled_back(test_case, setup):
-            test_case.assertFalse(
+        def assert_marker_was_rolled_back(setup):
+            self.assertFalse(
                 get_user_model().objects.filter(username="scenario-marker").exists()
             )
 

@@ -1,5 +1,8 @@
+from typing import Optional
+
 from django.db.models import Model
 from django.urls import reverse
+from django.db import models
 
 from bloomerp.modules.definition import module_registry
 from bloomerp.router import RouteType, router
@@ -64,7 +67,7 @@ class BloomerpViewTestCase(RequestTestCaseMixin, BaseBloomerpTestCaseWithModels)
         model = setup.model if isinstance(setup, ModelRequestSetup) else None
         module = setup.module if isinstance(setup, ModuleRequestSetup) else None
         route = self.get_route(view_name, model=model, module=module)
-        return reverse(viewname=route.url_name, kwargs=kwargs)
+        return reverse(viewname=route.url_name, kwargs=kwargs or self.get_view_kwargs())
 
     def test_route_registration(self) -> None:
         """
@@ -89,6 +92,15 @@ class BloomerpViewTestCase(RequestTestCaseMixin, BaseBloomerpTestCaseWithModels)
             self.assertIs(route.model, self.model)
         if self.module is not None:
             self.assertEqual(route.module, self.get_test_case_module())
+            
+    def get_view_kwargs(self) -> Optional[dict]:
+        """Sets the default view kwargs for all tests if not given in setup
+
+        Returns:
+            dict: the optional dictionary
+        """
+        return None
+        
 
 
 class BloomerpModelViewTestCase(BloomerpViewTestCase):
@@ -101,6 +113,25 @@ class BloomerpDetailViewTestCase(BloomerpViewTestCase):
     """Base class for object-detail routes."""
 
     route_type = RouteType.DETAIL
+    
+    def get_test_object(self) -> models.Model | None:
+        """Returns default object for all test cases.
+        Is used to automatically set the view kwargs.
+    
+
+        Returns:
+            models.Model: an instance of a model
+        """
+        
+    def get_view_kwargs(self):
+        obj = self.get_test_object()
+        
+        if obj:
+            return {
+                "pk" : obj.pk
+            }
+        return None
+        
 
 
 class BloomerpModuleViewTestCase(BloomerpViewTestCase):

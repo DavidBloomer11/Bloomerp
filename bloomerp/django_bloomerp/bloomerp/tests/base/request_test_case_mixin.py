@@ -11,7 +11,7 @@ from bloomerp.modules.definition import ModuleConfig
 
 
 ResponseValidator = Callable[[HttpResponse], bool]
-RequestPreparation = Callable[["RequestTestCaseMixin", "RequestSetup"], None]
+RequestPreparation = Callable[["RequestSetup"], None]
 
 
 @dataclass
@@ -96,7 +96,7 @@ class RequestTestCaseMixin:
         with transaction.atomic():
             try:
                 if setup.prepare:
-                    setup.prepare(self, setup)
+                    setup.prepare(setup)
 
                 if setup.user:
                     self.client.force_login(setup.user)

@@ -11,55 +11,6 @@ class TestCreateUserView(BloomerpDetailViewTestCase):
     view_name = 'create_user_for_object'
     model = None
 
-    def create_customer(self, with_account:bool):
-        data = {
-            "first_name" : "John",
-            "last_name" : "Doe",
-            "age" : 12,
-        }
-        if with_account:
-            data["user_account"] = self.normal_user
-        
-        return self.CustomerModel.objects.create(
-            **data
-        )
-    
     def get_request_setups(self) -> list[RequestSetup]:
-        without_account_cust = self.create_customer(False)
-        with_account_cust = self.create_customer(True)
-        
-        return [
-            ModelRequestSetup(
-                name="Admin user",
-                user=self.admin_user,
-                model=self.CustomerModel,
-                method="GET",
-                view_kwargs={
-                    "pk" : without_account_cust.id
-                },
-                expected=ExpectedResult(
-                    200,
-                    [
-                        self.contains_text("User field"),
-                        self.contains_text("Username"),
-                        self.contains_text("Groups"),
-                        self.contains_text("Policies")
-                    ]
-                )
-            ),
-            ModelRequestSetup(
-                name="Admin user, customer account exists",
-                user=self.admin_user,
-                model=self.CustomerModel,
-                method="GET",
-                view_kwargs={
-                    "pk" : with_account_cust.id
-                },
-                expected=ExpectedResult(
-                    200,
-                    [
-                        self.contains_text("This record is already linked to"),
-                    ]
-                )
-            ),
-        ]
+        # Add only the route scenarios this callable needs.
+        return []

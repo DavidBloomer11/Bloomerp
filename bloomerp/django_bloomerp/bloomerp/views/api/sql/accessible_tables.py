@@ -36,8 +36,9 @@ class AccessibleTablesResponseSerializer(serializers.Serializer):
 
 
 @router.register(
-    path="api/sql/accessible-tables/",
+    path="sql/accessible-tables/",
     name="api_sql_accessible_tables",
+    route_type="api"
 )
 class AccessibleTablesView(BaseBloomerpApiView):
     serializer_class = AccessibleTablesQuerySerializer
