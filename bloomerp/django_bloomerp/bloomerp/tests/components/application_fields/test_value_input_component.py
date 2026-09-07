@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestValueInputComponent(BloomerpComponentTestCase):
+    """Tests function `value_input` from `bloomerp/components/application_fields/filters.py`."""
+
     view_name = 'components_filters_value_input'
 
     def get_request_setups(self) -> list[RequestSetup]:

@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestCreateTodoForObjectComponent(BloomerpComponentTestCase):
+    """Tests function `create_todo_for_object` from `bloomerp/components/todos/create_todo_for_object.py`."""
+
     view_name = 'components_create_todo_for_object'
 
     def get_request_setups(self) -> list[RequestSetup]:

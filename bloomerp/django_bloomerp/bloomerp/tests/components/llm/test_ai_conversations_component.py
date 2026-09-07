@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestAiConversationsComponent(BloomerpComponentTestCase):
+    """Tests function `ai_conversations` from `bloomerp/components/llm/ai_conversations.py`."""
+
     view_name = 'components_ai_conversations'
 
     def get_request_setups(self) -> list[RequestSetup]:

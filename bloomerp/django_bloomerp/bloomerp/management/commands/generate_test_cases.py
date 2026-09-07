@@ -175,12 +175,7 @@ class Command(BaseCommand):
             )
             if is_component != components:
                 continue
-            if not components and route.route_type in {
-                RouteType.API,
-                RouteType.API_MODEL,
-                RouteType.API_DETAIL,
-                RouteType.WEBSOCKET,
-            }:
+            if not components and route.route_type == RouteType.WEBSOCKET:
                 continue
 
             routed_callable = inspect.unwrap(route.view)
@@ -267,6 +262,9 @@ class Command(BaseCommand):
                     RouteType.MODEL: "BloomerpModelViewTestCase",
                     RouteType.DETAIL: "BloomerpDetailViewTestCase",
                     RouteType.MODULE: "BloomerpModuleViewTestCase",
+                    RouteType.API: "BloomerpAPIViewTestCase",
+                    RouteType.API_MODEL: "BloomerpAPIModelViewTestCase",
+                    RouteType.API_DETAIL: "BloomerpAPIDetailViewTestCase",
                 }
                 base_class = base_classes[route_type]
                 view_name_counts: dict[str, int] = {}
@@ -285,7 +283,12 @@ class Command(BaseCommand):
                     if (route.base_url_name or route.url_name) == view_name
                 ]
 
-                if route_type in {RouteType.MODEL, RouteType.DETAIL}:
+                if route_type in {
+                    RouteType.MODEL,
+                    RouteType.DETAIL,
+                    RouteType.API_MODEL,
+                    RouteType.API_DETAIL,
+                }:
                     route_models = sorted(
                         {
                             route.model
@@ -318,6 +321,9 @@ class Command(BaseCommand):
                 base_class=base_class,
                 class_name=class_name,
                 view_name=view_name,
+                source_file=source.relative_to(Path(app_config.path).parent).as_posix(),
+                view_definition=_definition_name(routed_callable),
+                view_kind=callable_kind,
                 imports=imports,
                 attributes=attributes,
             )
@@ -563,6 +569,9 @@ class Command(BaseCommand):
         base_class: str,
         class_name: str,
         view_name: str,
+        source_file: str | None = None,
+        view_definition: str | None = None,
+        view_kind: str | None = None,
         imports: list[tuple[str, str]] | None = None,
         attributes: list[tuple[str, str]] | None = None,
     ) -> str:
@@ -570,6 +579,8 @@ class Command(BaseCommand):
             "BloomerpDetailViewTestCase": "ModelRequestSetup",
             "BloomerpModelViewTestCase": "ModelRequestSetup",
             "BloomerpModuleViewTestCase": "ModuleRequestSetup",
+            "BloomerpAPIModelViewTestCase": "ModelRequestSetup",
+            "BloomerpAPIDetailViewTestCase": "ModelRequestSetup",
         }.get(base_class)
         import_lines = [
             f"from {import_path} import {imported_name}"
@@ -594,6 +605,12 @@ class Command(BaseCommand):
             f"    {attribute_name} = {attribute_value}"
             for attribute_name, attribute_value in attributes or []
         )
+        docstring_lines = []
+        if source_file and view_definition and view_kind:
+            docstring_lines = [
+                f'    """Tests {view_kind} `{view_definition}` from `{source_file}`."""',
+                "",
+            ]
         return "\n".join(
             [
                 GENERATED_FILE_HEADER.rstrip(),
@@ -601,6 +618,7 @@ class Command(BaseCommand):
                 "",
                 "",
                 f"class {class_name}({base_class}):",
+                *docstring_lines,
                 *attribute_lines,
                 "",
                 "    def get_request_setups(self) -> list[RequestSetup]:",

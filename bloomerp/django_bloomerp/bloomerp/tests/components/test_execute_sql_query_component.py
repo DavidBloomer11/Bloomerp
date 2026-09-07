@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestExecuteSqlQueryComponent(BloomerpComponentTestCase):
+    """Tests function `execute_sql_query` from `bloomerp/components/execute_sql_query.py`."""
+
     view_name = 'components_execute_sql_query'
 
     def get_request_setups(self) -> list[RequestSetup]:

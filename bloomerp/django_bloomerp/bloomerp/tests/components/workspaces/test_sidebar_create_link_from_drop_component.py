@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestSidebarCreateLinkFromDropComponent(BloomerpComponentTestCase):
+    """Tests function `sidebar_create_link_from_drop` from `bloomerp/components/workspaces/sidebar.py`."""
+
     view_name = 'components_workspaces_sidebar_create_link_from_drop'
 
     def get_request_setups(self) -> list[RequestSetup]:

@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestSelectPreferenceComponent(BloomerpComponentTestCase):
+    """Tests function `select_preference` from `bloomerp/components/preferences/select_preference.py`."""
+
     view_name = 'components_select_preference'
 
     def get_request_setups(self) -> list[RequestSetup]:

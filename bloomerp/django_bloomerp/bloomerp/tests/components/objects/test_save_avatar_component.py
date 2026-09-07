@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestSaveAvatarComponent(BloomerpComponentTestCase):
+    """Tests function `save_avatar` from `bloomerp/components/objects/save_avatar.py`."""
+
     view_name = 'components_save_avatar'
 
     def get_request_setups(self) -> list[RequestSetup]:

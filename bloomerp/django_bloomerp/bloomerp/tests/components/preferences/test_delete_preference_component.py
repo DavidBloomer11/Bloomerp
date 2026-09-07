@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestDeletePreferenceComponent(BloomerpComponentTestCase):
+    """Tests function `delete_preference` from `bloomerp/components/preferences/delete_preference.py`."""
+
     view_name = 'components_delete_preference'
 
     def get_request_setups(self) -> list[RequestSetup]:

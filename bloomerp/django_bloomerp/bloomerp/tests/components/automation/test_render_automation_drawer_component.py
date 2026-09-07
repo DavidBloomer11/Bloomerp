@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestRenderAutomationDrawerComponent(BloomerpComponentTestCase):
+    """Tests function `render_automation_drawer` from `bloomerp/components/automation/drawer.py`."""
+
     view_name = 'components_automation_drawer'
 
     def get_request_setups(self) -> list[RequestSetup]:

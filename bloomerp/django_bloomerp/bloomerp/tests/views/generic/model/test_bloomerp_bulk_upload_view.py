@@ -8,6 +8,8 @@ from bloomerp.tests.base import (
 
 
 class TestBloomerpBulkUploadView(BloomerpModelViewTestCase):
+    """Tests class `BloomerpBulkUploadView` from `bloomerp/views/generic/model/bulk_upload.py`."""
+
     view_name = 'bulk_upload'
     model = None
 

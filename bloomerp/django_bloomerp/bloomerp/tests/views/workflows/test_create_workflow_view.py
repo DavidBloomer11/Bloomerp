@@ -9,6 +9,8 @@ from bloomerp.tests.base import (
 
 
 class TestCreateWorkflowView(BloomerpDetailViewTestCase):
+    """Tests class `CreateWorkflowView` from `bloomerp/views/workflows/builder.py`."""
+
     view_name = 'builder'
     model = Workflow
 

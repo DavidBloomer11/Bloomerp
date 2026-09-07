@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestSaveLayoutObjectComponent(BloomerpComponentTestCase):
+    """Tests function `save_layout_object` from `bloomerp/components/layout/save_layout_object.py`."""
+
     view_name = 'components_save_layout_object'
 
     def get_request_setups(self) -> list[RequestSetup]:

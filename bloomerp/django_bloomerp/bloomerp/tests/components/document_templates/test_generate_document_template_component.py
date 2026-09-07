@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestGenerateDocumentTemplateComponent(BloomerpComponentTestCase):
+    """Tests function `generate_document_template` from `bloomerp/components/document_templates/generate_document_template.py`."""
+
     view_name = 'components_generate_document_template'
 
     def get_request_setups(self) -> list[RequestSetup]:

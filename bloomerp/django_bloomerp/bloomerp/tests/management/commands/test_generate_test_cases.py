@@ -96,6 +96,11 @@ class GenerateTestCasesCommandTests(SimpleTestCase):
         self.assertIn("BloomerpDetailViewTestCase", submit_case.content)
         self.assertIn("view_name = 'submit'", submit_case.content)
         self.assertIn("model = Form", submit_case.content)
+        self.assertIn(
+            '"""Tests class `SubmitFormView` from '
+            '`bloomerp/views/forms/submit.py`."""',
+            submit_case.content,
+        )
         self.assertIn("    ExpectedResult,", submit_case.content)
         self.assertIn("    RequestSetup,", submit_case.content)
         self.assertIn("    ModelRequestSetup,", submit_case.content)
@@ -103,6 +108,32 @@ class GenerateTestCasesCommandTests(SimpleTestCase):
             "def get_request_setups(self) -> list[RequestSetup]:",
             submit_case.content,
         )
+
+        # 5. Include all API route families with their specialized base classes.
+        api_case = next(
+            case
+            for case in generated
+            if "class TestBloomerpApiRootView" in case.content
+        )
+        self.assertIn("BloomerpAPIViewTestCase", api_case.content)
+        self.assertIn("    ExpectedResult,", api_case.content)
+        self.assertIn("    RequestSetup,", api_case.content)
+
+        api_model_case = next(
+            case
+            for case in generated
+            if "class TestBloomerpListApiviewView" in case.content
+        )
+        self.assertIn("BloomerpAPIModelViewTestCase", api_model_case.content)
+        self.assertIn("    ModelRequestSetup,", api_model_case.content)
+
+        api_detail_case = next(
+            case
+            for case in generated
+            if "class TestBloomerpDetailApiviewView" in case.content
+        )
+        self.assertIn("BloomerpAPIDetailViewTestCase", api_detail_case.content)
+        self.assertIn("    ModelRequestSetup,", api_detail_case.content)
 
     def test_component_skeleton_imports_request_scenario_classes(self):
         """
@@ -114,12 +145,20 @@ class GenerateTestCasesCommandTests(SimpleTestCase):
             base_class="BloomerpComponentTestCase",
             class_name="TestExampleComponent",
             view_name="components_example",
+            source_file="example/components/example.py",
+            view_definition="example_component",
+            view_kind="function",
         )
 
         # 2. Confirm all classes needed for request scenarios are ready to use.
         self.assertIn("    BloomerpComponentTestCase,", content)
         self.assertIn("    ExpectedResult,", content)
         self.assertIn("    RequestSetup,", content)
+        self.assertIn(
+            '"""Tests function `example_component` from '
+            '`example/components/example.py`."""',
+            content,
+        )
         self.assertIn("def get_request_setups(self) -> list[RequestSetup]:", content)
 
     def test_registry_ownership_is_inferred_from_implementations(self):

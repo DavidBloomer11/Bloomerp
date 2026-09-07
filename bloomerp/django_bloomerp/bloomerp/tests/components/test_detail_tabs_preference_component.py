@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestDetailTabsPreferenceComponent(BloomerpComponentTestCase):
+    """Tests function `detail_tabs_preference` from `bloomerp/components/detail_tabs_preference.py`."""
+
     view_name = 'components_detail_tabs_preference'
 
     def get_request_setups(self) -> list[RequestSetup]:

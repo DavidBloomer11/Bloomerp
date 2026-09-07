@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestReplyToEmailComponent(BloomerpComponentTestCase):
+    """Tests function `reply_to_email` from `bloomerp/components/communication/emails/reply_to_email.py`."""
+
     view_name = 'components_reply_to_email'
 
     def get_request_setups(self) -> list[RequestSetup]:

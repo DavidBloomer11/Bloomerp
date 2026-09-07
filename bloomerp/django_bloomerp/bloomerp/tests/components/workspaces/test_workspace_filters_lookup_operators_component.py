@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestWorkspaceFiltersLookupOperatorsComponent(BloomerpComponentTestCase):
+    """Tests function `workspace_filters_lookup_operators` from `bloomerp/components/workspaces/filter_workspace.py`."""
+
     view_name = 'components_workspaces_filters_lookup_operators'
 
     def get_request_setups(self) -> list[RequestSetup]:

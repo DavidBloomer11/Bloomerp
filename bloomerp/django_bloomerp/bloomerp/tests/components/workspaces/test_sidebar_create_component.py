@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestSidebarCreateComponent(BloomerpComponentTestCase):
+    """Tests function `sidebar_create` from `bloomerp/components/workspaces/sidebar.py`."""
+
     view_name = 'components_workspaces_sidebar_create'
 
     def get_request_setups(self) -> list[RequestSetup]:

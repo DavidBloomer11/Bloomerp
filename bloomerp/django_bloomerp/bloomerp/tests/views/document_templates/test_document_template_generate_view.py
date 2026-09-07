@@ -9,6 +9,8 @@ from bloomerp.tests.base import (
 
 
 class TestDocumentTemplateGenerateView(BloomerpDetailViewTestCase):
+    """Tests class `DocumentTemplateGenerateView` from `bloomerp/views/document_templates/generate_view.py`."""
+
     view_name = 'Generate PDF'
     model = DocumentTemplate
 

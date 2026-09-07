@@ -9,6 +9,8 @@ from bloomerp.tests.base import (
 
 
 class TestUserCreateView(BloomerpModelViewTestCase):
+    """Tests class `UserCreateView` from `bloomerp/views/users/create.py`."""
+
     view_name = 'add'
     model = User
 

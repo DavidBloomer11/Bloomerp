@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestRenderInboxFolderComponent(BloomerpComponentTestCase):
+    """Tests function `render_inbox_folder` from `bloomerp/components/communication/render_inbox_folder_items.py`."""
+
     view_name = 'components_render_inbox_folder_items'
 
     def get_request_setups(self) -> list[RequestSetup]:

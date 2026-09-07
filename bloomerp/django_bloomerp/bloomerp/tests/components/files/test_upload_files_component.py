@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestUploadFilesComponent(BloomerpComponentTestCase):
+    """Tests function `upload_files` from `bloomerp/components/files/upload_files.py`."""
+
     view_name = 'components_files_upload'
 
     def get_request_setups(self) -> list[RequestSetup]:

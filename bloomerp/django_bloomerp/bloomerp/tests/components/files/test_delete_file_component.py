@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestDeleteFileComponent(BloomerpComponentTestCase):
+    """Tests function `delete_file` from `bloomerp/components/files/delete_file_browser_item.py`."""
+
     view_name = 'components_files_delete'
 
     def get_request_setups(self) -> list[RequestSetup]:

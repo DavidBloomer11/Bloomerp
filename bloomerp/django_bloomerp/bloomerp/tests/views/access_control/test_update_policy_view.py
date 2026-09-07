@@ -9,6 +9,8 @@ from bloomerp.tests.base import (
 
 
 class TestUpdatePolicyView(BloomerpDetailViewTestCase):
+    """Tests class `UpdatePolicyView` from `bloomerp/views/access_control/update.py`."""
+
     view_name = 'Update'
     model = Policy
 

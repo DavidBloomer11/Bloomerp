@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestPreviewFileComponent(BloomerpComponentTestCase):
+    """Tests function `preview_file` from `bloomerp/components/files/preview_file.py`."""
+
     view_name = 'components_preview_file'
 
     def get_request_setups(self) -> list[RequestSetup]:

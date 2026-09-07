@@ -8,6 +8,8 @@ from bloomerp.tests.base import (
 
 
 class TestBloomerpModuleHomeView(BloomerpModuleViewTestCase):
+    """Tests class `BloomerpModuleHomeView` from `bloomerp/views/workspaces/module_home.py`."""
+
     view_name = '{module}'
     module = None
 

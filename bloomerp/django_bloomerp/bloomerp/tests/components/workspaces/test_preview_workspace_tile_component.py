@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestPreviewWorkspaceTileComponent(BloomerpComponentTestCase):
+    """Tests class `PreviewWorkspaceTile` from `bloomerp/components/workspaces/preview_workspace_tile.py`."""
+
     view_name = 'preview_workspace_tile'
 
     def get_request_setups(self) -> list[RequestSetup]:

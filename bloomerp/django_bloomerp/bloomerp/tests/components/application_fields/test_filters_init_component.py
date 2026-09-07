@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestFiltersInitComponent(BloomerpComponentTestCase):
+    """Tests function `filters_init` from `bloomerp/components/application_fields/filters.py`."""
+
     view_name = 'components_filters_init'
 
     def get_request_setups(self) -> list[RequestSetup]:

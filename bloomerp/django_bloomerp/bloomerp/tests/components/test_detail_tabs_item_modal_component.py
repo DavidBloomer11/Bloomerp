@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestDetailTabsItemModalComponent(BloomerpComponentTestCase):
+    """Tests function `detail_tabs_item_modal` from `bloomerp/components/detail_tabs_item_modal.py`."""
+
     view_name = 'components_detail_tabs_item_modal'
 
     def get_request_setups(self) -> list[RequestSetup]:

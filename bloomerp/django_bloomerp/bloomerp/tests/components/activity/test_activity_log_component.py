@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestActivityLogComponent(BloomerpComponentTestCase):
+    """Tests function `activity_log` from `bloomerp/components/activity/activity_log.py`."""
+
     view_name = 'components_activity_log'
 
     def get_request_setups(self) -> list[RequestSetup]:

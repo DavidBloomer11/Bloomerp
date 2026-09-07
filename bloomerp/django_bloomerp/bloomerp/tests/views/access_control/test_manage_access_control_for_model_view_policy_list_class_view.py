@@ -8,6 +8,8 @@ from bloomerp.tests.base import (
 
 
 class TestManageAccessControlForModelViewPolicyListClassView(BloomerpModelViewTestCase):
+    """Tests class `ManageAccessControlForModelView` from `bloomerp/views/access_control/policy_list.py`."""
+
     view_name = 'cost_centers_manageaccesscontrolformodelview'
     model = None
 

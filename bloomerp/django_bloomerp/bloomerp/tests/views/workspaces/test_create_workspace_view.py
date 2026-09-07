@@ -9,6 +9,8 @@ from bloomerp.tests.base import (
 
 
 class TestCreateWorkspaceView(BloomerpModelViewTestCase):
+    """Tests class `CreateWorkspaceView` from `bloomerp/views/workspaces/create_workspace.py`."""
+
     view_name = 'add'
     model = Workspace
 

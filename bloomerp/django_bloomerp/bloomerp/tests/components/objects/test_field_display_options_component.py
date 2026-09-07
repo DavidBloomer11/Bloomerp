@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestFieldDisplayOptionsComponent(BloomerpComponentTestCase):
+    """Tests function `field_display_options` from `bloomerp/components/objects/field_display_options.py`."""
+
     view_name = 'components_field_display_options'
 
     def get_request_setups(self) -> list[RequestSetup]:

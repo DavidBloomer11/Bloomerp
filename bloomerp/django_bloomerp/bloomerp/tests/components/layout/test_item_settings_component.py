@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestItemSettingsComponent(BloomerpComponentTestCase):
+    """Tests function `item_settings` from `bloomerp/components/layout/layout_item_settings.py`."""
+
     view_name = 'components_item_settings'
 
     def get_request_setups(self) -> list[RequestSetup]:

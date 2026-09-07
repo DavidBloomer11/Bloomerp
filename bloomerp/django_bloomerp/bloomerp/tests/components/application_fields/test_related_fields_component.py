@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestRelatedFieldsComponent(BloomerpComponentTestCase):
+    """Tests function `related_fields` from `bloomerp/components/application_fields/filters.py`."""
+
     view_name = 'components_filters_related_fields'
 
     def get_request_setups(self) -> list[RequestSetup]:

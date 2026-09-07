@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestDataviewActionComponent(BloomerpComponentTestCase):
+    """Tests function `dataview_action` from `bloomerp/components/objects/dataviews/dataview.py`."""
+
     view_name = 'components_dataview_action'
 
     def get_request_setups(self) -> list[RequestSetup]:

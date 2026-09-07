@@ -9,6 +9,8 @@ from bloomerp.tests.base import (
 
 
 class TestUserAdminPasswordResetView(BloomerpDetailViewTestCase):
+    """Tests class `UserAdminPasswordResetView` from `bloomerp/views/users/admin_reset_password.py`."""
+
     view_name = 'admin_reset_password_for_user'
     model = User
 

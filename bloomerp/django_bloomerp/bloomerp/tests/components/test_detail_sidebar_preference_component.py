@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestDetailSidebarPreferenceComponent(BloomerpComponentTestCase):
+    """Tests function `detail_sidebar_preference` from `bloomerp/components/detail_sidebar_preference.py`."""
+
     view_name = 'components_detail_sidebar_preference'
 
     def get_request_setups(self) -> list[RequestSetup]:

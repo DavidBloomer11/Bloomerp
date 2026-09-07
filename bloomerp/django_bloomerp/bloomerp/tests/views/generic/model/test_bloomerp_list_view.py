@@ -8,6 +8,8 @@ from bloomerp.tests.base import (
 
 
 class TestBloomerpListView(BloomerpModelViewTestCase):
+    """Tests class `BloomerpListView` from `bloomerp/views/generic/model/list.py`."""
+
     view_name = 'model'
     model = None
 

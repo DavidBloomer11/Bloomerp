@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestObjectPreviewComponent(BloomerpComponentTestCase):
+    """Tests function `object_preview` from `bloomerp/components/objects/object_preview.py`."""
+
     view_name = 'components_object_preview'
 
     def get_request_setups(self) -> list[RequestSetup]:

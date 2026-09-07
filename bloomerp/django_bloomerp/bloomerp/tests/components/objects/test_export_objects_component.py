@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestExportObjectsComponent(BloomerpComponentTestCase):
+    """Tests function `export_objects` from `bloomerp/components/objects/export.py`."""
+
     view_name = 'components_export_objects'
 
     def get_request_setups(self) -> list[RequestSetup]:

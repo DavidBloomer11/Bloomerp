@@ -7,7 +7,7 @@ from bloomerp.views.api.generic.base import AUTO_API_MODELS, BaseModelApiView
     route_type="api_detail",
     models=AUTO_API_MODELS
 )
-class BloomerpDetailAPIView(BaseModelApiView):
+class BloomerpDetailApiView(BaseModelApiView):
     actions = {
         "get": "retrieve",
         "put": "update",

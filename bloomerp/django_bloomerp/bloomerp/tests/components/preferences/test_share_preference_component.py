@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestSharePreferenceComponent(BloomerpComponentTestCase):
+    """Tests function `share_preference` from `bloomerp/components/preferences/share_preference.py`."""
+
     view_name = 'components_share_preference'
 
     def get_request_setups(self) -> list[RequestSetup]:

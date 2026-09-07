@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestSidebarEditItemComponent(BloomerpComponentTestCase):
+    """Tests function `sidebar_edit_item` from `bloomerp/components/workspaces/sidebar.py`."""
+
     view_name = 'components_workspaces_sidebar_edit_item'
 
     def get_request_setups(self) -> list[RequestSetup]:

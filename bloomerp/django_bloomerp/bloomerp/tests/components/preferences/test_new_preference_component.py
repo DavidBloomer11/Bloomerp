@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestNewPreferenceComponent(BloomerpComponentTestCase):
+    """Tests function `new_preference` from `bloomerp/components/preferences/new_preference.py`."""
+
     view_name = 'components_new_preference'
 
     def get_request_setups(self) -> list[RequestSetup]:

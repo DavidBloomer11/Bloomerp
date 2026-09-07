@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestCreateTileView(BloomerpViewTestCase):
+    """Tests class `CreateTileView` from `bloomerp/views/workspaces/create_tile.py`."""
+
     view_name = 'Create Tile'
 
     def get_request_setups(self) -> list[RequestSetup]:

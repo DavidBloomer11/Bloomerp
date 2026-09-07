@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestCommentsComponent(BloomerpComponentTestCase):
+    """Tests function `comments` from `bloomerp/components/objects/comments.py`."""
+
     view_name = 'components_comments'
 
     def get_request_setups(self) -> list[RequestSetup]:

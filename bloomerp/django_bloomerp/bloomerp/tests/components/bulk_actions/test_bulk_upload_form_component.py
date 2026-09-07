@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestBulkUploadFormComponent(BloomerpComponentTestCase):
+    """Tests function `bulk_upload_form` from `bloomerp/components/bulk_actions/bulk_upload.py`."""
+
     view_name = 'components_bulk_upload_form'
 
     def get_request_setups(self) -> list[RequestSetup]:

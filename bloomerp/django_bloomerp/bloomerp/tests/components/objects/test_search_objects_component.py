@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestSearchObjectsComponent(BloomerpComponentTestCase):
+    """Tests function `search_objects` from `bloomerp/components/objects/search_objects.py`."""
+
     view_name = 'components_search_objects'
 
     def get_request_setups(self) -> list[RequestSetup]:

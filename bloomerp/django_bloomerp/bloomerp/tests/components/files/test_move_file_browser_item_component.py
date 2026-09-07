@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestMoveFileBrowserItemComponent(BloomerpComponentTestCase):
+    """Tests function `move_file_browser_item` from `bloomerp/components/files/move_file_browser_item.py`."""
+
     view_name = 'components_files_move_browser_item'
 
     def get_request_setups(self) -> list[RequestSetup]:

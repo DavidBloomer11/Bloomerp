@@ -8,6 +8,8 @@ from bloomerp.tests.base import (
 
 
 class TestDownloadSdkviewView(BloomerpModuleViewTestCase):
+    """Tests class `DownloadSDKView` from `bloomerp/views/sdk/dowload_sdk.py`."""
+
     view_name = 'download_sdk'
     module = 'misc'
 

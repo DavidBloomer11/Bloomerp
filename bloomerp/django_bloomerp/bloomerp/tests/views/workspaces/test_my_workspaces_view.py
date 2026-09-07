@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestMyWorkspacesView(BloomerpViewTestCase):
+    """Tests class `MyWorkspacesView` from `bloomerp/views/workspaces/my_workspaces.py`."""
+
     view_name = 'my_workspaces'
 
     def get_request_setups(self) -> list[RequestSetup]:

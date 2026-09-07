@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestFieldSelectorComponent(BloomerpComponentTestCase):
+    """Tests function `field_selector` from `bloomerp/components/objects/dataviews/bulk_actions.py`."""
+
     view_name = 'components_bulk_actions_field_selector'
 
     def get_request_setups(self) -> list[RequestSetup]:

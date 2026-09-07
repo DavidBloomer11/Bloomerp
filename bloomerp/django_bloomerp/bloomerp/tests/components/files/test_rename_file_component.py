@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestRenameFileComponent(BloomerpComponentTestCase):
+    """Tests function `rename_file` from `bloomerp/components/files/rename_file_browser_item.py`."""
+
     view_name = 'components_files_rename'
 
     def get_request_setups(self) -> list[RequestSetup]:

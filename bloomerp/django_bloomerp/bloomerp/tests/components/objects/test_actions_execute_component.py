@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestActionsExecuteComponent(BloomerpComponentTestCase):
+    """Tests function `actions_execute` from `bloomerp/components/objects/actions.py`."""
+
     view_name = 'components_objects_actions'
 
     def get_request_setups(self) -> list[RequestSetup]:

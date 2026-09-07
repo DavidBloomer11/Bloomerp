@@ -79,7 +79,12 @@ class BloomerpViewTestCase(RequestTestCaseMixin, BaseBloomerpTestCaseWithModels)
             return
 
         # 2. Require the context needed by specialized route families.
-        if self.route_type in {RouteType.MODEL, RouteType.DETAIL}:
+        if self.route_type in {
+            RouteType.MODEL,
+            RouteType.DETAIL,
+            RouteType.API_MODEL,
+            RouteType.API_DETAIL,
+        }:
             if self.model is None:
                 self.skipTest("Set model to test this route")
         if self.route_type == RouteType.MODULE and self.module is None:
@@ -138,3 +143,21 @@ class BloomerpModuleViewTestCase(BloomerpViewTestCase):
     """Base class for module-level routes."""
 
     route_type = RouteType.MODULE
+
+
+class BloomerpAPIViewTestCase(BloomerpViewTestCase):
+    """Base class for application-level API routes."""
+
+    route_type = RouteType.API
+
+
+class BloomerpAPIModelViewTestCase(BloomerpModelViewTestCase):
+    """Base class for model-level API routes."""
+
+    route_type = RouteType.API_MODEL
+
+
+class BloomerpAPIDetailViewTestCase(BloomerpDetailViewTestCase):
+    """Base class for object-detail API routes."""
+
+    route_type = RouteType.API_DETAIL

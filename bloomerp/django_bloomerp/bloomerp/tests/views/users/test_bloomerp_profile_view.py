@@ -9,6 +9,8 @@ from bloomerp.tests.base import (
 
 
 class TestBloomerpProfileView(BloomerpModelViewTestCase):
+    """Tests class `BloomerpProfileView` from `bloomerp/views/users/profile.py`."""
+
     view_name = 'my_profile_overview'
     model = User
 

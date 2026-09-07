@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestDownloadAttachmentComponent(BloomerpComponentTestCase):
+    """Tests function `download_attachment` from `bloomerp/components/communication/emails/download_attachment.py`."""
+
     view_name = 'components_emails_download_attachment'
 
     def get_request_setups(self) -> list[RequestSetup]:

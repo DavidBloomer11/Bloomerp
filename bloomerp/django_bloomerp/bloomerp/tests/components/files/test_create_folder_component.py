@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestCreateFolderComponent(BloomerpComponentTestCase):
+    """Tests function `create_folder` from `bloomerp/components/files/create_folder.py`."""
+
     view_name = 'components_create_folder'
 
     def get_request_setups(self) -> list[RequestSetup]:

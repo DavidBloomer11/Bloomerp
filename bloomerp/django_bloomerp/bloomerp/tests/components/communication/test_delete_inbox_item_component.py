@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestDeleteInboxItemComponent(BloomerpComponentTestCase):
+    """Tests function `delete_inbox_item` from `bloomerp/components/communication/delete_inbox_item.py`."""
+
     view_name = 'components_delete_inbox_item'
 
     def get_request_setups(self) -> list[RequestSetup]:

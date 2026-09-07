@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestQrCodeComponent(BloomerpComponentTestCase):
+    """Tests function `qr_code` from `bloomerp/components/forms/qr_code.py`."""
+
     view_name = 'components_forms_qr_code'
 
     def get_request_setups(self) -> list[RequestSetup]:

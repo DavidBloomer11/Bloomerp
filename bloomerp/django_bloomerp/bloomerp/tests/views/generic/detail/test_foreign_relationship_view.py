@@ -8,6 +8,8 @@ from bloomerp.tests.base import (
 
 
 class TestForeignRelationshipView(BloomerpDetailViewTestCase):
+    """Tests class `ForeignRelationshipView` from `bloomerp/views/generic/detail/foreign_relationship.py`."""
+
     view_name = 'manufacturingorder_set_relationship'
     model = None
 

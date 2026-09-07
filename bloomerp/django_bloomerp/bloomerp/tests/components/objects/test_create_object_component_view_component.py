@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestCreateObjectComponentViewComponent(BloomerpComponentTestCase):
+    """Tests class `CreateObjectComponentView` from `bloomerp/components/objects/crud_object.py`."""
+
     view_name = 'components_create_object'
 
     def get_request_setups(self) -> list[RequestSetup]:

@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestShareWorkspaceComponent(BloomerpComponentTestCase):
+    """Tests function `share_workspace` from `bloomerp/components/workspaces/share_workspace.py`."""
+
     view_name = 'components_workspaces_share_workspace'
 
     def get_request_setups(self) -> list[RequestSetup]:

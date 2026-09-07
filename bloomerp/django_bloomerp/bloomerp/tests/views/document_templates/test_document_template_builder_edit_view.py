@@ -9,6 +9,8 @@ from bloomerp.tests.base import (
 
 
 class TestDocumentTemplateBuilderEditView(BloomerpDetailViewTestCase):
+    """Tests class `DocumentTemplateBuilderEditView` from `bloomerp/views/document_templates/document_template_builder_view.py`."""
+
     view_name = 'builder'
     model = DocumentTemplate
 

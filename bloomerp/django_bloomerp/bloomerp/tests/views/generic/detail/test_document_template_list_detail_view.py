@@ -8,6 +8,8 @@ from bloomerp.tests.base import (
 
 
 class TestDocumentTemplateListDetailView(BloomerpDetailViewTestCase):
+    """Tests class `DocumentTemplateListDetailView` from `bloomerp/views/generic/detail/document_templates.py`."""
+
     view_name = 'document_templates'
     model = None
 

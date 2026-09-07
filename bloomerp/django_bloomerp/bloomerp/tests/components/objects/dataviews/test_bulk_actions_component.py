@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestBulkActionsComponent(BloomerpComponentTestCase):
+    """Tests function `bulk_actions` from `bloomerp/components/objects/dataviews/bulk_actions.py`."""
+
     view_name = 'components_bulk_actions'
 
     def get_request_setups(self) -> list[RequestSetup]:

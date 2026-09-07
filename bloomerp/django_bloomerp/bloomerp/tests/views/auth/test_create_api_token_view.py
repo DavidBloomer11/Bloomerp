@@ -9,6 +9,8 @@ from bloomerp.tests.base import (
 
 
 class TestCreateApiTokenView(BloomerpModelViewTestCase):
+    """Tests class `CreateApiTokenView` from `bloomerp/views/auth/create_api_token.py`."""
+
     view_name = 'add'
     model = ApiKey
 

@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestRenderWorkflowNodeComponent(BloomerpComponentTestCase):
+    """Tests function `render_workflow_node` from `bloomerp/components/automation/render_workflow_node.py`."""
+
     view_name = 'components_automation_render_workflow_node'
 
     def get_request_setups(self) -> list[RequestSetup]:

@@ -9,6 +9,8 @@ from bloomerp.tests.base import (
 
 
 class TestSubmitFormView(BloomerpDetailViewTestCase):
+    """Tests class `SubmitFormView` from `bloomerp/views/forms/submit.py`."""
+
     view_name = 'submit'
     model = Form
 

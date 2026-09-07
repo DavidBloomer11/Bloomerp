@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestUpdateObjectComponent(BloomerpComponentTestCase):
+    """Tests function `update_object` from `bloomerp/components/objects/crud_object.py`."""
+
     view_name = 'components_update_object'
 
     def get_request_setups(self) -> list[RequestSetup]:

@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestUpdateDataviewPreferenceComponent(BloomerpComponentTestCase):
+    """Tests function `update_dataview_preference` from `bloomerp/components/objects/dataviews/update_preference.py`."""
+
     view_name = 'components_update_dataview_preference'
 
     def get_request_setups(self) -> list[RequestSetup]:

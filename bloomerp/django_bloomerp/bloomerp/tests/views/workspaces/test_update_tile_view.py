@@ -9,6 +9,8 @@ from bloomerp.tests.base import (
 
 
 class TestUpdateTileView(BloomerpDetailViewTestCase):
+    """Tests class `UpdateTileView` from `bloomerp/views/workspaces/update_tile.py`."""
+
     view_name = 'Update Tile'
     model = Tile
 

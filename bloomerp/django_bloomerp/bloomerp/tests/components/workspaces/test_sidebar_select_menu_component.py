@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestSidebarSelectMenuComponent(BloomerpComponentTestCase):
+    """Tests function `sidebar_select_menu` from `bloomerp/components/workspaces/sidebar.py`."""
+
     view_name = 'components_workspaces_sidebar_select_menu'
 
     def get_request_setups(self) -> list[RequestSetup]:

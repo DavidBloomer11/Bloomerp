@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestKanbanMoveCardComponent(BloomerpComponentTestCase):
+    """Tests function `kanban_move_card` from `bloomerp/components/objects/dataviews/kanban.py`."""
+
     view_name = 'components_kanban_move_card'
 
     def get_request_setups(self) -> list[RequestSetup]:

@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestInitialDataValueComponent(BloomerpComponentTestCase):
+    """Tests function `initial_data_value` from `bloomerp/components/forms/initial_data.py`."""
+
     view_name = 'components_forms_initial_data_value'
 
     def get_request_setups(self) -> list[RequestSetup]:

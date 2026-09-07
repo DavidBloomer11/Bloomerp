@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestDeleteWorkspaceComponent(BloomerpComponentTestCase):
+    """Tests function `delete_workspace` from `bloomerp/components/workspaces/delete_workspace.py`."""
+
     view_name = 'components_workspaces_delete_workspace'
 
     def get_request_setups(self) -> list[RequestSetup]:

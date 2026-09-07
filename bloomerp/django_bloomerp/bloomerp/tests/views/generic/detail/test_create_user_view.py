@@ -8,6 +8,8 @@ from bloomerp.tests.base import (
 
 
 class TestCreateUserView(BloomerpDetailViewTestCase):
+    """Tests class `CreateUserView` from `bloomerp/views/generic/detail/create_user_for_object.py`."""
+
     view_name = 'create_user_for_object'
     model = None
 

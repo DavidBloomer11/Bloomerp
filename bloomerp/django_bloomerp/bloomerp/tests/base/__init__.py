@@ -24,6 +24,9 @@ from bloomerp.tests.base.request_test_case_mixin import (
     ResponseValidator,
 )
 from bloomerp.tests.base.view_test_case import (
+    BloomerpAPIDetailViewTestCase,
+    BloomerpAPIModelViewTestCase,
+    BloomerpAPIViewTestCase,
     BloomerpDetailViewTestCase,
     BloomerpModelViewTestCase,
     BloomerpModuleViewTestCase,
@@ -48,6 +51,9 @@ __all__ = [
     "BloomerpChannelTestCase",
     "BloomerpComponentTestCase",
     "BloomerpDataviewTestCase",
+    "BloomerpAPIDetailViewTestCase",
+    "BloomerpAPIModelViewTestCase",
+    "BloomerpAPIViewTestCase",
     "BloomerpDetailViewTestCase",
     "BloomerpE2ETestCase",
     "E2EAction",

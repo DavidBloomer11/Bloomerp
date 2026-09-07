@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestPreviewPermissionsTableComponent(BloomerpComponentTestCase):
+    """Tests function `preview_permissions_table` from `bloomerp/components/access_control/preview_permissions_table.py`."""
+
     view_name = 'components_preview_permissions_table'
 
     def get_request_setups(self) -> list[RequestSetup]:

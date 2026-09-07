@@ -7,6 +7,8 @@ from bloomerp.tests.base import (
 
 
 class TestAddInboxFolderComponent(BloomerpComponentTestCase):
+    """Tests class `AddInboxFolder` from `bloomerp/components/communication/add_inbox_folder.py`."""
+
     view_name = 'components_add_inbox_folder'
 
     def get_request_setups(self) -> list[RequestSetup]:
