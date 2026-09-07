@@ -10,3 +10,8 @@ staticfiles/
 build/
 dist/
 *.egg-info/
+
+.bloomerp/marketplace/
+.bloomerp/wheels/
+.bloomerp/app-releases.json
+.bloomerp/marketplace-overrides.json

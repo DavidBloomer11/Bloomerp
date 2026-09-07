@@ -304,7 +304,7 @@ class TestApplicationField(BaseBloomerpTestCaseWithModels):
         self.assertIs(field_type.model_field_cls, AddressField)
         self.assertIsNotNone(field_type.form_factory)
         self.assertIsInstance(field_type.widget_factory(FieldContext()), AddressWidget)
-        self.assertIn(Lookup.CONTAINS, field_type.lookups)
+        self.assertIn(Lookup.ADDRESS_CONTAINS, field_type.lookups)
 
     def test_week_field_type_uses_week_field_parts(self):
         field_type = FIELD_TYPE_REGISTRY.WEEK_FIELD

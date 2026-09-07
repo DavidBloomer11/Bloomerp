@@ -4,6 +4,7 @@ from datetime import date, datetime, time, timedelta
 from typing import Any, Callable
 
 import calendar
+import json
 from django import forms
 import django_filters
 
@@ -12,8 +13,9 @@ from enum import Enum
 from typing import Optional
 from typing import TYPE_CHECKING
 
+from bloomerp.widgets.address_widget import ADDRESS_COMPONENTS, AddressWidget
 from bloomerp.widgets.foreign_field_widget import ForeignFieldWidget
-from django.db.models import BooleanField, Count, DateField, DateTimeField, DecimalField, DurationField, Field, FloatField, IntegerField, QuerySet, TimeField, UUIDField
+from django.db.models import Q, BooleanField, Count, DateField, DateTimeField, DecimalField, DurationField, Field, FloatField, IntegerField, QuerySet, TimeField, UUIDField
 from django.conf import settings
 from django.utils import timezone
 
@@ -543,6 +545,34 @@ def _python_count_compare(operator: Callable) -> Callable[[Any, Any], bool]:
     return evaluate
 
 
+class AddressFilter(django_filters.CharFilter):
+    def filter(self, queryset: QuerySet, value) -> QuerySet:
+        if value in django_filters.constants.EMPTY_VALUES:
+            return queryset
+
+        if isinstance(value, str):
+            try:
+                value = json.loads(value)
+            except (TypeError, ValueError):
+                return queryset.none()
+
+        if not isinstance(value, dict):
+            return queryset.none()
+
+        component_filters = {}
+        for key, _label, _autocomplete in ADDRESS_COMPONENTS:
+            component_value = str(value.get(key, "")).strip()
+            if not component_value:
+                continue
+
+            lookup = "iexact" if key == "country" else "icontains"
+            component_filters[f"{self.field_name}__{key}__{lookup}"] = component_value
+
+        if not component_filters:
+            return queryset
+
+        return queryset.filter(**component_filters)
+
 
 # ---------------------
 # Defintion
@@ -960,7 +990,22 @@ class Lookup(Enum):
         python_eval=_python_count_compare(lambda a, b: a <= b),
     )
     
-    
+    ADDRESS_CONTAINS = LookupDefinition(
+        id="address_contains",
+        display_name="Contains",
+        django_representation="contains",
+        aliases=["__contains"],
+        widget_func=lambda _: AddressWidget(),
+        filter_class_funcs=lambda field, lookup=None: {
+            name: AddressFilter(field_name=field.field)
+            for name in _filter_names(
+                field,
+                lookup or Lookup.ADDRESS_CONTAINS.value,
+            )
+        },
+    )
+
+
 
 DATE_LOOKUPS = [
     Lookup.EQUALS,
@@ -1045,3 +1090,8 @@ TEXT_LOOKUPS = [
     Lookup.IS_NULL,
     Lookup.NOT_EQUALS,
 ]
+
+
+
+    
+    

@@ -93,6 +93,6 @@ def available_layout_items(
 
     return render(
         request,
-        "components/layouts/available_items.html",
+        "components/layout/available_items.html",
         {"items": items},
     )

@@ -1,7 +1,7 @@
 from django.test import RequestFactory, TestCase
 from django.template.loader import render_to_string
 
-from bloomerp.components.workspaces.sidebar import (
+from bloomerp.components.ui.sidebar import (
     sidebar_create,
     sidebar_create_folder,
     sidebar_create_link_from_drop,
@@ -64,7 +64,7 @@ class SidebarSelectionComponentTests(TestCase):
 
         with self.assertNumQueries(1):
             html = render_to_string(
-                "components/sidebar/content.html",
+                "components/ui/sidebar/content.html",
                 {"sidebar": self.primary_sidebar, "can_manage": False},
             )
 

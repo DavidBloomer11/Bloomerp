@@ -60,7 +60,7 @@ def _create_folder_endpoint(context) -> str:
 
 
 def _can_create_folder(context) -> bool:
-    from bloomerp.components.files.create_folder import can_create_folder
+    from bloomerp.components.files.folders.create import can_create_folder
 
     return can_create_folder(context.request)
 

@@ -5,7 +5,7 @@ from django.shortcuts import render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.core.exceptions import FieldDoesNotExist
-from bloomerp.components.application_fields.filters import filters_init
+from bloomerp.components.filters.fields import filters_init
 from bloomerp.dataviews.registry import DATAVIEW_REGISTRY
 from bloomerp.models.definition import (
     DataviewAction,

@@ -48,7 +48,7 @@ def select_preference(request: HttpRequest, model: str) -> HttpResponse:
 
     return render(
         request,
-        "components/select_preference.html",
+        "components/preferences/select.html",
         {
             "preferences": preferences,
             "model": model,

@@ -3,7 +3,7 @@
 from bloomerp.automation.base_executor import BaseExecutor
 from bloomerp.automation.flows.if_condition import BranchStopped
 from bloomerp.automation.schema import WorkflowInputRequirement, WorkflowValueType
-from bloomerp.components.application_fields.filters import filterable_field_type_ids
+from bloomerp.components.filters.fields import filterable_field_type_ids
 from bloomerp.field_types.lookups import Lookup
 from bloomerp.forms.base_content_type_form import BaseContentTypeForm
 from bloomerp.forms.base_workflow_node_form import BaseWorkflowNodeForm

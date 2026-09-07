@@ -7,7 +7,7 @@ from bloomerp.tests.base import (
 
 
 class TestFilterWorkspaceComponent(BloomerpComponentTestCase):
-    """Tests function `filter_workspace` from `bloomerp/components/workspaces/filter_workspace.py`."""
+    """Tests function `filter_workspace` from `bloomerp/components/workspaces/filters.py`."""
 
     view_name = 'components_filter_workspace'
 

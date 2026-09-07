@@ -1,6 +1,7 @@
 from io import StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from django.apps import apps
 from django.core.management.base import CommandError
@@ -122,7 +123,7 @@ class GenerateTestCasesCommandTests(SimpleTestCase):
         api_model_case = next(
             case
             for case in generated
-            if "class TestBloomerpListApiviewView" in case.content
+            if "class TestBloomerpListApiView" in case.content
         )
         self.assertIn("BloomerpAPIModelViewTestCase", api_model_case.content)
         self.assertIn("    ModelRequestSetup,", api_model_case.content)
@@ -130,7 +131,7 @@ class GenerateTestCasesCommandTests(SimpleTestCase):
         api_detail_case = next(
             case
             for case in generated
-            if "class TestBloomerpDetailApiviewView" in case.content
+            if "class TestBloomerpDetailApiView" in case.content
         )
         self.assertIn("BloomerpAPIDetailViewTestCase", api_detail_case.content)
         self.assertIn("    ModelRequestSetup,", api_detail_case.content)
@@ -160,6 +161,19 @@ class GenerateTestCasesCommandTests(SimpleTestCase):
             content,
         )
         self.assertIn("def get_request_setups(self) -> list[RequestSetup]:", content)
+
+    def test_component_discovery_fails_when_a_source_module_cannot_import(self):
+        """
+        Use case: A component module contains a broken import.
+        Expected result: Generation fails instead of silently omitting its routes.
+        """
+        with patch.object(
+            self.command,
+            "_import_source_modules",
+            side_effect=CommandError("Unable to import broken component"),
+        ):
+            with self.assertRaisesRegex(CommandError, "broken component"):
+                self.command._discover_components(self.app_config)
 
     def test_registry_ownership_is_inferred_from_implementations(self):
         """
@@ -227,15 +241,34 @@ class GenerateTestCasesCommandTests(SimpleTestCase):
                 target.read_text(encoding="utf-8"), "developer_work = True\n"
             )
 
-            # 4. Generated skeletons can be refreshed without risking handwritten files.
-            target.write_text(GENERATED_FILE_HEADER + "old = True\n", encoding="utf-8")
+            # 4. Generated files with developer work are protected too.
+            customized_generated_content = GENERATED_FILE_HEADER + "old = True\n"
+            target.write_text(customized_generated_content, encoding="utf-8")
+            self.assertEqual(
+                self.command._write_test_case(test_case, force=False, dry_run=False),
+                "skipped",
+            )
+            self.assertEqual(
+                target.read_text(encoding="utf-8"),
+                customized_generated_content,
+            )
+
+            # 5. Empty generated request skeletons can be refreshed safely.
+            generated_skeleton = (
+                GENERATED_FILE_HEADER
+                + "class TestExample:\n"
+                + "    def get_request_setups(self):\n"
+                + "        # Add only the route scenarios this callable needs.\n"
+                + "        return []\n"
+            )
+            target.write_text(generated_skeleton, encoding="utf-8")
             self.assertEqual(
                 self.command._write_test_case(test_case, force=False, dry_run=False),
                 "overwritten",
             )
             self.assertEqual(target.read_text(encoding="utf-8"), test_case.content)
 
-            # 5. The explicit force option also replaces handwritten targets.
+            # 6. The explicit force option replaces handwritten targets.
             target.write_text("developer_work = True\n", encoding="utf-8")
             self.assertEqual(
                 self.command._write_test_case(test_case, force=True, dry_run=False),

@@ -39,6 +39,7 @@ class BloomerpApp(AppConfig):
         from bloomerp.signals.activity_log_signals import after_save_of_object
         from bloomerp.signals.activity_log_signals import before_delete_of_object  # noqa: F401
         from bloomerp.signals.activity_log_signals import after_delete_of_object  # noqa: F401
+        from bloomerp.filters.lookups import LOOKUP_REGISTRY
         
         configure_bloomerp_allauth_settings()
         

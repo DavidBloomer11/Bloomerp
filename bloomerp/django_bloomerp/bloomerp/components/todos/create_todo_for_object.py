@@ -3,7 +3,7 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 
-from bloomerp.components.objects.crud_object import CreateObjectComponentView
+from bloomerp.components.objects.crud.create_update import CreateObjectComponentView
 from bloomerp.models.project_management.todo import Todo
 from bloomerp.router import router
 from bloomerp.utils.models import get_detail_base_view_url

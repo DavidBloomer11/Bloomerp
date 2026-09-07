@@ -1,5 +1,5 @@
 from bloomerp.models.project_management.todo import Todo
-from bloomerp.tests.base_component_test import BaseBloomerpComponentTest, RequestSetup, ExpectedResult
+from bloomerp.tests.base import BaseBloomerpComponentTest, RequestSetup, ExpectedResult
 
 class BulkActionsComponentTestCase(BaseBloomerpComponentTest):
     view_name = "components_bulk_actions"

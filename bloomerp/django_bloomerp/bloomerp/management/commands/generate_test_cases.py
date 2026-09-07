@@ -166,6 +166,12 @@ class Command(BaseCommand):
         """Generate one test class per unique routed callable."""
         from bloomerp.router import RouteType, router
 
+        if components:
+            # Route auto-discovery is deliberately resilient at application startup,
+            # but test generation must not silently omit components that failed to
+            # import. Import every component module explicitly and fail with context.
+            list(self._import_source_modules(app_config, "components"))
+
         grouped_routes: dict[tuple[str, int, str], list] = {}
         callables: dict[tuple[str, int, str], Callable] = {}
         for route in router.get_routes_by_app(app_config):
@@ -670,13 +676,19 @@ class Command(BaseCommand):
     ) -> str:
         """Create, overwrite, or skip one generated test module."""
         exists = test_case.target.exists()
-        generated_target = (
-            exists
-            and test_case.target.read_text(encoding="utf-8").startswith(
-                GENERATED_FILE_HEADER
+        existing_content = (
+            test_case.target.read_text(encoding="utf-8") if exists else ""
+        )
+        generated_skeleton = (
+            existing_content == test_case.content
+            or (
+                existing_content.startswith(GENERATED_FILE_HEADER)
+                and "# Add only the route scenarios this callable needs."
+                in existing_content
+                and "        return []" in existing_content
             )
         )
-        if exists and not force and not generated_target:
+        if exists and not force and not generated_skeleton:
             self.stdout.write(f"Skipped existing {test_case.target}")
             return "skipped"
 

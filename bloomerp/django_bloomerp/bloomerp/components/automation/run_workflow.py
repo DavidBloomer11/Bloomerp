@@ -30,6 +30,15 @@ class RunWorkflowForm(forms.Form):
 )
 @login_required
 def run_workflow(request: HttpRequest, workflow_id: str) -> HttpResponse:
+    """Endpoint to run a specific workflow
+
+    Args:
+        request (HttpRequest)
+        workflow_id (str)
+
+    Returns:
+        HttpResponse: for post request, a message containing the result, for get requests.
+    """
     workflow = get_object_or_404(Workflow, id=workflow_id)
 
     if not UserPolicyManager(request.user).has_access_to_object(workflow, BloomerpPermission.CHANGE):

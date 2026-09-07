@@ -9,7 +9,10 @@ from typing import Type, Optional
 from django.db.models import Model
 from django.db.models.query import QuerySet
 
-from bloomerp.field_types.filter_classes import filter_class_for_model_field_path
+from bloomerp.field_types.filter_classes import (
+    filter_class_for_model_field_path,
+    resolve_model_field_path,
+)
 from bloomerp.models.application_field import ApplicationField
 
 
@@ -75,6 +78,9 @@ def dynamic_filterset_factory(model: type[Model], filters:dict[str, str]=None) -
         else:
             field_name = filter_key
             lookup_expr = "exact"
+
+        if resolve_model_field_path(model, field_name) is None:
+            continue
 
         filter_cls = (
             django_filters.BooleanFilter
