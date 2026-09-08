@@ -40,6 +40,9 @@ export default class ForeignFieldWidget extends BaseWidget {
     private advancedSelectionTarget: HTMLElement | null = null;
     private advancedModalClosedHandler: (() => void) | null = null;
     private advancedModalClosedTarget: HTMLElement | null = null;
+    private originalDropdownParent: HTMLElement | null = null;
+    private originalDropdownNextSibling: ChildNode | null = null;
+    private repositionDropdownHandler: (() => void) | null = null;
 
     private createControlEl: HTMLElement | null = null;
     private advancedControlEl: HTMLElement | null = null;
@@ -105,6 +108,7 @@ export default class ForeignFieldWidget extends BaseWidget {
         this.cleanupPreviewHandlers();
         this.teardownCreateSuccessListener();
         this.teardownAdvancedSelectionListener();
+        this.restoreDropdown();
     }
 
     private onFocus(e: Event) {
@@ -116,7 +120,7 @@ export default class ForeignFieldWidget extends BaseWidget {
 
     private onFocusOut(e: FocusEvent): void {
         const nextTarget = e.relatedTarget as HTMLElement | null;
-        if (nextTarget && this.element.contains(nextTarget)) return;
+        if (nextTarget && (this.element.contains(nextTarget) || this.dropdown?.contains(nextTarget))) return;
         this.hideDropdown();
     }
 
@@ -160,6 +164,7 @@ export default class ForeignFieldWidget extends BaseWidget {
     // Click handlers
     private handleCreateClick(e: Event) {
         e.preventDefault();
+        this.hideDropdown();
         let modal = getComponent(document.querySelector('#create-object-modal')) as Modal;
         if (!modal || !this.contentTypeId) return;
 
@@ -175,8 +180,12 @@ export default class ForeignFieldWidget extends BaseWidget {
 
     private async handleAdvancedClick(e: Event) {
         e.preventDefault();
+        this.hideDropdown();
         // 1. Get the modal
         let modal = getComponent(document.querySelector('#advanced-query-modal')) as Modal;
+        if (!modal || !this.contentTypeId) return;
+
+        modal.setSize('full');
         modal.open();
         this.setupAdvancedSelectionListener(modal);
 
@@ -245,7 +254,8 @@ export default class ForeignFieldWidget extends BaseWidget {
     }
 
     private handleOutsideClick(e: MouseEvent) {
-        if (!this.element.contains(e.target as Node)) {
+        const target = e.target as Node;
+        if (!this.element.contains(target) && !this.dropdown?.contains(target)) {
             this.hideDropdown();
             this.closeOverflowMenus();
             hideObjectPreviewTooltip();
@@ -749,11 +759,78 @@ export default class ForeignFieldWidget extends BaseWidget {
     }
 
     private showDropdown() {
-        if (this.dropdown) this.dropdown.classList.remove('hidden');
+        if (!this.dropdown) return;
+
+        this.portalDropdownToBody();
+        this.dropdown.classList.remove('hidden');
+        this.positionDropdown();
     }
 
     private hideDropdown() {
-        if (this.dropdown) this.dropdown.classList.add('hidden');
+        if (!this.dropdown) return;
+
+        this.dropdown.classList.add('hidden');
+        this.restoreDropdown();
+    }
+
+    private portalDropdownToBody(): void {
+        if (!this.dropdown || this.dropdown.parentElement === document.body) return;
+
+        this.originalDropdownParent = this.dropdown.parentElement;
+        this.originalDropdownNextSibling = this.dropdown.nextSibling;
+        document.body.appendChild(this.dropdown);
+
+        this.dropdown.style.position = 'absolute';
+        this.dropdown.style.right = 'auto';
+        this.dropdown.style.marginTop = '0';
+        this.dropdown.style.zIndex = '9999';
+
+        this.repositionDropdownHandler = () => this.positionDropdown();
+        window.addEventListener('resize', this.repositionDropdownHandler);
+        window.addEventListener('scroll', this.repositionDropdownHandler, true);
+    }
+
+    private restoreDropdown(): void {
+        if (!this.dropdown || !this.originalDropdownParent) return;
+
+        if (this.repositionDropdownHandler) {
+            window.removeEventListener('resize', this.repositionDropdownHandler);
+            window.removeEventListener('scroll', this.repositionDropdownHandler, true);
+            this.repositionDropdownHandler = null;
+        }
+
+        this.dropdown.style.position = '';
+        this.dropdown.style.left = '';
+        this.dropdown.style.right = '';
+        this.dropdown.style.top = '';
+        this.dropdown.style.width = '';
+        this.dropdown.style.marginTop = '';
+        this.dropdown.style.zIndex = '';
+
+        if (
+            this.originalDropdownNextSibling
+            && this.originalDropdownNextSibling.parentNode === this.originalDropdownParent
+        ) {
+            this.originalDropdownParent.insertBefore(this.dropdown, this.originalDropdownNextSibling);
+        } else {
+            this.originalDropdownParent.appendChild(this.dropdown);
+        }
+
+        this.originalDropdownParent = null;
+        this.originalDropdownNextSibling = null;
+    }
+
+    private positionDropdown(): void {
+        if (!this.dropdown || !this.input || this.dropdown.classList.contains('hidden')) return;
+
+        const inputRect = this.input.getBoundingClientRect();
+        const scrollX = window.scrollX || window.pageXOffset;
+        const scrollY = window.scrollY || window.pageYOffset;
+        const width = Math.max(inputRect.width, 160);
+
+        this.dropdown.style.left = `${inputRect.left + scrollX}px`;
+        this.dropdown.style.top = `${inputRect.bottom + scrollY + 4}px`;
+        this.dropdown.style.width = `${width}px`;
     }
 
     private valuesEqual(left: string | string[], right: string | string[]): boolean {
