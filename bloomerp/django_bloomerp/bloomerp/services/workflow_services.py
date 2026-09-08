@@ -509,7 +509,13 @@ def _execute_workflow_state(
             state.scope_key = parent_scope
         
         try:
-            output_data = node.execute(input_data)
+            if transaction.get_connection().in_atomic_block:
+                # Some executors convert database errors into workflow output.
+                # Isolate them so the surrounding workflow transaction remains usable.
+                with transaction.atomic():
+                    output_data = node.execute(input_data)
+            else:
+                output_data = node.execute(input_data)
         except Exception as error:
             _trace_node(execution_trace, node, "error", error=error)
             _create_run_step(
