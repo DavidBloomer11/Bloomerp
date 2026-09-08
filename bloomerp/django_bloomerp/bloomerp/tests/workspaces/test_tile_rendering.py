@@ -180,6 +180,36 @@ class WorkspaceTileRenderingTests(BaseBloomerpTestCaseWithModels):
         self.assertTrue(item.border)
         self.assertNotIn("hx-get", item.content)
 
+    def test_table_pagination_replaces_only_the_layout_item_body(self):
+        html = render_to_string(
+            "cotton/features/workspaces/tiles/table.html",
+            {
+                "payload": {"columns": ["Title"], "rows": [["First row"]]},
+                "tile_id": "tile-1",
+                "url": "/components/layout/render-layout-item/1/",
+                "current_page": 1,
+                "total_pages": 2,
+                "has_previous": False,
+                "has_next": True,
+                "previous_page_number": 0,
+                "next_page_number": 2,
+                "pagination_pages": [1, 2],
+                "show_global_pagination": True,
+                "result_start": 1,
+                "result_end": 10,
+                "result_count": 11,
+                "pagination_querystring": "tile_id=tile-1&colspan=1&max_cols=4",
+            },
+        )
+        soup = BeautifulSoup(html, "html.parser")
+
+        pagination = soup.find("nav", attrs={"aria-label": "Pagination"})
+        self.assertIsNotNone(pagination)
+        self.assertEqual(pagination["hx-target"], "closest [data-layout-item-body]")
+        self.assertEqual(pagination["hx-select"], "[data-layout-item-body]")
+        self.assertEqual(pagination["hx-swap"], "outerHTML")
+        self.assertNotIn(f'#layout-field-tile-1', html)
+
     def test_data_view_tile_is_registered_with_its_builder_and_renderer(self):
         """
         Use case: A user opens the workspace tile type selector.
