@@ -116,10 +116,10 @@ class BloomerpModelViewTestCase(BloomerpViewTestCase):
 
 class BloomerpDetailViewTestCase(BloomerpViewTestCase):
     """Base class for object-detail routes."""
-
+    test_object = None
     route_type = RouteType.DETAIL
     
-    def get_test_object(self) -> models.Model | None:
+    def create_test_object(self) -> models.Model | None:
         """Returns default object for all test cases.
         Is used to automatically set the view kwargs.
     
@@ -127,7 +127,14 @@ class BloomerpDetailViewTestCase(BloomerpViewTestCase):
         Returns:
             models.Model: an instance of a model
         """
+    
+    def get_test_object(self) -> models.Model | None:
+        if self.test_object: 
+            return self.test_object
+        self.test_object = self.create_test_object()
+        return self.test_object
         
+    
     def get_view_kwargs(self):
         obj = self.get_test_object()
         

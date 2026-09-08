@@ -34,7 +34,7 @@ class TestBloomerpDeleteView(BloomerpDetailViewTestCase):
         PolicyManager.assign(policy, self.normal_user)
         
     
-    def get_test_object(self):
+    def create_test_object(self):
         return Todo.objects.create(
             title="Hello"
         )
