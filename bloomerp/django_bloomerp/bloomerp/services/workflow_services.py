@@ -23,6 +23,7 @@ from bloomerp.utils.json_serialization import make_json_safe
 
 
 _NO_OUTPUT = object()
+_IN_FAILED_SQL_TRANSACTION = "25P02"
 
 
 class _WorkflowPaused(Exception):
@@ -246,6 +247,14 @@ def load_step_output(step: WorkflowRunStep) -> dict | Any:
         )
 
 
+def _is_in_failed_sql_transaction(error: DatabaseError) -> bool:
+    database_error = error.__cause__
+    return (
+        getattr(database_error, "sqlstate", None) == _IN_FAILED_SQL_TRANSACTION
+        or getattr(database_error, "pgcode", None) == _IN_FAILED_SQL_TRANSACTION
+    )
+
+
 def _execute_node(node: WorkflowNode, input_data: object) -> object:
     """Execute a node without allowing a handled database error to break its caller."""
     if not transaction.get_connection().in_atomic_block:
@@ -255,12 +264,12 @@ def _execute_node(node: WorkflowNode, input_data: object) -> object:
     try:
         with transaction.atomic():
             output_data = node.execute(input_data)
-    except DatabaseError:
+    except DatabaseError as error:
         is_handled_error = (
             isinstance(output_data, dict)
             and output_data.get("status") == "error"
         )
-        if not is_handled_error:
+        if not is_handled_error or not _is_in_failed_sql_transaction(error):
             raise
 
     return output_data
