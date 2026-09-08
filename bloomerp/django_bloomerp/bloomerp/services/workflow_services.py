@@ -684,7 +684,7 @@ def resume_workflow_sync(
     paused_step: WorkflowRunStep,
     output_data=_NO_OUTPUT,
 ) -> WorkflowRun:
-    """Resume an existing workflow run after a paused step."""
+    """Resume an existing workflow run after atomically claiming its paused step."""
     with transaction.atomic():
         paused_step = WorkflowRunStep.objects.select_for_update().select_related(
             "workflow_run__workflow"
@@ -728,9 +728,12 @@ def resume_workflow_sync(
             )
             for output_node in paused_node.get_output_nodes()
         ]
-        return _execute_workflow_state(
-            workflow=workflow,
-            workflow_run=workflow_run,
-            state=state,
-            start_frames=start_frames,
-        )
+
+    # Executors may handle database errors as workflow output. Run them after
+    # the claim commits so a failed statement cannot poison the lock transaction.
+    return _execute_workflow_state(
+        workflow=workflow,
+        workflow_run=workflow_run,
+        state=state,
+        start_frames=start_frames,
+    )

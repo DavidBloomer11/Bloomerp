@@ -3,7 +3,7 @@ import tempfile
 from unittest.mock import patch
 
 from django.contrib.contenttypes.models import ContentType
-from django.db import models
+from django.db import models, transaction
 from django.test import TransactionTestCase
 from django_celery_beat.models import PeriodicTask
 from regex import F
@@ -17,7 +17,11 @@ from bloomerp.models import ApplicationField, User
 from bloomerp.models.automation import Workflow, WorkflowEdge, WorkflowNode
 from bloomerp.models.automation.workflow_run import WorkflowRun
 from bloomerp.models.document_templates.document_template import DocumentTemplate
-from bloomerp.celery.tasks.workflow_task import run_scheduled_workflow, run_workflow_async
+from bloomerp.celery.tasks.workflow_task import (
+    resume_workflow_async,
+    run_scheduled_workflow,
+    run_workflow_async,
+)
 from bloomerp.services.workflow_services import (
     _serialize_trigger_data,
     format_execution_trace,
@@ -284,6 +288,113 @@ class TestAutomation(TransactionTestCase):
             delay_mock.assert_called_once_with(paused_step.pk)
             paused_step.refresh_from_db()
             self.assertEqual(paused_step.status, "PAUSED")
+
+    def test_resume_workflow_executes_nodes_after_lock_transaction_commits(self):
+        """
+        Use case: A synchronous workflow continues after a paused step.
+        Expected result: Downstream nodes execute outside the transaction used to claim the step.
+        """
+        # 1. Create a workflow run with a step that can be resumed.
+        workflow = Workflow.objects.create(
+            name="Resume transaction boundary",
+            enable_logging=True,
+        )
+        trigger = WorkflowNode.objects.create(
+            workflow=workflow,
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"proposal": "ready"}},
+            type="TRIGGER",
+        )
+        pause_node = WorkflowNode.objects.create(
+            workflow=workflow,
+            sub_type="ENRICH_DATA",
+            parameters={"data": {}},
+            type="ACTION",
+        )
+        workflow.connect_nodes(trigger, pause_node)
+
+        with tempfile.TemporaryDirectory() as media_root, self.settings(MEDIA_ROOT=media_root):
+            workflow_run = run_workflow_sync(workflow, {})
+            paused_step = workflow_run.steps.get(sequence=1)
+            paused_step.status = "PAUSED"
+            paused_step.save(update_fields=["status"])
+
+            downstream = WorkflowNode.objects.create(
+                workflow=workflow,
+                sub_type="ENRICH_DATA",
+                parameters={"data": {"approved": True}},
+                type="ACTION",
+            )
+            workflow.connect_nodes(pause_node, downstream)
+
+            # 2. Record whether the downstream executor runs inside an atomic block.
+            atomic_states = []
+            original_execute = WorkflowNode.execute
+
+            def capture_transaction_state(node, input_data):
+                atomic_states.append(transaction.get_connection().in_atomic_block)
+                return original_execute(node, input_data)
+
+            with patch.object(WorkflowNode, "execute", new=capture_transaction_state):
+                resumed_run = resume_workflow(paused_step)
+
+            # 3. Verify execution happens after the claim transaction commits.
+            self.assertEqual(atomic_states, [False])
+            self.assertTrue(resumed_run.execution_trace[-1]["output"]["approved"])
+
+    def test_async_resume_executes_nodes_after_lock_transaction_commits(self):
+        """
+        Use case: Celery resumes an asynchronous workflow after a paused step.
+        Expected result: Downstream nodes execute outside the transaction used to claim the step.
+        """
+        # 1. Create an asynchronous workflow run with a step that can be resumed.
+        workflow = Workflow.objects.create(
+            name="Async resume transaction boundary",
+            enable_logging=True,
+            run_asynchronously=True,
+        )
+        trigger = WorkflowNode.objects.create(
+            workflow=workflow,
+            sub_type="HUMAN_TRIGGER",
+            parameters={"data": {"proposal": "ready"}},
+            type="TRIGGER",
+        )
+        pause_node = WorkflowNode.objects.create(
+            workflow=workflow,
+            sub_type="ENRICH_DATA",
+            parameters={"data": {}},
+            type="ACTION",
+        )
+        workflow.connect_nodes(trigger, pause_node)
+
+        with tempfile.TemporaryDirectory() as media_root, self.settings(MEDIA_ROOT=media_root):
+            workflow_run = run_workflow_sync(workflow, {})
+            paused_step = workflow_run.steps.get(sequence=1)
+            paused_step.status = "PAUSED"
+            paused_step.save(update_fields=["status"])
+
+            downstream = WorkflowNode.objects.create(
+                workflow=workflow,
+                sub_type="ENRICH_DATA",
+                parameters={"data": {"approved": True}},
+                type="ACTION",
+            )
+            workflow.connect_nodes(pause_node, downstream)
+
+            # 2. Run the Celery task directly and record the executor transaction state.
+            atomic_states = []
+            original_execute = WorkflowNode.execute
+
+            def capture_transaction_state(node, input_data):
+                atomic_states.append(transaction.get_connection().in_atomic_block)
+                return original_execute(node, input_data)
+
+            with patch.object(WorkflowNode, "execute", new=capture_transaction_state):
+                result = resume_workflow_async.run(paused_step.pk)
+
+            # 3. Verify the task completed after executing outside the claim transaction.
+            self.assertEqual(atomic_states, [False])
+            self.assertEqual(result["workflow_run_id"], str(workflow_run.id))
 
     def test_run_workflow_can_start_from_a_selected_node(self):
         workflow = Workflow.objects.create(name="Debug start workflow")
