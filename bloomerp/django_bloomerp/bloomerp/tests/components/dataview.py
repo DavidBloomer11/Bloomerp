@@ -4,6 +4,7 @@ from datetime import date, datetime, timedelta
 
 from django.db import models
 from django.http import HttpResponse
+from django.test import RequestFactory
 from django.urls import reverse
 from django.utils import timezone
 from django.contrib.contenttypes.models import ContentType
@@ -20,9 +21,14 @@ from bloomerp.models.definition import (
     ModelViewSettings,
     get_model_config,
 )
+from bloomerp.permissions.definition import BloomerpPermission
+from bloomerp.permissions.manager import PolicyManager
 from bloomerp.models.users.user_list_view_preference import UserListViewPreference
 from bloomerp.services.user_services import get_data_view_fields
-from bloomerp.components.objects.dataviews.dataview import _select_related_rendered_relations
+from bloomerp.components.objects.dataviews.dataview import (
+    _select_related_rendered_relations,
+    dataview,
+)
 from bloomerp.tests.utils.dynamic_models import create_test_models
 
 
@@ -125,6 +131,32 @@ class TestDataView(BaseBloomerpTestCaseWithModels):
             )
         self.assertNotContains(response, "should_render_func=&lt;function", html=False)
 
+    def test_dataview_actions_argument_filters_toolbar_by_id(self):
+        """An embedded data view can render only its explicitly selected actions."""
+        content_type = ContentType.objects.get_for_model(self.CustomerModel)
+        request = RequestFactory().get(
+            reverse(
+                "components_dataview",
+                kwargs={"content_type_id": content_type.pk},
+            )
+        )
+        request.user = self.admin_user
+
+        response = dataview(
+            request,
+            content_type.pk,
+            actions=["filter", "export"],
+        )
+
+        self.assertContains(response, 'data-data-view-button="filter"', html=False)
+        self.assertContains(response, 'data-data-view-button="export"', html=False)
+        self.assertNotContains(response, 'data-data-view-button="add"', html=False)
+        self.assertNotContains(
+            response,
+            'data-data-view-button="display-options"',
+            html=False,
+        )
+
     def test_dataview_actions_can_replace_default_toolbar(self):
         """
         Use case: Configure HTML, immediate, and modal actions for a model Dataview.
@@ -136,7 +168,7 @@ class TestDataView(BaseBloomerpTestCaseWithModels):
             kwargs={"content_type_id": content_type.pk},
         )
         execute_url = reverse(
-            "components_dataview_configured_action",
+            "components_dataview_action",
             kwargs={
                 "content_type_id": content_type.pk,
                 "action_id": "run-test",
@@ -199,7 +231,7 @@ class TestDataView(BaseBloomerpTestCaseWithModels):
         """
         content_type = ContentType.objects.get_for_model(self.CustomerModel)
         action_url = reverse(
-            "components_dataview_configured_action",
+            "components_dataview_action",
             kwargs={
                 "content_type_id": content_type.pk,
                 "action_id": "denied-test",
@@ -415,6 +447,12 @@ class TestDataView(BaseBloomerpTestCaseWithModels):
             row_policy=row_policy,
             field_policy=field_policy,
         )
+        policy.global_permissions.add(
+            Permission.objects.get(
+                content_type=content_type,
+                codename="view_customer",
+            )
+        )
         policy.assign_user(self.normal_user)
 
         # 2. Create the preference object including the two fields
@@ -453,6 +491,77 @@ class TestDataView(BaseBloomerpTestCaseWithModels):
 
         preference.refresh_from_db()
         self.assertEqual(preference.get_visible_field_ids("table"), [first_name_field.id])
+
+    def test_shared_preference_uses_viewer_fields_without_mutating_owner(self):
+        """A shared layout is projected through the current viewer's field policy."""
+        content_type = ContentType.objects.get_for_model(self.CustomerModel)
+        first_name_field = ApplicationField.get_by_field(
+            self.CustomerModel,
+            "first_name",
+        )
+        last_name_field = ApplicationField.get_by_field(
+            self.CustomerModel,
+            "last_name",
+        )
+        self._ensure_permissions_for_model(self.CustomerModel)
+        policy = PolicyManager.create_policy(
+            model_or_content_type=self.CustomerModel,
+            field_permissions={
+                "first_name": [BloomerpPermission.VIEW],
+            },
+            row_permissions=[],
+            global_permissions=[BloomerpPermission.VIEW],
+        )
+        PolicyManager.assign(policy, self.normal_user)
+        preference = UserListViewPreference.objects.create(
+            user=self.admin_user,
+            content_type=content_type,
+            display_fields={
+                "table": [first_name_field.id, last_name_field.id],
+                "kanban": [],
+                "card": [],
+                "calendar": [],
+                "gantt": [],
+                "pivot_table": [],
+            },
+        )
+
+        owner_fields = get_data_view_fields(preference, "table")
+        self.assertEqual(
+            [field.id for field in owner_fields.visible_fields],
+            [first_name_field.id, last_name_field.id],
+        )
+
+        dataview_fields = get_data_view_fields(
+            preference,
+            "table",
+            user=self.normal_user,
+        )
+
+        self.assertEqual(
+            [field.id for field in dataview_fields.visible_fields],
+            [first_name_field.id],
+        )
+        preference.refresh_from_db()
+        self.assertEqual(
+            preference.get_visible_field_ids("table"),
+            [first_name_field.id, last_name_field.id],
+        )
+
+        preference.set_visible_field_ids("table", [last_name_field.id])
+        preference.save(update_fields=["display_fields"])
+        hidden_fields = get_data_view_fields(
+            preference,
+            "table",
+            user=self.normal_user,
+        )
+
+        self.assertEqual(hidden_fields.visible_fields, [])
+        preference.refresh_from_db()
+        self.assertEqual(
+            preference.get_visible_field_ids("table"),
+            [last_name_field.id],
+        )
 
     
         
@@ -621,7 +730,7 @@ class TestDataView(BaseBloomerpTestCaseWithModels):
         self.assertNotContains(response, 'data-testid="data-view-pagination"', html=False)
 
         column_url = reverse(
-            viewname="components_dataview_action",
+            viewname="components_dataview_renderer_operation",
             kwargs={"content_type_id": content_type.id, "action": "column"},
         )
         page_response = self.client.get(
@@ -1239,7 +1348,7 @@ class TestCalendarDataView(BaseBloomerpTestCaseWithModels):
         )
         unscheduled = self.CalendarEventModel.objects.create(name="Unscheduled")
         action_url = reverse(
-            "components_dataview_action",
+            "components_dataview_renderer_operation",
             kwargs={"content_type_id": content_type.id, "action": "dates"},
         )
         local_timezone = timezone.get_current_timezone()
@@ -1301,7 +1410,7 @@ class TestCalendarDataView(BaseBloomerpTestCaseWithModels):
 
         # 3. Request the next page through the permission-filtered renderer action.
         page_url = reverse(
-            "components_dataview_action",
+            "components_dataview_renderer_operation",
             kwargs={"content_type_id": content_type.id, "action": "unit"},
         )
         page_response = self.client.get(
@@ -1498,7 +1607,7 @@ class TestGantDataView(BaseBloomerpTestCaseWithModels):
 
         # 4. Request page two through the renderer action.
         page_url = reverse(
-            "components_dataview_action",
+            "components_dataview_renderer_operation",
             kwargs={"content_type_id": content_type.id, "action": "page"},
         )
         page_response = self.client.get(
@@ -1539,7 +1648,7 @@ class TestGantDataView(BaseBloomerpTestCaseWithModels):
         self.assertContains(response, "gant_unscheduled_page=2", html=False)
 
         page_url = reverse(
-            "components_dataview_action",
+            "components_dataview_renderer_operation",
             kwargs={"content_type_id": content_type.id, "action": "unscheduled"},
         )
         page_response = self.client.get(
@@ -1568,7 +1677,7 @@ class TestGantDataView(BaseBloomerpTestCaseWithModels):
             ends_on=date(2026, 9, 6),
         )
         action_url = reverse(
-            "components_dataview_action",
+            "components_dataview_renderer_operation",
             kwargs={"content_type_id": content_type.id, "action": "dates"},
         )
         local_tz = timezone.get_current_timezone()
@@ -1630,7 +1739,7 @@ class TestGantDataView(BaseBloomerpTestCaseWithModels):
         )
         self.client.force_login(self.normal_user)
         action_url = reverse(
-            "components_dataview_action",
+            "components_dataview_renderer_operation",
             kwargs={"content_type_id": content_type.id, "action": "dates"},
         )
         target = timezone.make_aware(datetime(2026, 10, 4)).timestamp() * 1000

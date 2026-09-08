@@ -56,20 +56,29 @@ def _sanitize_visible_field_ids(
     return visible_field_ids
 
 
-def get_data_view_fields(preference: UserListViewPreference, view_type: str = None) -> DataViewFields:
+def get_data_view_fields(
+    preference: UserListViewPreference,
+    view_type: str | None = None,
+    user: AbstractBloomerpUser | None = None,
+) -> DataViewFields:
     """Gets the visible and accessible fields for a user's list view preference.
     
     Args:
         preference (UserListViewPreference): The user's list view preference.
         view_type (str): Optional view type override. Defaults to preference.view_type.
+        user: User whose field permissions should be applied. Defaults to the
+            preference owner for backward compatibility.
     Returns:
         DataViewFields: Container with visible_fields and accessible_fields.
     """
     view_type = view_type or preference.view_type
-    
+    permission_user = user or preference.user
+    is_preference_owner = permission_user.pk == preference.user_id
+    configured_visible_field_ids = preference.get_visible_field_ids(view_type)
+
     # Get all accessible fields for this user and content type
-    manager = UserPolicyManager(preference.user)
-    
+    manager = UserPolicyManager(permission_user)
+
     accessible_fields_qs = manager.get_accessible_fields(
         preference.content_type,
         BloomerpPermission.VIEW
@@ -79,20 +88,39 @@ def get_data_view_fields(preference: UserListViewPreference, view_type: str = No
         ]
     )
     
-    # Remove persisted fields the user can no longer access.
-    visible_field_ids = _sanitize_visible_field_ids(preference, accessible_fields_qs, view_type)
-    
+    if is_preference_owner:
+        # Retain the existing self-healing behavior for an owner's preference.
+        visible_field_ids = _sanitize_visible_field_ids(
+            preference,
+            accessible_fields_qs,
+            view_type,
+        )
+    else:
+        # Shared preferences are presentation state owned by somebody else.
+        # Project them through the viewer's permissions without mutating them.
+        accessible_field_ids = set(
+            accessible_fields_qs.values_list("id", flat=True)
+        )
+        visible_field_ids = [
+            field_id
+            for field_id in configured_visible_field_ids
+            if field_id in accessible_field_ids
+        ]
+
     # If no visible fields are set, prefer business fields before audit/system fields.
-    if not visible_field_ids:
+    should_apply_defaults = not visible_field_ids and (
+        is_preference_owner or not configured_visible_field_ids
+    )
+    if should_apply_defaults:
         preferred_fields = accessible_fields_qs.exclude(field__in=AUTO_MANAGED_FIELD_NAMES)
         default_fields = list(preferred_fields[:5].values_list('id', flat=True))
         if not default_fields:
             default_fields = list(accessible_fields_qs[:5].values_list('id', flat=True))
         visible_field_ids = default_fields
-        # Optionally persist the defaults
-        preference.set_visible_field_ids(view_type, default_fields)
-        preference.save(update_fields=['display_fields'])
-    
+        if is_preference_owner:
+            preference.set_visible_field_ids(view_type, default_fields)
+            preference.save(update_fields=['display_fields'])
+
     # Get visible fields in persisted display order, limited to accessible fields.
     accessible_fields_by_id = {field.id: field for field in accessible_fields_qs}
     visible_fields = [

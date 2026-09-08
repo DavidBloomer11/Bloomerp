@@ -1,4 +1,5 @@
 import json
+from importlib.metadata import PackageNotFoundError, version
 
 import bleach
 from django import template
@@ -50,6 +51,15 @@ ACTIVITY_LOG_ALLOWED_ATTRIBUTES = {
     "a": ["href", "title"],
 }
 ACTIVITY_LOG_ALLOWED_PROTOCOLS = ["http", "https", "mailto"]
+
+
+@register.simple_tag
+def bloomerp_asset_version() -> str:
+    """Return a release-specific cache key for compiled Bloomerp assets."""
+    try:
+        return version("Bloomerp")
+    except PackageNotFoundError:
+        return "dev"
 
 
 @register.simple_tag
