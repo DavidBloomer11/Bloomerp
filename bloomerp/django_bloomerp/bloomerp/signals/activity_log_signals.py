@@ -75,11 +75,13 @@ def compute_field_changes(instance: Model, event_id: str) -> list[dict[str, Any]
 
 @receiver(pre_save)
 def before_save_of_object(sender, instance: Model, **kwargs):
+    manager = ActivityLogManager(instance, current_request())
+    manager.set_user_stamp()
+    
     if not ActivityLogManager.should_record_change(instance._meta.model):
         return
 
     try:
-        manager = ActivityLogManager(instance, current_request())
         manager.set_changes()
         event_id = set_transient_attribute(instance)
 

@@ -12,7 +12,7 @@ class TestBuilderView(BloomerpDetailViewTestCase):
     view_name = 'form_builder'
     model = Form
 
-    def get_test_object(self):
+    def create_test_object(self):
         return Form.objects.create(
             name="Default form",
             content_type=self.get_content_type_for_model(Todo)

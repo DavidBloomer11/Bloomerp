@@ -58,6 +58,21 @@ class ActivityLogManager:
                 )
         return changes
 
+    def set_user_stamp(self) -> None:
+        """
+        Set's the user stamp of the object.
+        """
+        user = getattr(self.request, "user", None)
+        if user is None:
+            return
+
+        if self.is_create and hasattr(self.instance, "created_by") and not user.is_anonymous:
+            setattr(self.instance, "created_by", user)
+            
+        if hasattr(self.instance, "updated_by") and not user.is_anonymous:
+            setattr(self.instance, "updated_by", user)
+        
+    
     def set_changes(self) -> None:
         """Compute field-level changes using serialized before/after snapshots."""
         before_instance: Optional[Model] = None
@@ -68,15 +83,7 @@ class ActivityLogManager:
         after_data = self._serialize_instance(self.instance)
         self.payload = self._build_changes(before_data=before_data, after_data=after_data)
 
-        user = getattr(self.request, "user", None)
-        if user is None:
-            return
-
-        if self.is_create and hasattr(self.instance, "created_by") and not user.is_anonymous:
-            setattr(self.instance, "created_by", user)
-            
-        if hasattr(self.instance, "updated_by") and not user.is_anonymous:
-            setattr(self.instance, "updated_by", user)
+        
         
     def set_delete(self) -> None:
         """Capture a full JSON-safe representation before the object is deleted."""
@@ -113,7 +120,7 @@ class ActivityLogManager:
                 return ActivityLogSource.CREATE
             if "/api/" in self.request.path:
                 return ActivityLogSource.API
-            if "/bulk-upload/" or "/import/" in self.request.path:
+            if "/bulk-upload/" in self.request.path or "/import/" in self.request.path:
                 return ActivityLogSource.BULK
             
         return ActivityLogSource.DETAIL
@@ -133,7 +140,7 @@ class ActivityLogManager:
             object_id=str(self.instance.id),
             content_type=self.get_content_type()
         )
-
+        
     @staticmethod
     def should_record_change(model:Type[Model]) -> bool:
         """Whether a change should be recorded on this instance

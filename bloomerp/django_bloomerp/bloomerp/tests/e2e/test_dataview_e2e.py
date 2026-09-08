@@ -179,7 +179,7 @@ def search(
     )
 
 
-def change_view_type(view_type:DataviewType, page: Page) -> None:
+def change_view_type(view_type, page: Page) -> None:
     page.get_by_role("button", name="Display").click()
     display_menu = page.locator("div[role='menu']:visible").filter(
         has=page.locator(f"button[data-display-options-values*='\"view_type\": \"{view_type.value.key}\"']")

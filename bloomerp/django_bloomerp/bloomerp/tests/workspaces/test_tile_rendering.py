@@ -12,8 +12,6 @@ from bloomerp.models.users.user_list_view_preference import UserListViewPreferen
 from bloomerp.models import FieldLayout, LayoutItem, LayoutRow
 from bloomerp.models.workspaces.tile import Tile
 from bloomerp.components.layout.render_layout_item import _tile
-from bloomerp.permissions.manager import UserPolicyManager
-from bloomerp.services.permission_services import UserPermissionManager
 from bloomerp.services.workspace_services import (
     _localize_generated_module_links,
     _tile_display_metadata,
