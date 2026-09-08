@@ -4,7 +4,7 @@ from typing import Any
 
 from django.apps import apps
 from django.core.files.base import ContentFile
-from django.db import transaction
+from django.db import DatabaseError, transaction
 from django.db.models import Max, Model
 from django.db.models.query import QuerySet
 from django.utils import timezone
@@ -23,6 +23,7 @@ from bloomerp.utils.json_serialization import make_json_safe
 
 
 _NO_OUTPUT = object()
+_IN_FAILED_SQL_TRANSACTION = "25P02"
 
 
 class _WorkflowPaused(Exception):
@@ -244,6 +245,34 @@ def load_step_output(step: WorkflowRunStep) -> dict | Any:
         return _deserialize_trigger_data(
             json.loads(output_file.read().decode("utf-8"))
         )
+
+
+def _is_in_failed_sql_transaction(error: DatabaseError) -> bool:
+    database_error = error.__cause__
+    return (
+        getattr(database_error, "sqlstate", None) == _IN_FAILED_SQL_TRANSACTION
+        or getattr(database_error, "pgcode", None) == _IN_FAILED_SQL_TRANSACTION
+    )
+
+
+def _execute_node(node: WorkflowNode, input_data: object) -> object:
+    """Execute a node without allowing a handled database error to break its caller."""
+    if not transaction.get_connection().in_atomic_block:
+        return node.execute(input_data)
+
+    output_data = _NO_OUTPUT
+    try:
+        with transaction.atomic():
+            output_data = node.execute(input_data)
+    except DatabaseError as error:
+        is_handled_error = (
+            isinstance(output_data, dict)
+            and output_data.get("status") == "error"
+        )
+        if not is_handled_error or not _is_in_failed_sql_transaction(error):
+            raise
+
+    return output_data
 
 def _replace_step_output(step: WorkflowRunStep, output_data) -> None:
     serialized_output = _serialize_trigger_data(output_data)
@@ -509,13 +538,7 @@ def _execute_workflow_state(
             state.scope_key = parent_scope
         
         try:
-            if transaction.get_connection().in_atomic_block:
-                # Some executors convert database errors into workflow output.
-                # Isolate them so the surrounding workflow transaction remains usable.
-                with transaction.atomic():
-                    output_data = node.execute(input_data)
-            else:
-                output_data = node.execute(input_data)
+            output_data = _execute_node(node, input_data)
         except Exception as error:
             _trace_node(execution_trace, node, "error", error=error)
             _create_run_step(

@@ -1,9 +1,9 @@
 import json
 import tempfile
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from django.contrib.contenttypes.models import ContentType
-from django.db import IntegrityError, models
+from django.db import DatabaseError, IntegrityError, models
 from django.test import TransactionTestCase
 from django_celery_beat.models import PeriodicTask
 from regex import F
@@ -24,6 +24,7 @@ from bloomerp.celery.tasks.workflow_task import (
     run_workflow_async,
 )
 from bloomerp.services.workflow_services import (
+    _execute_node,
     _serialize_trigger_data,
     format_execution_trace,
     resume_workflow,
@@ -359,6 +360,84 @@ class TestAutomation(TransactionTestCase):
                 resumed_run.execution_trace[-1]["output"]["status"],
                 "error",
             )
+
+    def test_execute_node_recovers_output_after_aborted_savepoint(self):
+        """
+        Use case: PostgreSQL detects a swallowed database error when committing a savepoint.
+        Expected result: Explicit error output is preserved after the savepoint is rolled back.
+        """
+        # 1. Simulate an executor returning an explicit error before savepoint release fails.
+        node = Mock()
+        node.execute.return_value = {
+            "status": "error",
+            "error_message": "Invalid configured query",
+        }
+        connection = Mock(in_atomic_block=True)
+        postgres_error = Exception("current transaction is aborted")
+        postgres_error.sqlstate = "25P02"
+        aborted_transaction = DatabaseError("current transaction is aborted")
+        aborted_transaction.__cause__ = postgres_error
+
+        class AbortedSavepoint:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc_value, traceback):
+                raise aborted_transaction
+
+        # 2. Execute through the failed savepoint boundary reported by PostgreSQL.
+        with (
+            patch(
+                "bloomerp.services.workflow_services.transaction.get_connection",
+                return_value=connection,
+            ),
+            patch(
+                "bloomerp.services.workflow_services.transaction.atomic",
+                return_value=AbortedSavepoint(),
+            ),
+        ):
+            output = _execute_node(node, {})
+
+        # 3. Verify the executor's handled error remains available to the workflow.
+        self.assertEqual(output["status"], "error")
+        self.assertEqual(output["error_message"], "Invalid configured query")
+
+    def test_execute_node_reraises_unrelated_savepoint_database_error(self):
+        """
+        Use case: Savepoint release fails for a reason unrelated to an aborted transaction.
+        Expected result: The database failure is not hidden by an executor error result.
+        """
+        # 1. Simulate an executor error result followed by an unrelated connection failure.
+        node = Mock()
+        node.execute.return_value = {
+            "status": "error",
+            "error_message": "Invalid configured query",
+        }
+        connection = Mock(in_atomic_block=True)
+        connection_error = DatabaseError("server closed the connection unexpectedly")
+
+        class FailedSavepoint:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc_value, traceback):
+                raise connection_error
+
+        # 2. Verify that only PostgreSQL's aborted-transaction error is recoverable.
+        with (
+            patch(
+                "bloomerp.services.workflow_services.transaction.get_connection",
+                return_value=connection,
+            ),
+            patch(
+                "bloomerp.services.workflow_services.transaction.atomic",
+                return_value=FailedSavepoint(),
+            ),
+            self.assertRaises(DatabaseError) as raised,
+        ):
+            _execute_node(node, {})
+
+        self.assertIs(raised.exception, connection_error)
 
     def test_async_resume_recovers_from_handled_database_error(self):
         """
