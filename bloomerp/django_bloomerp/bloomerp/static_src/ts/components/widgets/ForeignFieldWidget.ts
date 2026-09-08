@@ -30,6 +30,7 @@ export default class ForeignFieldWidget extends BaseWidget {
     private boundCreateClick: any = null;
     private boundAdvancedClick: any = null;
     private boundOnKeyDown: any = null;
+    private boundOnDropdownKeyDown: any = null;
     private currentIndex: number = -1;
     private boundOnFocus: any = null;
     private boundOnFocusOut: any = null;
@@ -40,6 +41,11 @@ export default class ForeignFieldWidget extends BaseWidget {
     private advancedSelectionTarget: HTMLElement | null = null;
     private advancedModalClosedHandler: (() => void) | null = null;
     private advancedModalClosedTarget: HTMLElement | null = null;
+    private originalDropdownParent: HTMLElement | null = null;
+    private originalDropdownNextSibling: ChildNode | null = null;
+    private repositionDropdownHandler: (() => void) | null = null;
+    private searchAbortController: AbortController | null = null;
+    private searchRequestId: number = 0;
 
     private createControlEl: HTMLElement | null = null;
     private advancedControlEl: HTMLElement | null = null;
@@ -59,7 +65,7 @@ export default class ForeignFieldWidget extends BaseWidget {
         this.isDisabled = this.element.dataset.disabled === 'true';
         this.widgetInstanceId = this.ensureWidgetInstanceId();
 
-        if (!this.input || !this.resultsList || !this.selectedContainer || !this.fieldName || !this.contentTypeId) {
+        if (!this.input || !this.dropdown || !this.resultsList || !this.selectedContainer || !this.fieldName || !this.contentTypeId) {
             return;
         }
 
@@ -70,11 +76,13 @@ export default class ForeignFieldWidget extends BaseWidget {
         this.boundOnFocus = this.onFocus.bind(this);
         this.boundOnFocusOut = this.onFocusOut.bind(this);
         this.boundOnKeyDown = this.onKeyDown.bind(this);
+        this.boundOnDropdownKeyDown = this.onDropdownKeyDown.bind(this);
         this.input.addEventListener('input', this.boundOnInput);
         this.input.addEventListener('focus', this.boundOnFocus);
         this.input.addEventListener('keydown', this.boundOnKeyDown);
         this.element.addEventListener('focusout', this.boundOnFocusOut);
         this.resultsList.addEventListener('click', this.boundOnResultClick);
+        this.dropdown.addEventListener('keydown', this.boundOnDropdownKeyDown);
 
         // wire create / advanced controls inside dropdown (if present)
         this.createControlEl = this.element.querySelector('.foreign-field-dropdown [data-action="create-new"]') as HTMLElement | null;
@@ -97,14 +105,16 @@ export default class ForeignFieldWidget extends BaseWidget {
         if (this.input && this.boundOnFocus) this.input.removeEventListener('focus', this.boundOnFocus);
         if (this.input && this.boundOnKeyDown) this.input.removeEventListener('keydown', this.boundOnKeyDown);
         if (this.resultsList && this.boundOnResultClick) this.resultsList.removeEventListener('click', this.boundOnResultClick);
+        if (this.dropdown && this.boundOnDropdownKeyDown) this.dropdown.removeEventListener('keydown', this.boundOnDropdownKeyDown);
         if (this.createControlEl && this.boundCreateClick) this.createControlEl.removeEventListener('click', this.boundCreateClick);
         if (this.advancedControlEl && this.boundAdvancedClick) this.advancedControlEl.removeEventListener('click', this.boundAdvancedClick);
         if (this.boundOnFocusOut) this.element.removeEventListener('focusout', this.boundOnFocusOut);
         document.removeEventListener('click', this.outsideClickHandler);
-        if (this.debounceTimer) window.clearTimeout(this.debounceTimer);
+        this.cancelPendingSearch();
         this.cleanupPreviewHandlers();
         this.teardownCreateSuccessListener();
         this.teardownAdvancedSelectionListener();
+        this.restoreDropdown();
     }
 
     private onFocus(e: Event) {
@@ -116,7 +126,7 @@ export default class ForeignFieldWidget extends BaseWidget {
 
     private onFocusOut(e: FocusEvent): void {
         const nextTarget = e.relatedTarget as HTMLElement | null;
-        if (nextTarget && this.element.contains(nextTarget)) return;
+        if (nextTarget && (this.element.contains(nextTarget) || this.dropdown?.contains(nextTarget))) return;
         this.hideDropdown();
     }
 
@@ -160,6 +170,7 @@ export default class ForeignFieldWidget extends BaseWidget {
     // Click handlers
     private handleCreateClick(e: Event) {
         e.preventDefault();
+        this.hideDropdown();
         let modal = getComponent(document.querySelector('#create-object-modal')) as Modal;
         if (!modal || !this.contentTypeId) return;
 
@@ -175,8 +186,12 @@ export default class ForeignFieldWidget extends BaseWidget {
 
     private async handleAdvancedClick(e: Event) {
         e.preventDefault();
+        this.hideDropdown();
         // 1. Get the modal
         let modal = getComponent(document.querySelector('#advanced-query-modal')) as Modal;
+        if (!modal || !this.contentTypeId) return;
+
+        modal.setSize('full');
         modal.open();
         this.setupAdvancedSelectionListener(modal);
 
@@ -218,7 +233,39 @@ export default class ForeignFieldWidget extends BaseWidget {
         } else if (e.key === 'Escape') {
             e.preventDefault();
             this.hideDropdown();
+        } else if (e.key === 'Tab' && !e.shiftKey) {
+            e.preventDefault();
+            this.currentIndex = 0;
+            this.highlightItem(items, this.currentIndex);
+            items[this.currentIndex]?.focus();
         }
+    }
+
+    private onDropdownKeyDown(e: KeyboardEvent): void {
+        if (e.key !== 'Tab' || !this.dropdown || this.dropdown.classList.contains('hidden')) return;
+
+        const items = this.getSelectableItems();
+        const currentItem = (e.target as HTMLElement).closest<HTMLElement>('li, [data-action]');
+        const currentItemIndex = currentItem ? items.indexOf(currentItem) : -1;
+        if (currentItemIndex < 0) return;
+
+        e.preventDefault();
+        if (e.shiftKey) {
+            if (currentItemIndex === 0) {
+                this.input?.focus();
+                return;
+            }
+            items[currentItemIndex - 1]?.focus();
+            return;
+        }
+
+        if (currentItemIndex < items.length - 1) {
+            items[currentItemIndex + 1]?.focus();
+            return;
+        }
+
+        this.hideDropdown();
+        this.focusNextElementAfterInput();
     }
 
     private getSelectableItems(): HTMLElement[] {
@@ -245,7 +292,8 @@ export default class ForeignFieldWidget extends BaseWidget {
     }
 
     private handleOutsideClick(e: MouseEvent) {
-        if (!this.element.contains(e.target as Node)) {
+        const target = e.target as Node;
+        if (!this.element.contains(target) && !this.dropdown?.contains(target)) {
             this.hideDropdown();
             this.closeOverflowMenus();
             hideObjectPreviewTooltip();
@@ -255,8 +303,9 @@ export default class ForeignFieldWidget extends BaseWidget {
     private onInput(): void {
         if (!this.input) return;
         const q = this.input.value.trim();
-        if (this.debounceTimer) window.clearTimeout(this.debounceTimer);
+        this.cancelPendingSearch();
         this.debounceTimer = window.setTimeout(() => {
+            this.debounceTimer = null;
             if (q.length === 0) {
                 this.clearResults();
                 return;
@@ -267,15 +316,27 @@ export default class ForeignFieldWidget extends BaseWidget {
 
     private async fetchResults(query: string) {
         if (!this.contentTypeId) return;
+        const requestId = ++this.searchRequestId;
+        this.searchAbortController?.abort();
+        const abortController = new AbortController();
+        this.searchAbortController = abortController;
         const url = `/components/search-objects/${this.contentTypeId}/?fk_search_results_query=${encodeURIComponent(query)}`;
         try {
-            const resp = await fetch(url, { credentials: 'same-origin' });
-            if (!resp.ok) return;
+            const resp = await fetch(url, {
+                credentials: 'same-origin',
+                signal: abortController.signal,
+            });
+            if (!resp.ok || requestId !== this.searchRequestId) return;
             const data = await resp.json();
+            if (requestId !== this.searchRequestId) return;
             this.renderResults(data.objects || []);
         } catch (err) {
-            // swallow errors silently
+            if (abortController.signal.aborted) return;
             console.error('ForeignFieldWidget fetch error', err);
+        } finally {
+            if (this.searchAbortController === abortController) {
+                this.searchAbortController = null;
+            }
         }
     }
 
@@ -749,11 +810,111 @@ export default class ForeignFieldWidget extends BaseWidget {
     }
 
     private showDropdown() {
-        if (this.dropdown) this.dropdown.classList.remove('hidden');
+        if (!this.dropdown) return;
+
+        this.portalDropdownToBody();
+        this.dropdown.classList.remove('hidden');
+        this.positionDropdown();
     }
 
     private hideDropdown() {
-        if (this.dropdown) this.dropdown.classList.add('hidden');
+        if (!this.dropdown) return;
+
+        this.cancelPendingSearch();
+        this.dropdown.classList.add('hidden');
+        this.restoreDropdown();
+    }
+
+    private cancelPendingSearch(): void {
+        if (this.debounceTimer !== null) {
+            window.clearTimeout(this.debounceTimer);
+            this.debounceTimer = null;
+        }
+        this.searchRequestId += 1;
+        this.searchAbortController?.abort();
+        this.searchAbortController = null;
+    }
+
+    private focusNextElementAfterInput(): void {
+        if (!this.input) return;
+
+        const focusScope = this.element.closest<HTMLElement>('[bloomerp-component="modal"]') || document.body;
+        const focusableElements = Array.from(focusScope.querySelectorAll<HTMLElement>(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )).filter((element) => {
+            if (element.hasAttribute('disabled')) return false;
+            if (element.closest('.hidden')) return false;
+            return element.getClientRects().length > 0;
+        });
+        const inputIndex = focusableElements.indexOf(this.input);
+        if (inputIndex < 0) return;
+
+        const nextElement = focusableElements[inputIndex + 1];
+        if (nextElement) {
+            nextElement.focus();
+        } else if (focusScope !== document.body) {
+            focusableElements[0]?.focus();
+        }
+    }
+
+    private portalDropdownToBody(): void {
+        if (!this.dropdown || this.dropdown.parentElement === document.body) return;
+
+        this.originalDropdownParent = this.dropdown.parentElement;
+        this.originalDropdownNextSibling = this.dropdown.nextSibling;
+        document.body.appendChild(this.dropdown);
+
+        this.dropdown.style.position = 'absolute';
+        this.dropdown.style.right = 'auto';
+        this.dropdown.style.marginTop = '0';
+        this.dropdown.style.zIndex = '9999';
+
+        this.repositionDropdownHandler = () => this.positionDropdown();
+        window.addEventListener('resize', this.repositionDropdownHandler);
+        window.addEventListener('scroll', this.repositionDropdownHandler, true);
+    }
+
+    private restoreDropdown(): void {
+        if (!this.dropdown || !this.originalDropdownParent) return;
+
+        if (this.repositionDropdownHandler) {
+            window.removeEventListener('resize', this.repositionDropdownHandler);
+            window.removeEventListener('scroll', this.repositionDropdownHandler, true);
+            this.repositionDropdownHandler = null;
+        }
+
+        this.dropdown.style.position = '';
+        this.dropdown.style.left = '';
+        this.dropdown.style.right = '';
+        this.dropdown.style.top = '';
+        this.dropdown.style.width = '';
+        this.dropdown.style.marginTop = '';
+        this.dropdown.style.zIndex = '';
+
+        if (
+            this.originalDropdownNextSibling
+            && this.originalDropdownNextSibling.parentNode === this.originalDropdownParent
+        ) {
+            this.originalDropdownParent.insertBefore(this.dropdown, this.originalDropdownNextSibling);
+        } else {
+            this.originalDropdownParent.appendChild(this.dropdown);
+        }
+
+        this.originalDropdownParent = null;
+        this.originalDropdownNextSibling = null;
+    }
+
+    private positionDropdown(): void {
+        if (!this.dropdown || !this.input || this.dropdown.classList.contains('hidden')) return;
+
+        const inputRect = this.input.getBoundingClientRect();
+        const scrollX = window.scrollX || window.pageXOffset;
+        const scrollY = window.scrollY || window.pageYOffset;
+        const width = Math.max(inputRect.width, 160);
+
+        this.dropdown.style.left = `${inputRect.left + scrollX}px`;
+        this.dropdown.style.top = `${inputRect.bottom + scrollY + 4}px`;
+        this.dropdown.style.width = `${width}px`;
     }
 
     private valuesEqual(left: string | string[], right: string | string[]): boolean {
