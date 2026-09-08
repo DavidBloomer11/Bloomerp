@@ -125,7 +125,7 @@ def _build_data_view_query_state(
     elif preference.content_type_id != content_type.id:
         return HttpResponse("Invalid list view preference", status=400)
     dataview_options = _get_dataview_options(preference)
-    dataview_fields = get_data_view_fields(preference)
+    dataview_fields = get_data_view_fields(preference, user=request.user)
     avatar_field, dataview_render_fields = _split_avatar_field(dataview_fields)
 
     # String search if 
@@ -385,11 +385,16 @@ def _render_dataview_actions(
     request: HttpRequest,
     state: DataViewQueryState,
     context: dict,
+    action_ids: list[str] | None = None,
 ) -> list[str]:
     action_context = _build_dataview_action_context(request, state)
     rendered_actions: list[str] = []
+    allowed_action_ids = set(action_ids) if action_ids is not None else None
 
     for action in _get_configured_dataview_actions(state.model):
+        if allowed_action_ids is not None and action.id not in allowed_action_ids:
+            continue
+
         try:
             should_render = action.should_render_func(action_context)
         except Exception:
@@ -411,7 +416,7 @@ def _render_dataview_actions(
         else:
             template_name = "components/objects/dataview_actions/action.html"
             execution_url = reverse(
-                "components_dataview_configured_action",
+                "components_dataview_action",
                 kwargs={
                     "content_type_id": state.content_type.pk,
                     "action_id": action.id,
@@ -450,14 +455,31 @@ def dataview(
     component_args: dict[str, str] | None = None,
     dataview_base_url: str | None = None,
     before_data_view: str = "",
+    actions: list[str] | None = None,
 ) -> HttpResponse:
-    """
-    Renders the data table component. A data table is a table that takes in a content type 
-    id and renders a table of the corresponding model's data.
-    It supports the following features:
-    - filtering
-    - permissions management
-    - string searching
+    """Renders a dataview, applied with permission.
+
+    A dataview can be of type:
+        - table
+        - kanban
+        - card
+        - ...
+
+    Args:
+        request (HttpRequest): request object
+        content_type_id (int): content type id
+        preference (UserListViewPreference | None, optional): Injected preference object. Defaults to None.
+        base_queryset (QuerySet | None, optional): Optional base queryset. Defaults to None.
+        additional_reserved_query_keys (set[str] | None, optional): Additional reserved query keys. Defaults to None.
+        component_id (str | None, optional): The id of the frontend component. Defaults to None.
+        component_args (dict[str, str] | None, optional): Optional frontend component arguments. Defaults to None.
+        dataview_base_url (str | None, optional): The base URL of the dataview. Defaults to None.
+        before_data_view (str, optional): Optional HTML snippet that would render before. Defaults to "".
+        actions (list[str] | None, optional): IDs of the actions to render. When
+            omitted, all actions configured for the model are rendered.
+
+    Returns:
+        HttpResponse: The response
     """
     state = _build_data_view_query_state(
         request,
@@ -555,65 +577,8 @@ def dataview(
         request,
         state,
         context,
+        actions,
     )
     context["rendered_dataview"] = _render_dataview_body(request, state, pagination, context)
-    
+
     return render(request, 'components/objects/dataview.html', context)
-
-
-@router.register(
-    path="components/dataview/<int:content_type_id>/configured-action/<str:action_id>/",
-    name="components_dataview_configured_action",
-)
-def configured_dataview_action(
-    request: HttpRequest,
-    content_type_id: int,
-    action_id: str,
-) -> HttpResponse:
-    """Execute a configured Dataview action against its permission-filtered context."""
-    if request.method != "POST":
-        return HttpResponse("Method not allowed", status=405)
-
-    state = _build_data_view_query_state(request, content_type_id)
-    if isinstance(state, HttpResponse):
-        return state
-
-    action = next(
-        (
-            configured_action
-            for configured_action in _get_configured_dataview_actions(state.model)
-            if isinstance(configured_action, DataviewAction)
-            and configured_action.id == action_id
-        ),
-        None,
-    )
-    if action is None:
-        return HttpResponse("Action not found", status=404)
-
-    action_context = _build_dataview_action_context(request, state)
-    try:
-        should_execute = action.should_render_func(action_context)
-    except Exception:
-        should_execute = False
-    if not should_execute:
-        return HttpResponse(status=403)
-
-    return action.execution_func(action_context)
-
-
-@router.register(
-    path="components/dataview/<int:content_type_id>/action/<str:action>/",
-    name="components_dataview_action",
-)
-def dataview_action(request: HttpRequest, content_type_id: int, action: str) -> HttpResponse:
-    """Dispatches a view-specific dataview action to the active renderer."""
-    state = _build_data_view_query_state(request, content_type_id)
-    if isinstance(state, HttpResponse):
-        return state
-
-    definition = DATAVIEW_REGISTRY.get(state.preference.view_type)
-    if definition is None:
-        return HttpResponse("Invalid view type", status=400)
-
-    return definition.renderer_cls.handle_action(action, request, state)
-    

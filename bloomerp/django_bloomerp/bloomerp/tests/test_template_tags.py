@@ -1,7 +1,8 @@
 from types import SimpleNamespace
+from unittest.mock import patch
 
 from django.template.loader import render_to_string
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, override_settings
 from django.utils import timezone
 
 from bloomerp.templatetags.bloomerp import (
@@ -86,3 +87,18 @@ class ActivityLogHtmlFilterTests(SimpleTestCase):
         self.assertEqual(rendered.count("<strong>Visible</strong>"), 2)
         self.assertNotIn("<script", rendered)
         self.assertNotIn("&lt;strong&gt;", rendered)
+
+
+class ViteBundleTemplateTests(SimpleTestCase):
+    @override_settings(DEBUG=False)
+    @patch("bloomerp.templatetags.bloomerp.version", return_value="1.15.13")
+    def test_built_bundle_url_is_versioned(self, _version):
+        """
+        Use case: A browser loads compiled assets after a Bloomerp upgrade.
+        Expected result: The package version changes the bundle URL and bypasses stale caches.
+        """
+        # 1. Render the production bundle snippet for a known package version.
+        rendered = render_to_string("snippets/vite_bundle.html")
+
+        # 2. Verify the compiled entry URL includes the release cache key.
+        self.assertIn("/static/bloomerp/js/dist/main.js?v=1.15.13", rendered)

@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 from bloomerp.models.users.user_list_view_preference import UserListViewPreference
 from bloomerp.models import FieldLayout, LayoutItem, LayoutRow
+from bloomerp.models.definition import get_default_dataview_actions
 from bloomerp.models.workspaces.tile import Tile
 from bloomerp.components.layout.render_layout_item import _tile
 from bloomerp.services.workspace_services import (
@@ -30,6 +31,7 @@ from bloomerp.workspaces.text_tile.render import render_html
 from bloomerp.workspaces.tiles import TileType
 from bloomerp.modules.definition import ModuleConfig
 from bloomerp.workspaces.utils import UserParameterResolver
+from bloomerp.widgets.code_editor_widget import CodeEditorWidget
 from bloomerp.widgets.foreign_field_widget import ForeignFieldWidget
 from bloomerp.views.workspaces.create_tile import CREATE_TILE_SESSION_KEY
 from bloomerp.views.workspaces.base import BaseWorkspaceView
@@ -251,6 +253,66 @@ class WorkspaceTileRenderingTests(BaseBloomerpTestCaseWithModels):
         )
         self.assertFalse(form.fields["list_view_preference_id"].required)
         self.assertIn(preference, form.fields["list_view_preference_id"].queryset)
+        self.assertIsInstance(
+            form.fields["initial_query_params"].widget,
+            CodeEditorWidget,
+        )
+
+    @patch("bloomerp.workspaces.dataview_tile.form.get_model_config", return_value=None)
+    def test_data_view_tile_form_uses_default_actions_without_model_config(
+        self,
+        _get_model_config,
+    ):
+        """A model without view settings offers and selects the standard actions."""
+        content_type = ContentType.objects.get_for_model(self.CustomerModel)
+
+        form = DataViewTileForm(
+            user=self.admin_user,
+            initial={"content_type_id": content_type.pk, "actions": None},
+        )
+
+        default_ids = [action.id for action in get_default_dataview_actions()]
+        available_ids = [
+            action_id
+            for action_id in default_ids
+            if action_id not in {"display-options", "select-preference"}
+        ]
+        self.assertEqual(
+            [action_id for action_id, _label in form.fields["actions"].choices],
+            available_ids,
+        )
+        self.assertNotIn("display-options", available_ids)
+        self.assertNotIn("select-preference", available_ids)
+        self.assertEqual(form.initial["actions"], available_ids)
+
+    @patch("bloomerp.workspaces.dataview_tile.form.get_model_config")
+    def test_data_view_tile_form_uses_actions_from_model_config(
+        self,
+        get_model_config_mock,
+    ):
+        """Configured model actions become the tile's available default choices."""
+        get_model_config_mock.return_value = SimpleNamespace(
+            model_view_settings=SimpleNamespace(
+                dataview_actions=[
+                    SimpleNamespace(id="approve", label="Approve"),
+                    SimpleNamespace(id="display-options"),
+                    SimpleNamespace(id="select-preference"),
+                    SimpleNamespace(id="archive"),
+                ]
+            )
+        )
+        content_type = ContentType.objects.get_for_model(self.CustomerModel)
+
+        form = DataViewTileForm(
+            user=self.admin_user,
+            initial={"content_type_id": content_type.pk, "actions": None},
+        )
+
+        self.assertEqual(
+            list(form.fields["actions"].choices),
+            [("approve", "Approve"), ("archive", "Archive")],
+        )
+        self.assertEqual(form.initial["actions"], ["approve", "archive"])
 
     def test_data_view_tile_form_saves_a_null_list_view_preference(self):
         """
@@ -263,6 +325,7 @@ class WorkspaceTileRenderingTests(BaseBloomerpTestCaseWithModels):
             data={
                 "content_type_id": content_type.pk,
                 "list_view_preference_id": "",
+                "initial_query_params": '{"status": "active", "priority__gte": 2}',
             },
             user=self.admin_user,
         )
@@ -274,6 +337,25 @@ class WorkspaceTileRenderingTests(BaseBloomerpTestCaseWithModels):
         # 3. Verify the nullable value is persisted in the configuration.
         self.assertEqual(response.config.content_type_id, content_type.pk)
         self.assertIsNone(response.config.list_view_preference_id)
+        self.assertEqual(
+            response.config.initial_query_params,
+            {"status": "active", "priority__gte": 2},
+        )
+
+    def test_data_view_tile_form_rejects_non_object_query_parameters(self):
+        """Initial query parameters must be a mapping of query keys to values."""
+        content_type = ContentType.objects.get_for_model(self.CustomerModel)
+        form = DataViewTileForm(
+            data={
+                "content_type_id": content_type.pk,
+                "list_view_preference_id": "",
+                "initial_query_params": '["status", "active"]',
+            },
+            user=self.admin_user,
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("initial_query_params", form.errors)
 
     def test_data_view_tile_builder_persists_form_configuration(self):
         """
@@ -336,6 +418,7 @@ class WorkspaceTileRenderingTests(BaseBloomerpTestCaseWithModels):
             DataViewTileConfig(
                 content_type_id=content_type.pk,
                 list_view_preference_id=tile_preference.pk,
+                actions=["filter", "export"],
             ),
             request,
         )
@@ -343,10 +426,51 @@ class WorkspaceTileRenderingTests(BaseBloomerpTestCaseWithModels):
         # 3. Verify the configured preference was passed through and selection was unchanged.
         self.assertEqual(html, "Rendered data view")
         self.assertEqual(data_view_mock.call_args.kwargs["preference"], tile_preference)
+        self.assertEqual(
+            data_view_mock.call_args.kwargs["actions"],
+            ["filter", "export"],
+        )
         selected.refresh_from_db()
         tile_preference.refresh_from_db()
         self.assertTrue(selected.selected)
         self.assertFalse(tile_preference.selected)
+
+    @patch("bloomerp.workspaces.dataview_tile.render.dataview")
+    def test_data_view_tile_renderer_applies_initial_query_parameters(
+        self,
+        data_view_mock,
+    ):
+        """Configured filters seed the request without replacing live parameters."""
+        content_type = ContentType.objects.get_for_model(self.CustomerModel)
+        request = self.factory.get(
+            "/",
+            {
+                "status": "changed",
+                "page": "2",
+                "tile_id": "tile-1",
+            },
+        )
+        request.user = self.admin_user
+        data_view_mock.return_value = HttpResponse("Rendered data view")
+
+        html = DataViewTileRenderer.render(
+            DataViewTileConfig(
+                content_type_id=content_type.pk,
+                initial_query_params={
+                    "status": "initial",
+                    "category": ["one", "two"],
+                    "empty": None,
+                },
+            ),
+            request,
+        )
+
+        self.assertEqual(html, "Rendered data view")
+        self.assertEqual(request.GET["status"], "changed")
+        self.assertEqual(request.GET["page"], "2")
+        self.assertEqual(request.GET.getlist("category"), ["one", "two"])
+        self.assertNotIn("empty", request.GET)
+        self.assertNotIn("tile_id", request.GET)
     def test_saved_canvas_tile_renders_state_height_and_save_url(self):
         """
         Use case: A saved canvas tile is rendered after a user has drawn on it.

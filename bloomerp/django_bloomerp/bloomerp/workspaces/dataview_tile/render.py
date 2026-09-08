@@ -1,3 +1,4 @@
+from django.db.models import ObjectDoesNotExist
 from django.http import HttpRequest
 
 from bloomerp.components.objects.dataviews.dataview import dataview
@@ -16,28 +17,33 @@ class DataViewTileRenderer(BaseTileRenderer):
 
         preference = None
         if config.list_view_preference_id is not None:
-            preference = (
-                PreferenceManager(request.user)
-                .get_available(
-                    UserListViewPreference,
-                    {"content_type_id": config.content_type_id},
+            try:
+                preference = UserListViewPreference.objects.get(
+                    id=config.list_view_preference_id
                 )
-                .filter(pk=config.list_view_preference_id)
-                .first()
-            )
+            except ObjectDoesNotExist:
+                pass
             if preference is not None:
                 preference = preference.effective_preference
 
         get_params = request.GET.copy()
-        get_params.pop("tile_id")
-        get_params.pop("colspan")
-        get_params.pop("max_cols")
-        
+
+        for key, value in config.initial_query_params.items():
+            if key in get_params or value is None:
+                continue
+            if isinstance(value, list):
+                get_params.setlist(key, [str(item) for item in value])
+            else:
+                get_params[key] = str(value)
+
+        for key in ["tile_id", "colspan", "max_cols"]:
+            get_params.pop(key, None)
+
         request.GET = get_params
-        
-        
+
         return dataview(
             request,
             content_type_id=config.content_type_id,
             preference=preference,
+            actions=config.actions,
         ).content.decode("utf-8")
