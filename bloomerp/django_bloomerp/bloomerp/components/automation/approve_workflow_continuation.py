@@ -89,14 +89,18 @@ def approve_workflow_continuation(request: HttpRequest, workflow_run_id: str) ->
                 type="info"
             )
         
-        resume_workflow(
+        resumed_workflow = resume_workflow(
             paused_step,
             output_data=form.cleaned_data.get("data") or output_step_data
         )
         
         return render_page_refresh_with_message(
             request,
-            message="Workflow resumed",
+            message=(
+                "Workflow resumed"
+                if resumed_workflow is not None
+                else "Workflow resume queued"
+            ),
             type="info"
         )
     
