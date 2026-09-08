@@ -33,7 +33,7 @@
                     class="btn btn-sm join-item"
                     {% if not has_previous %}disabled{% endif %}
                     hx-get="{{ url }}{% if pagination_querystring %}?{{ pagination_querystring }}&page=1{% else %}?page=1{% endif %}"
-                    hx-target="#tile-{{ tile_id }}"
+                    hx-target="#layout-field-{{ tile_id }}"
                     hx-swap="outerHTML"
                 >
                     First
@@ -42,7 +42,7 @@
                     class="btn btn-sm join-item"
                     {% if not has_previous %}disabled{% endif %}
                     {% if has_previous %}hx-get="{{ url }}{% if pagination_querystring %}?{{ pagination_querystring }}&page={{ previous_page_number }}{% else %}?page={{ previous_page_number }}{% endif %}"{% endif %}
-                    hx-target="#tile-{{ tile_id }}"
+                    hx-target="#layout-field-{{ tile_id }}"
                     hx-swap="outerHTML"
                 >
                     Prev
@@ -57,7 +57,7 @@
                             <button
                                 class="btn btn-sm join-item"
                                 hx-get="{{ url }}{% if pagination_querystring %}?{{ pagination_querystring }}&page={{ page_number }}{% else %}?page={{ page_number }}{% endif %}"
-                                hx-target="#tile-{{ tile_id }}"
+                                hx-target="#layout-field-{{ tile_id }}"
                                 hx-swap="outerHTML"
                             >
                                 {{ page_number }}
@@ -71,7 +71,7 @@
                     class="btn btn-sm join-item"
                     {% if not has_next %}disabled{% endif %}
                     {% if has_next %}hx-get="{{ url }}{% if pagination_querystring %}?{{ pagination_querystring }}&page={{ next_page_number }}{% else %}?page={{ next_page_number }}{% endif %}"{% endif %}
-                    hx-target="#tile-{{ tile_id }}"
+                    hx-target="#layout-field-{{ tile_id }}"
                     hx-swap="outerHTML"
                 >
                     Next
@@ -80,7 +80,7 @@
                     class="btn btn-sm join-item"
                     {% if not has_next %}disabled{% endif %}
                     hx-get="{{ url }}{% if pagination_querystring %}?{{ pagination_querystring }}&page={{ total_pages }}{% else %}?page={{ total_pages }}{% endif %}"
-                    hx-target="#tile-{{ tile_id }}"
+                    hx-target="#layout-field-{{ tile_id }}"
                     hx-swap="outerHTML"
                 >
                     Last
