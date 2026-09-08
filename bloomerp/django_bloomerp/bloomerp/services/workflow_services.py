@@ -509,7 +509,13 @@ def _execute_workflow_state(
             state.scope_key = parent_scope
         
         try:
-            output_data = node.execute(input_data)
+            if transaction.get_connection().in_atomic_block:
+                # Some executors convert database errors into workflow output.
+                # Isolate them so the surrounding workflow transaction remains usable.
+                with transaction.atomic():
+                    output_data = node.execute(input_data)
+            else:
+                output_data = node.execute(input_data)
         except Exception as error:
             _trace_node(execution_trace, node, "error", error=error)
             _create_run_step(
@@ -684,7 +690,7 @@ def resume_workflow_sync(
     paused_step: WorkflowRunStep,
     output_data=_NO_OUTPUT,
 ) -> WorkflowRun:
-    """Resume an existing workflow run after atomically claiming its paused step."""
+    """Resume an existing workflow run after a paused step."""
     with transaction.atomic():
         paused_step = WorkflowRunStep.objects.select_for_update().select_related(
             "workflow_run__workflow"
@@ -728,12 +734,9 @@ def resume_workflow_sync(
             )
             for output_node in paused_node.get_output_nodes()
         ]
-
-    # Executors may handle database errors as workflow output. Run them after
-    # the claim commits so a failed statement cannot poison the lock transaction.
-    return _execute_workflow_state(
-        workflow=workflow,
-        workflow_run=workflow_run,
-        state=state,
-        start_frames=start_frames,
-    )
+        return _execute_workflow_state(
+            workflow=workflow,
+            workflow_run=workflow_run,
+            state=state,
+            start_frames=start_frames,
+        )
