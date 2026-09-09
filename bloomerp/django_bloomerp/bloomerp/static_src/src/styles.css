@@ -1746,5 +1746,96 @@ Dashboard
         fill: #9ca3af !important;
     }
 
+    /* DrawFlow is generated markup, so its dark theme lives here rather than
+       relying on utility classes that cannot be attached to every element. */
+    .dark #drawflow {
+        background-color: #18181b;
+        background-image: radial-gradient(circle, #3f3f46 1px, transparent 1px);
+    }
+
+    .dark .drawflow .drawflow-node {
+        background: #27272a !important;
+        border-color: #52525b !important;
+        color: #f4f4f5 !important;
+    }
+
+    .dark .drawflow .drawflow-node:hover,
+    .dark .drawflow .drawflow-node.selected {
+        border-color: var(--color-primary-500) !important;
+    }
+
+    .dark .drawflow .node-header {
+        background: linear-gradient(135deg, #27272a 0%, #18181b 100%) !important;
+        border-color: #3f3f46 !important;
+        color: #f4f4f5 !important;
+    }
+
+    .dark .drawflow .workflow-node-kicker,
+    .dark .drawflow .workflow-node-meta,
+    .dark .drawflow .workflow-node-config-key {
+        color: #a1a1aa;
+    }
+
+    .dark .drawflow .workflow-node-title,
+    .dark .drawflow .workflow-node-config-value {
+        color: #f4f4f5;
+    }
+
+    .dark .drawflow .workflow-node-config-chip,
+    .dark .drawflow .workflow-node-empty-config {
+        background: #18181b;
+        border-color: #52525b;
+    }
+
+    .dark .drawflow .workflow-node-card--trigger .workflow-node-icon {
+        background: #14532d;
+        color: #bbf7d0;
+    }
+
+    .dark .drawflow .workflow-node-card--action .workflow-node-icon {
+        background: #1e3a8a;
+        color: #bfdbfe;
+    }
+
+    .dark .drawflow .workflow-node-card--flow .workflow-node-icon {
+        background: #78350f;
+        color: #fde68a;
+    }
+
+    .dark .drawflow .drawflow-node .input,
+    .dark .drawflow .drawflow-node .output {
+        background: #a1a1aa !important;
+        border-color: #27272a !important;
+    }
+
+    .dark .drawflow .connection .main-path {
+        stroke: #71717a !important;
+    }
+
+    .dark .drawflow .connection .main-path:hover {
+        stroke: #a1a1aa !important;
+    }
+
+    .dark .drawflow .connection .point {
+        stroke: #a1a1aa !important;
+        fill: #27272a !important;
+    }
+
+    .dark .drawflow [data-workflow-port-label] {
+        color: #d4d4d8 !important;
+    }
+
+    .dark .drawflow [data-workflow-edge-label] {
+        background: rgba(39, 39, 42, 0.94) !important;
+        color: #e4e4e7 !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35) !important;
+    }
+
+    .dark .drawflow [data-workflow-edge-label] textarea {
+        background: rgba(39, 39, 42, 0.98) !important;
+        border-color: #71717a !important;
+        color: #f4f4f5 !important;
+    }
+
     /* Delete Button */
 }
