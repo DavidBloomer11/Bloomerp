@@ -2,7 +2,7 @@
 from bloomerp.automation.flows.if_condition import IfConditionExecutor
 from bloomerp.tests.base import (
     BloomerpWorkflowNodeTestCase,
-    WorkflowSimulation,
+    WorkflowNodeSimulation,
 )
 
 
@@ -10,5 +10,5 @@ class TestIfConditionNode(BloomerpWorkflowNodeTestCase):
     node_id = 'IF_CONDITION'
     executor_class = IfConditionExecutor
 
-    def get_simulations(self) -> list[WorkflowSimulation]:
+    def get_simulations(self) -> list[WorkflowNodeSimulation]:
         return []

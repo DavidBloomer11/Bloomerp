@@ -16,6 +16,7 @@ interface SavedWorkflowNode {
     parameters: Record<string, any>;
     pos_x: number;
     pos_y: number;
+    output_ports?: WorkflowOutputPort[];
 }
 
 interface SavedWorkflowEdge {
@@ -23,6 +24,7 @@ interface SavedWorkflowEdge {
     from_node: string;
     to_node: string;
     name?: string | null;
+    output_port?: string;
 }
 
 interface SavedWorkflow {
@@ -39,6 +41,13 @@ interface WorkflowNodeDefinition {
     subTypeName: string;
     description: string;
     icon: string;
+    outputPorts: WorkflowOutputPort[];
+}
+
+interface WorkflowOutputPort {
+    id: string;
+    label: string;
+    max_connections: number | null;
 }
 
 interface WorkflowEdgeMetadata {
@@ -97,6 +106,17 @@ function stringifyConfigValue(value: any): string {
     if (value === null || value === undefined || value === '') return 'empty';
     if (typeof value === 'object') return truncate(JSON.stringify(value), 56);
     return truncate(String(value), 56);
+}
+
+function parseOutputPorts(value: string | null): WorkflowOutputPort[] {
+    const fallback = [{ id: 'default', label: 'Output', max_connections: null }];
+    if (!value) return fallback;
+    try {
+        const ports = JSON.parse(value);
+        return Array.isArray(ports) && ports.length ? ports : fallback;
+    } catch {
+        return fallback;
+    }
 }
 
 function createWorkflowEdgeKey(
@@ -249,6 +269,15 @@ export default class Workflow extends BaseComponent {
         });
         
         this.drawflow.on('connectionCreated', (info: any) => {
+            if (!this.connectionFitsPortLimit(info)) {
+                this.drawflow.removeSingleConnection(
+                    info.output_id,
+                    info.input_id,
+                    info.output_class,
+                    info.input_class,
+                );
+                return;
+            }
             this.edgeMetadata.set(connectionInfoToEdgeKey(info), { name: '' });
             this.refreshWorkflowEdgeLabels();
             this.scheduleAutosave();
@@ -310,6 +339,7 @@ export default class Workflow extends BaseComponent {
                 subTypeName: el.getAttribute('data-node-subtype-name') || subTypeId,
                 description: el.getAttribute('data-node-subtype-description') || '',
                 icon: el.getAttribute('data-node-subtype-icon') || 'fa-solid fa-circle-nodes',
+                outputPorts: parseOutputPorts(el.getAttribute('data-node-output-ports')),
             });
         });
     }
@@ -320,6 +350,70 @@ export default class Workflow extends BaseComponent {
 
     private getNodeDefinition(nodeType: string, nodeSubType: string): WorkflowNodeDefinition | undefined {
         return this.nodeDefinitions.get(this.nodeDefinitionKey(nodeType, nodeSubType));
+    }
+
+    private outputPortForClass(
+        ports: WorkflowOutputPort[],
+        outputClass: string,
+    ): WorkflowOutputPort {
+        const index = Math.max(0, Number.parseInt(outputClass.replace('output_', ''), 10) - 1);
+        return ports[index] || { id: 'default', label: 'Output', max_connections: null };
+    }
+
+    private outputClassForPort(ports: WorkflowOutputPort[], portId: string): string {
+        const index = ports.findIndex((port) => port.id === portId);
+        return `output_${index >= 0 ? index + 1 : 1}`;
+    }
+
+    private connectionFitsPortLimit(info: any): boolean {
+        const node = this.drawflow.getNodeFromId(info.output_id);
+        if (!node) return true;
+        const ports = node.data?.outputPorts || [];
+        const port = this.outputPortForClass(ports, info.output_class || 'output_1');
+        if (port.max_connections === null) return true;
+        const connectionCount = node.outputs?.[info.output_class]?.connections?.length || 0;
+        return connectionCount <= port.max_connections;
+    }
+
+    private decorateNodeOutputPorts(nodeId: number, ports: WorkflowOutputPort[]): void {
+        window.requestAnimationFrame(() => {
+            const nodeElement = this.element?.querySelector<HTMLElement>(`#node-${nodeId}`);
+            if (!nodeElement) return;
+            nodeElement.querySelectorAll<HTMLElement>('.outputs .output').forEach((output, index) => {
+                const port = ports[index] || { id: 'default', label: 'Output', max_connections: null };
+                output.dataset.workflowPortId = port.id;
+                output.setAttribute('aria-label', port.label);
+                output.setAttribute('title', port.label);
+                output.querySelectorAll('[data-workflow-port-label]').forEach((label) => label.remove());
+                const label = document.createElement('span');
+                label.dataset.workflowPortLabel = 'true';
+                label.textContent = port.label;
+                label.style.position = 'absolute';
+                label.style.right = '12px';
+                label.style.transform = 'translateY(-50%)';
+                label.style.whiteSpace = 'nowrap';
+                label.style.fontSize = '11px';
+                label.style.color = '#64748b';
+                label.style.pointerEvents = 'none';
+                output.appendChild(label);
+            });
+        });
+    }
+
+    private syncNodeOutputPorts(nodeId: number, ports: WorkflowOutputPort[]): void {
+        const node = this.drawflow.getNodeFromId(nodeId);
+        if (!node) return;
+        const targetCount = Math.max(1, ports.length);
+        let currentCount = Object.keys(node.outputs || {}).length;
+        while (currentCount < targetCount) {
+            this.drawflow.addNodeOutput(nodeId);
+            currentCount += 1;
+        }
+        while (currentCount > targetCount) {
+            this.drawflow.removeNodeOutput(nodeId, `output_${currentCount}`);
+            currentCount -= 1;
+        }
+        this.decorateNodeOutputPorts(nodeId, ports);
     }
 
     private importSavedWorkflow(): void {
@@ -352,13 +446,14 @@ export default class Workflow extends BaseComponent {
                 nodeName: node.name || '',
                 nodeDefinition: definition,
                 parameters: node.parameters || {},
+                outputPorts: node.output_ports || definition?.outputPorts || [],
             };
             const inputs = node.type === 'TRIGGER' ? 0 : 1;
             
             const addedNodeId = Number(this.drawflow.addNode(
                 node.type,
                 inputs,
-                1,
+                Math.max(1, nodeData.outputPorts.length),
                 toCanvasPosition(node.pos_x, WORKFLOW_CANVAS_OFFSET_X),
                 toCanvasPosition(node.pos_y, WORKFLOW_CANVAS_OFFSET_Y),
                 `${node.type}-${drawflowId}`,
@@ -366,6 +461,7 @@ export default class Workflow extends BaseComponent {
                 createNodeHtml(node.type, nodeSubType, drawflowId, definition, nodeData.parameters, node.id, node.name),
                 false
             ));
+            this.decorateNodeOutputPorts(addedNodeId, nodeData.outputPorts);
 
             if (firstImportedDrawflowNodeId === null) {
                 firstImportedDrawflowNodeId = addedNodeId;
@@ -379,9 +475,14 @@ export default class Workflow extends BaseComponent {
             const fromNode = nodeIdMap.get(edge.from_node);
             const toNode = nodeIdMap.get(edge.to_node);
             if (!fromNode || !toNode) continue;
-            this.drawflow.addConnection(fromNode, toNode, 'output_1', 'input_1');
+            const fromData = this.drawflow.getNodeFromId(fromNode)?.data;
+            const outputClass = this.outputClassForPort(
+                fromData?.outputPorts || [],
+                edge.output_port || 'default',
+            );
+            this.drawflow.addConnection(fromNode, toNode, outputClass, 'input_1');
             this.edgeMetadata.set(
-                createWorkflowEdgeKey(fromNode, toNode),
+                createWorkflowEdgeKey(fromNode, toNode, outputClass, 'input_1'),
                 {
                     id: edge.id,
                     name: edge.name || '',
@@ -1003,7 +1104,13 @@ export default class Workflow extends BaseComponent {
                 (entry): entry is { node: any; drawflowId: number } =>
                     entry.drawflowId !== null,
             );
-        const edges: Array<{ id?: number; from_node: string; to_node: string; name?: string | null }> = [];
+        const edges: Array<{
+            id?: number;
+            from_node: string;
+            to_node: string;
+            name?: string | null;
+            output_port: string;
+        }> = [];
         const clientIdByDrawflowId = new Map<number, string>();
 
         for (const { node, drawflowId } of normalizedNodes) {
@@ -1028,6 +1135,10 @@ export default class Workflow extends BaseComponent {
                         from_node: clientIdByDrawflowId.get(fromDrawflowId) || buildWorkflowClientId(fromDrawflowId),
                         to_node: clientIdByDrawflowId.get(toDrawflowId) || buildWorkflowClientId(toDrawflowId),
                         name: edgeMetadata?.name || null,
+                        output_port: this.outputPortForClass(
+                            node.data?.outputPorts || [],
+                            outputClass,
+                        ).id,
                     });
                 }
             }
@@ -1112,10 +1223,13 @@ export default class Workflow extends BaseComponent {
                         if (!drawflowId) continue;
                         const drawflowNode = this.drawflow.getNodeFromId(drawflowId);
                         if (drawflowNode) {
+                            const outputPorts = node.output_ports || drawflowNode.data?.outputPorts || [];
+                            this.syncNodeOutputPorts(drawflowId, outputPorts);
                             const updatedData = {
                                 ...drawflowNode.data,
                                 workflowNodeId: node.id,
                                 nodeName: node.name || '',
+                                outputPorts,
                             };
                             this.drawflow.updateNodeDataFromId(drawflowId, updatedData);
                             this.refreshNodeCard(drawflowId, updatedData);
@@ -1152,7 +1266,17 @@ export default class Workflow extends BaseComponent {
             const toNodeId = drawflowIdByClientId.get(edge.to_node);
             if (!fromNodeId || !toNodeId) continue;
 
-            const edgeKey = createWorkflowEdgeKey(fromNodeId, toNodeId);
+            const sourceNode = this.drawflow.getNodeFromId(fromNodeId);
+            const outputClass = this.outputClassForPort(
+                sourceNode?.data?.outputPorts || [],
+                edge.output_port || 'default',
+            );
+            const edgeKey = createWorkflowEdgeKey(
+                fromNodeId,
+                toNodeId,
+                outputClass,
+                'input_1',
+            );
             const previousMetadata = existingMetadata.get(edgeKey);
             this.edgeMetadata.set(edgeKey, {
                 id: edge.id,
@@ -1199,15 +1323,18 @@ export default class Workflow extends BaseComponent {
         let numberOfInputs = 1;
         const definition = this.getNodeDefinition(nodeType, nodeSubType);
         const parameters = {};
+        const outputPorts = definition?.outputPorts || [
+            { id: 'default', label: 'Output', max_connections: null },
+        ];
 
         if (nodeType==='TRIGGER') {
             numberOfInputs=0
         }
 
-        this.drawflow.addNode(
+        const addedNodeId = Number(this.drawflow.addNode(
             nodeType,
             numberOfInputs,
-            1,
+            Math.max(1, outputPorts.length),
             coordinates.x,
             coordinates.y,
             `${nodeType}-${this.nodeId}`,
@@ -1217,10 +1344,12 @@ export default class Workflow extends BaseComponent {
                 nodeDefinition: definition,
                 nodeName: '',
                 parameters,
+                outputPorts,
             },
             createNodeHtml(nodeType, nodeSubType, this.nodeId, definition, parameters),
             false
-        );
+        ));
+        this.decorateNodeOutputPorts(addedNodeId, outputPorts);
                 
         this.nodeId++;
     }

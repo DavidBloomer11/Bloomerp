@@ -14,6 +14,7 @@ export default class CodeEditorWidget extends BaseWidget {
     private lastCommittedValue: string = '';
     private boundOnEditorChange: (() => void) | null = null;
     private boundOnModalClosed: ((event: Event) => void) | null = null;
+    private boundOnTextareaInput: (() => void) | null = null;
 
     public initialize(): void {
         if (!this.element) return;
@@ -26,7 +27,38 @@ export default class CodeEditorWidget extends BaseWidget {
         if (!this.textarea || !this.editorContainer) return;
         this.lastCommittedValue = this.textarea.value || this.textarea.textContent || '';
 
-        this.configureAceModuleLoader();
+        if (this.element.closest("[bloomerp-component='document-template-builder']")) {
+            this.initializePlainTextEditor();
+        } else {
+            this.configureAceModuleLoader();
+            this.initializeEditor();
+        }
+
+        if (this.launchFromButton && this.modalId) {
+            this.boundOnModalClosed = (event: Event) => {
+                const customEvent = event as CustomEvent<{ modalId?: string }>;
+                if (customEvent.detail?.modalId !== this.modalId) return;
+
+                this.commitTextareaChange();
+            };
+            document.body.addEventListener('bloomerp:modal-closed', this.boundOnModalClosed);
+        }
+    }
+
+    private initializePlainTextEditor(): void {
+        if (!this.editorContainer || !this.textarea) return;
+
+        this.editorContainer.hidden = true;
+        this.textarea.hidden = false;
+        this.textarea.classList.add('textarea', 'w-full', 'font-mono');
+        this.textarea.style.minHeight = '300px';
+        this.boundOnTextareaInput = () => this.onChange();
+        this.textarea.addEventListener('input', this.boundOnTextareaInput);
+    }
+
+    private initializeEditor(): void {
+        if (!this.editorContainer || !this.textarea || this.editor) return;
+
         this.disposeEditorForContainer(this.editorContainer);
 
         this.editor = ace.edit(this.editorContainer);
@@ -53,16 +85,6 @@ export default class CodeEditorWidget extends BaseWidget {
             this.onChange();
         };
         this.editor.session.on('change', this.boundOnEditorChange);
-
-        if (this.launchFromButton && this.modalId) {
-            this.boundOnModalClosed = (event: Event) => {
-                const customEvent = event as CustomEvent<{ modalId?: string }>;
-                if (customEvent.detail?.modalId !== this.modalId) return;
-
-                this.commitTextareaChange();
-            };
-            document.body.addEventListener('bloomerp:modal-closed', this.boundOnModalClosed);
-        }
     }
 
     public destroy(): void {
@@ -82,6 +104,10 @@ export default class CodeEditorWidget extends BaseWidget {
             document.body.removeEventListener('bloomerp:modal-closed', this.boundOnModalClosed);
         }
 
+        if (this.textarea && this.boundOnTextareaInput) {
+            this.textarea.removeEventListener('input', this.boundOnTextareaInput);
+        }
+
         if (this.editorContainer) {
             const registeredEditor = CodeEditorWidget.editorsByContainer.get(this.editorContainer);
             if (registeredEditor === this.editor) {
@@ -93,6 +119,7 @@ export default class CodeEditorWidget extends BaseWidget {
         this.editor = null;
         this.boundOnEditorChange = null;
         this.boundOnModalClosed = null;
+        this.boundOnTextareaInput = null;
     }
 
     private configureAceModuleLoader(): void {
